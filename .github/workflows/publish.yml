@@ -2,7 +2,7 @@ name: Publish
 on:
   release:
     types: [published]
-  
+
 jobs:
   publish-on-pypi-servers:
     runs-on: ubuntu-20.04

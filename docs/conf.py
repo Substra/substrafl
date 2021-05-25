@@ -24,6 +24,7 @@ def _get_version():
         exec(fp.read(), version_)  # pylint: disable=exec-used
     return version_["__version__"]
 
+
 # Mock imports
 # Required for all dependencies
 autodoc_mock_imports = [
@@ -49,20 +50,20 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.autodoc',
-    'sphinx_rtd_theme',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.ifconfig',
-    'sphinx_click',
-    'recommonmark',
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc",
+    "sphinx_rtd_theme",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.ifconfig",
+    "sphinx_click",
+    "recommonmark",
 ]
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
-    'pandas': ('https://pandas.pydata.org/docs/', None),
-    'torch': ('https://pytorch.org/docs/stable/', None)
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "torch": ("https://pytorch.org/docs/stable/", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.

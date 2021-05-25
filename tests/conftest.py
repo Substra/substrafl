@@ -3,6 +3,7 @@ import pytest
 
 from pathlib import Path
 
+
 @pytest.fixture
 def temp_folder():
     test_dir = tempfile.TemporaryDirectory(prefix="tests")
@@ -10,4 +11,3 @@ def temp_folder():
 
     # delete the temp test_dir
     test_dir.cleanup()
-
