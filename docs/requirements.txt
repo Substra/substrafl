@@ -1,0 +1,11 @@
+sphinx==3.3.1
+sphinx_rtd_theme==0.5.0
+sphinx-autobuild==2020.9.1
+sphinx-click==2.5.0
+click==7.1.2
+texttable==1.6.3
+recommonmark==0.6.0
+# Sphinx 3.3.1 does not require a specific version of docutils
+# but docutils 0.17 changed the output html markup, breaking the RTD theme
+# original issue: https://github.com/sphinx-doc/sphinx/issues/9051
+docutils==0.16

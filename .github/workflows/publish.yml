@@ -1,0 +1,24 @@
+name: Publish
+on:
+  release:
+    types: [published]
+  
+jobs:
+  publish-on-pypi-servers:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Config Poetry
+        run: |
+          poetry config repositories.owkin ${{ secrets.PYPI_REPOSITORY_URL }}
+          poetry config http-basic.owkin ${{ secrets.PYPI_USERNAME }} ${{ secrets.PYPI_PASSWORD }}
+
+      - name: Publish package
+        run: poetry publish -r owkin --build

@@ -1,0 +1,55 @@
+name: pr-validation
+on:
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  pr-validation:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Code conventions
+        run: |
+          poetry run pip install pre-commit
+          poetry run pre-commit install
+          poetry run pre-commit run --all-files
+
+      - name: Install package
+        run: poetry install -v
+
+      - name: Run tests
+        run: poetry run pytest --cov=connectlib --cov-append --cov-report=html:htmlcov
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: htmlcov
+
+  pr-validation-docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install Dependencies
+        run: pip install -r docs/requirements.txt
+
+      - name: Test docs
+        run: |
+          cd docs
+          make html

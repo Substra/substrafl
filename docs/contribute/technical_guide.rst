@@ -1,0 +1,176 @@
+Technical Guide
+===============
+
+Merge requests
+--------------
+
+Description
+^^^^^^^^^^^
+
+- Fill in the required template:
+
+    -  if there in a associated issue, a reference to it (only need to write ``#{issue_number}`` in GitHub, e.g. ``#85``)
+    -  if there is no issue, a description of the problem it solves
+    -  a technical description of the implementation
+
+    Adding ``Closes #{issue_number}`` in the merge request description to automatically close the
+    issue once the request is merged into master.
+
+- Be sure that your pull request contains tests that cover the changed or added code.
+- If your changes warrant a documentation change, the pull request must also update the documentation.
+
+Commits - format
+^^^^^^^^^^^^^^^^
+
+Commits on the master branch and all branches where several people may
+work at the same time follow the **conventional commit** convention. If
+someone works on his own branch, then he is expected to **squash** his
+commits into one commit in the conventional format at the merge.
+
+::
+
+   type(optional scope): one-liner description (less than 100 characters)
+
+   optional body
+
+   optional footer
+
+The main possible types are:
+
+-  ``feat`` for feature
+-  ``test`` for tests
+-  ``fix`` for bug fixes
+-  ``doc`` for documentation
+-  and
+   `more <https://github.com/commitizen/conventional-commit-types/blob/master/index.json>`__
+
+The scopes are the names of the modules in ConnectLib. It is not recommended but possible to have several scopes,
+in that case separate them with commas.
+
+**Example**: example of a feature that adds a Chowder module and Algorithm.
+
+::
+
+    feat(modules, algorithms): this commit is on several packages
+
+    More precise description of the feature, that goes on several lines.
+    It can be an explanation of why a particuliar implementation for example.
+
+    This is the footer with for example the GitHub issue number. #85
+
+Local development
+-----------------
+
+Poetry
+^^^^^^
+
+You will need `Poetry <https://python-poetry.org>`__ to start contributing on the ConnectLib codebase.
+Refer to the `documentation <https://python-poetry.org/docs/#introduction>`__ to start using Poetry.
+
+You will first need to clone the repository using `git` and place yourself in its directory:
+
+.. code:: bash
+
+    git clone git@gitlab.com:owkin/galaxy/belt/represent.git
+    cd represent
+
+Now, you will need to install the required dependency for Poetry and be sure that the current
+tests are passing on your machine:
+
+.. code:: bash
+
+    # Poetry configuration
+    poetry config virtualenvs.in-project true
+
+    # Run tests
+    poetry run pytest --cov=rpz tests/
+
+Pre-commit hooks
+^^^^^^^^^^^^^^^^
+
+ConnectLib uses the black coding style and you must ensure that your code follows it.
+If not, the CI will fail and your Pull Request will not be merged.
+
+Similarly, we use Flake8 for linting. If you don't respect the coding conventions, the CI will fail as well.
+
+The line length used in the repository (for black auto formatting) is 95.
+
+To make sure that you don't accidentally commit code that does not follow the coding style,
+you can install a pre-commit hook that will check that everything is in order:
+
+.. code:: bash
+
+    poetry run pre-commit install
+
+You can also run it anytime using:
+
+.. code:: bash
+
+    poetry run pre-commit run --all-files
+
+Tests
+^^^^^
+
+Your code must always be accompanied by corresponding tests, if tests are not present your code will not be merged.
+
+This is the tests structure:
+
+   -  tests
+
+      -  resources (CAUTION: ADD YOUR RESOURCES IN GIT LFS)
+      -  conftest.py
+      -  <module_name>
+          - test_<file_name>.py
+          - ...
+      - ...
+
+Write a test
+~~~~~~~~~~~~
+
+You can refer to the `pytest <https://docs.pytest.org/en/latest/>`__
+documentation to understand fixtures and test cases.
+
+In ``conftest.py``, there are the
+`fixtures <https://docs.pytest.org/en/latest/fixture.html#fixture>`__
+used by all tests. You can also write your fixtures directly in the test
+file.
+
+The structure of the test files mirrors the structure of the package.
+The test file names must start with ``test_``.
+
+The test function names are of the format
+``test_{function_name}_{what_is_tested}``
+
+**Example**:
+
+- I wrote a function `my_function` in `package > utils > functional.py`.
+- I add relevant tests in the test file: `tests > utils > test_functional.py`
+- My test functions are named: `test_my_function_accepts_nan`, `test_my_function_error_if_input_dim_2`
+
+Non-regression tests
+^^^^^^^^^^^^^^^^^^^^
+
+Some of the most important modules have "non-regression" tests that make sure that for a given input, the output
+of the module stays the same for every commit. This kind of test make sure that the performances of the modules are
+stable.
+
+To write a non-regression test:
+
+.. code:: python
+
+    # The first fixture MUST BE non_regression_tracking
+    # This fixture will fix the seeding and provide a callable to track tensors
+    def test_module_non_regression(non_regression_tracking, resources_path, ...):
+        x = torch.randn(...)
+        module = Module(...)
+        # if your module contains batch norms or dropout
+        module.eval()
+
+        y = module(x)
+
+        # Test specific file in tests/resources
+        # The test_pth extension is tracked by git-lfs
+        non_regression_tensors_path = resources_path / "test_module_non_regression.test_pth"
+
+        # Specify which tensor to track
+        non_regression_tracking(y, assets_path=non_regression_tensors_path)
