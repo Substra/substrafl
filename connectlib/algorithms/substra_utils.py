@@ -10,6 +10,7 @@ from platform import python_version
 
 from .algo import RegisteredAlgo
 
+# TODO: change the base Image to a python image
 DOCKERFILE_TEMPLATE = """
 FROM substrafoundation/substra-tools:0.7.0
 

@@ -61,6 +61,16 @@ class FedAVG(Strategy):
 
         return composite_traintuple, aggregatetuple
 
+    # def perform_round(self, ...):
+    #     results = []
+    #     for node in node_specs:
+    #         result = node.execute(algo.perform_round())
+    #         results.append(result)
+    #
+    #     avg_result = aggregator_node.execute(self.aggregate_states(results))
+    #
+    #     return avg_result
+
     def run(
         self,
         client: substra.Client,
@@ -74,31 +84,32 @@ class FedAVG(Strategy):
             self.perform_round(client, algo_key, init_agg_key, node_specs=node_specs)
 
 
-class FedAVG:
-    ...
-
-    def perform_round(self, hospitals: List):
-
-        results = []
-        for hospital in hospitals:
-            result = perform_update(hospital)
-            results.append(result)
-
-        agg = aggregate(results)
-
-
-class RucheFedAVG:
-    ...
-
-    def perform_round(self):
-        updates = []
-        for i, client in enumerate(clients):
-            tokens_list = client.data_indexer.generate_tokens(self._num_updates)
-            client_update = client.compute_updates(tokens_list=tokens_list)
-
-            updates.append(client_update)
-            if verbose > 0:
-                print(" - Client {} emitted updates".format(i))
-
-        # Transmit updates to server
-        agg_update = server.aggregate_updates(updates=updates)
+#
+# class FedAVG:
+#     ...
+#
+#     def perform_round(self, hospitals: List):
+#
+#         results = []
+#         for hospital in hospitals:
+#             result = perform_update(hospital)
+#             results.append(result)
+#
+#         agg = aggregate(results)
+#
+#
+# class RucheFedAVG:
+#     ...
+#
+#     def perform_round(self):
+#         updates = []
+#         for i, client in enumerate(clients):
+#             tokens_list = client.data_indexer.generate_tokens(self._num_updates)
+#             client_update = client.compute_updates(tokens_list=tokens_list)
+#
+#             updates.append(client_update)
+#             if verbose > 0:
+#                 print(" - Client {} emitted updates".format(i))
+#
+#         # Transmit updates to server
+#         agg_update = server.aggregate_updates(updates=updates)

@@ -15,15 +15,18 @@ from typing import Dict, Tuple, Any, Optional, Callable, Type
 class Algo(substratools.CompositeAlgo):
     SEED: int
 
-    def preprocessing(self, x: Any, y: Optional[Any] = None) -> Tuple[np.array, np.array]:
-        return x, y
+    def preprocessing(self, x: Any, y: Optional[Any] = None) -> Tuple[Any, Any]:
+        if y is not None:
+            return x, y
+        else:
+            return x
 
     @abstractmethod
-    def perform_update(self, x: np.array, y: np.array):
+    def perform_update(self, x: Any, y: Any):
         raise NotImplementedError
 
     @abstractmethod
-    def test(self, x: np.array):
+    def test(self, x: Any):
         raise NotImplementedError
 
     @property
@@ -49,8 +52,8 @@ class Algo(substratools.CompositeAlgo):
         self,
         X: Any,
         y: Any,
-        head_model: Optional["Algo"],
-        trunk_model: Optional[Dict[str, np.array]],
+        head_model: Optional["Algo"], # instance of own type
+        trunk_model: Optional[Dict[str, np.array]], # shared state
         rank: int,
     ):
 
