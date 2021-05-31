@@ -9,10 +9,12 @@ import numpy as np
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple, Any, Optional, Callable
+from typing import Dict, Tuple, Any, Optional, Callable, Type
 
 
 class Algo(substratools.CompositeAlgo):
+    SEED: int
+
     def preprocessing(self, x: Any, y: Optional[Any] = None) -> Tuple[np.array, np.array]:
         return x, y
 
@@ -55,7 +57,10 @@ class Algo(substratools.CompositeAlgo):
         if head_model is None:
             head_model = self
 
-        if trunk_model is not None:
+        if trunk_model is None:
+            print("trunk model is None")
+            # raise TypeError("you need to run InitAggregator first")
+        else:
             head_model.weights = trunk_model
 
         X, y = self.preprocessing(X, y)

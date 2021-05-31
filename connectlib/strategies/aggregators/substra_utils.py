@@ -7,7 +7,9 @@ import subprocess
 import zipfile
 import connectlib
 
+from typing import Type
 from platform import python_version
+from pathlib import Path
 
 from .aggregator import Aggregator
 
@@ -30,19 +32,19 @@ ENTRYPOINT ["python{0}", "/algo/algo.py"]
 ALGO = """
 import substratools as tools
 
-from connectlib.strategies.aggregators import {}
+from connectlib.strategies.aggregators import {0}
 
 if __name__ == "__main__":
-    tools.algo.execute({}())
+    tools.algo.execute({0}())
 """
 
 
 def add_aggregator(
     client: substra.Client,
-    aggregator_cls: type(Aggregator),
+    aggregator_cls: Type[Aggregator],
     permisions: substra.sdk.schemas.Permissions,
 ) -> str:
-    algo_dir = tempfile.mkdtemp()
+    algo_dir = Path(tempfile.mkdtemp())
 
     python_major_minor = ".".join(python_version().split(".")[:2])
 
@@ -87,8 +89,8 @@ def add_aggregator(
 
     print(algo_dir)
 
-    aggregator_key = client.add_algo(
-        substra.sdk.schemas.AlgoSpec(
+    aggregator_key = client.add_aggregate_algo(
+        substra.sdk.schemas.AggregateAlgoSpec(
             name=aggregator_cls.__name__,
             description=description_path,
             file=archive_path,

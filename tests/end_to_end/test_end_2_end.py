@@ -41,23 +41,17 @@ def test_end_2_end():
     org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
     org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
 
-    from connectlib.algorithms.substra_utils import add_algo
     from algo.algo import MyAlgo
+    from connectlib.orchestrator import Orchestrator, NodeSpec
+    from connectlib.strategies import FedAVG
 
-    algo_key = add_algo(org1_client, MyAlgo(), permisions=DEFAULT_PERMISSIONS)
+    node_specs = [
+        NodeSpec("0", org1_dataset_key, [org1_data_sample_key], "fake_objective"),
+        NodeSpec("1", org2_dataset_key, [org2_data_sample_key], "fake_objective"),
+    ]
 
-    print(algo_key)
+    my_algo = MyAlgo()
+    strategy = FedAVG(1, 1)
 
-    logger.info("Adding dimension reduction train tuple")
-    traintuple = org1_client.add_traintuple(
-        substra.sdk.schemas.TraintupleSpec(
-            algo_key=algo_key,
-            data_manager_key=org1_dataset_key,
-            train_data_sample_keys=[org1_data_sample_key],
-            in_models_keys=None,
-            tag="dimension reduction",
-            rank=None,
-            metadata=None,
-        )
-    )
-    print(traintuple)
+    orchestrator = Orchestrator(my_algo, strategy, 1)
+    compute_plan_key = orchestrator.run(org1_client, node_specs)

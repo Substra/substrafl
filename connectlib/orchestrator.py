@@ -1,20 +1,15 @@
+import datetime
 import substra
 
 from typing import List
-from dataclasses import dataclass
 
 from connectlib.algorithms import RegisteredAlgo
 from connectlib.strategies import FedAVG
 
 from .algorithms.substra_utils import add_algo
-
-
-@dataclass
-class NodeSpec:
-    node_id: str
-    data_manager_key: str
-    data_sample_keys: List[str]
-    objective_name: str
+from .specs.node import NodeSpec
+from .strategies.aggregators.init_aggregator import InitializationAggregator
+from .strategies.aggregators.substra_utils import add_aggregator
 
 
 class Orchestrator:
@@ -23,6 +18,11 @@ class Orchestrator:
         self.strategy = strategy
         self.num_rounds = num_rounds
 
+    def register_init_aggregator(
+        self, client: substra.Client, permisions: substra.sdk.schemas.Permissions
+    ) -> str:
+        return add_aggregator(client, InitializationAggregator, permisions)
+
     def run(self, client: substra.Client, node_specs: List[NodeSpec]):
         node_ids = [node_spec.node_id for node_spec in node_specs]
 
@@ -30,8 +30,18 @@ class Orchestrator:
 
         algo_key = add_algo(client, self.algo, permissions)
 
-        agg_key = None
-        for round in range(self.num_rounds):
-            agg_key = self.strategy.perform_round(
-                client=client, algo_key=algo_key, agg_key=agg_key, node_specs=node_specs
-            )
+        composite_traintuples, aggregatetuple = self.strategy.perform_round(
+            client=client, algo_key=algo_key, agg_key=None, node_specs=node_specs
+        )
+
+        compute_plan = client.add_compute_plan(
+            {
+                "composite_traintuples": composite_traintuples,
+                "aggregatetuples": [aggregatetuple],
+                "tag": str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
+            }
+        )
+
+        # TODO: wait on compute_plan
+
+        return compute_plan

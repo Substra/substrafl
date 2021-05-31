@@ -31,6 +31,9 @@ COPY ./{4} /algo/parameters.json
 ENTRYPOINT ["python{0}", "/algo/algo.py"]
 """
 
+# TODO: Let user use their own seed if they want
+# TODO: the SEED needs to be read/write from disk
+# TODO: the SEED needs to be incremented for every execution
 ALGO = """
 import json
 import cloudpickle
@@ -72,6 +75,7 @@ def add_algo(
             f"RUN cd /connectlib && python{python_major_minor} -m pip install {wheel_name}"
         )
     else:
+        # TODO: add private pypi
         connectlib_install_cmd = f"RUN python{python_major_minor} -m pip install connectlib=={connectlib.__version__}"
 
     algo_path = registered_algo.algo_dir / "algo.py"
@@ -88,7 +92,7 @@ def add_algo(
             DOCKERFILE_TEMPLATE.format(
                 python_major_minor,
                 connectlib_install_cmd,
-                "RUN python{python_major_minor} -m pip install " + " ".join(dependencies)
+                f"RUN python{python_major_minor} -m pip install " + " ".join(dependencies)
                 if dependencies is not None
                 else "",  # Dependencies
                 registered_algo.cloudpickle_path.name,
@@ -108,8 +112,8 @@ def add_algo(
 
     print(registered_algo.algo_dir)
 
-    algo_key = client.add_algo(
-        substra.sdk.schemas.AlgoSpec(
+    algo_key = client.add_composite_algo(
+        substra.sdk.schemas.CompositeAlgoSpec(
             name=registered_algo.algo_cls.__name__,
             description=description_path,
             file=archive_path,

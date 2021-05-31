@@ -47,17 +47,6 @@ The main possible types are:
 The scopes are the names of the modules in ConnectLib. It is not recommended but possible to have several scopes,
 in that case separate them with commas.
 
-**Example**: example of a feature that adds a Chowder module and Algorithm.
-
-::
-
-    feat(modules, algorithms): this commit is on several packages
-
-    More precise description of the feature, that goes on several lines.
-    It can be an explanation of why a particuliar implementation for example.
-
-    This is the footer with for example the GitHub issue number. #85
-
 Local development
 -----------------
 
@@ -71,8 +60,8 @@ You will first need to clone the repository using `git` and place yourself in it
 
 .. code:: bash
 
-    git clone git@gitlab.com:owkin/galaxy/belt/represent.git
-    cd represent
+    git clone git@github.com:owkin/connectlib.git
+    cd connectlib
 
 Now, you will need to install the required dependency for Poetry and be sure that the current
 tests are passing on your machine:
@@ -146,31 +135,3 @@ The test function names are of the format
 - I wrote a function `my_function` in `package > utils > functional.py`.
 - I add relevant tests in the test file: `tests > utils > test_functional.py`
 - My test functions are named: `test_my_function_accepts_nan`, `test_my_function_error_if_input_dim_2`
-
-Non-regression tests
-^^^^^^^^^^^^^^^^^^^^
-
-Some of the most important modules have "non-regression" tests that make sure that for a given input, the output
-of the module stays the same for every commit. This kind of test make sure that the performances of the modules are
-stable.
-
-To write a non-regression test:
-
-.. code:: python
-
-    # The first fixture MUST BE non_regression_tracking
-    # This fixture will fix the seeding and provide a callable to track tensors
-    def test_module_non_regression(non_regression_tracking, resources_path, ...):
-        x = torch.randn(...)
-        module = Module(...)
-        # if your module contains batch norms or dropout
-        module.eval()
-
-        y = module(x)
-
-        # Test specific file in tests/resources
-        # The test_pth extension is tracked by git-lfs
-        non_regression_tensors_path = resources_path / "test_module_non_regression.test_pth"
-
-        # Specify which tensor to track
-        non_regression_tracking(y, assets_path=non_regression_tensors_path)
