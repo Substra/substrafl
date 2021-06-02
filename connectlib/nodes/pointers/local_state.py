@@ -1,0 +1,2 @@
+class LocalStatePointer:
+    pass

@@ -113,3 +113,7 @@ class FedAVG(Strategy):
 #
 #         # Transmit updates to server
 #         agg_update = server.aggregate_updates(updates=updates)
+
+
+class FedAvg:
+    def perform_round(self, train_):
