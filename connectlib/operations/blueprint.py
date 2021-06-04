@@ -17,8 +17,8 @@ class Blueprint(Generic[CLS]):
         return hash((self.cls, self.parameters))
 
 
-def blueprint(cls: CLS) -> Callable[..., Blueprint]:
-    def blueprint_cls(*args, **kwargs) -> Blueprint:
+def blueprint(cls: CLS) -> Callable[..., Blueprint[CLS]]:
+    def blueprint_cls(*args, **kwargs) -> Blueprint[CLS]:
         # TypeError if types are not [str, int, float, bool, None]
         parameters = json.dumps({"args": args, "kwargs": kwargs})
 

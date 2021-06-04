@@ -1,7 +1,7 @@
 import substra
 import uuid
 
-from typing import Optional, List, TypeVar, Dict
+from typing import Optional, List, TypeVar, Dict, Type
 
 from connectlib.nodes.references import SharedStateRef
 from connectlib.nodes.register import register_aggregate_op
@@ -19,7 +19,7 @@ class AggregationNode(Node):
 
     def compute(
         self,
-        operation: Blueprint[AggregateOp],
+        operation: Blueprint[Type[AggregateOp]],
         shared_states: Optional[List[SharedStateRef]] = None,
     ) -> SharedStateRef:
         if not isinstance(operation, Blueprint):
@@ -28,10 +28,10 @@ class AggregationNode(Node):
                 f"Given: {type(operation)}",
                 "Have you decorated your AggregateOp with @blueprint?",
             )
-        if not isinstance(operation.cls, AggregationNode):
+        if not issubclass(operation.cls, AggregateOp):
             raise TypeError(
                 "operation must be a Blueprint of an AggregateOp",
-                f"Given: {type(operation.cls)}",
+                f"Given: {operation.cls}",
             )
 
         op_id = uuid.uuid4().hex

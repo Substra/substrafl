@@ -1,20 +1,24 @@
 import substra
 import uuid
 
-from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict, Type
 
 from connectlib.nodes.references import (
     LocalStateRef,
     SharedStateRef,
-    RemoteTrainRef,
-    AlgoRef,
 )
+from connectlib.algorithms import Algo
+from connectlib.operations.blueprint import Blueprint
+from connectlib.operations import RemoteTrainOp
 from connectlib.nodes import Node
+from connectlib.nodes.register import register_algo
+
+OperationKey = str
 
 
-@dataclass
 class TrainDataNode(Node):
+    CACHE: Dict[Blueprint[Union[Algo, RemoteTrainOp]], OperationKey] = {}
+
     def __init__(
         self,
         node_id: str,
@@ -30,18 +34,32 @@ class TrainDataNode(Node):
 
     def compute(
         self,
-        operation: Union[AlgoRef, RemoteTrainRef],
+        operation: Blueprint[Union[Type[Algo], Type[RemoteTrainOp]]],
         data_sample_keys: Optional[List[str]] = None,
         local_state: Optional[LocalStateRef] = None,
         shared_state: Optional[SharedStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
+        if not isinstance(operation, Blueprint):
+            raise TypeError(
+                "operation must be a Blueprint",
+                f"Given: {type(operation)}",
+                "Have you decorated your Algo or RemoteTrainOp with @blueprint?",
+            )
+        if not issubclass(operation.cls, Algo) and not issubclass(
+            operation.cls, RemoteTrainOp
+        ):
+            raise TypeError(
+                "operation must be a Blueprint of an Algo or RemoteTrainOp",
+                f"Given: {operation.cls}",
+            )
+
         if data_sample_keys is None:
             data_sample_keys = self.data_sample_keys
 
         op_id = uuid.uuid4().hex
 
         train_tuple = {
-            "algo_key": operation.key,
+            "algo_key": operation,
             "data_manager_key": self.data_manager_key,
             "train_data_sample_keys": data_sample_keys,
             "in_head_model_id": local_state.key if local_state is not None else None,
@@ -54,6 +72,23 @@ class TrainDataNode(Node):
 
         return LocalStateRef(op_id), SharedStateRef(op_id)
 
-    def set_permissions(self, permissions: substra.sdk.schemas.Permissions):
+    def register_operations(
+        self, client: substra.Client, permissions: substra.sdk.schemas.Permissions
+    ):
         for tuple in self.tuples:
-            tuple["out_trunk_model_permissions"] = permissions
+            if tuple.get("out_trunk_model_permissions", None) is None:
+                tuple["out_trunk_model_permissions"] = permissions
+
+            if isinstance(tuple["algo_key"], Blueprint):
+                blueprint: Blueprint[Union[Algo, RemoteTrainOp]] = tuple["algo_key"]
+
+                if blueprint not in self.CACHE:
+                    operation_key = register_algo(
+                        client, blueprint=blueprint, permisions=permissions
+                    ).key
+                    self.CACHE[blueprint] = operation_key
+
+                else:
+                    operation_key = self.CACHE[blueprint]
+
+                tuple["algo_key"] = operation_key

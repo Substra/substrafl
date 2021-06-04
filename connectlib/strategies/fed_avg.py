@@ -1,15 +1,13 @@
-import uuid
-import substra
-
 import numpy as np
 
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Type
 
+from connectlib.algorithms import Algo
 from connectlib.operations import AggregateOp
 from connectlib.operations.blueprint import blueprint
 from connectlib.nodes import TrainDataNode, AggregationNode
-from connectlib.nodes.references import LocalStateRef, SharedStateRef, AlgoRef
-from connectlib.nodes.register import register_aggregate_op
+from connectlib.operations.blueprint import Blueprint
+from connectlib.nodes.references import LocalStateRef, SharedStateRef
 from connectlib.strategies.strategy import Strategy
 
 SharedState = Dict[str, np.array]
@@ -40,7 +38,7 @@ class FedAVG(Strategy):
 
     def perform_round(
         self,
-        algo: AlgoRef,
+        algo: Blueprint[Type[Algo]],
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         local_states: Optional[List[LocalStateRef]],

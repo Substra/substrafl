@@ -43,9 +43,9 @@ def test_end_2_end():
     org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
 
     from algo.algo import MyAlgo
+    from connectlib.orchestrator import Orchestrator
     from connectlib.strategies import FedAVG
     from connectlib.nodes import TrainDataNode, AggregationNode
-    from connectlib.nodes.register import register_algo
 
     train_data_nodes = [
         TrainDataNode("0", org1_dataset_key, [org1_data_sample_key], "fake_objective"),
@@ -57,31 +57,5 @@ def test_end_2_end():
     my_algo = MyAlgo()
     strategy = FedAVG(1, 1)
 
-    algo_ptr = register_algo(org1_client, my_algo, permisions=DEFAULT_PERMISSIONS)
-
-    strategy.perform_round(
-        algo=algo_ptr,
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
-        local_states=None,
-        shared_state=None,
-    )
-
-    permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=["0", "1"])
-
-    composite_traintuples = []
-    for node in train_data_nodes:
-        node.set_permissions(permissions)
-        composite_traintuples += node.tuples
-
-    aggregation_node.register_operations(org1_client, permissions)
-
-    print(composite_traintuples, aggregation_node.tuples)
-
-    compute_plan = org1_client.add_compute_plan(
-        {
-            "composite_traintuples": composite_traintuples,
-            "aggregatetuples": aggregation_node.tuples,
-            "tag": str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
-        }
-    )
+    orchestrator = Orchestrator(my_algo, strategy)
+    orchestrator.run(org1_client, train_data_nodes, aggregation_node)
