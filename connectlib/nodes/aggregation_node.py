@@ -1,36 +1,30 @@
-import substratools
+import uuid
 
-from abc import abstractmethod
-from dataclasses import dataclass
 from typing import Optional, List, TypeVar
-from pathlib import Path
 
-from connectlib.operations import AggregateOp
-from connectlib.nodes.pointers import SharedStatePointer
+from connectlib.nodes.pointers import SharedStatePointer, AggregatePointer
+from connectlib.nodes import Node
 
 SharedState = TypeVar("SharedState")
 
 
-@dataclass
-class AggregationNode:
-    node_id: str
+class AggregationNode(Node):
+    def add(
+        self,
+        operation_pointer: AggregatePointer,
+        shared_state_pointers: Optional[List[SharedStatePointer]] = None,
+    ) -> SharedStatePointer:
+        op_id = uuid.uuid4().hex
 
-    def submit(self,
-               operation: AggregateOp,
-               shared_state_pointer: Optional[SharedStatePointer] = None) \
-            -> SharedStatePointer:
-        pass
+        aggregate_tuple = {
+            "algo_key": operation_pointer.key,
+            "worker": self.node_id,
+            "in_models_ids": [pointer.key for pointer in shared_state_pointers]
+            if shared_state_pointers is not None
+            else None,
+            "tag": "aggregate",
+            "aggregatetuple_id": op_id,
+        }
+        self.tuples.append(aggregate_tuple)
 
-
-class AggregateExecutor(substratools.AggregateAlgo):
-    def __init__(self, operation: AggregateOp):
-        self.operation = operation
-
-    def aggregate(self, inmodels: List[SharedState], rank) -> SharedState:
-        return self.operation(inmodels)
-
-    def load_model(self, path: str) -> SharedState:
-        return self.operation.shared_state_serializer.load(Path(path))
-
-    def save_model(self, model: SharedState, path: str):
-        self.operation.shared_state_serializer.save(model, Path(path))
+        return SharedStatePointer(key=op_id)

@@ -1,12 +1,33 @@
 import uuid
 import substra
 
-from typing import List, Optional
+import numpy as np
 
-from .strategy import Strategy
-from .aggregators import AvgAggregator
-from .aggregators.substra_utils import add_aggregator
-from ..specs.node import NodeSpec
+from typing import List, Optional, Dict
+
+from connectlib.operations import AggregateOp
+from connectlib.operations.blueprint import blueprint
+from connectlib.nodes import TrainDataNode, AggregationNode
+from connectlib.nodes.pointers import LocalStatePointer, SharedStatePointer, AlgoPointer
+from connectlib.nodes.register import register_aggregate_op
+from connectlib.strategies.strategy import Strategy
+
+SharedState = Dict[str, np.array]
+
+
+@blueprint
+class AvgAggregateOp(AggregateOp):
+    def __call__(self, shared_states: List[SharedState]) -> SharedState:
+        # get keys
+        keys = shared_states[0].keys()
+
+        # average weights
+        averaged_states = {}
+        for key in keys:
+            states = np.stack([state[key] for state in shared_states])
+            averaged_states[key] = np.mean(states, axis=0)
+
+        return averaged_states
 
 
 class FedAVG(Strategy):
@@ -14,106 +35,43 @@ class FedAVG(Strategy):
         self.num_rounds = num_rounds
         self.num_updates = num_updates
 
-        self.aggregator_key = None
-
-    def register_aggregator(
-        self, client: substra.Client, permisions: substra.sdk.schemas.Permissions
-    ) -> str:
-        return add_aggregator(client, AvgAggregator, permisions)
+        self.avg_op = None
 
     def perform_round(
         self,
         client: substra.Client,
-        algo_key: str,
-        agg_key: Optional[str],
-        node_specs: List[NodeSpec],
+        algo: AlgoPointer,
+        train_data_nodes: List[TrainDataNode],
+        aggregation_node: AggregationNode,
+        local_states: Optional[List[LocalStatePointer]],
+        shared_state: Optional[SharedStatePointer],
     ):
-        node_ids = [node_spec.node_id for node_spec in node_specs]
+        if self.avg_op is None:
+            authorized_ids = [aggregation_node.node_id] + [
+                node.node_id for node in train_data_nodes
+            ]
+            permissions = substra.sdk.schemas.Permissions(
+                public=False, authorized_ids=authorized_ids
+            )
+            self.avg_op = register_aggregate_op(
+                client, blueprint=AvgAggregateOp(), permisions=permissions
+            )
 
-        permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=node_ids)
+        next_local_states = []
+        states_to_aggregate = []
+        for i, node in enumerate(train_data_nodes):
+            previous_local_state = local_states[i] if local_states is not None else None
 
-        if self.aggregator_key is None:
-            self.aggregator_key = self.register_aggregator(client, permisions=permissions)
+            next_local_state, next_shared_state = node.add(
+                algo,
+                local_state_pointer=previous_local_state,
+                shared_state_pointer=shared_state,
+            )
+            next_local_states.append(next_local_state)
+            states_to_aggregate.append(next_shared_state)
 
-        composite_traintuple = [
-            {
-                "algo_key": algo_key,
-                "data_manager_key": node_spec.data_manager_key,
-                "train_data_sample_keys": node_spec.data_sample_keys,
-                "in_head_model_id": None,
-                "in_trunk_model_id": agg_key,
-                "out_trunk_model_permissions": permissions,
-                "tag": node_spec.objective_name,
-                "composite_traintuple_id": uuid.uuid4().hex,
-            }
-            for node_spec in node_specs
-        ]
+        avg_shared_state = aggregation_node.add(
+            self.avg_op, shared_state_pointers=states_to_aggregate
+        )
 
-        previous_composite_ids = [ct["composite_traintuple_id"] for ct in composite_traintuple]
-
-        aggregatetuple = {
-            "algo_key": self.aggregator_key,
-            "worker": node_ids[0],
-            "in_models_ids": previous_composite_ids,
-            "tag": node_specs[0].objective_name,
-            "aggregatetuple_id": uuid.uuid4().hex,
-        }
-
-        return composite_traintuple, aggregatetuple
-
-    # def perform_round(self, ...):
-    #     results = []
-    #     for node in node_specs:
-    #         result = node.execute(algo.perform_round())
-    #         results.append(result)
-    #
-    #     avg_result = aggregator_node.execute(self.aggregate_states(results))
-    #
-    #     return avg_result
-
-    def run(
-        self,
-        client: substra.Client,
-        algo_key: str,
-        init_agg_key: str,
-        node_specs: List[NodeSpec],
-    ):
-        for round in range(self.num_rounds):
-            # TODO: add a way of selecting data samples inside node_specs
-            # TODO: either pass indices or create new NodeSpec instances
-            self.perform_round(client, algo_key, init_agg_key, node_specs=node_specs)
-
-
-#
-# class FedAVG:
-#     ...
-#
-#     def perform_round(self, hospitals: List):
-#
-#         results = []
-#         for hospital in hospitals:
-#             result = perform_update(hospital)
-#             results.append(result)
-#
-#         agg = aggregate(results)
-#
-#
-# class RucheFedAVG:
-#     ...
-#
-#     def perform_round(self):
-#         updates = []
-#         for i, client in enumerate(clients):
-#             tokens_list = client.data_indexer.generate_tokens(self._num_updates)
-#             client_update = client.compute_updates(tokens_list=tokens_list)
-#
-#             updates.append(client_update)
-#             if verbose > 0:
-#                 print(" - Client {} emitted updates".format(i))
-#
-#         # Transmit updates to server
-#         agg_update = server.aggregate_updates(updates=updates)
-
-
-class FedAvg:
-    def perform_round(self, train_):
+        return next_local_states, avg_shared_state

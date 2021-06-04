@@ -2,5 +2,5 @@ from dataclasses import dataclass
 
 
 @dataclass
-class LocalStatePointer:
+class AggregatePointer:
     key: str

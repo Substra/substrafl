@@ -1,3 +1,3 @@
-from .algo import Algo, RegisteredAlgo, register
+from .algo import Algo
 
-__all__ = ["Algo", "RegisteredAlgo", "register"]
+__all__ = ["Algo"]

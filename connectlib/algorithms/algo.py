@@ -1,15 +1,11 @@
-import json
 import substratools
-import cloudpickle
 import pickle
-import tempfile
 
 import numpy as np
 
 from abc import abstractmethod
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Tuple, Any, Optional, Callable, Type
+from typing import Dict, Tuple, Any, Optional
 
 
 class Algo(substratools.CompositeAlgo):
@@ -52,10 +48,10 @@ class Algo(substratools.CompositeAlgo):
         self,
         X: Any,
         y: Any,
-        head_model: Optional["Algo"], # instance of own type
-        trunk_model: Optional[Dict[str, np.array]], # shared state
+        head_model: Optional["Algo"],  # instance of own type
+        trunk_model: Optional[Dict[str, np.array]],  # shared state
         rank: int,
-    ):
+    ) -> Tuple["Algo", Dict[str, np.array]]:
 
         if head_model is None:
             head_model = self
@@ -97,31 +93,3 @@ class Algo(substratools.CompositeAlgo):
 
     def save_head_model(self, model: "Algo", path: str):
         model.save(Path(path))
-
-
-@dataclass
-class RegisteredAlgo:
-    algo_cls: Algo
-    algo_dir: Path
-    parameters_path: Path
-    cloudpickle_path: Path
-
-
-def register(cls: Algo) -> Callable[..., RegisteredAlgo]:
-    def pickle_algo(*args, **kwargs) -> RegisteredAlgo:
-        parameters = {"args": args, "kwargs": kwargs}
-
-        algo_dir = Path(tempfile.mkdtemp())
-        parameters_path = algo_dir / "parameters.json"
-        cloudpickle_path = algo_dir / "cloudpickle"
-
-        with parameters_path.open("w") as f:
-            # TypeError if types are not [str, int, float, bool, None]
-            json.dump(parameters, f)
-
-        with cloudpickle_path.open("wb") as f:
-            cloudpickle.dump(cls, f)
-
-        return RegisteredAlgo(cls, algo_dir, parameters_path, cloudpickle_path)
-
-    return pickle_algo

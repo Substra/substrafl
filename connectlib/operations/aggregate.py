@@ -1,25 +1,29 @@
-from abc import ABC, abstractmethod
-from typing import List, TypeVar, Type
+import substratools
 
-from connectlib.operations.serializers import PickleSerializer
+from abc import abstractmethod
+from typing import List, TypeVar, Type, Optional
+from pathlib import Path
+
+from connectlib.operations.serializers import PickleSerializer, Serializer
 
 SharedState = TypeVar("SharedState")
 
 
-class AggregateOp(ABC):
-    @property
-    def shared_state_serializer(self) -> Type[PickleSerializer]:
-        return PickleSerializer
-
+class AggregateOp(substratools.AggregateAlgo):
     @abstractmethod
-    def __call__(self, shared_states: List[SharedState]) -> SharedState:
+    def __call__(self, shared_states: Optional[List[SharedState]]) -> SharedState:
         raise NotImplementedError
 
+    @property
+    def shared_state_serializer(self) -> Type[Serializer]:
+        return PickleSerializer
 
-class AvgOp(AggregateOp):
-    def __init__(self, arg1):
-        self.arg1 = arg1
+    # Substra methods
+    def aggregate(self, inmodels: Optional[List[SharedState]], rank: int) -> SharedState:
+        return self(inmodels)
 
+    def load_model(self, path: str):
+        self.shared_state_serializer.load(Path(path))
 
-    def __call__(self, shared_states: List[Dict[str, np.array]]) -> Dict[str, np.array]:
-        pass
+    def save_model(self, model: SharedState, path: str):
+        self.shared_state_serializer.save(model, Path(path))

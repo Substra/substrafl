@@ -1,5 +1,5 @@
 from .aggregate import AggregateOp
-from .remote_train_data import RemoteTrainDataOp
-from .remote_test_data import RemoteTestDataOp
+from .remote_train import RemoteTrainOp
+from .remote_test import RemoteTestOp
 
-__all__ = ["AggregateOp", "RemoteTrainDataOp", "RemoteTestDataOp"]
+__all__ = ["AggregateOp", "RemoteTrainOp", "RemoteTestOp"]

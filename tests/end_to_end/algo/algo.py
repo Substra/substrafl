@@ -3,10 +3,11 @@ import numpy as np
 from pathlib import Path
 from typing import Optional, Tuple, Dict
 
-from connectlib.algorithms import Algo, register
+from connectlib.algorithms import Algo
+from connectlib.operations.blueprint import blueprint
 
 
-@register
+@blueprint
 class MyAlgo(Algo):
     def __init__(self):
         self._weights = {"test": np.random.randn(8, 16)}
