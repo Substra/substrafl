@@ -12,11 +12,11 @@ from pathlib import Path
 from platform import python_version
 
 from connectlib.operations.blueprint import Blueprint
-from connectlib.nodes.pointers import (
-    AggregatePointer,
-    AlgoPointer,
-    RemoteTestPointer,
-    RemoteTrainPointer,
+from connectlib.nodes.references import (
+    AggregateRef,
+    AlgoRef,
+    RemoteTestRef,
+    RemoteTrainRef,
 )
 
 # TODO: change the base Image to a python image
@@ -155,7 +155,7 @@ def register_aggregate_op(
     blueprint: Blueprint,
     permisions: substra.sdk.schemas.Permissions,
     dependencies: Optional[List[str]] = None,
-) -> AggregatePointer:
+) -> AggregateRef:
     archive_path, description_path = prepare_blueprint(blueprint, dependencies=dependencies)
 
     key = client.add_aggregate_algo(
@@ -168,7 +168,7 @@ def register_aggregate_op(
         )
     )
 
-    return AggregatePointer(key)
+    return AggregateRef(key)
 
 
 def _register_remote_data_op(
@@ -197,9 +197,9 @@ def register_remote_train_op(
     blueprint: Blueprint,
     permisions: substra.sdk.schemas.Permissions,
     dependencies: Optional[List[str]] = None,
-) -> RemoteTrainPointer:
+) -> RemoteTrainRef:
     key = _register_remote_data_op(client, blueprint, permisions, dependencies)
-    return RemoteTrainPointer(key)
+    return RemoteTrainRef(key)
 
 
 def register_remote_test_op(
@@ -207,9 +207,9 @@ def register_remote_test_op(
     blueprint: Blueprint,
     permisions: substra.sdk.schemas.Permissions,
     dependencies: Optional[List[str]] = None,
-) -> RemoteTestPointer:
+) -> RemoteTestRef:
     key = _register_remote_data_op(client, blueprint, permisions, dependencies)
-    return RemoteTestPointer(key)
+    return RemoteTestRef(key)
 
 
 def register_algo(
@@ -217,9 +217,9 @@ def register_algo(
     blueprint: Blueprint,
     permisions: substra.sdk.schemas.Permissions,
     dependencies: Optional[List[str]] = None,
-) -> AlgoPointer:
+) -> AlgoRef:
     key = _register_remote_data_op(client, blueprint, permisions, dependencies)
-    return AlgoPointer(key)
+    return AlgoRef(key)
 
 
 # TODO: add code to clean archives and other files

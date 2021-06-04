@@ -60,7 +60,6 @@ def test_end_2_end():
     algo_ptr = register_algo(org1_client, my_algo, permisions=DEFAULT_PERMISSIONS)
 
     strategy.perform_round(
-        org1_client,
         algo=algo_ptr,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
@@ -74,6 +73,8 @@ def test_end_2_end():
     for node in train_data_nodes:
         node.set_permissions(permissions)
         composite_traintuples += node.tuples
+
+    aggregation_node.register_operations(org1_client, permissions)
 
     print(composite_traintuples, aggregation_node.tuples)
 

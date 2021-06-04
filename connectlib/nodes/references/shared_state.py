@@ -2,5 +2,5 @@ from dataclasses import dataclass
 
 
 @dataclass
-class RemoteTrainPointer:
+class SharedStateRef:
     key: str

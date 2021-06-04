@@ -2,5 +2,5 @@ from dataclasses import dataclass
 
 
 @dataclass
-class RemoteTestPointer:
+class LocalStateRef:
     key: str
