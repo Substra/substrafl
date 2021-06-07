@@ -1,19 +1,18 @@
 import datetime
 import substra
 
-from typing import List, Type
+from typing import List
 
 from connectlib.algorithms import Algo
 from connectlib.nodes import TrainDataNode, AggregationNode
 from connectlib.strategies import FedAVG
-from connectlib.operations.blueprint import Blueprint
-
 
 
 class Orchestrator:
-    def __init__(self, algo: Blueprint[Type[Algo]], strategy: FedAVG):
+    def __init__(self, algo: Algo, strategy: FedAVG, num_rounds: int):
         self.algo = algo
         self.strategy = strategy
+        self.num_rounds = num_rounds
 
     def run(
         self,
@@ -21,13 +20,12 @@ class Orchestrator:
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
     ):
-        self.strategy.perform_round(
-            algo=self.algo,
-            train_data_nodes=train_data_nodes,
-            aggregation_node=aggregation_node,
-            local_states=None,
-            shared_state=None,
-        )
+        for _ in range(self.num_rounds):
+            self.strategy.perform_round(
+                algo=self.algo,
+                train_data_nodes=train_data_nodes,
+                aggregation_node=aggregation_node,
+            )
 
         authorized_ids = [aggregation_node.node_id] + [
             node.node_id for node in train_data_nodes
@@ -51,3 +49,5 @@ class Orchestrator:
                 "tag": str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
             }
         )
+
+        return compute_plan

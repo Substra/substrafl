@@ -1,3 +1,4 @@
+import uuid
 import os
 import cloudpickle
 import tempfile
@@ -11,7 +12,7 @@ from typing import Optional, List, Tuple
 from pathlib import Path
 from platform import python_version
 
-from connectlib.operations.blueprint import Blueprint
+from connectlib.remote.methods import RemoteStruct
 
 # TODO: change the base Image to a python image
 DOCKERFILE_TEMPLATE = """
@@ -29,41 +30,49 @@ RUN python{0} -m pip install -U pip
 {2}
 
 COPY ./algo.py /algo/algo.py
-COPY ./{3} /algo/cloudpickle
-COPY ./{4} /algo/parameters.json
+COPY ./{3} /algo/cls_cloudpickle
+COPY ./{4} /algo/cls_parameters.json
+COPY ./{5} /algo/remote_cls_parameters.json
 
 ENTRYPOINT ["python{0}", "/algo/algo.py"]
 """
 
-# TODO: Let user use their own seed if they want
-# TODO: the SEED needs to be read/write from disk
-# TODO: the SEED needs to be incremented for every execution
 ALGO = """
 import json
 import cloudpickle
 
 import substratools as tools
 
+from connectlib.remote.methods import {0}
+
 from pathlib import Path
 
 if __name__ == "__main__":
-    parameters_path = Path(__file__).parent / "parameters.json"
+    cls_parameters_path = Path(__file__).parent / "cls_parameters.json"
 
-    with parameters_path.open("r") as f:
-        parameters = json.load(f)
+    with cls_parameters_path.open("r") as f:
+        cls_parameters = json.load(f)
+    print(cls_parameters)
 
-    cloudpickle_path = Path(__file__).parent / "cloudpickle"
+    cls_cloudpickle_path = Path(__file__).parent / "cls_cloudpickle"
 
-    with cloudpickle_path.open("rb") as f:
+    with cls_cloudpickle_path.open("rb") as f:
         cls = cloudpickle.load(f)
 
-    tools.algo.execute(cls(*parameters["args"], **parameters["kwargs"]))
+    instance = cls(*cls_parameters["args"], **cls_parameters["kwargs"])
+
+    remote_cls_parameters_path = Path(__file__).parent / "remote_cls_parameters.json"
+
+    with remote_cls_parameters_path.open("r") as f:
+        remote_cls_parameters = json.load(f)
+
+    tools.algo.execute({0}(instance, *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]))
 """
 
 
-def prepare_blueprint(
-        blueprint: Blueprint,
-        dependencies: Optional[List[str]] = None,
+def prepare_substra_algo(
+    remote_struct: RemoteStruct,
+    dependencies: Optional[List[str]] = None,
 ) -> Tuple[Path, Path]:
     # Create temporary directory where we will serialize:
     # - the class Cloudpickle
@@ -74,15 +83,20 @@ def prepare_blueprint(
     # - the algo.py entrypoint
     operation_dir = Path(tempfile.mkdtemp())
 
-    # serialize parameters
-    parameters_path = operation_dir / "parameters.json"
-    with parameters_path.open("w") as f:
-        f.write(blueprint.parameters)
-
     # serialize cls
-    cloudpickle_path = operation_dir / "cloudpickle"
+    cloudpickle_path = operation_dir / "cls_cloudpickle"
     with cloudpickle_path.open("wb") as f:
-        cloudpickle.dump(blueprint.cls, f)
+        cloudpickle.dump(remote_struct.cls, f)
+
+    # serialize cls parameters
+    cls_parameters_path = operation_dir / "cls_parameters.json"
+    with cls_parameters_path.open("w") as f:
+        f.write(remote_struct.cls_parameters)
+
+    # serialize remote cls parameters
+    remote_cls_parameters_path = operation_dir / "remote_cls_parameters.json"
+    with remote_cls_parameters_path.open("w") as f:
+        f.write(remote_struct.remote_cls_parameters)
 
     # get python version
     # Required to select the correct version of python inside the docker Image
@@ -109,12 +123,12 @@ def prepare_blueprint(
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
     with algo_path.open("w") as f:
-        f.write(ALGO)
+        f.write(ALGO.format(remote_struct.remote_cls_name))
 
     # Write description
     description_path = operation_dir / "description.md"
     with description_path.open("w") as f:
-        f.write(f"# ConnnectLib Operation: {blueprint.cls.__name__}")
+        f.write("# ConnnectLib Operation")
 
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
@@ -127,7 +141,8 @@ def prepare_blueprint(
                 if dependencies is not None
                 else "",  # Dependencies
                 cloudpickle_path.name,
-                parameters_path.name,
+                cls_parameters_path.name,
+                remote_cls_parameters_path.name,
             )
         )
 
@@ -145,16 +160,18 @@ def prepare_blueprint(
 
 
 def register_aggregate_node_op(
-        client: substra.Client,
-        blueprint: Blueprint,
-        permisions: substra.sdk.schemas.Permissions,
-        dependencies: Optional[List[str]] = None,
+    client: substra.Client,
+    remote_struct: RemoteStruct,
+    permisions: substra.sdk.schemas.Permissions,
+    dependencies: Optional[List[str]] = None,
 ) -> str:
-    archive_path, description_path = prepare_blueprint(blueprint, dependencies=dependencies)
+    archive_path, description_path = prepare_substra_algo(
+        remote_struct, dependencies=dependencies
+    )
 
     key = client.add_aggregate_algo(
         substra.sdk.schemas.AggregateAlgoSpec(
-            name=blueprint.cls.__name__,
+            name=uuid.uuid4().hex,
             description=description_path,
             file=archive_path,
             permissions=permisions,
@@ -164,17 +181,19 @@ def register_aggregate_node_op(
     return key
 
 
-def register_remote_data_node_op(
-        client: substra.Client,
-        blueprint: Blueprint,
-        permisions: substra.sdk.schemas.Permissions,
-        dependencies: Optional[List[str]] = None,
+def register_data_node_op(
+    client: substra.Client,
+    remote_struct: RemoteStruct,
+    permisions: substra.sdk.schemas.Permissions,
+    dependencies: Optional[List[str]] = None,
 ) -> str:
-    archive_path, description_path = prepare_blueprint(blueprint, dependencies=dependencies)
+    archive_path, description_path = prepare_substra_algo(
+        remote_struct, dependencies=dependencies
+    )
 
     key = client.add_composite_algo(
         substra.sdk.schemas.CompositeAlgoSpec(
-            name=blueprint.cls.__name__,
+            name=uuid.uuid4().hex,
             description=description_path,
             file=archive_path,
             permissions=permisions,

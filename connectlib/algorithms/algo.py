@@ -1,38 +1,32 @@
-import substratools
-import pickle
-
 import numpy as np
 
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, Any
+
+from connectlib.remote import remote_data
+
+Weights = Dict[str, np.array]
 
 
-class Algo(substratools.CompositeAlgo):
-    SEED: int
-
-    def preprocessing(self, x: Any, y: Optional[Any] = None) -> Tuple[Any, Any]:
-        if y is not None:
-            return x, y
-        else:
-            return x
+class Algo:
+    def __init__(self, seed: int = 42, *args, **kwargs):
+        self.seed = seed
+        self.args = args
+        self.kwargs = kwargs
 
     @abstractmethod
-    def perform_update(self, x: Any, y: Any):
+    def delayed_init(self, seed: int, *args, **kwargs):
         raise NotImplementedError
 
+    @remote_data
     @abstractmethod
-    def test(self, x: Any):
+    def train(self, x: Any, y: Any, num_updates: int, shared_state: Weights) -> Weights:
         raise NotImplementedError
 
-    @property
+    @remote_data
     @abstractmethod
-    def weights(self) -> Dict[str, np.array]:
-        raise NotImplementedError
-
-    @weights.setter
-    @abstractmethod
-    def weights(self, weights: Dict[str, np.array]):
+    def predict(self, x: Any, shared_state: Weights) -> np.array:
         raise NotImplementedError
 
     @abstractmethod
@@ -42,54 +36,3 @@ class Algo(substratools.CompositeAlgo):
     @abstractmethod
     def save(self, path: Path):
         raise NotImplementedError
-
-    # Substra methods
-    def train(
-        self,
-        X: Any,
-        y: Any,
-        head_model: Optional["Algo"],  # instance of own type
-        trunk_model: Optional[Dict[str, np.array]],  # shared state
-        rank: int,
-    ) -> Tuple["Algo", Dict[str, np.array]]:
-
-        if head_model is None:
-            head_model = self
-
-        if trunk_model is None:
-            print("trunk model is None")
-            # raise TypeError("you need to run InitAggregator first")
-        else:
-            head_model.weights = trunk_model
-
-        X, y = self.preprocessing(X, y)
-        head_model.perform_update(X, y)
-
-        return head_model, head_model.weights
-
-    def predict(
-        self, X: Any, head_model: Optional["Algo"], trunk_model: Optional[Dict[str, np.array]]
-    ):
-        assert head_model is not None
-        assert trunk_model is not None
-
-        head_model.weights = trunk_model
-
-        X = self.preprocessing(X)
-        return head_model.test(X)
-
-    def load_trunk_model(self, path: str) -> Dict[str, np.array]:
-        with Path(path).open("rb") as f:
-            weights = pickle.load(f)
-        return weights
-
-    def save_trunk_model(self, model: Dict[str, np.array], path: str):
-        with Path(path).open("wb") as f:
-            pickle.dump(model, f)
-
-    def load_head_model(self, path: str) -> "Algo":
-        self.load(Path(path))
-        return self
-
-    def save_head_model(self, model: "Algo", path: str):
-        model.save(Path(path))

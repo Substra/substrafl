@@ -1,13 +1,12 @@
 import substra
 import uuid
 
-from typing import Optional, List, TypeVar, Dict, Type
+from typing import TypeVar, Dict
 
 from connectlib.nodes.references import SharedStateRef
-from connectlib.nodes.register import register_aggregate_node_op
-from connectlib.operations import AggregateOp
-from connectlib.operations.blueprint import Blueprint
 from connectlib.nodes import Node
+from connectlib.remote.methods import RemoteStruct, AggregateOperation
+from connectlib.remote.register import register_aggregate_node_op
 
 SharedState = TypeVar("SharedState")
 
@@ -15,32 +14,23 @@ OperationKey = str
 
 
 class AggregationNode(Node):
-    CACHE: Dict[Blueprint[AggregateOp], OperationKey] = {}
+    CACHE: Dict[RemoteStruct, OperationKey] = {}
 
-    def compute(
-        self,
-        operation: Blueprint[Type[AggregateOp]],
-        shared_states: Optional[List[SharedStateRef]] = None,
-    ) -> SharedStateRef:
-        if not isinstance(operation, Blueprint):
+    def compute(self, operation: AggregateOperation) -> SharedStateRef:
+        if not isinstance(operation, AggregateOperation):
             raise TypeError(
-                "operation must be a Blueprint",
+                "operation must be a AggregateOperation",
                 f"Given: {type(operation)}",
-                "Have you decorated your AggregateOp with @blueprint?",
-            )
-        if not issubclass(operation.cls, AggregateOp):
-            raise TypeError(
-                "operation must be a Blueprint of an AggregateOp",
-                f"Given: {operation.cls}",
+                "Have you decorated your method with @remote?",
             )
 
         op_id = uuid.uuid4().hex
 
         aggregate_tuple = {
-            "algo_key": operation,
+            "algo_key": operation.remote_struct,
             "worker": self.node_id,
-            "in_models_ids": [ref.key for ref in shared_states]
-            if shared_states is not None
+            "in_models_ids": [ref.key for ref in operation.shared_states]
+            if operation.shared_states is not None
             else None,
             "tag": "aggregate",
             "aggregatetuple_id": op_id,
@@ -53,16 +43,16 @@ class AggregationNode(Node):
         self, client: substra.Client, permissions: substra.sdk.schemas.Permissions
     ):
         for tuple in self.tuples:
-            if isinstance(tuple["algo_key"], Blueprint):
-                blueprint: Blueprint[AggregateOp] = tuple["algo_key"]
+            if isinstance(tuple["algo_key"], RemoteStruct):
+                remote_struct: RemoteStruct = tuple["algo_key"]
 
-                if blueprint not in self.CACHE:
+                if remote_struct not in self.CACHE:
                     operation_key = register_aggregate_node_op(
-                        client, blueprint=blueprint, permisions=permissions
+                        client, remote_struct=remote_struct, permisions=permissions
                     )
-                    self.CACHE[blueprint] = operation_key
+                    self.CACHE[remote_struct] = operation_key
 
                 else:
-                    operation_key = self.CACHE[blueprint]
+                    operation_key = self.CACHE[remote_struct]
 
                 tuple["algo_key"] = operation_key
