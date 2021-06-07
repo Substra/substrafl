@@ -12,12 +12,6 @@ from pathlib import Path
 from platform import python_version
 
 from connectlib.operations.blueprint import Blueprint
-from connectlib.nodes.references import (
-    AggregateRef,
-    AlgoRef,
-    RemoteTestRef,
-    RemoteTrainRef,
-)
 
 # TODO: change the base Image to a python image
 DOCKERFILE_TEMPLATE = """
@@ -68,8 +62,8 @@ if __name__ == "__main__":
 
 
 def prepare_blueprint(
-    blueprint: Blueprint,
-    dependencies: Optional[List[str]] = None,
+        blueprint: Blueprint,
+        dependencies: Optional[List[str]] = None,
 ) -> Tuple[Path, Path]:
     # Create temporary directory where we will serialize:
     # - the class Cloudpickle
@@ -150,12 +144,12 @@ def prepare_blueprint(
     return archive_path, description_path
 
 
-def register_aggregate_op(
-    client: substra.Client,
-    blueprint: Blueprint,
-    permisions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
-) -> AggregateRef:
+def register_aggregate_node_op(
+        client: substra.Client,
+        blueprint: Blueprint,
+        permisions: substra.sdk.schemas.Permissions,
+        dependencies: Optional[List[str]] = None,
+) -> str:
     archive_path, description_path = prepare_blueprint(blueprint, dependencies=dependencies)
 
     key = client.add_aggregate_algo(
@@ -167,15 +161,14 @@ def register_aggregate_op(
             metadata=dict(),
         )
     )
+    return key
 
-    return AggregateRef(key)
 
-
-def _register_remote_data_op(
-    client: substra.Client,
-    blueprint: Blueprint,
-    permisions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
+def register_remote_data_node_op(
+        client: substra.Client,
+        blueprint: Blueprint,
+        permisions: substra.sdk.schemas.Permissions,
+        dependencies: Optional[List[str]] = None,
 ) -> str:
     archive_path, description_path = prepare_blueprint(blueprint, dependencies=dependencies)
 
@@ -190,36 +183,3 @@ def _register_remote_data_op(
     )
 
     return key
-
-
-def register_remote_train_op(
-    client: substra.Client,
-    blueprint: Blueprint,
-    permisions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
-) -> RemoteTrainRef:
-    key = _register_remote_data_op(client, blueprint, permisions, dependencies)
-    return RemoteTrainRef(key)
-
-
-def register_remote_test_op(
-    client: substra.Client,
-    blueprint: Blueprint,
-    permisions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
-) -> RemoteTestRef:
-    key = _register_remote_data_op(client, blueprint, permisions, dependencies)
-    return RemoteTestRef(key)
-
-
-def register_algo(
-    client: substra.Client,
-    blueprint: Blueprint,
-    permisions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
-) -> AlgoRef:
-    key = _register_remote_data_op(client, blueprint, permisions, dependencies)
-    return AlgoRef(key)
-
-
-# TODO: add code to clean archives and other files

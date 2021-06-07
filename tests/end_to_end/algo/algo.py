@@ -10,7 +10,7 @@ from connectlib.operations.blueprint import blueprint
 @blueprint
 class MyAlgo(Algo):
     def __init__(self):
-        self._weights = {"test": np.random.randn(8, 16)}
+        self._shared_state = {"test": np.random.randn(8, 16)}
 
     def preprocessing(
         self, x: np.array, y: Optional[np.array] = None
@@ -24,12 +24,12 @@ class MyAlgo(Algo):
         return np.random.randint(0, 2, size=(len(x), 1))
 
     @property
-    def weights(self) -> Dict[str, np.array]:
-        return self._weights
+    def shared_state(self) -> Dict[str, np.array]:
+        return self._shared_state
 
-    @weights.setter
-    def weights(self, weights: Dict[str, np.array]):
-        self._weights = weights
+    @shared_state.setter
+    def shared_state(self, shared_state: Dict[str, np.array]):
+        self._shared_state = shared_state
 
     def load(self, path: Path):
         pass

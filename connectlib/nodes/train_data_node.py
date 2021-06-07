@@ -11,7 +11,7 @@ from connectlib.algorithms import Algo
 from connectlib.operations.blueprint import Blueprint
 from connectlib.operations import RemoteTrainOp
 from connectlib.nodes import Node
-from connectlib.nodes.register import register_algo
+from connectlib.nodes.register import register_remote_data_node_op
 
 OperationKey = str
 
@@ -83,9 +83,9 @@ class TrainDataNode(Node):
                 blueprint: Blueprint[Union[Algo, RemoteTrainOp]] = tuple["algo_key"]
 
                 if blueprint not in self.CACHE:
-                    operation_key = register_algo(
+                    operation_key = register_remote_data_node_op(
                         client, blueprint=blueprint, permisions=permissions
-                    ).key
+                    )
                     self.CACHE[blueprint] = operation_key
 
                 else:

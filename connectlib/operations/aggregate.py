@@ -27,19 +27,3 @@ class AggregateOp(substratools.AggregateAlgo):
 
     def save_model(self, model: SharedState, path: str):
         self.shared_state_serializer.save(model, Path(path))
-
-
-# def aggregate_op(shared_state_serializer: Type[Serializer] = PickleSerializer) -> Callable:
-#     def aggregate_op_macro(method: Callable[[Optional[List[SharedState]]], SharedState]) -> Blueprint[AggregateOp]:
-#         @blueprint
-#         class AggregateOpMacro(AggregateOp):
-#             @property
-#             def shared_state_serializer(self) -> Type[Serializer]:
-#                 return shared_state_serializer
-#
-#             def __call__(self, shared_states: Optional[List[SharedState]]) -> SharedState:
-#                 return method(shared_states)
-#
-#         return AggregateOpMacro()
-#
-#     return aggregate_op_macro

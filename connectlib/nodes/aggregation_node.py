@@ -4,7 +4,7 @@ import uuid
 from typing import Optional, List, TypeVar, Dict, Type
 
 from connectlib.nodes.references import SharedStateRef
-from connectlib.nodes.register import register_aggregate_op
+from connectlib.nodes.register import register_aggregate_node_op
 from connectlib.operations import AggregateOp
 from connectlib.operations.blueprint import Blueprint
 from connectlib.nodes import Node
@@ -57,9 +57,9 @@ class AggregationNode(Node):
                 blueprint: Blueprint[AggregateOp] = tuple["algo_key"]
 
                 if blueprint not in self.CACHE:
-                    operation_key = register_aggregate_op(
+                    operation_key = register_aggregate_node_op(
                         client, blueprint=blueprint, permisions=permissions
-                    ).key
+                    )
                     self.CACHE[blueprint] = operation_key
 
                 else:
