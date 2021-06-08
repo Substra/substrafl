@@ -10,10 +10,9 @@ from connectlib.remote import remote
 
 
 class FedAVG(Strategy):
-    def __init__(self, num_rounds: int, num_updates: int):
-        self.num_rounds = num_rounds
+    def __init__(self, num_updates: int):
         self.num_updates = num_updates
-        super(FedAVG, self).__init__(num_rounds=num_rounds, num_updates=num_updates, seed=42)
+        super(FedAVG, self).__init__(num_updates=num_updates, seed=42)
 
         # States
         self.local_states = None
@@ -46,7 +45,7 @@ class FedAVG(Strategy):
             )
 
             next_local_state, next_shared_state = node.compute(
-                algo.train(
+                algo.train(  # type: ignore
                     node.data_sample_keys,
                     shared_state=self.avg_shared_state,
                     num_updates=self.num_updates,
@@ -57,7 +56,7 @@ class FedAVG(Strategy):
             states_to_aggregate.append(next_shared_state)
 
         avg_shared_state = aggregation_node.compute(
-            self.avg_shared_states(shared_states=states_to_aggregate)
+            self.avg_shared_states(shared_states=states_to_aggregate)  # type: ignore
         )
 
         self.local_states = next_local_states

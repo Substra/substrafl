@@ -5,11 +5,11 @@ from typing import List
 
 from connectlib.algorithms import Algo
 from connectlib.nodes import TrainDataNode, AggregationNode
-from connectlib.strategies import FedAVG
+from connectlib.strategies import Strategy
 
 
 class Orchestrator:
-    def __init__(self, algo: Algo, strategy: FedAVG, num_rounds: int):
+    def __init__(self, algo: Algo, strategy: Strategy, num_rounds: int):
         self.algo = algo
         self.strategy = strategy
         self.num_rounds = num_rounds

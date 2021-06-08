@@ -1,7 +1,7 @@
 import substra
 import uuid
 
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple
 
 from connectlib.nodes.references import (
     LocalStateRef,
@@ -11,22 +11,16 @@ from connectlib.nodes import Node
 from connectlib.remote.methods import RemoteStruct, DataOperation
 from connectlib.remote.register import register_data_node_op
 
-OperationKey = str
-
 
 class TrainDataNode(Node):
-    CACHE: Dict[RemoteStruct, OperationKey] = {}
-
     def __init__(
         self,
         node_id: str,
         data_manager_key: str,
         data_sample_keys: List[str],
-        objective_name: str,
     ):
         self.data_manager_key = data_manager_key
         self.data_sample_keys = data_sample_keys
-        self.objective_name = objective_name
 
         super(TrainDataNode, self).__init__(node_id)
 

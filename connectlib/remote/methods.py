@@ -32,14 +32,13 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         trunk_model: Optional,  # shared state
         rank: int,
     ) -> Tuple:
-        assert head_model is None
 
         method_to_call = getattr(self.instance, self.method_name)
         next_shared_state = method_to_call(
             x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters
         )
 
-        return next_shared_state, next_shared_state
+        return self.instance, next_shared_state
 
     def predict(self, X: Any, head_model: Optional, trunk_model: Optional):
         assert head_model is None
@@ -58,10 +57,10 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         self.shared_state_serializer.save(model, Path(path))
 
     def load_head_model(self, path: str):
-        return self.shared_state_serializer.load(Path(path))
+        return self.instance.load(Path(path))
 
     def save_head_model(self, model, path: str):
-        self.shared_state_serializer.save(model, Path(path))
+        model.save(Path(path))
 
 
 class RemoteMethod(substratools.AggregateAlgo):

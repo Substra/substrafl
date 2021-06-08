@@ -68,16 +68,17 @@ org2_client = substra.Client(debug=True)
 
 org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
 org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
+###########################
 
 train_data_nodes = [
-    TrainDataNode("0", org1_dataset_key, [org1_data_sample_key], "fake_objective"),
-    TrainDataNode("1", org1_dataset_key, [org1_data_sample_key], "fake_objective"),
+    TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
+    TrainDataNode("1", org2_dataset_key, [org2_data_sample_key]),
 ]
 
 aggregation_node = AggregationNode("0")
 
 my_algo = MyAlgo()
-strategy = FedAVG(1, 1)
+strategy = FedAVG(num_updates=1)
 
-orchestrator = Orchestrator(my_algo, strategy)
+orchestrator = Orchestrator(my_algo, strategy, num_rounds=1)
 orchestrator.run(org1_client, train_data_nodes, aggregation_node)

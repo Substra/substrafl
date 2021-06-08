@@ -1,5 +1,8 @@
+import json
+
 from abc import ABC, abstractmethod
 from typing import TypeVar, List
+from pathlib import Path
 
 from connectlib.algorithms import Algo
 from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
@@ -28,3 +31,10 @@ class Strategy(ABC):
     @abstractmethod
     def predict(self, algo: Algo, test_data_nodes: List[TestDataNode]):
         raise NotImplementedError
+
+    def load(self, path: Path):
+        pass
+
+    def save(self, path: Path):
+        with path.open("w") as f:
+            json.dump({"args": self.args, "kwargs": {**self.kwargs, "seed": self.seed}}, f)

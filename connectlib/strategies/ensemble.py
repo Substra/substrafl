@@ -39,7 +39,7 @@ class Ensemble(Strategy):
             )
 
             next_local_state, next_shared_state = node.compute(
-                algo.train(
+                algo.train(  # type: ignore
                     node.data_sample_keys,
                     shared_state=previous_shared_state,
                     num_updates=self.num_updates,
@@ -50,7 +50,7 @@ class Ensemble(Strategy):
             next_shared_states.append(next_shared_state)
 
         self.stacked_shared_states = aggregation_node.compute(
-            self.stack_states(shared_states=next_shared_states)
+            self.stack_states(shared_states=next_shared_states)  # type: ignore
         )
 
         self.local_states = next_local_states

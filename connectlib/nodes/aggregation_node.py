@@ -14,8 +14,6 @@ OperationKey = str
 
 
 class AggregationNode(Node):
-    CACHE: Dict[RemoteStruct, OperationKey] = {}
-
     def compute(self, operation: AggregateOperation) -> SharedStateRef:
         if not isinstance(operation, AggregateOperation):
             raise TypeError(
