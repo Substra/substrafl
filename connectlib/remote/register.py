@@ -18,7 +18,15 @@ from connectlib.remote.methods import RemoteStruct
 DOCKERFILE_TEMPLATE = """
 FROM substrafoundation/substra-tools:0.7.0
 
-RUN apt-get update && apt-get install -y python{0}
+RUN apt update
+RUN apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
+
+RUN wget https://www.python.org/ftp/python/{6}/Python-{6}.tgz \
+    && tar -xf Python-{6}.tgz \
+    && cd Python-{6} \
+    && ./configure --enable-optimizations \
+    && make -j 12 \
+    && make altinstall
 
 # install dependencies
 RUN python{0} -m pip install -U pip
@@ -143,6 +151,7 @@ def prepare_substra_algo(
                 cloudpickle_path.name,
                 cls_parameters_path.name,
                 remote_cls_parameters_path.name,
+                python_version()
             )
         )
 
