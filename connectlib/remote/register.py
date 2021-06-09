@@ -18,7 +18,7 @@ from connectlib.remote.methods import RemoteStruct
 DOCKERFILE_TEMPLATE = """
 FROM substrafoundation/substra-tools:0.7.0
 
-RUN apt-get update && apt-get install -y python{0}-dev
+RUN apt-get update && apt-get install -y python{0}
 
 # install dependencies
 RUN python{0} -m pip install -U pip
