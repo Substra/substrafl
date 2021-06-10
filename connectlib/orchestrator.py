@@ -4,7 +4,7 @@ import substra
 from typing import List
 
 from connectlib.algorithms import Algo
-from connectlib.nodes import TrainDataNode, AggregationNode
+from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
 from connectlib.strategies import Strategy
 
 
@@ -19,6 +19,7 @@ class Orchestrator:
         client: substra.Client,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
+        test_data_nodes: List[TestDataNode],
     ):
         for _ in range(self.num_rounds):
             self.strategy.perform_round(
@@ -40,12 +41,18 @@ class Orchestrator:
             node.register_operations(client, permissions)
             composite_traintuples += node.tuples
 
+        testtuples = []
+        for node in test_data_nodes:
+            node.register_operations(client, permissions)
+            testtuples += node.tuples
+
         aggregation_node.register_operations(client, permissions)
 
         compute_plan = client.add_compute_plan(
             {
                 "composite_traintuples": composite_traintuples,
                 "aggregatetuples": aggregation_node.tuples,
+                "testtuples": testtuples,
                 "tag": str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
             }
         )

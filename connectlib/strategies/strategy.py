@@ -29,7 +29,13 @@ class Strategy(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def predict(self, algo: Algo, test_data_nodes: List[TestDataNode]):
+    def predict(
+        self,
+        algo: Algo,
+        test_data_nodes: List[TestDataNode],
+        train_data_nodes: List[TrainDataNode],
+    ):
+        # TODO: when substratools testtuples are patched to accept algo_key, we will not need train_data_nodes anymore
         raise NotImplementedError
 
     def load(self, path: Path):

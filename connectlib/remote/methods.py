@@ -14,12 +14,14 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         instance,
         method_name: str,
         method_parameters: Dict,
+        fake_traintuple: bool = False,
         shared_state_serializer: Type[Serializer] = PickleSerializer,
     ):
         self.instance = instance
         self.instance.delayed_init(instance.seed, *instance.args, **instance.kwargs)
 
         self.method_name = method_name
+        self.fake_traintuple = fake_traintuple
         self.method_parameters = method_parameters
 
         self.shared_state_serializer = shared_state_serializer
@@ -32,13 +34,15 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         trunk_model: Optional,  # shared state
         rank: int,
     ) -> Tuple:
+        if not self.fake_traintuple:
+            method_to_call = getattr(self.instance, self.method_name)
+            next_shared_state = method_to_call(
+                x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters
+            )
 
-        method_to_call = getattr(self.instance, self.method_name)
-        next_shared_state = method_to_call(
-            x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters
-        )
-
-        return self.instance, next_shared_state
+            return self.instance, next_shared_state
+        else:
+            return head_model, trunk_model
 
     def predict(self, X: Any, head_model: Optional, trunk_model: Optional):
         assert head_model is None
@@ -140,6 +144,7 @@ def remote_data(method: Callable):
         data_samples: Optional[List[str]] = None,
         shared_state: Optional = None,
         _skip: bool = False,
+        fake_traintuple: bool = False,
         **method_parameters
     ) -> DataOperation:
         if _skip:
@@ -153,7 +158,11 @@ def remote_data(method: Callable):
         cls = self.__class__
         cls_parameters = json.dumps({"args": self.args, "kwargs": self.kwargs})
 
-        kwargs = {"method_name": method.__name__, "method_parameters": method_parameters}
+        kwargs = {
+            "method_name": method.__name__,
+            "method_parameters": method_parameters,
+            "fake_traintuple": fake_traintuple,
+        }
         remote_cls_parameters = json.dumps({"args": [], "kwargs": kwargs})
 
         return DataOperation(

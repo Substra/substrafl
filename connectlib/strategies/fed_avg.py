@@ -62,5 +62,29 @@ class FedAVG(Strategy):
         self.local_states = next_local_states
         self.avg_shared_state = avg_shared_state
 
-    def predict(self, algo: Algo, test_data_nodes: List[TestDataNode]):
-        raise NotImplementedError
+    def predict(
+        self,
+        algo: Algo,
+        test_data_nodes: List[TestDataNode],
+        train_data_nodes: List[TrainDataNode],
+    ):
+        # TODO: REMOVE WHEN HACK IS FIXED
+        traintuple_ids = []
+        for i, node in enumerate(train_data_nodes):
+            previous_local_state = (
+                self.local_states[i] if self.local_states is not None else None
+            )
+
+            traintuple_id, _ = node.compute(
+                algo.predict(  # type: ignore
+                    [node.data_sample_keys[0]],
+                    shared_state=self.avg_shared_state,
+                    num_updates=self.num_updates,
+                    fake_traintuple=True,
+                ),
+                local_state=previous_local_state,
+            )
+            traintuple_ids.append(traintuple_id)
+
+        for i, node in enumerate(test_data_nodes):
+            testtuple = node.compute(traintuple_ids[i])
