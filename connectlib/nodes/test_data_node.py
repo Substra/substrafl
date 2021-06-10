@@ -7,12 +7,13 @@ from connectlib.nodes import Node
 
 
 class TestDataNode(Node):
+    # TODO: improve on comments and docstrings
     def __init__(
         self,
         node_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        objective_key: str,
+        objective_key: str,  # key to the metric, use substra.Client().add_objective()
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys
