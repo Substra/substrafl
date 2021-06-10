@@ -55,7 +55,7 @@ def make_objective(client: substra.Client, asset_dir: Path):
         "description": ASSETS_DIR / "opener" / "description.md",
         "metrics_name": "accuracy",
         "metrics": ASSETS_DIR / "objective" / "metrics.zip",
-        "permissions": DEFAULT_PERMISSIONS  # {"public": False, "authorized_ids": []},
+        "permissions": DEFAULT_PERMISSIONS,  # {"public": False, "authorized_ids": []},
     }
 
     return objective
@@ -68,7 +68,7 @@ def zip_objective(asset_dir: Path):
     archive_path = operation_dir / "metrics.zip"
     with zipfile.ZipFile(archive_path, "w") as z:
         for filepath in operation_dir.glob("*[!.zip]"):
-            print(f'zipped in {filepath}')
+            print(f"zipped in {filepath}")
             z.write(filepath, arcname=os.path.basename(filepath))
 
 
@@ -99,8 +99,6 @@ org2_client = substra.Client(debug=True)
 org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
 org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
 
-###########################"
-
 train_data_nodes = [
     TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
     TrainDataNode("1", org1_dataset_key, [org1_data_sample_key]),
@@ -108,19 +106,21 @@ train_data_nodes = [
 
 OBJECTIVE = make_objective(org1_client, ASSETS_DIR)
 org1_objective_key = org1_client.add_objective(
-        {
-            "name": OBJECTIVE["name"],
-            "description": str(OBJECTIVE["description"]),
-            "metrics_name": OBJECTIVE["metrics_name"],
-            "metrics": str(OBJECTIVE["metrics"]),
-            "test_data_sample_keys": [org1_data_sample_key],
-            "test_data_manager_key": org1_dataset_key,
-            "permissions": OBJECTIVE["permissions"],
-        },
-    )
+    {
+        "name": OBJECTIVE["name"],
+        "description": str(OBJECTIVE["description"]),
+        "metrics_name": OBJECTIVE["metrics_name"],
+        "metrics": str(OBJECTIVE["metrics"]),
+        "test_data_sample_keys": [org1_data_sample_key],
+        "test_data_manager_key": org1_dataset_key,
+        "permissions": OBJECTIVE["permissions"],
+    },
+)
 
 test_data_nodes = [
-    TestDataNode("0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key),
+    TestDataNode(
+        "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
+    ),
 ]
 
 aggregation_node = AggregationNode("0")
@@ -129,5 +129,6 @@ my_algo = MyAlgo()
 strategy = FedAVG(num_updates=1)
 
 orchestrator = Orchestrator(my_algo, strategy, num_rounds=1)
-orchestrator.run(org1_client, train_data_nodes, aggregation_node,
-                 test_data_nodes=test_data_nodes)
+orchestrator.run(
+    org1_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
+)

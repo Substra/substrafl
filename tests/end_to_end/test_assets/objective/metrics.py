@@ -16,5 +16,5 @@ class AccuracyMetric(tools.Metrics):
         return accuracy_score(y_true, y_pred)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tools.metrics.execute(AccuracyMetric())
