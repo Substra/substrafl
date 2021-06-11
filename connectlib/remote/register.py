@@ -30,7 +30,7 @@ RUN wget https://www.python.org/ftp/python/{6}/Python-{6}.tgz \
 
 # install dependencies
 RUN python{0} -m pip install -U pip
-RUN python{0} -m pip install six
+RUN python{0} -m pip install six pytest
 # Install connectlib
 {1}
 
@@ -64,6 +64,7 @@ if __name__ == "__main__":
 
     cls_cloudpickle_path = Path(__file__).parent / "cls_cloudpickle"
 
+    print(__file__)
     with cls_cloudpickle_path.open("rb") as f:
         cls = cloudpickle.load(f)
 
