@@ -13,6 +13,7 @@ class AccuracyMetric(tools.Metrics):
         :type y_pred: pd.DataFrame
         :rtype: float
         """
+        # TODO: make sure that y_pred is what you expect ()
         return accuracy_score(y_true, y_pred)
 
 

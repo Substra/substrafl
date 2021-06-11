@@ -82,7 +82,8 @@ class MyAlgo(Algo):
 
     @remote_data
     def predict(self, x: np.array, shared_state):
-        return np.random.randint(0, 2, size=(len(x), 1))
+        # return np.random.randint(0, 2, size=(len(x), 1))
+        return shared_state
 
     def load(self, path: Path):
         pass
@@ -98,7 +99,9 @@ org2_client = substra.Client(debug=True)
 
 org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
 org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
+# TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
+# TODO: how to have multiple organizations in a debug workflow (ask Fabien)
 train_data_nodes = [
     TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
     TrainDataNode("1", org1_dataset_key, [org1_data_sample_key]),
@@ -121,6 +124,9 @@ test_data_nodes = [
     TestDataNode(
         "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
     ),
+    TestDataNode(
+        "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
+    ),
 ]
 
 aggregation_node = AggregationNode("0")
@@ -132,3 +138,5 @@ orchestrator = Orchestrator(my_algo, strategy, num_rounds=1)
 orchestrator.run(
     org1_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
 )
+
+# TODO: to test fed-avg set weights to constant values and
