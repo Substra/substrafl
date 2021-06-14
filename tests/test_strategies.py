@@ -38,7 +38,7 @@ class MyAlgo(Algo):
 """
 
 
-def register_dataset(client: substra.Client, asset_dir: Path):
+def register_dataset(client: substra.Client, asset_dir: Path, partner_name: str):
     # Add the dataset
     # This is the data opener that for nows returns directly a mdf
     logger.info("Adding dataset")
@@ -49,6 +49,8 @@ def register_dataset(client: substra.Client, asset_dir: Path):
             type="opener - MDF",
             description=asset_dir / "opener" / "description.md",
             permissions=DEFAULT_PERMISSIONS,
+            # this is important in the debug mode to separate the partners
+            metadata={substra.DEBUG_OWNER: partner_name},
         )
     )
 
@@ -199,21 +201,21 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     orchestrator.run(client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes)
     """
 
-    org1_client = substra.Client(debug=True)
+    org_client = substra.Client(debug=True)
     # org2_client = substra.Client(debug=True)
 
-    org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
-    org2_dataset_key, org2_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
+    org1_dataset_key, org1_data_sample_key = register_dataset(org_client, ASSETS_DIR, "0")
+    org2_dataset_key, org2_data_sample_key = register_dataset(org_client, ASSETS_DIR, "1")
     # TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
     # TODO: how to have multiple organizations in a debug workflow (ask Fabien)
     train_data_nodes = [
         TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
-        TrainDataNode("1", org1_dataset_key, [org1_data_sample_key]),
+        TrainDataNode("1", org2_dataset_key, [org2_data_sample_key]),
     ]
 
-    OBJECTIVE = make_objective(org1_client, ASSETS_DIR)
-    org1_objective_key = org1_client.add_objective(
+    OBJECTIVE = make_objective(org_client, ASSETS_DIR)
+    org1_objective_key = org_client.add_objective(
         {
             "name": OBJECTIVE["name"],
             "description": str(OBJECTIVE["description"]),
@@ -225,12 +227,25 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
         },
     )
 
+    OBJECTIVE = make_objective(org_client, ASSETS_DIR)
+    org2_objective_key = org_client.add_objective(
+        {
+            "name": OBJECTIVE["name"],
+            "description": str(OBJECTIVE["description"]),
+            "metrics_name": OBJECTIVE["metrics_name"],
+            "metrics": str(OBJECTIVE["metrics"]),
+            "test_data_sample_keys": [org2_data_sample_key],
+            "test_data_manager_key": org2_dataset_key,
+            "permissions": OBJECTIVE["permissions"],
+        },
+    )
+
     test_data_nodes = [
         TestDataNode(
             "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
         ),
         TestDataNode(
-            "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
+            "1", org2_dataset_key, [org2_data_sample_key], objective_key=org2_objective_key
         ),
     ]
 
@@ -243,5 +258,5 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
 
     orchestrator = Orchestrator(my_algo, strategy, num_rounds=1)
     orchestrator.run(
-        org1_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
+        org_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
     )
