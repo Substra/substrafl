@@ -147,9 +147,15 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     # ensure that the results are as expected
     class MyAlgo(Algo):
         def delayed_init(self, seed: int, *args, **kwargs):
-            self._shared_state = {"test": np.ones([8, 16])}
-            # TODO: you could save init random state of each worker to the local-worker and check if the fed_avg is
-            # indeed the mean of all
+            if "single_state_init" in kwargs.keys():
+                self._shared_state = {"test": np.ones([8, 16]) * kwargs["single_state_init"]}
+            elif seed is not None:
+                # TODO: you could save init random state of each worker to the local-worker and check if the fed_avg is
+                # indeed the mean of all
+                self._shared_state = {"test": np.random.rand(8, 16)}
+            else:
+                raise NotImplementedError
+            print(self._shared_state)
 
         @remote_data
         def train(self, x: np.array, y: np.array, num_updates: int, shared_state):
@@ -251,12 +257,12 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
 
     aggregation_node = AggregationNode("0")
 
-    my_algo = MyAlgo()
+    my_algo0 = MyAlgo(single_state_init=2)
+    # my_algo1 = MyAlgo(single_state_init=1)
 
-    # my_algo.__module__ = '__main__'
-    strategy = FedAVG(num_updates=1)
+    strategy = FedAVG(num_updates=2)
 
-    orchestrator = Orchestrator(my_algo, strategy, num_rounds=1)
+    orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
     orchestrator.run(
         org_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
     )
