@@ -1,6 +1,6 @@
-from sklearn.metrics import accuracy_score
-
 import substratools as tools
+
+import numpy as np
 
 
 class AccuracyMetric(tools.Metrics):
@@ -13,8 +13,11 @@ class AccuracyMetric(tools.Metrics):
         :type y_pred: pd.DataFrame
         :rtype: float
         """
-        # TODO: make sure that y_pred is what you expect ()
-        return accuracy_score(y_true, y_pred)
+        assert np.all(y_pred == 1)
+        # TODO: this is only temporary and used by the tests (tests/test_strategies.py
+        # this should be improved and done for each test separately)
+        # return accuracy_score(y_true, y_pred)
+        return 1.0
 
 
 if __name__ == "__main__":

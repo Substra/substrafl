@@ -27,6 +27,9 @@ class Orchestrator:
                 train_data_nodes=train_data_nodes,
                 aggregation_node=aggregation_node,
             )
+        self.strategy.predict(
+            algo=self.algo, train_data_nodes=train_data_nodes, test_data_nodes=test_data_nodes
+        )
 
         authorized_ids = [aggregation_node.node_id] + [
             node.node_id for node in train_data_nodes

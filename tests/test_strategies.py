@@ -1,6 +1,5 @@
 import numpy as np
 from pathlib import Path
-import pytest
 from loguru import logger
 import os
 import zipfile
@@ -140,14 +139,15 @@ orchestrator.run(
     org1_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
 )
 """
-## MyAlgo.__module__ = '__main__'
 
 
 def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query):
     # ensure that the results are as expected
     class MyAlgo(Algo):
         def delayed_init(self, seed: int, *args, **kwargs):
-            self._shared_state = {"test": np.random.randn(8, 16)}
+            self._shared_state = {"test": np.ones([8, 16])}
+            # TODO: you could save init random state of each worker to the local-worker and check if the fed_avg is
+            # indeed the mean of all
 
         @remote_data
         def train(self, x: np.array, y: np.array, num_updates: int, shared_state):
@@ -155,18 +155,17 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
 
         @remote_data
         def predict(self, x: np.array, shared_state):
-            # return np.random.randint(0, 2, size=(len(x), 1))
-            return shared_state
+            return shared_state["test"]
 
         def load(self, path: Path):
-            pass
+            return self
 
         def save(self, path: Path):
             assert path.parent.exists()
             with path.open("w") as f:
                 f.write("test")
 
-    MyAlgo.__module__ = "__main__"
+    # MyAlgo.__module__ = "__main__"
     """
     my_algo = MyAlgo()
     '''
@@ -201,10 +200,10 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     """
 
     org1_client = substra.Client(debug=True)
-    org2_client = substra.Client(debug=True)
+    # org2_client = substra.Client(debug=True)
 
     org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
-    org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
+    org2_dataset_key, org2_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
     # TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
     # TODO: how to have multiple organizations in a debug workflow (ask Fabien)

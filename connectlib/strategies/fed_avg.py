@@ -75,16 +75,17 @@ class FedAVG(Strategy):
                 self.local_states[i] if self.local_states is not None else None
             )
 
-            traintuple_id, _ = node.compute(
+            assert previous_local_state is not None
+
+            traintuple_id_ref, _ = node.compute(
                 algo.predict(  # type: ignore
                     [node.data_sample_keys[0]],
                     shared_state=self.avg_shared_state,
-                    num_updates=self.num_updates,
                     fake_traintuple=True,
                 ),
                 local_state=previous_local_state,
             )
-            traintuple_ids.append(traintuple_id)
+            traintuple_ids.append(traintuple_id_ref.key)
 
         for i, node in enumerate(test_data_nodes):
-            testtuple = node.compute(traintuple_ids[i])
+            node.compute(traintuple_ids[i])  # compute testtuple

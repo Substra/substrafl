@@ -35,19 +35,28 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         rank: int,
     ) -> Tuple:
         if not self.fake_traintuple:
-            method_to_call = getattr(self.instance, self.method_name)
+            # head_model should be None only at initiation
+            if head_model is not None:
+                instance = head_model
+            else:
+                instance = self.instance
+
+            method_to_call = getattr(instance, self.method_name)
             next_shared_state = method_to_call(
                 x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters
             )
 
-            return self.instance, next_shared_state
+            return instance, next_shared_state
         else:
             return head_model, trunk_model
 
     def predict(self, X: Any, head_model: Optional, trunk_model: Optional):
-        assert head_model is None
+        if head_model is not None:
+            instance = head_model
+        else:
+            instance = self.instance
 
-        method_to_call = getattr(self.instance, self.method_name)
+        method_to_call = getattr(instance, self.method_name)
         predictions = method_to_call(
             x=X, shared_state=trunk_model, _skip=True, **self.method_parameters
         )

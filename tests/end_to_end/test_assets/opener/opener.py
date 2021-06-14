@@ -1,3 +1,5 @@
+import shutil
+
 import numpy as np
 import substratools as tools
 
@@ -10,10 +12,11 @@ class Opener(tools.Opener):
         return np.random.randint(0, 2, size=(1000, 1))
 
     def save_predictions(self, y_pred: np.array, path):
-        np.save(y_pred, path)
+        np.save(path, y_pred)
+        shutil.move(str(path) + ".npy", path)
 
     def get_predictions(self, path):
-        raise NotImplementedError
+        return np.load(path)
 
     def fake_X(self, n_samples=None):
         raise NotImplementedError

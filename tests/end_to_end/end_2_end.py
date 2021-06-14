@@ -86,7 +86,7 @@ class MyAlgo(Algo):
         return shared_state
 
     def load(self, path: Path):
-        pass
+        return self
 
     def save(self, path: Path):
         assert path.parent.exists()
