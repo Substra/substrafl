@@ -14,6 +14,7 @@ import substra
 
 ASSETS_DIR = Path(__file__).parent / "end_to_end" / "test_assets"
 DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_ids=list())
+STATE_PATH = Path.cwd() / "local-worker" / "init_state"
 
 
 def register_dataset(client: substra.Client, asset_dir: Path, partner_name: str):
@@ -76,16 +77,10 @@ def zip_objective(asset_dir: Path):
 def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query):
     # ensure that the results are as expected
     class MyAlgo(Algo):
+        # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
+        # pytest calls it)
         def delayed_init(self, seed: int, *args, **kwargs):
-            if "single_state_init" in kwargs.keys():
-                self._shared_state = {"test": np.ones([8, 16]) * kwargs["single_state_init"]}
-            elif seed is not None:
-                # TODO: you could save init random state of each worker to the local-worker and check if the fed_avg is
-                # indeed the mean of all
-                self._shared_state = {"test": np.random.rand(8, 16)}
-            else:
-                raise NotImplementedError
-            print(self._shared_state)
+            self._shared_state = {"test": kwargs["shared_state"]}
 
         @remote_data
         def train(self, x: np.array, y: np.array, num_updates: int, shared_state):
@@ -103,6 +98,8 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
             with path.open("w") as f:
                 f.write("test")
 
+    Path(STATE_PATH).mkdir(parents=True, exist_ok=True)
+
     org_client = substra.Client(debug=True)
     # org2_client = substra.Client(debug=True)
 
@@ -110,7 +107,6 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     org2_dataset_key, org2_data_sample_key = register_dataset(org_client, ASSETS_DIR, "1")
     # TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
-    # TODO: how to have multiple organizations in a debug workflow (ask Fabien)
     train_data_nodes = [
         TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
         TrainDataNode("1", org2_dataset_key, [org2_data_sample_key]),
@@ -153,7 +149,25 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
 
     aggregation_node = AggregationNode("0")
 
-    my_algo0 = MyAlgo(single_state_init=2)
+    seed = 42
+    single_state_init = 2
+    if single_state_init is not None:
+        shared_state = np.ones([8, 16]) * single_state_init
+    elif seed is not None:
+        # TODO: you could save init random state of each worker to the local-worker and check if the fed_avg is
+        # indeed the mean of all
+        np.random.seed(seed)
+        shared_state = np.random.rand(8, 16)
+    else:
+        raise NotImplementedError
+    print(shared_state)
+    # change to list to make it serializable to dump to json
+    my_algo0 = MyAlgo(shared_state=shared_state.tolist())
+    # save initial state for the test purposes
+    # TODO: try different algos/ init states for different partners
+    init_state_path = STATE_PATH / "0"
+    Path(init_state_path).mkdir(parents=True, exist_ok=True)
+    # np.savez(init_state_path  / 'init_state.npz', shared_state)
     # my_algo1 = MyAlgo(single_state_init=1)
 
     strategy = FedAVG(num_updates=2)
