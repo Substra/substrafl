@@ -152,7 +152,7 @@ def prepare_substra_algo(
                 cloudpickle_path.name,
                 cls_parameters_path.name,
                 remote_cls_parameters_path.name,
-                python_version()
+                python_version(),
             )
         )
 
