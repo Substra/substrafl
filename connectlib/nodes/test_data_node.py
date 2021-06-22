@@ -1,7 +1,6 @@
 import substra
-import uuid
 
-from typing import List, Optional, Tuple
+from typing import List
 
 from connectlib.nodes import Node
 

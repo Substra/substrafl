@@ -1,5 +1,4 @@
 import substratools as tools
-import os
 import numpy as np
 
 

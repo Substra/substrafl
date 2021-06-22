@@ -1,7 +1,7 @@
+from typing import TypeVar
+
 import substra
 import uuid
-
-from typing import TypeVar, Dict
 
 from connectlib.nodes.references import SharedStateRef
 from connectlib.nodes import Node
