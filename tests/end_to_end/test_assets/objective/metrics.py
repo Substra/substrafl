@@ -1,5 +1,5 @@
 import substratools as tools
-
+import os
 import numpy as np
 
 
@@ -13,11 +13,10 @@ class AccuracyMetric(tools.Metrics):
         :type y_pred: pd.DataFrame
         :rtype: float
         """
-        assert np.all(y_pred == 2)
+        mean_value = np.mean(y_pred)
         # TODO: this is only temporary and used by the tests (tests/test_strategies.py
         # this should be improved and done for each test separately)
-        # return accuracy_score(y_true, y_pred)
-        return 1.0
+        return mean_value
 
 
 if __name__ == "__main__":

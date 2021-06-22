@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from pathlib import Path
 from loguru import logger
@@ -14,7 +15,7 @@ import substra
 
 ASSETS_DIR = Path(__file__).parent / "end_to_end" / "test_assets"
 DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_ids=list())
-STATE_PATH = Path.cwd() / "local-worker" / "init_state"
+LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
 def register_dataset(client: substra.Client, asset_dir: Path, partner_name: str):
@@ -75,7 +76,12 @@ def zip_objective(asset_dir: Path):
 
 
 def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query):
+    # TODO: for now only a single algo is added for both partners. Connectlib must be updated to accept more algos/
+    # different
+    # init weights
     # ensure that the results are as expected
+    # TODO: fed avg strategy should take the same algo with the same init for each partner. We can overwrite it with
+    # something else for the test (eg with the datasets which may differ)
     class MyAlgo(Algo):
         # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
         # pytest calls it)
@@ -165,9 +171,6 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     my_algo0 = MyAlgo(shared_state=shared_state.tolist())
     # save initial state for the test purposes
     # TODO: try different algos/ init states for different partners
-    init_state_path = STATE_PATH / "0"
-    Path(init_state_path).mkdir(parents=True, exist_ok=True)
-    # np.savez(init_state_path  / 'init_state.npz', shared_state)
     # my_algo1 = MyAlgo(single_state_init=1)
 
     strategy = FedAVG(num_updates=2)
@@ -176,3 +179,13 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     orchestrator.run(
         org_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
     )
+
+    # read the results from saved performances
+    path = LOCAL_WORKER_PATH / "performances"
+    dirs = [d for d in path.iterdir() if d.is_dir()]
+    newest = max(dirs, key=os.path.getctime)
+    score_file = newest / "performance.json"
+    score = json.loads(score_file.read_bytes())["all"]
+
+    # assert that the calculated score matches the expected score
+    assert np.mean(shared_state) == score
