@@ -56,7 +56,20 @@ Poetry
 You will need `Poetry <https://python-poetry.org>`__ to start contributing on the ConnectLib codebase.
 Refer to the `documentation <https://python-poetry.org/docs/#introduction>`__ to start using Poetry.
 
-You will first need to clone the repository using `git` and place yourself in its directory:
+For instance, to install Poetry 1.1.6 on osx:
+
+.. code:: bash
+
+	curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+	source $HOME/.poetry/env
+	poetry --version
+
+You should get something like `Poetry version 1.1.6`
+
+If you have the error `permission denied: '~/.bash_profile'`, run `sudo chown $USER ~/.bash_profile` before.
+
+
+Then you will need to clone the repository using `git` and place yourself in its directory:
 
 .. code:: bash
 
@@ -68,8 +81,11 @@ tests are passing on your machine:
 
 .. code:: bash
 
-    # Poetry configuration
+    # Poetry virtual env configuration
     poetry config virtualenvs.in-project true
+
+	# create virtual env and install dev requirements
+	poetry install
 
     # Run tests
     poetry run pytest --cov=rpz tests/
