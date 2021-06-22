@@ -109,6 +109,7 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
 
     # generate the data for partner "0" and "1"
     for partner_name in partners:
+        # TODO: remove datasample dirs at the end of the tests
         path_data = ASSETS_DIR / f"datasample_{partner_name}"
         if not path_data.is_dir():
             path_data.mkdir()
