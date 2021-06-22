@@ -1,12 +1,16 @@
 import shutil
 
 import numpy as np
+import pathlib
 import substratools as tools
 
 
 class Opener(tools.Opener):
     def get_X(self, folders):
-        return np.random.randn(1000, 256)
+        samples = list()
+        for folder in folders:
+            samples.append(np.load(pathlib.Path(folder) / "data.npy"))
+        return samples
 
     def get_y(self, folders):
         return np.random.randint(0, 2, size=(1000, 1))

@@ -57,6 +57,15 @@ class TrainDataNode(Node):
     def register_operations(
         self, client: substra.Client, permissions: substra.sdk.schemas.Permissions
     ):
+        """Define the algorithms for each operation
+
+        Go through every operation in the computation graph, check what algorithm they use
+        and build the algorithm cache.
+
+        Args:
+            client (substra.Client): Substra client for the node.
+            permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
+        """
         for tuple in self.tuples:
             if tuple.get("out_trunk_model_permissions", None) is None:
                 tuple["out_trunk_model_permissions"] = permissions

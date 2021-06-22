@@ -38,7 +38,7 @@ def register_dataset(client: substra.Client, asset_dir: Path, partner_name: str)
     logger.info("Adding data sample")
     data_sample_key = client.add_data_sample(
         substra.sdk.schemas.DataSampleSpec(
-            path=asset_dir / "datasample",
+            path=asset_dir / f"datasample_{partner_name}",
             test_only=False,
             data_manager_keys=[dataset_key],
         )
@@ -86,11 +86,11 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
         # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
         # pytest calls it)
         def delayed_init(self, seed: int, *args, **kwargs):
-            self._shared_state = {"test": kwargs["shared_state"]}
+            pass
 
         @remote_data
         def train(self, x: np.array, y: np.array, num_updates: int, shared_state):
-            return self._shared_state
+            return dict(test=x)
 
         @remote_data
         def predict(self, x: np.array, shared_state):
@@ -104,18 +104,29 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
             with path.open("w") as f:
                 f.write("test")
 
-    Path(STATE_PATH).mkdir(parents=True, exist_ok=True)
-
     org_client = substra.Client(debug=True)
-    # org2_client = substra.Client(debug=True)
+    partners = ["0", "1"]
 
-    org1_dataset_key, org1_data_sample_key = register_dataset(org_client, ASSETS_DIR, "0")
-    org2_dataset_key, org2_data_sample_key = register_dataset(org_client, ASSETS_DIR, "1")
+    # generate the data for partner "0" and "1"
+    for partner_name in partners:
+        path_data = ASSETS_DIR / f"datasample_{partner_name}"
+        if not path_data.is_dir():
+            path_data.mkdir()
+        # all the data will be either 0s or 1s depending on the partner
+        new_data = np.ones([8, 16]) * int(partner_name)
+        np.save(path_data / "data.npy", new_data)
+
+    org1_dataset_key, org1_data_sample_key = register_dataset(
+        org_client, ASSETS_DIR, partners[0]
+    )
+    org2_dataset_key, org2_data_sample_key = register_dataset(
+        org_client, ASSETS_DIR, partners[1]
+    )
     # TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
     train_data_nodes = [
-        TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
-        TrainDataNode("1", org2_dataset_key, [org2_data_sample_key]),
+        TrainDataNode(partners[0], org1_dataset_key, [org1_data_sample_key]),
+        TrainDataNode(partners[1], org2_dataset_key, [org2_data_sample_key]),
     ]
 
     OBJECTIVE = make_objective(org_client, ASSETS_DIR)
@@ -146,32 +157,23 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
 
     test_data_nodes = [
         TestDataNode(
-            "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
+            partners[0],
+            org1_dataset_key,
+            [org1_data_sample_key],
+            objective_key=org1_objective_key,
         ),
         TestDataNode(
-            "1", org2_dataset_key, [org2_data_sample_key], objective_key=org2_objective_key
+            partners[1],
+            org2_dataset_key,
+            [org2_data_sample_key],
+            objective_key=org2_objective_key,
         ),
     ]
 
-    aggregation_node = AggregationNode("0")
-
-    seed = 42
-    single_state_init = 2
-    if single_state_init is not None:
-        shared_state = np.ones([8, 16]) * single_state_init
-    elif seed is not None:
-        # TODO: you could save init random state of each worker to the local-worker and check if the fed_avg is
-        # indeed the mean of all
-        np.random.seed(seed)
-        shared_state = np.random.rand(8, 16)
-    else:
-        raise NotImplementedError
-    print(shared_state)
-    # change to list to make it serializable to dump to json
-    my_algo0 = MyAlgo(shared_state=shared_state.tolist())
+    aggregation_node = AggregationNode(partners[0])
+    my_algo0 = MyAlgo()
     # save initial state for the test purposes
     # TODO: try different algos/ init states for different partners
-    # my_algo1 = MyAlgo(single_state_init=1)
 
     strategy = FedAVG(num_updates=2)
 
@@ -188,4 +190,4 @@ def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query
     score = json.loads(score_file.read_bytes())["all"]
 
     # assert that the calculated score matches the expected score
-    assert np.mean(shared_state) == score
+    assert score == 0.5
