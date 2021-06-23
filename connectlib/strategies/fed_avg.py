@@ -37,6 +37,16 @@ class FedAVG(Strategy):
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
     ):
+        """One round of the Federated Averaging strategy:
+        - if they exist, set the model weights to the aggregated weights on each train data nodes
+        - perform a local update (train on n minibatches) of the models on each train data nodes
+        - aggregate the model gradients
+
+        Args:
+            algo (Algo): User defined algorithm: describes the model train and predict
+            train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local updates
+            aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states of the models
+        """
         next_local_states = []
         states_to_aggregate = []
         for i, node in enumerate(train_data_nodes):
@@ -48,12 +58,13 @@ class FedAVG(Strategy):
             # for each composite tuple give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.compute(
                 algo.train(  # type: ignore
-                    node.data_sample_keys,
+                    node.data_sample_keys,  # TODO: change this, we don't give all the dataset to train on for one strategy round
                     shared_state=self.avg_shared_state,
                     num_updates=self.num_updates,
                 ),
                 local_state=previous_local_state,
             )
+            # keep the states in a list: one/node
             next_local_states.append(next_local_state)
             states_to_aggregate.append(next_shared_state)
 
@@ -80,6 +91,10 @@ class FedAVG(Strategy):
             assert previous_local_state is not None
 
             traintuple_id_ref, _ = node.compute(
+                # here we could also use algo.train or whatever method marked as @remote_data
+                # in the algo
+                # because fake_traintuple is true so the method name and the method
+                # are not used
                 algo.predict(  # type: ignore
                     [node.data_sample_keys[0]],
                     shared_state=self.avg_shared_state,

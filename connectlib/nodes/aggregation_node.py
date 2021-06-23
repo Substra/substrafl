@@ -13,6 +13,7 @@ SharedState = TypeVar("SharedState")
 OperationKey = str
 
 
+# TODO: rename CentralNode
 class AggregationNode(Node):
     def compute(self, operation: AggregateOperation) -> SharedStateRef:
         if not isinstance(operation, AggregateOperation):

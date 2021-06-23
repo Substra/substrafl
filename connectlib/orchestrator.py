@@ -10,6 +10,14 @@ from connectlib.strategies import Strategy
 
 class Orchestrator:
     def __init__(self, algo: Algo, strategy: Strategy, num_rounds: int):
+        """The orchestrator class takes an algo and strategy and runs the
+        federated learning experiment.
+
+        Args:
+            algo (Algo): Model, with its train and predict functions
+            strategy (Strategy): Federated learning strategy to train the model
+            num_rounds (int): Number of rounds of the strategy
+        """
         self.algo = algo
         self.strategy = strategy
         self.num_rounds = num_rounds
@@ -21,15 +29,32 @@ class Orchestrator:
         aggregation_node: AggregationNode,
         test_data_nodes: List[TestDataNode],
     ):
+        """Run the experiment
+
+          Args:
+              client (substra.Client): Substra client
+              train_data_nodes (List[TrainDataNode]): List of the nodes where training on data occurs
+              aggregation_node (AggregationNode): Central node if there is one
+              test_data_nodes (List[TestDataNode]): List of the TestDataNodes
+
+          Returns:
+        "      [type]: [description]
+        """
+        # TODO: rename the aggregation node into central node
+        # TODO: aggregation_node should be optional
+        # create computation graph
         for _ in range(self.num_rounds):
             self.strategy.perform_round(
                 algo=self.algo,
                 train_data_nodes=train_data_nodes,
                 aggregation_node=aggregation_node,
             )
-        self.strategy.predict(
+        self.strategy.predict(  # TODO rename 'predict' into 'predict_and_score' ? the outputs are metrics here
             algo=self.algo, train_data_nodes=train_data_nodes, test_data_nodes=test_data_nodes
         )
+
+        # Computation graph is created
+        # TODO: static checks on the graph
 
         authorized_ids = [aggregation_node.node_id] + [
             node.node_id for node in train_data_nodes

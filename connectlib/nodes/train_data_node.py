@@ -38,19 +38,26 @@ class TrainDataNode(Node):
 
         op_id = uuid.uuid4().hex
 
-        train_tuple = {
-            "algo_key": operation.remote_struct,  # reference to the remote object
+        # Create the composite traintuple Substra spec
+        # The only difference is the algo_key: for now it contains the remote struct
+        # When 'register_operations' is called, the algo is created and the field contains
+        # the actual algo key
+        # This is done to avoid registering duplicate algos to the platform
+        composite_traintuple = {
+            "algo_key": operation.remote_struct,
             "data_manager_key": self.data_manager_key,
             "train_data_sample_keys": operation.data_samples,
+            # in_head_model_id is a user-defined id (last composite_traintuple id)
             "in_head_model_id": local_state.key if local_state is not None else None,
             "in_trunk_model_id": operation.shared_state.key
             if operation.shared_state is not None
-            else None,
+            else None,  # user-defined id (last central node task id)
             "tag": "train",
             "composite_traintuple_id": op_id,
+            "metadata": dict(),  # TODO: might add info here so that on the platform we see what the tuple does ?
         }
 
-        self.tuples.append(train_tuple)
+        self.tuples.append(composite_traintuple)
 
         return LocalStateRef(op_id), SharedStateRef(op_id)
 
