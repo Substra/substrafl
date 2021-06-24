@@ -35,7 +35,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         rank: int,
     ) -> Tuple:
         if not self.fake_traintuple:
-            # head_model should be None only at initiation
+            # head_model should be None only at initialization
             if head_model is not None:
                 instance = head_model
             else:
