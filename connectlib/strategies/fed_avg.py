@@ -44,6 +44,8 @@ class FedAVG(Strategy):
                 self.local_states[i] if self.local_states is not None else None
             )
 
+            # define composite tuples (do not submit yet)
+            # for each composite tuple give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.compute(
                 algo.train(  # type: ignore
                     node.data_sample_keys,
