@@ -31,8 +31,10 @@ class Algo:
 
     @abstractmethod
     def load(self, path: Path):
+        # load local state
         raise NotImplementedError
 
     @abstractmethod
     def save(self, path: Path):
+        # save local state
         raise NotImplementedError

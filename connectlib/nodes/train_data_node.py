@@ -39,7 +39,7 @@ class TrainDataNode(Node):
         op_id = uuid.uuid4().hex
 
         train_tuple = {
-            "algo_key": operation.remote_struct,
+            "algo_key": operation.remote_struct,  # reference to the remote object
             "data_manager_key": self.data_manager_key,
             "train_data_sample_keys": operation.data_samples,
             "in_head_model_id": local_state.key if local_state is not None else None,
