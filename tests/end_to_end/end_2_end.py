@@ -45,9 +45,6 @@ def register_dataset(client: substra.Client, asset_dir: Path):
 
 
 def make_objective(client: substra.Client, asset_dir: Path):
-    # objective_key is a key to the metric your registered
-    # objective = asset_factory.create_objective(dataset=org1_client.get_dataset(org1_dataset_key))
-    # data['test_data_sample_keys'] = load_data_samples_keys(data_samples)
     zip_objective(asset_dir=asset_dir)
 
     objective = {
@@ -55,7 +52,7 @@ def make_objective(client: substra.Client, asset_dir: Path):
         "description": ASSETS_DIR / "opener" / "description.md",
         "metrics_name": "accuracy",
         "metrics": ASSETS_DIR / "objective" / "metrics.zip",
-        "permissions": DEFAULT_PERMISSIONS,  # {"public": False, "authorized_ids": []},
+        "permissions": DEFAULT_PERMISSIONS,
     }
 
     return objective
@@ -82,7 +79,6 @@ class MyAlgo(Algo):
 
     @remote_data
     def predict(self, x: np.array, shared_state):
-        # return np.random.randint(0, 2, size=(len(x), 1))
         return shared_state
 
     def load(self, path: Path):
@@ -94,19 +90,15 @@ class MyAlgo(Algo):
             f.write("test")
 
 
+# ##### DATA ENGINEER on PARTNERS  #############
 org1_client = substra.Client(debug=True)
 org2_client = substra.Client(debug=True)
 
+# register the data
 org1_dataset_key, org1_data_sample_key = register_dataset(org1_client, ASSETS_DIR)
 org2_dataset_key, org2_data_sample_key = register_dataset(org2_client, ASSETS_DIR)
-# TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
-# TODO: how to have multiple organizations in a debug workflow (ask Fabien)
-train_data_nodes = [
-    TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
-    TrainDataNode("1", org1_dataset_key, [org1_data_sample_key]),
-]
-
+# register objective
 OBJECTIVE = make_objective(org1_client, ASSETS_DIR)
 org1_objective_key = org1_client.add_objective(
     {
@@ -120,23 +112,32 @@ org1_objective_key = org1_client.add_objective(
     },
 )
 
+# ###### DATASCIENTIST on Connectlib ########
+
+# register all the keys to train, test and aggregation nodes
+train_data_nodes = [
+    TrainDataNode("0", org1_dataset_key, [org1_data_sample_key]),
+    TrainDataNode("1", org1_dataset_key, [org1_data_sample_key]),
+]
+
 test_data_nodes = [
     TestDataNode(
         "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
     ),
     TestDataNode(
-        "0", org1_dataset_key, [org1_data_sample_key], objective_key=org1_objective_key
+        "1", org2_dataset_key, [org2_data_sample_key], objective_key=org1_objective_key
     ),
 ]
 
 aggregation_node = AggregationNode("0")
 
+# Define Algo
 my_algo = MyAlgo()
+
+# Define strategy
 strategy = FedAVG(num_updates=1)
 
 orchestrator = Orchestrator(my_algo, strategy, num_rounds=1)
 orchestrator.run(
     org1_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
 )
-
-# TODO: to test fed-avg set weights to constant values and
