@@ -75,13 +75,11 @@ def zip_objective(asset_dir: Path):
             z.write(filepath, arcname=os.path.basename(filepath))
 
 
-def test_fed_avg():  # client, dataset_query, data_sample_query, objective_query):
-    # TODO: for now only a single algo is added for both partners. Connectlib must be updated to accept more algos/
-    # different
-    # init weights
-    # ensure that the results are as expected
-    # TODO: fed avg strategy should take the same algo with the same init for each partner. We can overwrite it with
-    # something else for the test (eg with the datasets which may differ)
+def test_fed_avg():
+    # makes sure that federated average strategy leads to the averaging output of the models from both partners.
+    # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
+    # predict() returns the data, score returned by AccuracyMetric (in the objective) is the mean of all the y_pred
+    # passed to it. The tests asserts if the score is 0.5
     class MyAlgo(Algo):
         # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
         # pytest calls it)
