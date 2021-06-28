@@ -39,6 +39,7 @@ class Orchestrator:
         )
 
         # Register all operations in substra
+        # Define the algorithms we need and submit them
         composite_traintuples = []
         for node in train_data_nodes:
             node.register_operations(client, permissions)
