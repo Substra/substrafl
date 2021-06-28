@@ -171,9 +171,6 @@ def test_fed_avg():
 
     aggregation_node = AggregationNode(partners[0])
     my_algo0 = MyAlgo()
-    # save initial state for the test purposes
-    # TODO: try different algos/ init states for different partners
-
     strategy = FedAVG(num_updates=2)
 
     orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
