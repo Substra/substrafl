@@ -54,7 +54,7 @@ Poetry
 ^^^^^^
 
 You will need `Poetry <https://python-poetry.org>`__ to start contributing on the ConnectLib codebase.
-Refer to the `documentation <https://python-poetry.org/docs/#introduction>`__ to start using Poetry.
+Refer to the `documentation <https://python-poetry.org/docs/#installation>`__ to install Poetry.
 
 For instance, to install Poetry 1.1.6 on osx:
 
@@ -64,31 +64,36 @@ For instance, to install Poetry 1.1.6 on osx:
 	source $HOME/.poetry/env
 	poetry --version
 
-You should get something like `Poetry version 1.1.6`
+You should get something like ``Poetry version 1.1.6``
 
-If you have the error `permission denied: '~/.bash_profile'`, run `sudo chown $USER ~/.bash_profile` before.
+If you have the error ``permission denied: '~/.bash_profile'``, run ``sudo chown $USER ~/.bash_profile`` before.
 
 
-Then you will need to clone the repository using `git` and place yourself in its directory:
+Then you will need to clone the repository using ``git`` and place yourself in its directory:
 
 .. code:: bash
 
     git clone git@github.com:owkin/connectlib.git
     cd connectlib
 
+Poetry can be configured via the ``config`` command (`documentation <https://python-poetry.org/docs/configuration>`__).
+For instance, if you want the virtualenv to be inside the project’s root directory:
+
+.. code:: bash
+
+    poetry config virtualenvs.in-project true
+
+
 Now, you will need to install the required dependency for Poetry and be sure that the current
 tests are passing on your machine:
 
 .. code:: bash
 
-    # Poetry virtual env configuration
-    poetry config virtualenvs.in-project true
-
 	# create virtual env and install dev requirements
 	poetry install
 
-    # Run tests
-    poetry run pytest --cov=rpz tests/
+	# Run tests
+	poetry run pytest --cov=rpz tests/
 
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^
