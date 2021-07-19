@@ -64,7 +64,7 @@ For instance, to install Poetry 1.1.6 on osx:
 	source $HOME/.poetry/env
 	poetry --version
 
-You should get something like ``Poetry version 1.1.6``
+Something like ``Poetry version 1.1.6`` should display on your screen.
 
 If you have the error ``permission denied: '~/.bash_profile'``, run ``sudo chown $USER ~/.bash_profile`` before.
 
