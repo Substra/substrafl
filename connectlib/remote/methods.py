@@ -53,7 +53,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
     def predict(self, X: Any, head_model: Optional, trunk_model: Optional):
         assert (
             head_model is not None
-        ), "head model is not None. Possibly you did not train() before running predict()"
+        ), "head model is None. Possibly you did not train() before running predict()"
         instance = head_model
 
         method_to_call = getattr(instance, self.method_name)
