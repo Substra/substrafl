@@ -30,7 +30,7 @@ RUN wget https://www.python.org/ftp/python/{6}/Python-{6}.tgz \
 
 # install dependencies
 RUN python{0} -m pip install -U pip
-RUN python{0} -m pip install six pytest
+RUN python{0} -m pip install six
 # Install connectlib
 {1}
 
