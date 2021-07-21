@@ -14,8 +14,8 @@ from platform import python_version
 
 from connectlib.remote.methods import RemoteStruct
 
-# TODO: change the base Image to a python image
-DOCKERFILE_TEMPLATE = """
+# if Python 3.9 is used, we need to install Python from scratch
+PYTHON_INSTALL_39 = """
 FROM substrafoundation/substra-tools:0.7.0
 
 RUN apt update
@@ -26,7 +26,18 @@ RUN wget https://www.python.org/ftp/python/{6}/Python-{6}.tgz \
     && cd Python-{6} \
     && ./configure --enable-optimizations \
     && make -j 12 \
-    && make altinstall
+    && make altinstall"""
+
+
+PYTHON_INSTALL = """
+FROM substrafoundation/substra-tools:0.7.0
+
+RUN apt-get update && apt-get install -y python{0}
+"""
+
+
+# TODO: change the base Image to a python image
+DOCKERFILE_TEMPLATE = """
 
 # install dependencies
 RUN python{0} -m pip install -U pip
@@ -141,9 +152,15 @@ def prepare_substra_algo(
 
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
+
+    if python_major_minor >= "3.9":
+        python_install = PYTHON_INSTALL_39
+    else:
+        python_install = PYTHON_INSTALL
+
     with open(dockerfile_path, "w") as f:
         f.write(
-            DOCKERFILE_TEMPLATE.format(
+            (python_install + DOCKERFILE_TEMPLATE).format(
                 python_major_minor,
                 connectlib_install_cmd,
                 f"RUN python{python_major_minor} -m pip install " + " ".join(dependencies)
