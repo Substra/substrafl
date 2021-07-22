@@ -153,10 +153,10 @@ def prepare_substra_algo(
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
 
-    if python_major_minor >= "3.9":
-        python_install = PYTHON_INSTALL_39
-    else:
-        python_install = PYTHON_INSTALL
+    # if python_major_minor >= "3.9":
+    #    python_install = PYTHON_INSTALL_39
+    # else:
+    python_install = PYTHON_INSTALL
 
     with open(dockerfile_path, "w") as f:
         f.write(
