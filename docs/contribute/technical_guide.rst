@@ -93,7 +93,7 @@ tests are passing on your machine:
 	poetry install
 
 	# Run tests
-	poetry run pytest --cov=rpz tests/
+	poetry run pytest tests/
 
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^
