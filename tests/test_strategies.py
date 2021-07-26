@@ -127,7 +127,7 @@ def test_fed_avg():
         TrainDataNode(partners[1], org2_dataset_key, [org2_data_sample_key]),
     ]
 
-    OBJECTIVE = make_objective(org_client, ASSETS_DIR)
+    OBJECTIVE = make_objective(ASSETS_DIR)
     org1_objective_key = org_client.add_objective(
         {
             "name": OBJECTIVE["name"],
@@ -140,7 +140,7 @@ def test_fed_avg():
         },
     )
 
-    OBJECTIVE = make_objective(org_client, ASSETS_DIR)
+    OBJECTIVE = make_objective(ASSETS_DIR)
     org2_objective_key = org_client.add_objective(
         {
             "name": OBJECTIVE["name"],
