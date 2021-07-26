@@ -67,7 +67,7 @@ def make_objective(asset_dir: Path):
 def zip_objective(asset_dir: Path):
     # Create necessary archive to register the operation on substra
     # the previous metric.zip will be overwritten
-    operation_dir = ASSETS_DIR / "objective"
+    operation_dir = asset_dir / "objective"
     archive_path = operation_dir / "metrics.zip"
     with zipfile.ZipFile(archive_path, "w") as z:
         for filepath in operation_dir.glob("*[!.zip]"):
