@@ -41,6 +41,9 @@ DOCKERFILE_TEMPLATE = """
 
 # install dependencies
 RUN python{0} -m pip install -U pip
+# TODO: for now pytest is added so that tests run correctly.
+# This should be done differently in the future (eg, install pytest as additional
+# requirements for the tests and not as a part of a template)
 RUN python{0} -m pip install six pytest
 # Install connectlib
 {1}
