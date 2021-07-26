@@ -121,7 +121,6 @@ def test_fed_avg():
     org2_dataset_key, org2_data_sample_key = register_dataset(
         org_client, ASSETS_DIR, partners[1]
     )
-    # TODO: check client.add_test_datasamples (ask Thais or Fabien)
 
     train_data_nodes = [
         TrainDataNode(partners[0], org1_dataset_key, [org1_data_sample_key]),
