@@ -47,7 +47,7 @@ def register_dataset(client: substra.Client, asset_dir: Path, partner_name: str)
     return dataset_key, data_sample_key
 
 
-def make_objective(client: substra.Client, asset_dir: Path):
+def make_objective(asset_dir: Path):
     # objective_key is a key to the metric your registered
     # objective = asset_factory.create_objective(dataset=org1_client.get_dataset(org1_dataset_key))
     # data['test_data_sample_keys'] = load_data_samples_keys(data_samples)
