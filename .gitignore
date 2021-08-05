@@ -141,3 +141,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# storage
+*.npy
+*.zip
