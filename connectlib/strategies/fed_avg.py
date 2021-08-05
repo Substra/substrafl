@@ -1,18 +1,31 @@
+import random
+
 import numpy as np
 
-from typing import List
+from typing import Optional, List
 
 from connectlib.algorithms import Algo
 from connectlib.algorithms.algo import Weights
 from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
 from connectlib.strategies.strategy import Strategy
-from connectlib.remote import remote
+from connectlib.remote import remote, remote_data
 
 
 class FedAVG(Strategy):
-    def __init__(self, num_updates: int):
+    """[summary]
+
+    Args:
+        Strategy ([type]): [description]
+    """
+
+    def __init__(self, num_rounds: int, num_updates: int, batch_size: int):
+        self.num_rounds = num_rounds
         self.num_updates = num_updates
-        super(FedAVG, self).__init__(num_updates=num_updates, seed=42)
+        self.batch_size = batch_size
+        seed = 42
+        super(FedAVG, self).__init__(
+            num_rounds=num_rounds, num_updates=num_updates, batch_size=batch_size, seed=seed
+        )
 
         # States
         self.local_states = None
@@ -30,6 +43,123 @@ class FedAVG(Strategy):
             averaged_states[key] = np.mean(states, axis=0)
 
         return averaged_states
+
+    @remote_data
+    def data_indexer(
+        self,
+        x,
+        y,
+        num_rounds: int,
+        num_updates: int,
+        batch_size: int,
+        seed: Optional[int] = 42,
+        drop_last: Optional[bool] = None,
+        shared_state: Optional = None,
+    ):
+        """Remotly (on the node) generates the batch_indices from the given data
+
+        Args:
+            x (sequence): x data, only for consistency purposes, not used
+                in the function
+            y (sequence): y data, the length of this data
+                is used to calculate the indices
+            num_rounds (int): number of rounds
+            num_updates (int): number of batches in each round
+            batch_size (int): number of data points in each batch
+            drop_last (bool): if set to True it will ignore the last, not full batch
+                if set to False it will make the last batch smaller
+            shared_state: used only for consistency purposes
+
+            return (dictionary): the structure is:
+                {"minibatch_indices": minibatch_indices,
+                 "index": 0}
+                where `minibatch_indices` is a list of rounds of list
+                of updates of `batch_size`, and each batch is filled
+                with integer indices.
+
+            The indices of the data are shuffled. The data is used to fill the batches until
+            a full batch cannot be made. The next batch will be shorter if `drop_last` is False.
+            The data is reshuffled and used again to fill next batches until `num_rounds` of
+            `num_updates` of batches is satisfied.
+
+            for example:
+                if the size of the data is 7, num_rounds = 3, num_updates=2 and batch_size=3,
+                and drop_last set to False,
+                the resulting minibatch_indices list will be:
+                1. first list of rounds of 2 lists
+                2. lists of updates with 2 lists of sizes
+                   either 3 or 1 (because drop_last is set to False)
+                therefore the minibatch_indices list will look as follows:
+                [[[id, id, id], [id, id, id]],
+                 [[id], [id2, id2, id2]],
+                 [[id2, id2, id2], [id2]]]
+                 where id are indices and id2 are reshufled indices
+
+                if, in the same case drop_last is set to True,
+                the resulting minibatch_indices will be:
+                [[[id, id, id], [id, id, id]],
+                 [[id2, id2, id2], [id2, id2, id2]],
+                 [[id3, id3, id3], [id3, id3, id3]]]
+                where id2 and id3 are indices drawn from the second and third pass on the data
+                and one data point is not used on each of the pass
+
+        """
+        data_len = len(y)
+
+        # if batch_size is larger than data size and drop_last is True we raise an error
+        if batch_size > data_len and drop_last:
+            raise ValueError(
+                "batch_size cannot be larger "
+                "than length of the data "
+                "if drop_last is set to True"
+            )
+        random.seed(seed)
+        indices = list(range(data_len))
+        minibatch_indices = list()
+        random.shuffle(indices)
+        idx = 0
+        for _ in range(num_rounds):
+            round_indices = list()
+            for _ in range(num_updates):
+                if drop_last and idx + batch_size > data_len:
+                    # Not enough samples to do a full batch, we shuffle
+                    # and go from the beginning again
+                    idx = 0
+                    random.shuffle(indices)
+                    round_indices.append(indices[idx : idx + batch_size])
+                    idx = idx + batch_size
+                else:
+                    round_indices.append(indices[idx : idx + batch_size])
+                    if idx + batch_size >= data_len:
+                        # we had just enough for one batch, we shuffle
+                        # and go from the beginning again
+                        idx = 0
+                        random.shuffle(indices)
+                    else:
+                        idx = idx + batch_size
+
+            minibatch_indices.append(round_indices)
+
+        return {"minibatch_indices": minibatch_indices, "index": 0}
+
+    def initialize(self, train_data_nodes: List[TrainDataNode]):
+        """[summary]
+
+        Args:
+            train_data_nodes (List[TrainDataNode]): [description]
+        """
+        self.local_states = list()
+        for node in train_data_nodes:
+            next_local_state, _ = node.compute(
+                self.data_indexer(
+                    node.data_sample_keys,
+                    shared_state=None,
+                    num_rounds=self.num_rounds,
+                    num_updates=self.num_updates,
+                    batch_size=self.batch_size,
+                )
+            )
+            self.local_states.append(next_local_state)
 
     def perform_round(
         self,
@@ -58,7 +188,7 @@ class FedAVG(Strategy):
             # for each composite tuple give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.compute(
                 algo.train(  # type: ignore
-                    node.data_sample_keys,  # TODO: change this, we don't give all the dataset to train on for one strategy round
+                    node.data_sample_keys,
                     shared_state=self.avg_shared_state,
                     num_updates=self.num_updates,
                 ),

@@ -42,6 +42,8 @@ class Orchestrator:
         """
         # TODO: rename the aggregation node into central node
         # TODO: aggregation_node should be optional
+        self.strategy.initialize(train_data_nodes)
+
         # create computation graph
         for _ in range(self.num_rounds):
             self.strategy.perform_round(

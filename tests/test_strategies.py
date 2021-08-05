@@ -170,7 +170,7 @@ def test_fed_avg():
 
     aggregation_node = AggregationNode(partners[0])
     my_algo0 = MyAlgo()
-    strategy = FedAVG(num_updates=2)
+    strategy = FedAVG(num_rounds=3, num_updates=2, batch_size=3)
 
     orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
     orchestrator.run(
