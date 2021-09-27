@@ -130,7 +130,12 @@ class RemoteStruct:
 
     def __hash__(self):
         return hash(
-            (self.cls, self.cls_parameters, self.remote_cls_name, self.remote_cls_parameters)
+            (
+                self.cls,
+                self.cls_parameters,
+                self.remote_cls_name,
+                self.remote_cls_parameters,
+            )
         )
 
 
@@ -175,7 +180,9 @@ def remote_data(method: Callable):
         remote_cls_parameters = json.dumps({"args": [], "kwargs": kwargs})
 
         return DataOperation(
-            RemoteStruct(cls, cls_parameters, "RemoteDataMethod", remote_cls_parameters),
+            RemoteStruct(
+                cls, cls_parameters, "RemoteDataMethod", remote_cls_parameters
+            ),
             data_samples,
             shared_state,
         )
@@ -185,7 +192,10 @@ def remote_data(method: Callable):
 
 def remote(method: Callable):
     def remote_method_inner(
-        self, shared_states: Optional[List] = None, _skip: bool = False, **method_parameters
+        self,
+        shared_states: Optional[List] = None,
+        _skip: bool = False,
+        **method_parameters
     ) -> AggregateOperation:
         if _skip:
             return method(self=self, shared_states=shared_states, **method_parameters)
@@ -193,7 +203,10 @@ def remote(method: Callable):
         cls = self.__class__
         cls_parameters = json.dumps({"args": self.args, "kwargs": self.kwargs})
 
-        kwargs = {"method_name": method.__name__, "method_parameters": method_parameters}
+        kwargs = {
+            "method_name": method.__name__,
+            "method_parameters": method_parameters,
+        }
         remote_cls_parameters = json.dumps({"args": [], "kwargs": kwargs})
 
         return AggregateOperation(

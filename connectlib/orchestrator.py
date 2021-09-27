@@ -52,7 +52,9 @@ class Orchestrator:
                 aggregation_node=aggregation_node,
             )
         self.strategy.predict(  # TODO rename 'predict' into 'predict_and_score' ? the outputs are metrics here
-            algo=self.algo, train_data_nodes=train_data_nodes, test_data_nodes=test_data_nodes
+            algo=self.algo,
+            train_data_nodes=train_data_nodes,
+            test_data_nodes=test_data_nodes,
         )
 
         # Computation graph is created

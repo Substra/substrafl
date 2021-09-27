@@ -1,6 +1,7 @@
 import json
 import numpy as np
 from pathlib import Path
+from logging import getLogger
 import os
 
 from connectlib.algorithms import Algo
@@ -11,8 +12,12 @@ from connectlib.strategies import FedAVG
 
 import substra
 
+logger = getLogger("tests")
+
 ASSETS_DIR = Path(__file__).parent / "end_to_end" / "test_assets"
-DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_ids=list())
+DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(
+    public=True, authorized_ids=list()
+)
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
@@ -28,7 +33,13 @@ def test_fed_avg(asset_factory, client):
             pass
 
         @remote_data
-        def train(self, x: np.array, y: np.array, num_updates: int, shared_state):
+        def train(
+            self,
+            x: np.array,
+            y: np.array,
+            num_updates: int,
+            shared_state,
+        ):
             return dict(test=x)
 
         @remote_data
@@ -83,10 +94,14 @@ def test_fed_avg(asset_factory, client):
     )
     sample_2_key = client.add_data_sample(data_sample)
 
-    data_sample = asset_factory.create_data_sample(datasets=[dataset_1_key], test_only=True)
+    data_sample = asset_factory.create_data_sample(
+        datasets=[dataset_1_key], test_only=True
+    )
     sample_1_test_key = client.add_data_sample(data_sample)
 
-    data_sample = asset_factory.create_data_sample(datasets=[dataset_2_key], test_only=True)
+    data_sample = asset_factory.create_data_sample(
+        datasets=[dataset_2_key], test_only=True
+    )
     sample_2_test_key = client.add_data_sample(data_sample)
 
     train_data_nodes = [
