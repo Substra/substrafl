@@ -14,37 +14,21 @@ from platform import python_version
 
 from connectlib.remote.methods import RemoteStruct
 
-# if Python 3.9 is used, we need to install Python from scratch
-PYTHON_INSTALL_39 = """
-FROM substrafoundation/substra-tools:0.7.0
-
-RUN apt update
-RUN apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
-
-RUN wget https://www.python.org/ftp/python/{6}/Python-{6}.tgz \
-    && tar -xf Python-{6}.tgz \
-    && cd Python-{6} \
-    && ./configure --enable-optimizations \
-    && make -j 12 \
-    && make altinstall"""
-
-
-PYTHON_INSTALL = """
-FROM substrafoundation/substra-tools:0.7.0
-
-RUN apt-get update && apt-get install -y python{0}
-"""
-
-
-# TODO: change the base Image to a python image
+# TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
+FROM python:{0}
+
+WORKDIR /sandbox
+ENV PYTHONPATH /sandbox
 
 # install dependencies
 RUN python{0} -m pip install -U pip
+
 # TODO: for now pytest is added so that tests run correctly.
 # This should be done differently in the future (eg, install pytest as additional
 # requirements for the tests and not as a part of a template)
 RUN python{0} -m pip install six pytest
+
 # Install connectlib
 {1}
 
@@ -127,8 +111,10 @@ def prepare_substra_algo(
     python_major_minor = ".".join(python_version().split(".")[:2])
 
     # Build Connectlib wheel if needed
-    if (connectlib.LIB_PATH.parent / "pyproject.toml").exists():
-        subprocess.call(["poetry", "build"])
+    if (connectlib.LIB_PATH.parent / "setup.py").exists():
+        subprocess.run(
+            ["pip", "wheel", ".", "-w", "dist"], cwd=str(connectlib.LIB_PATH.parent)
+        )
         shutil.copytree(connectlib.LIB_PATH.parent / "dist", operation_dir / "dist")
 
         # Get wheel name based on current version
@@ -156,23 +142,18 @@ def prepare_substra_algo(
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
 
-    if python_major_minor >= "3.9":
-        python_install = PYTHON_INSTALL_39
-    else:
-        python_install = PYTHON_INSTALL
-
     with open(dockerfile_path, "w") as f:
         f.write(
-            (python_install + DOCKERFILE_TEMPLATE).format(
+            DOCKERFILE_TEMPLATE.format(
                 python_major_minor,
                 connectlib_install_cmd,
-                f"RUN python{python_major_minor} -m pip install " + " ".join(dependencies)
+                f"RUN python{python_major_minor} -m pip install "
+                + " ".join(dependencies)
                 if dependencies is not None
                 else "",  # Dependencies
                 cloudpickle_path.name,
                 cls_parameters_path.name,
                 remote_cls_parameters_path.name,
-                python_version(),
             )
         )
 

@@ -90,12 +90,16 @@ ENTRYPOINT ["python3", "metrics.py"]
 """
 
 DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_ids=[])
-DEFAULT_OUT_TRUNK_MODEL_PERMISSIONS = substra.sdk.schemas.PrivatePermissions(authorized_ids=[])
+DEFAULT_OUT_TRUNK_MODEL_PERMISSIONS = substra.sdk.schemas.PrivatePermissions(
+    authorized_ids=[]
+)
 
 
 def zip_folder(path, destination=None):
     if not destination:
-        destination = os.path.join(os.path.dirname(path), os.path.basename(path) + ".zip")
+        destination = os.path.join(
+            os.path.dirname(path), os.path.basename(path) + ".zip"
+        )
     with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, _, files in os.walk(path):
             for f in files:
@@ -181,7 +185,9 @@ class AssetsFactory:
             data_manager_keys=datasets,
         )
 
-    def create_dataset(self, py_script, objective=None, permissions=None, metadata=None):
+    def create_dataset(
+        self, py_script, objective=None, permissions=None, metadata=None
+    ):
         py_script = DEFAULT_OPENER_SCRIPT
         idx = self._dataset_counter.inc()
         tmpdir = self._workdir / f"dataset-{idx}"
@@ -208,7 +214,12 @@ class AssetsFactory:
         )
 
     def create_objective(
-        self, dataset=None, data_samples=None, permissions=None, metadata=None, metrics=None
+        self,
+        dataset=None,
+        data_samples=None,
+        permissions=None,
+        metadata=None,
+        metrics=None,
     ):
         idx = self._objective_counter.inc()
         tmpdir = self._workdir / f"objective-{idx}"
@@ -291,7 +302,8 @@ class AssetsFactory:
 
         for t in traintuples:
             assert isinstance(
-                t, (substra.sdk.models.Traintuple, substra.sdk.models.CompositeTraintuple)
+                t,
+                (substra.sdk.models.Traintuple, substra.sdk.models.CompositeTraintuple),
             )
 
         return substra.sdk.schemas.AggregatetupleSpec(
@@ -323,7 +335,10 @@ class AssetsFactory:
             assert isinstance(head_traintuple, substra.sdk.models.CompositeTraintuple)
             assert isinstance(
                 trunk_traintuple,
-                (substra.sdk.models.CompositeTraintuple, substra.sdk.models.Aggregatetuple),
+                (
+                    substra.sdk.models.CompositeTraintuple,
+                    substra.sdk.models.Aggregatetuple,
+                ),
             )
             in_head_model_key = head_traintuple.key
             in_trunk_model_key = trunk_traintuple.key
@@ -341,7 +356,8 @@ class AssetsFactory:
             metadata=metadata,
             compute_plan_key=compute_plan_key,
             rank=rank,
-            out_trunk_model_permissions=permissions or DEFAULT_OUT_TRUNK_MODEL_PERMISSIONS,
+            out_trunk_model_permissions=permissions
+            or DEFAULT_OUT_TRUNK_MODEL_PERMISSIONS,
         )
 
     def create_compute_plan(self, tag="", clean_models=False, metadata=None):

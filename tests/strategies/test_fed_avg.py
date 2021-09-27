@@ -25,7 +25,9 @@ def test_data_indexer(len_data, num_updates, batch_size, num_rounds, drop_last):
         if not expect_last_batch:
             expect_last_batch = batch_size
 
-    strategy = FedAVG(num_rounds=num_rounds, num_updates=num_updates, batch_size=batch_size)
+    strategy = FedAVG(
+        num_rounds=num_rounds, num_updates=num_updates, batch_size=batch_size
+    )
 
     x = np.zeros(len_data)
     y = np.ones(len_data)

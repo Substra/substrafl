@@ -145,3 +145,7 @@ cython_debug/
 # storage
 *.npy
 *.zip
+
+# Project dependent
+local-worker/
+.whl

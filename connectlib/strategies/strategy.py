@@ -43,4 +43,6 @@ class Strategy(ABC):
 
     def save(self, path: Path):
         with path.open("w") as f:
-            json.dump({"args": self.args, "kwargs": {**self.kwargs, "seed": self.seed}}, f)
+            json.dump(
+                {"args": self.args, "kwargs": {**self.kwargs, "seed": self.seed}}, f
+            )

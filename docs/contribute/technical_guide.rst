@@ -50,50 +50,23 @@ in that case separate them with commas.
 Local development
 -----------------
 
-Poetry
-^^^^^^
-
-You will need `Poetry <https://python-poetry.org>`__ to start contributing on the ConnectLib codebase.
-Refer to the `documentation <https://python-poetry.org/docs/#installation>`__ to install Poetry.
-
-For instance, to install Poetry 1.1.6 on osx:
-
-.. code:: bash
-
-	curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-	source $HOME/.poetry/env
-	poetry --version
-
-Something like ``Poetry version 1.1.6`` should display on your screen.
-
-If you have the error ``permission denied: '~/.bash_profile'``, run ``sudo chown $USER ~/.bash_profile`` before.
-
-
-Then you will need to clone the repository using ``git`` and place yourself in its directory:
+You need to clone the repository using ``git`` and place yourself in its directory:
 
 .. code:: bash
 
     git clone git@github.com:owkin/connectlib.git
     cd connectlib
 
-Poetry can be configured via the ``config`` command (`documentation <https://python-poetry.org/docs/configuration>`__).
-For instance, if you want the virtualenv to be inside the project’s root directory:
-
-.. code:: bash
-
-    poetry config virtualenvs.in-project true
-
-
-Now, you will need to install the required dependency for Poetry and be sure that the current
+Now, install the required dependency and be sure that the current
 tests are passing on your machine:
 
 .. code:: bash
 
 	# create virtual env and install dev requirements
-	poetry install
+	pip install -e '.[dev]'
 
 	# Run tests
-	poetry run pytest tests/
+	pytest tests/
 
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^
@@ -110,13 +83,13 @@ you can install a pre-commit hook that will check that everything is in order:
 
 .. code:: bash
 
-    poetry run pre-commit install
+    pre-commit install
 
 You can also run it anytime using:
 
 .. code:: bash
 
-    poetry run pre-commit run --all-files
+    pre-commit run --all-files
 
 Tests
 ^^^^^

@@ -87,7 +87,9 @@ def data_samples_query(tmpdir):
     for i in range(nb):
         data_sample_dir_path = tmpdir / f"data_sample_{i}"
         data_sample_file_path = data_sample_dir_path / "data.txt"
-        data_sample_file_path.write_text(f"Hello world {i}", encoding="utf-8", ensure=True)
+        data_sample_file_path.write_text(
+            f"Hello world {i}", encoding="utf-8", ensure=True
+        )
 
         paths.append(str(data_sample_dir_path))
 

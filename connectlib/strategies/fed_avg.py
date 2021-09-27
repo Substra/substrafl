@@ -24,7 +24,10 @@ class FedAVG(Strategy):
         self.batch_size = batch_size
         seed = 42
         super(FedAVG, self).__init__(
-            num_rounds=num_rounds, num_updates=num_updates, batch_size=batch_size, seed=seed
+            num_rounds=num_rounds,
+            num_updates=num_updates,
+            batch_size=batch_size,
+            seed=seed,
         )
 
         # States
