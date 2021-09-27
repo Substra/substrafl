@@ -1,9 +1,7 @@
 import json
 import numpy as np
 from pathlib import Path
-from loguru import logger
 import os
-import zipfile
 
 from connectlib.algorithms import Algo
 from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
@@ -18,64 +16,7 @@ DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_id
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
-def register_dataset(client: substra.Client, asset_dir: Path, partner_name: str):
-    # Add the dataset
-    # This is the data opener that for nows returns directly a mdf
-    logger.info("Adding dataset")
-    dataset_key = client.add_dataset(
-        substra.sdk.schemas.DatasetSpec(
-            name="opener - MDF",
-            data_opener=asset_dir / "opener" / "opener.py",
-            type="opener - MDF",
-            description=asset_dir / "opener" / "description.md",
-            permissions=DEFAULT_PERMISSIONS,
-            # this is important in the debug mode to separate the partners
-            metadata={substra.DEBUG_OWNER: partner_name},
-        )
-    )
-
-    # Add the data samples : one data sample with the MDF inside
-    logger.info("Adding data sample")
-    data_sample_key = client.add_data_sample(
-        substra.sdk.schemas.DataSampleSpec(
-            path=asset_dir / f"datasample_{partner_name}",
-            test_only=False,
-            data_manager_keys=[dataset_key],
-        )
-    )
-
-    return dataset_key, data_sample_key
-
-
-def make_objective(asset_dir: Path):
-    # objective_key is a key to the metric your registered
-    # objective = asset_factory.create_objective(dataset=org1_client.get_dataset(org1_dataset_key))
-    # data['test_data_sample_keys'] = load_data_samples_keys(data_samples)
-    zip_objective(asset_dir=asset_dir)
-
-    objective = {
-        "name": "avg strategy end-to-end",
-        "description": ASSETS_DIR / "opener" / "description.md",
-        "metrics_name": "accuracy",
-        "metrics": ASSETS_DIR / "objective" / "metrics.zip",
-        "permissions": DEFAULT_PERMISSIONS,  # {"public": False, "authorized_ids": []},
-    }
-
-    return objective
-
-
-def zip_objective(asset_dir: Path):
-    # Create necessary archive to register the operation on substra
-    # the previous metric.zip will be overwritten
-    operation_dir = asset_dir / "objective"
-    archive_path = operation_dir / "metrics.zip"
-    with zipfile.ZipFile(archive_path, "w") as z:
-        for filepath in operation_dir.glob("*[!.zip]"):
-            print(f"zipped in {filepath}")
-            z.write(filepath, arcname=os.path.basename(filepath))
-
-
-def test_fed_avg():
+def test_fed_avg(asset_factory, client):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
     # predict() returns the data, score returned by AccuracyMetric (in the objective) is the mean of all the y_pred
@@ -102,7 +43,7 @@ def test_fed_avg():
             with path.open("w") as f:
                 f.write("test")
 
-    org_client = substra.Client(debug=True)
+    # org_client = client
     partners = ["0", "1"]
 
     # generate the data for partner "0" and "1"
@@ -115,55 +56,72 @@ def test_fed_avg():
         new_data = np.ones([8, 16]) * int(partner_name)
         np.save(path_data / "data.npy", new_data)
 
-    org1_dataset_key, org1_data_sample_key = register_dataset(
-        org_client, ASSETS_DIR, partners[0]
+    # client = substra.Client(debug=True)
+    opener_path = ASSETS_DIR / "opener" / "opener.py"
+    with open(opener_path, "r") as myfile:
+        opener_script = myfile.read()
+
+    dataset_query = asset_factory.create_dataset(
+        metadata={substra.DEBUG_OWNER: partners[0]}, py_script=opener_script
     )
-    org2_dataset_key, org2_data_sample_key = register_dataset(
-        org_client, ASSETS_DIR, partners[1]
+    dataset_1_key = client.add_dataset(dataset_query)
+
+    dataset_2_query = asset_factory.create_dataset(
+        metadata={substra.DEBUG_OWNER: partners[1]}, py_script=opener_script
     )
+    dataset_2_key = client.add_dataset(dataset_2_query)
+
+    # by assigning content we are ensuring that in the first dataset there are only 0s and in the other 1s, to be able
+    # to correctly test the strategy
+    data_sample = asset_factory.create_data_sample(
+        datasets=[dataset_1_key], test_only=False, content="0,0"
+    )
+    sample_1_key = client.add_data_sample(data_sample)
+
+    data_sample = asset_factory.create_data_sample(
+        datasets=[dataset_2_key], test_only=False, content="1,1"
+    )
+    sample_2_key = client.add_data_sample(data_sample)
+
+    data_sample = asset_factory.create_data_sample(datasets=[dataset_1_key], test_only=True)
+    sample_1_test_key = client.add_data_sample(data_sample)
+
+    data_sample = asset_factory.create_data_sample(datasets=[dataset_2_key], test_only=True)
+    sample_2_test_key = client.add_data_sample(data_sample)
 
     train_data_nodes = [
-        TrainDataNode(partners[0], org1_dataset_key, [org1_data_sample_key]),
-        TrainDataNode(partners[1], org2_dataset_key, [org2_data_sample_key]),
+        TrainDataNode(partners[0], dataset_1_key, [sample_1_key]),
+        TrainDataNode(partners[1], dataset_2_key, [sample_2_key]),
     ]
 
-    OBJECTIVE = make_objective(ASSETS_DIR)
-    org1_objective_key = org_client.add_objective(
-        {
-            "name": OBJECTIVE["name"],
-            "description": str(OBJECTIVE["description"]),
-            "metrics_name": OBJECTIVE["metrics_name"],
-            "metrics": str(OBJECTIVE["metrics"]),
-            "test_data_sample_keys": [org1_data_sample_key],
-            "test_data_manager_key": org1_dataset_key,
-            "permissions": OBJECTIVE["permissions"],
-        },
+    # define objectives using data_factory (sdk/data_factory)
+    OBJECTIVE = asset_factory.create_objective(
+        data_samples=[sample_1_test_key],
+        permissions=DEFAULT_PERMISSIONS,
+        dataset=client.get_dataset(dataset_1_key),
+        metrics=str(ASSETS_DIR / "objective"),
     )
+    org1_objective_key = client.add_objective(OBJECTIVE)
 
-    OBJECTIVE = make_objective(ASSETS_DIR)
-    org2_objective_key = org_client.add_objective(
-        {
-            "name": OBJECTIVE["name"],
-            "description": str(OBJECTIVE["description"]),
-            "metrics_name": OBJECTIVE["metrics_name"],
-            "metrics": str(OBJECTIVE["metrics"]),
-            "test_data_sample_keys": [org2_data_sample_key],
-            "test_data_manager_key": org2_dataset_key,
-            "permissions": OBJECTIVE["permissions"],
-        },
+    OBJECTIVE = asset_factory.create_objective(
+        data_samples=[sample_2_test_key],
+        permissions=DEFAULT_PERMISSIONS,
+        dataset=client.get_dataset(dataset_2_key),
+        metrics=str(ASSETS_DIR / "objective"),
     )
+    org2_objective_key = client.add_objective(OBJECTIVE)
 
     test_data_nodes = [
         TestDataNode(
             partners[0],
-            org1_dataset_key,
-            [org1_data_sample_key],
+            dataset_1_key,
+            [sample_1_test_key],
             objective_key=org1_objective_key,
         ),
         TestDataNode(
             partners[1],
-            org2_dataset_key,
-            [org2_data_sample_key],
+            dataset_2_key,
+            [sample_2_test_key],
             objective_key=org2_objective_key,
         ),
     ]
@@ -174,7 +132,7 @@ def test_fed_avg():
 
     orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
     orchestrator.run(
-        org_client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
+        client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
     )
 
     # read the results from saved performances
