@@ -54,8 +54,8 @@ setup(
     install_requires=[
         "numpy>=1.20.3",
         "cloudpickle>=1.6.0",
-        "substratools>=0.7.0",
-        "substra==0.9.0",
+        "substratools>=0.9.0",
+        "substra>0.10.0",
         "wheel",
     ],
     extras_require={

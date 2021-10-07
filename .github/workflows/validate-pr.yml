@@ -11,11 +11,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        python: [3.7, 3.8, 3.9]
+        python: [3.7, 3.8, 3.9, '3.10']
 
     steps:
       - uses: actions/checkout@v2
         with:
+          path: connectlib
           lfs: true
 
       - uses: actions/setup-python@v2
@@ -27,14 +28,34 @@ jobs:
 
       - name: Code conventions
         run: |
+          cd connectlib
           flake8 connectlib
-          black --check .
+          black --check connectlib
+
+      - name: Checkout pyconfig from a private repos
+        uses: actions/checkout@v2
+        with:
+          repository: owkin/connect-tools
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substratools
+
+      - name: Checkout pyconfig from a private repos
+        uses: actions/checkout@v2
+        with:
+          repository: owkin/substra
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substra
 
       - name: Install package
-        run: pip install -e '.[dev]'
+        run: |
+             pip install -e substra
+             pip install -e substratools
+             pip install -e connectlib[dev]
 
       - name: Run tests
-        run: pytest --cov=connectlib --cov-append --cov-report=html:htmlcov
+        run: |
+          cd connectlib
+          pytest --cov=connectlib --cov-append --cov-report=html:htmlcov
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
