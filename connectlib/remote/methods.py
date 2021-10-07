@@ -100,6 +100,10 @@ class RemoteMethod(substratools.AggregateAlgo):
 
         return next_shared_state
 
+    def predict(self, X, model):
+        """This predict method is required by substratools"""
+        return
+
     def load_model(self, path: str):
         return self.shared_state_serializer.load(Path(path))
 

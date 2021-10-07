@@ -82,12 +82,13 @@ class Orchestrator:
         aggregation_node.register_operations(client, permissions)
 
         compute_plan = client.add_compute_plan(
-            {
-                "composite_traintuples": composite_traintuples,
-                "aggregatetuples": aggregation_node.tuples,
-                "testtuples": testtuples,
-                "tag": str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
-            }
+            substra.sdk.schemas.ComputePlanSpec(
+                composite_traintuples=composite_traintuples,
+                aggregatetuples=aggregation_node.tuples,
+                testtuples=testtuples,
+                tag=str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
+                clean_models=True,  # set it to False if users need the intermediary models
+            )
         )
 
         return compute_plan

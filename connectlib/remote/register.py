@@ -4,7 +4,9 @@ import cloudpickle
 import tempfile
 import shutil
 import substra
+import substratools
 import subprocess
+import sys
 import zipfile
 import connectlib
 
@@ -29,7 +31,7 @@ RUN python{0} -m pip install -U pip
 # requirements for the tests and not as a part of a template)
 RUN python{0} -m pip install six pytest
 
-# Install connectlib
+# Install connectlib, substra and substratools
 {1}
 
 # Install dependencies
@@ -77,6 +79,68 @@ if __name__ == "__main__":
 """
 
 
+def get_local_lib(lib_modules: List, operation_dir: str, python_major_minor) -> str:
+    """Prepares the private libraries from lib_modules list
+    to be installed in the Docker and makes the command for dockerfile.
+    It first creates the wheel for each library. Each of the libraries must be already installed in the correct version
+    locally. Use command: `pip install -e library-name` in the directory of each library.
+
+    Args:
+        lib_modules (`list`): list of modules to be installed.
+        operation_dir (Path): PosixPath to the operation directory
+        python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
+
+    Returns:
+        str: dockerfile command for installing the given modules
+    """
+    install_cmds = []
+    for lib_module in lib_modules:
+        if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
+            # TODO: add private pypi (eg user needs to pass the credentials)
+            raise NotImplementedError(
+                "You must have connectlib, substra and substratools in editable mode.\n"
+                "eg `pip install -e substra` in the substra directory"
+            )
+        else:
+            lib_name = lib_module.__name__
+            lib_path = Path(lib_module.__file__).parents[1]
+
+            # if the right version of substra or substratools is not found, it will search if they are already
+            # installed in 'dist' and take them from there.
+            # sys.executable takes the Python interpreter run by the code and not the default one on the computer
+            try:
+                subprocess.check_output(
+                    [
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "wheel",
+                        ".",
+                        "-w",
+                        "dist",
+                        "--find-links",
+                        operation_dir / "dist/substra",
+                        "--find-links",
+                        operation_dir / "dist/substratools",
+                    ],
+                    cwd=str(lib_path),
+                )
+            except subprocess.CalledProcessError as e:
+                print(e.output)
+
+            shutil.copytree(lib_path / "dist", operation_dir / f"dist/{lib_name}")
+            # Get wheel name based on current version
+            wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl\n"
+
+            # Necessary command to install the wheel in the docker Image
+            install_cmd = (
+                f"COPY ./dist/{lib_name} /{lib_name}\n"
+                f"RUN cd /{lib_name} && python{python_major_minor} -m pip install {wheel_name}"
+            )
+            install_cmds.append(install_cmd)
+    return "\n".join(install_cmds)
+
+
 def prepare_substra_algo(
     remote_struct: RemoteStruct,
     dependencies: Optional[List[str]] = None,
@@ -110,24 +174,9 @@ def prepare_substra_algo(
     # Cloudpickle will crash if we don't deserialize with the same major.minor
     python_major_minor = ".".join(python_version().split(".")[:2])
 
-    # Build Connectlib wheel if needed
-    if (connectlib.LIB_PATH.parent / "setup.py").exists():
-        subprocess.run(
-            ["pip", "wheel", ".", "-w", "dist"], cwd=str(connectlib.LIB_PATH.parent)
-        )
-        shutil.copytree(connectlib.LIB_PATH.parent / "dist", operation_dir / "dist")
-
-        # Get wheel name based on current version
-        wheel_name = f"connectlib-{connectlib.__version__}-py3-none-any.whl"
-
-        # Necessary command to install the wheel in the docker Image
-        connectlib_install_cmd = (
-            f"COPY ./dist /connectlib\n"
-            f"RUN cd /connectlib && python{python_major_minor} -m pip install {wheel_name}"
-        )
-    else:
-        # TODO: add private pypi
-        connectlib_install_cmd = f"RUN python{python_major_minor} -m pip install connectlib=={connectlib.__version__}"
+    # Build Connectlib, Substra and Substratools wheel if needed
+    lib_modules = [substratools, substra, connectlib]  # owkin private dependencies
+    install_cmd = get_local_lib(lib_modules, operation_dir, python_major_minor)
 
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
@@ -146,7 +195,7 @@ def prepare_substra_algo(
         f.write(
             DOCKERFILE_TEMPLATE.format(
                 python_major_minor,
-                connectlib_install_cmd,
+                install_cmd,
                 f"RUN python{python_major_minor} -m pip install "
                 + " ".join(dependencies)
                 if dependencies is not None
@@ -159,14 +208,19 @@ def prepare_substra_algo(
 
     # Create necessary archive to register the operation on substra
     archive_path = operation_dir / "algo.zip"
+
     with zipfile.ZipFile(archive_path, "w") as z:
         for filepath in operation_dir.glob("*[!.zip]"):
             if filepath.name == "dist":
-                for dist in filepath.glob("*"):
-                    z.write(dist, arcname=os.path.join("dist", dist.name))
+                for dirpath, _, files in os.walk(filepath):
+                    dirpath = Path(dirpath).relative_to(filepath)
+                    for distfile in files:
+                        z.write(
+                            filepath / dirpath / distfile,
+                            arcname="dist" / dirpath / distfile,
+                        )
             else:
                 z.write(filepath, arcname=os.path.basename(filepath))
-
     return archive_path, description_path
 
 
@@ -180,13 +234,14 @@ def register_aggregate_node_op(
         remote_struct, dependencies=dependencies
     )
 
-    key = client.add_aggregate_algo(
-        substra.sdk.schemas.AggregateAlgoSpec(
+    key = client.add_algo(
+        substra.sdk.schemas.AlgoSpec(
             name=uuid.uuid4().hex,
             description=description_path,
             file=archive_path,
             permissions=permisions,
             metadata=dict(),
+            category=substra.sdk.schemas.AlgoCategory.aggregate,
         )
     )
     return key
@@ -202,13 +257,14 @@ def register_data_node_op(
         remote_struct, dependencies=dependencies
     )
 
-    key = client.add_composite_algo(
-        substra.sdk.schemas.CompositeAlgoSpec(
+    key = client.add_algo(
+        substra.sdk.schemas.AlgoSpec(
             name=uuid.uuid4().hex,
             description=description_path,
             file=archive_path,
             permissions=permisions,
             metadata=dict(),
+            category=substra.sdk.schemas.AlgoCategory.composite,
         )
     )
 
