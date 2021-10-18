@@ -1,5 +1,5 @@
 # The purpose of this file is to generate assests for testing purposes
-# data samples, dataset, objective for any tests
+# data samples, dataset, metricr any tests
 
 # Copyright 2018 Owkin, inc.
 #
@@ -154,7 +154,7 @@ class AssetsFactory:
     def __init__(self, name):
         self._data_sample_counter = Counter()
         self._dataset_counter = Counter()
-        self._objective_counter = Counter()
+        self._metric_counter = Counter()
         self._algo_counter = Counter()
         self._workdir = pathlib.Path(tempfile.mkdtemp(prefix="/tmp/"))
         self._uuid = name
@@ -185,9 +185,7 @@ class AssetsFactory:
             data_manager_keys=datasets,
         )
 
-    def create_dataset(
-        self, py_script, objective=None, permissions=None, metadata=None
-    ):
+    def create_dataset(self, py_script, metric=None, permissions=None, metadata=None):
         py_script = DEFAULT_OPENER_SCRIPT
         idx = self._dataset_counter.inc()
         tmpdir = self._workdir / f"dataset-{idx}"
@@ -209,11 +207,10 @@ class AssetsFactory:
             type="Test",
             metadata=metadata,
             description=str(description_path),
-            objective_key=objective.key if objective else None,
             permissions=permissions or DEFAULT_PERMISSIONS,
         )
 
-    def create_objective(
+    def create_metric(
         self,
         dataset=None,
         data_samples=None,
@@ -221,10 +218,10 @@ class AssetsFactory:
         metadata=None,
         metrics=None,
     ):
-        idx = self._objective_counter.inc()
-        tmpdir = self._workdir / f"objective-{idx}"
+        idx = self._metric_counter.inc()
+        tmpdir = self._workdir / f"metric-{idx}"
         tmpdir.mkdir()
-        name = _shorten_name(f"{self._uuid} - Objective {idx}")
+        name = _shorten_name(f"{self._uuid} - metric {idx}")
 
         description_path = tmpdir / "description.md"
         description_content = name
@@ -234,6 +231,7 @@ class AssetsFactory:
         if metrics:
             # if directory to the metric is given zip it
             metrics = pathlib.Path(metrics)
+            assert metrics.is_dir(), f"Metrics path should be a directory {metrics}"
             metrics_zip = tmpdir / "metrics.zip"
             with zipfile.ZipFile(metrics_zip, "w") as z:
                 for filepath in metrics.glob("*[!.zip]"):
@@ -249,13 +247,10 @@ class AssetsFactory:
 
         data_samples = data_samples or []
 
-        return substra.sdk.schemas.ObjectiveSpec(
+        return substra.sdk.schemas.MetricSpec(
             name=name,
             description=str(description_path),
-            metrics_name="test metrics",
-            metrics=str(metrics_zip),
+            file=str(metrics_zip),
+            permissions=permissions,
             metadata=metadata,
-            permissions=permissions or DEFAULT_PERMISSIONS,
-            test_data_sample_keys=_get_keys(data_samples),
-            test_data_manager_key=dataset.key if dataset else None,
         )

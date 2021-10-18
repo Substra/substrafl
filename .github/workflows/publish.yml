@@ -18,6 +18,7 @@ jobs:
         python-version: 3.7
     - name: Prepare
       run: |
+        pip install --upgrade pip
         pip install --upgrade setuptools wheel twine
     - name: Build connectlib
       run: |
