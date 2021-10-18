@@ -1,8 +1,6 @@
-import json
 import numpy as np
 from pathlib import Path
 from logging import getLogger
-import os
 
 from connectlib.algorithms import Algo
 from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
@@ -24,7 +22,7 @@ LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 def test_fed_avg(asset_factory, client):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
-    # predict() returns the data, score returned by AccuracyMetric (in the objective) is the mean of all the y_pred
+    # predict() returns the data, score returned by AccuracyMetric (in the metric) is the mean of all the y_pred
     # passed to it. The tests asserts if the score is 0.5
     class MyAlgo(Algo):
         # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
@@ -109,35 +107,35 @@ def test_fed_avg(asset_factory, client):
         TrainDataNode(partners[1], dataset_2_key, [sample_2_key]),
     ]
 
-    # define objectives using data_factory (sdk/data_factory)
-    OBJECTIVE = asset_factory.create_objective(
+    # define metrics using data_factory (sdk/data_factory)
+    METRIC = asset_factory.create_metric(
         data_samples=[sample_1_test_key],
         permissions=DEFAULT_PERMISSIONS,
         dataset=client.get_dataset(dataset_1_key),
-        metrics=str(ASSETS_DIR / "objective"),
+        metrics=str(ASSETS_DIR / "metric"),
     )
-    org1_objective_key = client.add_objective(OBJECTIVE)
+    org1_metric_key = client.add_metric(METRIC)
 
-    OBJECTIVE = asset_factory.create_objective(
+    METRIC = asset_factory.create_metric(
         data_samples=[sample_2_test_key],
         permissions=DEFAULT_PERMISSIONS,
         dataset=client.get_dataset(dataset_2_key),
-        metrics=str(ASSETS_DIR / "objective"),
+        metrics=str(ASSETS_DIR / "metric"),
     )
-    org2_objective_key = client.add_objective(OBJECTIVE)
+    org2_metric_key = client.add_metric(METRIC)
 
     test_data_nodes = [
         TestDataNode(
             partners[0],
             dataset_1_key,
             [sample_1_test_key],
-            objective_key=org1_objective_key,
+            metric_keys=[org1_metric_key],
         ),
         TestDataNode(
             partners[1],
             dataset_2_key,
             [sample_2_test_key],
-            objective_key=org2_objective_key,
+            metric_keys=[org2_metric_key],
         ),
     ]
 
@@ -146,16 +144,15 @@ def test_fed_avg(asset_factory, client):
     strategy = FedAVG(num_rounds=3, num_updates=2, batch_size=3)
 
     orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
-    orchestrator.run(
+    compute_plan = orchestrator.run(
         client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
     )
 
     # read the results from saved performances
-    path = LOCAL_WORKER_PATH / "performances"
-    dirs = [d for d in path.iterdir() if d.is_dir()]
-    newest = max(dirs, key=os.path.getctime)
-    score_file = newest / "performance.json"
-    score = json.loads(score_file.read_bytes())["all"]
+    testtuples = client.list_testtuple(
+        filters=[f"testtuple:compute_plan_key:{compute_plan.key}"]
+    )
+    testtuple = testtuples[0]
 
     # assert that the calculated score matches the expected score
-    assert score == 0.5
+    assert list(testtuple.test.perfs.values())[0] == 0.5

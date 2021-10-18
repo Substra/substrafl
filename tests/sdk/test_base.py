@@ -27,13 +27,13 @@ def test_dataset_query(dataset_query):
         "data_opener",
         "type",
         "description",
-        "objective_key",
+        "metric_key",
         "permissions",
     } <= dataset_query.keys()
 
 
-def test_objective_query(objective_query):
-    assert type(objective_query) is dict
+def test_metric_query(metric_query):
+    assert type(metric_query) is dict
     assert {
         "name",
         "metrics",
@@ -42,7 +42,7 @@ def test_objective_query(objective_query):
         "test_data_manager_key",
         "test_data_sample_keys",
         "permissions",
-    } <= objective_query.keys()
+    } <= metric_query.keys()
 
 
 def test_data_sample_query(data_sample_query):

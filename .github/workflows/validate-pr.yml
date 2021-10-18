@@ -24,7 +24,9 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install lint checks
-        run: pip install pytest black flake8
+        run: |
+          pip install --upgrade pip
+          pip install pytest black flake8
 
       - name: Code conventions
         run: |

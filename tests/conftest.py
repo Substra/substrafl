@@ -37,7 +37,7 @@ def dataset_query(tmpdir):
         "data_opener": str(opener_path),
         "type": "images",
         "description": str(desc_path),
-        "objective_key": "",
+        "metric_key": "",
         "permissions": {
             "public": True,
             "authorized_ids": [],
@@ -46,7 +46,7 @@ def dataset_query(tmpdir):
 
 
 @pytest.fixture
-def objective_query(tmpdir):
+def metric_query(tmpdir):
     metrics_path = tmpdir / "metrics.zip"
     metrics_path.write_text("foo archive", encoding="utf-8")
 
