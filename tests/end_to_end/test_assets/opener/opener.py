@@ -10,12 +10,12 @@ class Opener(tools.Opener):
         samples = list()
         for folder in folders:
             samples.append(np.load(pathlib.Path(folder) / "data.npy"))
-        return samples
+        return np.array(samples)
 
     def get_y(self, folders):
         return np.random.randint(0, 2, size=(1000, 1))
 
-    def save_predictions(self, y_pred: np.array, path):
+    def save_predictions(self, y_pred: np.ndarray, path):
         np.save(path, y_pred)
         shutil.move(str(path) + ".npy", path)
 

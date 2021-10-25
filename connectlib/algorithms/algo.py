@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 from connectlib.remote import remote_data
 
-Weights = Dict[str, np.array]
+Weights = Dict[str, np.ndarray]
 
 
 class Algo:
@@ -26,7 +26,7 @@ class Algo:
 
     @remote_data
     @abstractmethod
-    def predict(self, x: Any, shared_state: Weights) -> np.array:
+    def predict(self, x: Any, shared_state: Weights) -> np.ndarray:
         raise NotImplementedError
 
     @abstractmethod

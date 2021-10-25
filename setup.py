@@ -45,6 +45,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     keywords=["connectlib"],
     packages=find_packages(exclude=["tests*"]),
@@ -55,7 +56,7 @@ setup(
         "numpy>=1.20.3",
         "cloudpickle>=1.6.0",
         "substratools>=0.9.0",
-        "substra==0.11.1rc1",
+        "substra>=0.11.1rc1",
         "wheel",
     ],
     extras_require={

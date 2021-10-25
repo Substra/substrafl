@@ -3,7 +3,7 @@ from pathlib import Path
 from logging import getLogger
 
 from connectlib.algorithms import Algo
-from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
+from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
 from connectlib.orchestrator import Orchestrator
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
@@ -33,12 +33,14 @@ def test_fed_avg(asset_factory, client):
         @remote_data
         def train(
             self,
-            x: np.array,
-            y: np.array,
+            x: np.ndarray,
+            y: np.ndarray,
             num_updates: int,
+            n_rounds: int,
+            batch_size: int,
             shared_state,
         ):
-            return dict(test=x)
+            return dict(test=np.array(x), n_samples=len(x))
 
         @remote_data
         def predict(self, x: np.array, shared_state):
@@ -145,9 +147,11 @@ def test_fed_avg(asset_factory, client):
 
     orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
     compute_plan = orchestrator.run(
-        client, train_data_nodes, aggregation_node, test_data_nodes=test_data_nodes
+        client,
+        train_data_nodes=train_data_nodes,
+        test_data_nodes=test_data_nodes,
+        aggregation_node=aggregation_node,
     )
-
     # read the results from saved performances
     testtuples = client.list_testtuple(
         filters=[f"testtuple:compute_plan_key:{compute_plan.key}"]

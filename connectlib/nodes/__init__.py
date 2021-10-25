@@ -1,6 +1,11 @@
-from .node import Node
-from .aggregation_node import AggregationNode
-from .train_data_node import TrainDataNode
-from .test_data_node import TestDataNode
+from connectlib.nodes.node import Node
+from connectlib.nodes.aggregation_node import AggregationNode
+from connectlib.nodes.train_data_node import TrainDataNode
+from connectlib.nodes.test_data_node import TestDataNode
 
-__all__ = ["Node", "AggregationNode", "TrainDataNode", "TestDataNode"]
+__all__ = [
+    "Node",
+    "AggregationNode",
+    "TrainDataNode",
+    "TestDataNode",
+]

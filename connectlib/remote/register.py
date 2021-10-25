@@ -23,6 +23,8 @@ FROM python:{0}
 WORKDIR /sandbox
 ENV PYTHONPATH /sandbox
 
+RUN mkdir /wheels
+
 # install dependencies
 RUN python{0} -m pip install -U pip
 
@@ -79,7 +81,7 @@ if __name__ == "__main__":
 """
 
 
-def get_local_lib(lib_modules: List, operation_dir: str, python_major_minor) -> str:
+def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) -> str:
     """Prepares the private libraries from lib_modules list
     to be installed in the Docker and makes the command for dockerfile.
     It first creates the wheel for each library. Each of the libraries must be already installed in the correct version
@@ -108,6 +110,14 @@ def get_local_lib(lib_modules: List, operation_dir: str, python_major_minor) -> 
             # if the right version of substra or substratools is not found, it will search if they are already
             # installed in 'dist' and take them from there.
             # sys.executable takes the Python interpreter run by the code and not the default one on the computer
+            extra_args: list = list()
+            if lib_name == "connectlib":
+                extra_args = [
+                    "--find-links",
+                    operation_dir / "dist/substra",
+                    "--find-links",
+                    operation_dir / "dist/substratools",
+                ]
             try:
                 subprocess.check_output(
                     [
@@ -118,24 +128,25 @@ def get_local_lib(lib_modules: List, operation_dir: str, python_major_minor) -> 
                         ".",
                         "-w",
                         "dist",
-                        "--find-links",
-                        operation_dir / "dist/substra",
-                        "--find-links",
-                        operation_dir / "dist/substratools",
-                    ],
+                        "--no-deps",
+                    ]
+                    + extra_args,
                     cwd=str(lib_path),
                 )
             except subprocess.CalledProcessError as e:
                 print(e.output)
 
-            shutil.copytree(lib_path / "dist", operation_dir / f"dist/{lib_name}")
             # Get wheel name based on current version
-            wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl\n"
+            wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
+            (operation_dir / "dist").mkdir(exist_ok=True)
+            shutil.copy(
+                lib_path / "dist" / wheel_name, operation_dir / "dist" / wheel_name
+            )
 
             # Necessary command to install the wheel in the docker Image
             install_cmd = (
-                f"COPY ./dist/{lib_name} /{lib_name}\n"
-                f"RUN cd /{lib_name} && python{python_major_minor} -m pip install {wheel_name}"
+                f"COPY ./dist/{wheel_name} /wheels/{wheel_name}\n"
+                f"RUN cd /wheels && python{python_major_minor} -m pip install {wheel_name}\n"
             )
             install_cmds.append(install_cmd)
     return "\n".join(install_cmds)
@@ -213,21 +224,21 @@ def prepare_substra_algo(
         for filepath in operation_dir.glob("*[!.zip]"):
             if filepath.name == "dist":
                 for dirpath, _, files in os.walk(filepath):
-                    dirpath = Path(dirpath).relative_to(filepath)
+                    relative_dirpath = Path(dirpath).relative_to(filepath)
                     for distfile in files:
                         z.write(
-                            filepath / dirpath / distfile,
-                            arcname="dist" / dirpath / distfile,
+                            filepath / relative_dirpath / distfile,
+                            arcname="dist" / relative_dirpath / distfile,
                         )
             else:
                 z.write(filepath, arcname=os.path.basename(filepath))
     return archive_path, description_path
 
 
-def register_aggregate_node_op(
+def register_aggregation_node_op(
     client: substra.Client,
     remote_struct: RemoteStruct,
-    permisions: substra.sdk.schemas.Permissions,
+    permissions: substra.sdk.schemas.Permissions,
     dependencies: Optional[List[str]] = None,
 ) -> str:
     archive_path, description_path = prepare_substra_algo(
@@ -239,7 +250,7 @@ def register_aggregate_node_op(
             name=uuid.uuid4().hex,
             description=description_path,
             file=archive_path,
-            permissions=permisions,
+            permissions=permissions,
             metadata=dict(),
             category=substra.sdk.schemas.AlgoCategory.aggregate,
         )
@@ -250,7 +261,7 @@ def register_aggregate_node_op(
 def register_data_node_op(
     client: substra.Client,
     remote_struct: RemoteStruct,
-    permisions: substra.sdk.schemas.Permissions,
+    permissions: substra.sdk.schemas.Permissions,
     dependencies: Optional[List[str]] = None,
 ) -> str:
     archive_path, description_path = prepare_substra_algo(
@@ -262,7 +273,7 @@ def register_data_node_op(
             name=uuid.uuid4().hex,
             description=description_path,
             file=archive_path,
-            permissions=permisions,
+            permissions=permissions,
             metadata=dict(),
             category=substra.sdk.schemas.AlgoCategory.composite,
         )
