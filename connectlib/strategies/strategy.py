@@ -5,7 +5,7 @@ from typing import TypeVar, List
 from pathlib import Path
 
 from connectlib.algorithms import Algo
-from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
+from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
 
 SharedState = TypeVar("SharedState")
 
@@ -35,7 +35,6 @@ class Strategy(ABC):
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
     ):
-        # TODO: when substratools testtuples are patched to accept algo_key, we will not need train_data_nodes anymore
         raise NotImplementedError
 
     def load(self, path: Path):

@@ -1,12 +1,23 @@
 import substra
 
-from typing import List
+from typing import List, Optional
 
 from connectlib.nodes import Node
 
 
 class TestDataNode(Node):
-    # TODO: improve on comments and docstrings
+    """A node on which you will test your algorithm.
+    A TestDataNode must also be a train data node for now.
+
+    Inherits from :class:`connectlib.nodes.node.Node`
+
+    Args:
+        node_id (str): The substra node ID (shared with other nodes if permissions are needed)
+        data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
+        test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
+        metric_keys (List[str]):  Substra metric keys to the metrics, use substra.Client().add_metric()
+    """
+
     def __init__(
         self,
         node_id: str,
@@ -20,10 +31,15 @@ class TestDataNode(Node):
 
         super(TestDataNode, self).__init__(node_id)
 
-    def compute(
+    def update_states(
         self,
         traintuple_id: str,
     ):
+        """Creating a test tuple based on the node characteristic.
+
+        Args:
+            traintuple_id (str): The substra parant id
+        """
         self.tuples.append(
             {
                 "metric_keys": self.metric_keys,
@@ -34,6 +50,9 @@ class TestDataNode(Node):
         )
 
     def register_operations(
-        self, client: substra.Client, permissions: substra.sdk.schemas.Permissions
+        self,
+        client: substra.Client,
+        permissions: substra.sdk.schemas.Permissions,
+        dependencies: Optional[List[str]] = None,
     ):
         pass

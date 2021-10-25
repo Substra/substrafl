@@ -112,6 +112,18 @@ class RemoteMethod(substratools.AggregateAlgo):
 
 
 class RemoteStruct:
+    """Represents a submittable substra object.
+    E.g.: An algorithm, a dataset, an objective
+
+    Args:
+        cls (Type): The remote struct type (e.g. Algorithm, dataset)
+        cls_parameters (str): The class parameters serialized into json string.
+            E.g.: use `json.dumps({"args": [], "kwargs": kwargs})`
+        remote_cls_name (str): The name of the class used remotely
+        remote_cls_parameters (str): The remote class parameters serialized into json string.
+            E.g.: use `json.dumps({"args": [], "kwargs": kwargs})`
+    """
+
     def __init__(
         self,
         cls: Type,

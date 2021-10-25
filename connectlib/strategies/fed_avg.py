@@ -1,21 +1,51 @@
-import random
-
 import numpy as np
 
-from typing import Optional, List
+from typing import List, Dict, Union
 
 from connectlib.algorithms import Algo
-from connectlib.algorithms.algo import Weights
-from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
+from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
 from connectlib.strategies.strategy import Strategy
-from connectlib.remote import remote, remote_data
+from connectlib.remote import remote
 
 
 class FedAVG(Strategy):
-    """[summary]
+    """Federated averaging strategy.
+    Federated averaging is the simplest federating strategy.
+    A round consists in a performing a predefined number of forward/backward
+    passes on each client, aggregating updates by computing their means and
+    distributing the consensus update to all clients. In FedAvg, strategy is
+    performed in :term:`aggregationized setting` where a single server or
+    :term:`aggregation node` communicates with a number of client :term:`node`.
+
+    Formally, if :math:`w_t` denotes the parameters of the model at round
+    :math:`t`, a single round consists in the following steps:
+    .. math::
+      \\Delta w_t^{k} = \\mathcal{O}^k_t(w_t| X_t^k, y_t^k, m)
+      \\Delta w_t = \\sum_{k=1}^K \\frac{n_k}{n} \\Delta w_t^k
+      w_{t + 1} = w_t + \\Delta w_t
+    where :math:`\\mathcal{O}^k_t` is the local optimizer algorithm of client
+    :math:`k` taking as argument the aggregationized weights as well as the
+    :math:`t`-th batch of data for local worker :math:`k` and the number of
+    local updates :math:`m` to perform, and where :math:`n_k` is the number of
+    samples for worker :math:`k`, :math:`n = \\sum_{k=1}^K n_k` is the total
+    number of samples.
+
+    **Adventages**:
+    - decoupling of model training from the need for direct access to the raw
+    training data
+    - significant reduction of privacy and security risks by (limiting the attack
+    surface only to the nodes)
+
+    **Disadventages**:
+    - each :term:`node` is connected to :term:`aggregation node`. The communication
+    rounds between each node and aggregation node might be frequent which might be expensive
+    - some trust of the server coordinating the training is still required.
 
     Args:
-        Strategy ([type]): [description]
+        num_rounds (int): The number of times the algorithm will be trained on each client
+        num_updates (int): number of batches in each round. This arguments will be passed
+        to the `self.train` method of your `Algo` class
+        batch_size (int): The number of training examples utilized in one iteration
     """
 
     def __init__(self, num_rounds: int, num_updates: int, batch_size: int):
@@ -35,134 +65,81 @@ class FedAVG(Strategy):
         self.avg_shared_state = None
 
     @remote
-    def avg_shared_states(self, shared_states: List[Weights]) -> Weights:
-        # get keys
-        keys = shared_states[0].keys()
+    def avg_shared_states(
+        self, shared_states: List[Dict[str, Union[int, np.ndarray]]]
+    ) -> Dict[str, np.ndarray]:
+        """Compute the weighted avarage of all elements returned by the train
+        methode of the user defined algorithm.
+        The average is weighted by the number of samples.
 
-        # average weights
+        E.g.: shared_states = [
+            {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
+            {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
+        ]
+
+        result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
+
+        Args:
+            shared_states (List[Weights]): The list of the shared_state returned by
+            the train method of the algorithm for each node.
+
+        Raises:
+            TypeError: The train method of your algorithm must return a shared_state
+            TypeError: Each shared_state must contains the key **n_samples**
+            TypeError: Each shared_state must contains at least one element to average
+            TypeError: All the elements of shared_states must be similar (same keys)
+            TypeError: All elements to average must be of type np.array
+
+        Returns:
+            Weights:
+        """
+        # get keys
+        # TODO: for now an ugly conversion to list to be able to remove the element, improve
+        # shared_states -> list of weights at each client
+        if len(shared_states) == 0:
+            raise TypeError(
+                "Your shared_states is empty. Please ensure that "
+                "the train method of your algorithm always returns nothing. "
+                "It must returns a dict containing n_samples(int) and at least one other key (np.array)."
+            )
+        if not (
+            all(["n_samples" in shared_state.keys() for shared_state in shared_states])
+        ):
+            raise TypeError(
+                "n_samples must be a key from all your shared_state. "
+                "This must be set in the returned element of the train method from your algorithm. "
+                "It must be a dict containing n_samples(int) and at least one other key (np.array)."
+            )
+        if len(shared_states[0].keys()) == 1:
+            raise TypeError(
+                "shared_state must contains at least one element to average."
+                "This must be set it in the returned element of the train method from your algorithm. "
+                "It must be a dict containing n_samples(int) and at least one other key (np.array)."
+            )
+        for shared_state in shared_states:
+            for k, v in shared_state.items():
+                if k != "n_samples" and not (isinstance(v, np.ndarray)):
+                    raise TypeError(
+                        "Except for the `n_samples`, the types of your shared_state must be numpy array. "
+                        f"'{k}' is of type '{type(v)}' ."
+                        "It must be a dict containing n_samples(int) and at least one other key (np.array)."
+                    )
+
         averaged_states = {}
-        for key in keys:
-            states = np.stack([state[key] for state in shared_states])
-            averaged_states[key] = np.mean(states, axis=0)
+        all_samples = np.array([state.pop("n_samples") for state in shared_states])
+        n_all_samples = np.sum(all_samples)
+
+        for key in shared_states[0].keys():
+            # take each of the states,and multiply by the number of samples for each client and sum
+            # For now each value of shared_states is an np.array.
+            states = []
+            for n_samples, state in zip(all_samples, shared_states):
+                states.append(state[key] * n_samples)
+            states = np.sum(states, axis=0)
+            # divide by the sum of all the samples
+            averaged_states[key] = states / n_all_samples
 
         return averaged_states
-
-    @remote_data
-    def data_indexer(
-        self,
-        x,
-        y,
-        num_rounds: int,
-        num_updates: int,
-        batch_size: int,
-        seed: Optional[int] = 42,
-        drop_last: Optional[bool] = None,
-        shared_state: Optional = None,
-    ):
-        """Remotly (on the node) generates the batch_indices from the given data
-
-        Args:
-            x (sequence): x data, only for consistency purposes, not used
-                in the function
-            y (sequence): y data, the length of this data
-                is used to calculate the indices
-            num_rounds (int): number of rounds
-            num_updates (int): number of batches in each round
-            batch_size (int): number of data points in each batch
-            drop_last (bool): if set to True it will ignore the last, not full batch
-                if set to False it will make the last batch smaller
-            shared_state: used only for consistency purposes
-
-            return (dictionary): the structure is:
-                {"minibatch_indices": minibatch_indices,
-                 "index": 0}
-                where `minibatch_indices` is a list of rounds of list
-                of updates of `batch_size`, and each batch is filled
-                with integer indices.
-
-            The indices of the data are shuffled. The data is used to fill the batches until
-            a full batch cannot be made. The next batch will be shorter if `drop_last` is False.
-            The data is reshuffled and used again to fill next batches until `num_rounds` of
-            `num_updates` of batches is satisfied.
-
-            for example:
-                if the size of the data is 7, num_rounds = 3, num_updates=2 and batch_size=3,
-                and drop_last set to False,
-                the resulting minibatch_indices list will be:
-                1. first list of rounds of 2 lists
-                2. lists of updates with 2 lists of sizes
-                   either 3 or 1 (because drop_last is set to False)
-                therefore the minibatch_indices list will look as follows:
-                [[[id, id, id], [id, id, id]],
-                 [[id], [id2, id2, id2]],
-                 [[id2, id2, id2], [id2]]]
-                 where id are indices and id2 are reshufled indices
-
-                if, in the same case drop_last is set to True,
-                the resulting minibatch_indices will be:
-                [[[id, id, id], [id, id, id]],
-                 [[id2, id2, id2], [id2, id2, id2]],
-                 [[id3, id3, id3], [id3, id3, id3]]]
-                where id2 and id3 are indices drawn from the second and third pass on the data
-                and one data point is not used on each of the pass
-
-        """
-        data_len = len(y)
-
-        # if batch_size is larger than data size and drop_last is True we raise an error
-        if batch_size > data_len and drop_last:
-            raise ValueError(
-                "batch_size cannot be larger "
-                "than length of the data "
-                "if drop_last is set to True"
-            )
-        random.seed(seed)
-        indices = list(range(data_len))
-        minibatch_indices = list()
-        random.shuffle(indices)
-        idx = 0
-        for _ in range(num_rounds):
-            round_indices = list()
-            for _ in range(num_updates):
-                if drop_last and idx + batch_size > data_len:
-                    # Not enough samples to do a full batch, we shuffle
-                    # and go from the beginning again
-                    idx = 0
-                    random.shuffle(indices)
-                    round_indices.append(indices[idx : idx + batch_size])
-                    idx = idx + batch_size
-                else:
-                    round_indices.append(indices[idx : idx + batch_size])
-                    if idx + batch_size >= data_len:
-                        # we had just enough for one batch, we shuffle
-                        # and go from the beginning again
-                        idx = 0
-                        random.shuffle(indices)
-                    else:
-                        idx = idx + batch_size
-
-            minibatch_indices.append(round_indices)
-
-        return {"minibatch_indices": minibatch_indices, "index": 0}
-
-    def initialize(self, train_data_nodes: List[TrainDataNode]):
-        """[summary]
-
-        Args:
-            train_data_nodes (List[TrainDataNode]): [description]
-        """
-        self.local_states = list()
-        for node in train_data_nodes:
-            next_local_state, _ = node.compute(
-                self.data_indexer(
-                    node.data_sample_keys,
-                    shared_state=None,
-                    num_rounds=self.num_rounds,
-                    num_updates=self.num_updates,
-                    batch_size=self.batch_size,
-                )
-            )
-            self.local_states.append(next_local_state)
 
     def perform_round(
         self,
@@ -173,7 +150,7 @@ class FedAVG(Strategy):
         """One round of the Federated Averaging strategy:
         - if they exist, set the model weights to the aggregated weights on each train data nodes
         - perform a local update (train on n minibatches) of the models on each train data nodes
-        - aggregate the model gradients
+        - aggregate the model shared_states
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
@@ -189,11 +166,13 @@ class FedAVG(Strategy):
 
             # define composite tuples (do not submit yet)
             # for each composite tuple give description of Algo instead of a key for an algo
-            next_local_state, next_shared_state = node.compute(
+            next_local_state, next_shared_state = node.update_states(
                 algo.train(  # type: ignore
                     node.data_sample_keys,
                     shared_state=self.avg_shared_state,
                     num_updates=self.num_updates,
+                    n_rounds=self.num_rounds,
+                    batch_size=self.batch_size,
                 ),
                 local_state=previous_local_state,
             )
@@ -201,7 +180,7 @@ class FedAVG(Strategy):
             next_local_states.append(next_local_state)
             states_to_aggregate.append(next_shared_state)
 
-        avg_shared_state = aggregation_node.compute(
+        avg_shared_state = aggregation_node.update_states(
             self.avg_shared_states(shared_states=states_to_aggregate)  # type: ignore
         )
 
@@ -214,28 +193,39 @@ class FedAVG(Strategy):
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
     ):
-        # TODO: REMOVE WHEN HACK IS FIXED
-        traintuple_ids = []
-        for i, node in enumerate(train_data_nodes):
-            previous_local_state = (
-                self.local_states[i] if self.local_states is not None else None
-            )
+        for test_node in test_data_nodes:
+            matching_train_nodes = [
+                train_node
+                for train_node in train_data_nodes
+                if train_node.node_id == test_node.node_id
+            ]
+            if len(matching_train_nodes) == 0:
+                raise NotImplementedError(
+                    "Cannot test on a node we did not train on for now."
+                )
 
+            train_node = matching_train_nodes[0]
+            node_index = train_data_nodes.index(train_node)
+            previous_local_state = (
+                self.local_states[node_index] if self.local_states is not None else None
+            )
             assert previous_local_state is not None
 
-            traintuple_id_ref, _ = node.compute(
+            # Since the training round ends on an aggregation on the aggregation node
+            # we need to get the aggregated gradients back to the test node
+            traintuple_id_ref, _ = train_node.update_states(
                 # here we could also use algo.train or whatever method marked as @remote_data
                 # in the algo
                 # because fake_traintuple is true so the method name and the method
                 # are not used
                 algo.predict(  # type: ignore
-                    [node.data_sample_keys[0]],
+                    [test_node.test_data_sample_keys[0]],
                     shared_state=self.avg_shared_state,
                     fake_traintuple=True,
                 ),
                 local_state=previous_local_state,
             )
-            traintuple_ids.append(traintuple_id_ref.key)
 
-        for i, node in enumerate(test_data_nodes):
-            node.compute(traintuple_ids[i])  # compute testtuple
+            test_node.update_states(
+                traintuple_id=traintuple_id_ref.key
+            )  # Init state for testtuple

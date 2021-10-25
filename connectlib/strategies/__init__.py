@@ -1,4 +1,7 @@
-from .strategy import Strategy
-from .fed_avg import FedAVG
+from connectlib.strategies.strategy import Strategy
+from connectlib.strategies.fed_avg import FedAVG
 
-__all__ = ["Strategy", "FedAVG"]
+__all__ = [
+    "Strategy",
+    "FedAVG",
+]

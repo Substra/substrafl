@@ -1,3 +1,5 @@
-from .algo import Algo
+from connectlib.algorithms.algo import Algo
 
-__all__ = ["Algo"]
+__all__ = [
+    "Algo",
+]
