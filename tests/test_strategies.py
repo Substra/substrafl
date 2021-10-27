@@ -145,7 +145,9 @@ def test_fed_avg(asset_factory, client):
     my_algo0 = MyAlgo()
     strategy = FedAVG(num_rounds=3, num_updates=2, batch_size=3)
 
-    orchestrator = Orchestrator(my_algo0, strategy, num_rounds=1)
+    orchestrator = Orchestrator(
+        my_algo0, strategy, num_rounds=1, dependencies=["six", "pytest"]
+    )
     compute_plan = orchestrator.run(
         client,
         train_data_nodes=train_data_nodes,
