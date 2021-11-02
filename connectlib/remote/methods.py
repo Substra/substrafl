@@ -136,7 +136,9 @@ class RemoteStruct:
         self.remote_cls_name = remote_cls_name
         self.remote_cls_parameters = remote_cls_parameters
 
-    def __eq__(self, other: "RemoteStruct") -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, RemoteStruct):
+            return NotImplemented
         return (
             self.cls == other.cls
             and self.cls_parameters == other.cls_parameters

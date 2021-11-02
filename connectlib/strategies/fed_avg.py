@@ -1,11 +1,12 @@
+from typing import Dict, List, Optional, Union
+
 import numpy as np
-
-from typing import List, Dict, Union
-
 from connectlib.algorithms import Algo
-from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
-from connectlib.strategies.strategy import Strategy
+from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
+from connectlib.nodes.references.local_state import LocalStateRef
+from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote import remote
+from connectlib.strategies.strategy import Strategy
 
 
 class FedAVG(Strategy):
@@ -14,8 +15,9 @@ class FedAVG(Strategy):
     A round consists in a performing a predefined number of forward/backward
     passes on each client, aggregating updates by computing their means and
     distributing the consensus update to all clients. In FedAvg, strategy is
-    performed in :term:`aggregationized setting` where a single server or
-    :term:`aggregation node` communicates with a number of client :term:`node`.
+    performed in a centralized way, where a single server or
+    :term:`aggregation node` communicates with a number of clients :term:`TrainDataNode`
+    and :term:`TestDataNode`.
 
     Formally, if :math:`w_t` denotes the parameters of the model at round
     :math:`t`, a single round consists in the following steps:
@@ -24,7 +26,7 @@ class FedAVG(Strategy):
       \\Delta w_t = \\sum_{k=1}^K \\frac{n_k}{n} \\Delta w_t^k
       w_{t + 1} = w_t + \\Delta w_t
     where :math:`\\mathcal{O}^k_t` is the local optimizer algorithm of client
-    :math:`k` taking as argument the aggregationized weights as well as the
+    :math:`k` taking as argument the averaged weights as well as the
     :math:`t`-th batch of data for local worker :math:`k` and the number of
     local updates :math:`m` to perform, and where :math:`n_k` is the number of
     samples for worker :math:`k`, :math:`n = \\sum_{k=1}^K n_k` is the total
@@ -61,8 +63,8 @@ class FedAVG(Strategy):
         )
 
         # States
-        self.local_states = None
-        self.avg_shared_state = None
+        self.local_states: Optional[List[LocalStateRef]] = None
+        self.avg_shared_state: Optional[SharedStateRef] = None
 
     @remote
     def avg_shared_states(
@@ -160,9 +162,9 @@ class FedAVG(Strategy):
         next_local_states = []
         states_to_aggregate = []
         for i, node in enumerate(train_data_nodes):
-            previous_local_state = (
-                self.local_states[i] if self.local_states is not None else None
-            )
+            previous_local_state = None
+            if self.local_states is not None:
+                previous_local_state = self.local_states[i]
 
             # define composite tuples (do not submit yet)
             # for each composite tuple give description of Algo instead of a key for an algo
