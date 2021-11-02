@@ -167,13 +167,11 @@ def prepare_substra_algo(
 
     # serialize cls parameters
     cls_parameters_path = operation_dir / "cls_parameters.json"
-    with cls_parameters_path.open("w") as f:
-        f.write(remote_struct.cls_parameters)
+    cls_parameters_path.write_text(remote_struct.cls_parameters)
 
     # serialize remote cls parameters
     remote_cls_parameters_path = operation_dir / "remote_cls_parameters.json"
-    with remote_cls_parameters_path.open("w") as f:
-        f.write(remote_struct.remote_cls_parameters)
+    remote_cls_parameters_path.write_text(remote_struct.remote_cls_parameters)
 
     # get python version
     # Required to select the correct version of python inside the docker Image
@@ -186,31 +184,26 @@ def prepare_substra_algo(
 
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
-    with algo_path.open("w") as f:
-        f.write(ALGO.format(remote_struct.remote_cls_name))
+    algo_path.write_text(ALGO.format(remote_struct.remote_cls_name))
 
     # Write description
     description_path = operation_dir / "description.md"
-    with description_path.open("w") as f:
-        f.write("# ConnnectLib Operation")
+    description_path.write_text("# ConnnectLib Operation")
 
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
-
-    with open(dockerfile_path, "w") as f:
-        f.write(
-            DOCKERFILE_TEMPLATE.format(
-                python_major_minor,
-                install_cmd,
-                f"RUN python{python_major_minor} -m pip install "
-                + " ".join(dependencies)
-                if dependencies is not None
-                else "",  # Dependencies
-                cloudpickle_path.name,
-                cls_parameters_path.name,
-                remote_cls_parameters_path.name,
-            )
+    dockerfile_path.write_text(
+        DOCKERFILE_TEMPLATE.format(
+            python_major_minor,
+            install_cmd,
+            f"RUN python{python_major_minor} -m pip install " + " ".join(dependencies)
+            if dependencies is not None
+            else "",  # Dependencies
+            cloudpickle_path.name,
+            cls_parameters_path.name,
+            remote_cls_parameters_path.name,
         )
+    )
 
     # Create necessary archive to register the operation on substra
     archive_path = operation_dir / "algo.zip"
