@@ -4,7 +4,7 @@ from logging import getLogger
 
 from connectlib.algorithms import Algo
 from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
-from connectlib.orchestrator import Orchestrator
+from connectlib import execute_experiment
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
 
@@ -140,19 +140,22 @@ def test_fed_avg(asset_factory, client):
             metric_keys=[org2_metric_key],
         ),
     ]
-
+    num_rounds = 3  # TODO For now, num_rounds is passed to both algorithm and
+    # execute_experiment because of the way the indexer works. It is to be refactored as
+    # a generator with a fixed seed.
     aggregation_node = AggregationNode(partners[0])
     my_algo0 = MyAlgo()
-    strategy = FedAVG(num_rounds=3, num_updates=2, batch_size=3)
+    strategy = FedAVG(num_rounds=num_rounds, num_updates=2, batch_size=3)
 
-    orchestrator = Orchestrator(
-        my_algo0, strategy, num_rounds=1, dependencies=["six", "pytest"]
-    )
-    compute_plan = orchestrator.run(
-        client,
+    compute_plan = execute_experiment(
+        client=client,
+        algo=my_algo0,
+        strategy=strategy,
         train_data_nodes=train_data_nodes,
         test_data_nodes=test_data_nodes,
         aggregation_node=aggregation_node,
+        num_rounds=3,
+        dependencies=["six", "pytest"],
     )
     # read the results from saved performances
     testtuples = client.list_testtuple(
