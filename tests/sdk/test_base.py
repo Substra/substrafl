@@ -16,8 +16,9 @@ import sdk
 import substra
 
 
-def test_client(client):
-    assert isinstance(client, substra.sdk.client.Client)
+def test_client(network):
+    for client in network.clients:
+        assert isinstance(client, substra.sdk.client.Client)
 
 
 def test_dataset_query(dataset_query):

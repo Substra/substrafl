@@ -1,0 +1,8 @@
+- username: 'node-1'
+  msp_id: 'MyOrg1MSP'
+  url: 'http://substra-backend.node-1.com'
+  password: 'p@sswr0d44'
+- username: 'node-2'
+  msp_id: 'MyOrg2MSP'
+  url: 'http://substra-backend.node-2.com'
+  password: 'p@sswr0d45'

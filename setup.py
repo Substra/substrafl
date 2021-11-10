@@ -60,7 +60,12 @@ setup(
         "wheel",
     ],
     extras_require={
-        "dev": ["pytest>=6.2.4", "pytest-cov>=2.12.0", "pre-commit>=2.13.0"],
+        "dev": [
+            "pytest>=6.2.4",
+            "pytest-cov>=2.12.0",
+            "pre-commit>=2.13.0",
+            "types-PyYAML>=6.0.0",
+        ],
     },
     python_requires=">=3.7",
 )

@@ -217,11 +217,10 @@ class FedAVG(Strategy):
             # we need to get the aggregated gradients back to the test node
             traintuple_id_ref, _ = train_node.update_states(
                 # here we could also use algo.train or whatever method marked as @remote_data
-                # in the algo
-                # because fake_traintuple is true so the method name and the method
+                # in the algo because fake_traintuple is true so the method name and the method
                 # are not used
-                algo.predict(  # type: ignore
-                    [test_node.test_data_sample_keys[0]],
+                operation=algo.predict(
+                    data_samples=[train_node.data_sample_keys[0]],
                     shared_state=self.avg_shared_state,
                     fake_traintuple=True,
                 ),

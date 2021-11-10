@@ -1,14 +1,15 @@
-import numpy as np
-from pathlib import Path
 from logging import getLogger
+from pathlib import Path
 
+import numpy as np
+import substra
 from connectlib.algorithms import Algo
 from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
 from connectlib import execute_experiment
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
 
-import substra
+import utils
 
 logger = getLogger("tests")
 
@@ -19,11 +20,12 @@ DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
-def test_fed_avg(asset_factory, client):
+def test_fed_avg(asset_factory, network):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
     # predict() returns the data, score returned by AccuracyMetric (in the metric) is the mean of all the y_pred
     # passed to it. The tests asserts if the score is 0.5
+    # This test only runs on two nodes.
     class MyAlgo(Algo):
         # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
         # pytest calls it)
@@ -54,59 +56,58 @@ def test_fed_avg(asset_factory, client):
             with path.open("w") as f:
                 f.write("test")
 
-    # org_client = client
-    partners = ["0", "1"]
+    # TODO: metrics, datasets, data_samples will be instantiate as fixture
 
     # generate the data for partner "0" and "1"
-    for partner_name in partners:
-        # TODO: remove datasample dirs at the end of the tests
-        path_data = ASSETS_DIR / f"datasample_{partner_name}"
+    for k, client in enumerate(network.clients[:2]):
+        path_data = ASSETS_DIR / f"datasample_{k}"
         if not path_data.is_dir():
             path_data.mkdir()
         # all the data will be either 0s or 1s depending on the partner
-        new_data = np.ones([8, 16]) * int(partner_name)
+        new_data = np.ones([8, 16]) * int(k)
         np.save(path_data / "data.npy", new_data)
 
-    # client = substra.Client(debug=True)
     opener_path = ASSETS_DIR / "opener" / "opener.py"
     with open(opener_path, "r") as myfile:
         opener_script = myfile.read()
 
     dataset_query = asset_factory.create_dataset(
-        metadata={substra.DEBUG_OWNER: partners[0]}, py_script=opener_script
+        metadata={substra.DEBUG_OWNER: network.msp_ids[0]},
+        py_script=opener_script,
     )
-    dataset_1_key = client.add_dataset(dataset_query)
+    dataset_1_key = network.clients[0].add_dataset(dataset_query)
 
     dataset_2_query = asset_factory.create_dataset(
-        metadata={substra.DEBUG_OWNER: partners[1]}, py_script=opener_script
+        metadata={substra.DEBUG_OWNER: network.msp_ids[1]},
+        py_script=opener_script,
     )
-    dataset_2_key = client.add_dataset(dataset_2_query)
+    dataset_2_key = network.clients[1].add_dataset(dataset_2_query)
 
     # by assigning content we are ensuring that in the first dataset there are only 0s and in the other 1s, to be able
     # to correctly test the strategy
     data_sample = asset_factory.create_data_sample(
         datasets=[dataset_1_key], test_only=False, content="0,0"
     )
-    sample_1_key = client.add_data_sample(data_sample)
+    sample_1_key = network.clients[0].add_data_sample(data_sample)
 
     data_sample = asset_factory.create_data_sample(
         datasets=[dataset_2_key], test_only=False, content="1,1"
     )
-    sample_2_key = client.add_data_sample(data_sample)
+    sample_2_key = network.clients[1].add_data_sample(data_sample)
 
     data_sample = asset_factory.create_data_sample(
         datasets=[dataset_1_key], test_only=True
     )
-    sample_1_test_key = client.add_data_sample(data_sample)
+    sample_1_test_key = network.clients[0].add_data_sample(data_sample)
 
     data_sample = asset_factory.create_data_sample(
         datasets=[dataset_2_key], test_only=True
     )
-    sample_2_test_key = client.add_data_sample(data_sample)
+    sample_2_test_key = network.clients[1].add_data_sample(data_sample)
 
     train_data_nodes = [
-        TrainDataNode(partners[0], dataset_1_key, [sample_1_key]),
-        TrainDataNode(partners[1], dataset_2_key, [sample_2_key]),
+        TrainDataNode(network.msp_ids[0], dataset_1_key, [sample_1_key]),
+        TrainDataNode(network.msp_ids[1], dataset_2_key, [sample_2_key]),
     ]
 
     # define metrics using data_factory (sdk/data_factory)
@@ -116,7 +117,7 @@ def test_fed_avg(asset_factory, client):
         dataset=client.get_dataset(dataset_1_key),
         metrics=str(ASSETS_DIR / "metric"),
     )
-    org1_metric_key = client.add_metric(METRIC)
+    org1_metric_key = network.clients[0].add_metric(METRIC)
 
     METRIC = asset_factory.create_metric(
         data_samples=[sample_2_test_key],
@@ -124,17 +125,17 @@ def test_fed_avg(asset_factory, client):
         dataset=client.get_dataset(dataset_2_key),
         metrics=str(ASSETS_DIR / "metric"),
     )
-    org2_metric_key = client.add_metric(METRIC)
+    org2_metric_key = network.clients[0].add_metric(METRIC)
 
     test_data_nodes = [
         TestDataNode(
-            partners[0],
+            network.msp_ids[0],
             dataset_1_key,
             [sample_1_test_key],
             metric_keys=[org1_metric_key],
         ),
         TestDataNode(
-            partners[1],
+            network.msp_ids[1],
             dataset_2_key,
             [sample_2_test_key],
             metric_keys=[org2_metric_key],
@@ -143,7 +144,7 @@ def test_fed_avg(asset_factory, client):
     num_rounds = 3  # TODO For now, num_rounds is passed to both algorithm and
     # execute_experiment because of the way the indexer works. It is to be refactored as
     # a generator with a fixed seed.
-    aggregation_node = AggregationNode(partners[0])
+    aggregation_node = AggregationNode(network.msp_ids[0])
     my_algo0 = MyAlgo()
     strategy = FedAVG(num_rounds=num_rounds, num_updates=2, batch_size=3)
 
@@ -154,9 +155,13 @@ def test_fed_avg(asset_factory, client):
         train_data_nodes=train_data_nodes,
         test_data_nodes=test_data_nodes,
         aggregation_node=aggregation_node,
-        num_rounds=3,
+        num_rounds=num_rounds,
         dependencies=["six", "pytest"],
     )
+
+    # Wait for the compute plan to be finished
+    utils.wait(network.clients[0], compute_plan)
+
     # read the results from saved performances
     testtuples = client.list_testtuple(
         filters=[f"testtuple:compute_plan_key:{compute_plan.key}"]

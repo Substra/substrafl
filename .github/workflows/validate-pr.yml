@@ -57,7 +57,7 @@ jobs:
       - name: Run tests
         run: |
           cd connectlib
-          pytest --cov=connectlib --cov-append --cov-report=html:htmlcov
+          pytest --cov=connectlib --cov-append --cov-report=html:htmlcov --local
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
