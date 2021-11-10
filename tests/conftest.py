@@ -12,18 +12,63 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import pytest
 
-import substra
+import settings
 from sdk import data_factory
 
 
-@pytest.fixture
-def client(tmpdir):
-    c = substra.Client(debug=True)
-    return c
+def pytest_addoption(parser):
+    """Command line arguments to configure the network to be local or remote."""
+    parser.addoption(
+        "--local",
+        action="store_true",
+        help="Run the tests on the local backend only (debug mode). "
+        "Otherwise run the tests only on the remote backend.",
+    )
 
 
+@pytest.fixture(scope="session")
+def network_cfg(request):
+    """Network configuration fixture.
+    Loads the appropriate backend configuration based on the options passed to pytest.
+
+    Args:
+        request: Pytest cli request.
+
+    Returns:
+        settings.Settings: The entire :term:`Connect` network configuration.
+    """
+    local = request.config.getoption("--local")
+
+    return settings.load_backend_config(debug=bool(local))
+
+
+@pytest.fixture(scope="session")
+def network(request):
+    """Network fixture. Create network instance from the configuration files and the options
+    passed as arguments to pytest.
+
+    Network must be started outside of the tests environment and the network is kept
+    alive while running all tests.
+
+    if --local is passed, the session will be started in debug mode and all the clients will be duplicated.
+
+    Args:
+        network_cfg: Network configuration.
+
+    Returns:
+        Network: All the elements needed to interact with the :term:`Connect` platform.
+    """
+    local = request.config.getoption("--local")
+
+    network = settings.local_network() if local else settings.remote_network()
+    return network
+
+
+# TODO : the entire way of creating and using assets for the test needs to be redefine
+# This will be done in an other PR
 @pytest.fixture
 def dataset_query(tmpdir):
     opener_path = tmpdir / "opener.py"

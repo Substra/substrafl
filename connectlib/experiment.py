@@ -20,7 +20,7 @@ def execute_experiment(
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
     your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
-    plateform.
+    platform.
 
     In connectlib, operations are linked to each other statically before being submitted to substra.
 
@@ -30,7 +30,7 @@ def execute_experiment(
     generate the static graph of operations.
 
     Each element necessary for those operations (CompositeTrainTuples, TestTuples and Algorithms)
-    is registered to the connect plateform thanks to the specified client.
+    is registered to the connect platform thanks to the specified client.
 
     Finally, the compute plan is sent and executed.
 
