@@ -7,7 +7,7 @@ import substra
 import substratools
 import subprocess
 import sys
-import zipfile
+import tarfile
 import connectlib
 
 from typing import Optional, List, Tuple
@@ -206,20 +206,11 @@ def prepare_substra_algo(
     )
 
     # Create necessary archive to register the operation on substra
-    archive_path = operation_dir / "algo.zip"
-
-    with zipfile.ZipFile(archive_path, "w") as z:
-        for filepath in operation_dir.glob("*[!.zip]"):
-            if filepath.name == "dist":
-                for dirpath, _, files in os.walk(filepath):
-                    relative_dirpath = Path(dirpath).relative_to(filepath)
-                    for distfile in files:
-                        z.write(
-                            filepath / relative_dirpath / distfile,
-                            arcname="dist" / relative_dirpath / distfile,
-                        )
-            else:
-                z.write(filepath, arcname=os.path.basename(filepath))
+    archive_path = operation_dir / "algo.tar.gz"
+    with tarfile.open(archive_path, "w:gz") as tar:
+        for filepath in operation_dir.glob("*"):
+            if not filepath.name.endswith(".tar.gz"):
+                tar.add(filepath, arcname=os.path.basename(filepath), recursive=True)
     return archive_path, description_path
 
 
