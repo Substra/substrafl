@@ -29,7 +29,7 @@ with open(os.path.join(here, "connectlib", "__version__.py"), "r", "utf-8") as f
 
 setup(
     name="connectlib",
-    version="0.1.0",
+    version=about['__version__'],
     description="Federated Learning library",
     long_description="",
     long_description_content_type="text/markdown",
@@ -56,7 +56,7 @@ setup(
         "numpy>=1.20.3",
         "cloudpickle>=1.6.0",
         "substratools>=0.9.0",
-        "substra>=0.11.1rc1",
+        "substra>=0.13.0",
         "wheel",
     ],
     extras_require={
