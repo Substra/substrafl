@@ -1,10 +1,10 @@
 import datetime
-import substra
-
 from typing import List, Optional
 
+import substra
+
 from connectlib.algorithms import Algo
-from connectlib.nodes import TrainDataNode, AggregationNode, TestDataNode
+from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 from connectlib.strategies import Strategy
 
 

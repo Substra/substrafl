@@ -1,6 +1,6 @@
-import substra
-
 from typing import List, Optional
+
+import substra
 
 from connectlib.nodes import Node
 

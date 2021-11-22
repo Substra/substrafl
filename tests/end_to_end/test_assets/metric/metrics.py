@@ -1,5 +1,5 @@
-import substratools as tools
 import numpy as np
+import substratools as tools
 
 
 class AccuracyMetric(tools.Metrics):

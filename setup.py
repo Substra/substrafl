@@ -13,9 +13,10 @@
 # limitations under the License.
 
 """Packaging settings."""
-from codecs import open
 import os
-from setuptools import setup, find_packages
+from codecs import open
+
+from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,7 +30,7 @@ with open(os.path.join(here, "connectlib", "__version__.py"), "r", "utf-8") as f
 
 setup(
     name="connectlib",
-    version=about['__version__'],
+    version=about["__version__"],
     description="Federated Learning library",
     long_description="",
     long_description_content_type="text/markdown",

@@ -14,7 +14,6 @@
 
 
 import pytest
-
 import settings
 from sdk import data_factory
 

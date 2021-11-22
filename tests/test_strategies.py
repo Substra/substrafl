@@ -3,13 +3,13 @@ from pathlib import Path
 
 import numpy as np
 import substra
-from connectlib.algorithms import Algo
-from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
+import utils
+
 from connectlib import execute_experiment
+from connectlib.algorithms import Algo
+from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
-
-import utils
 
 logger = getLogger("tests")
 

@@ -1,11 +1,11 @@
-from typing import Optional, TypeVar, List
+import uuid
+from typing import List, Optional, TypeVar
 
 import substra
-import uuid
 
-from connectlib.nodes.references import SharedStateRef
 from connectlib.nodes import Node
-from connectlib.remote.methods import RemoteStruct, AggregateOperation
+from connectlib.nodes.references import SharedStateRef
+from connectlib.remote.methods import AggregateOperation, RemoteStruct
 from connectlib.remote.register import register_aggregation_node_op
 
 SharedState = TypeVar("SharedState")

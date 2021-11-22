@@ -1,8 +1,8 @@
-import numpy as np
-
 from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
+
+import numpy as np
 
 from connectlib.remote import remote_data
 

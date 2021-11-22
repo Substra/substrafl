@@ -1,11 +1,10 @@
 import json
-
 from abc import ABC, abstractmethod
-from typing import TypeVar, List
 from pathlib import Path
+from typing import List, TypeVar
 
 from connectlib.algorithms import Algo
-from connectlib.nodes import AggregationNode, TrainDataNode, TestDataNode
+from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 
 SharedState = TypeVar("SharedState")
 

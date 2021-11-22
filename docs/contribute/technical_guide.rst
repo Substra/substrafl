@@ -76,6 +76,14 @@ If not, the CI will fail and your Pull Request will not be merged.
 
 Similarly, we use Flake8 for linting. If you don't respect the coding conventions, the CI will fail as well.
 
+The imports must be sorted, we are using isort in the CI, it is also included in the precomit.
+Use full paths for imports from Connectlib, that is, avoid writing import .blabla, put the full path
+instead: import from connectlib.blabla
+
+Because relative imports can be messy, particularly for shared projects where directory structure is likely to change.
+Relative imports are also not as readable as absolute ones, and it’s not easy to tell the location of the imported
+resources.
+
 The line length used in the repository (for black auto formatting) is 95.
 
 To make sure that you don't accidentally commit code that does not follow the coding style,

@@ -1,19 +1,19 @@
-import uuid
 import os
-import cloudpickle
-import tempfile
 import shutil
-import substra
-import substratools
 import subprocess
 import sys
 import tarfile
-import connectlib
-
-from typing import Optional, List, Tuple
+import tempfile
+import uuid
 from pathlib import Path
 from platform import python_version
+from typing import List, Optional, Tuple
 
+import cloudpickle
+import substra
+import substratools
+
+import connectlib
 from connectlib.remote.methods import RemoteStruct
 
 # TODO: need to have the GPU drivers in the Docker image

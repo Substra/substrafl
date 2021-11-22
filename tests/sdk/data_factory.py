@@ -23,7 +23,6 @@ import zipfile
 
 import substra
 
-
 DEFAULT_DATA_SAMPLE_FILENAME = "data.npy"
 
 DEFAULT_SUBSTRATOOLS_VERSION = "0.9.0-minimal"

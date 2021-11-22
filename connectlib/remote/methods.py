@@ -1,11 +1,11 @@
 import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+
 import substratools
 
-from pathlib import Path
-from dataclasses import dataclass
-from typing import Dict, Tuple, Any, Optional, Callable, List, Type
-
-from connectlib.remote.serializers import Serializer, PickleSerializer
+from connectlib.remote.serializers import PickleSerializer, Serializer
 
 
 class RemoteDataMethod(substratools.CompositeAlgo):

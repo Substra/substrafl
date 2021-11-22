@@ -1,7 +1,8 @@
-from connectlib.nodes.node import Node
+from connectlib.nodes.node import Node  # isort:skip
+
 from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.nodes.train_data_node import TrainDataNode
 
 __all__ = [
     "Node",
