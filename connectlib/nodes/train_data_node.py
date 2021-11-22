@@ -1,14 +1,11 @@
-import substra
 import uuid
-
 from typing import List, Optional, Tuple
 
-from connectlib.nodes.references import (
-    LocalStateRef,
-    SharedStateRef,
-)
+import substra
+
 from connectlib.nodes import Node
-from connectlib.remote.methods import RemoteStruct, DataOperation
+from connectlib.nodes.references import LocalStateRef, SharedStateRef
+from connectlib.remote.methods import DataOperation, RemoteStruct
 from connectlib.remote.register import register_data_node_op
 
 

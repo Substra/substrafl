@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Union
 
 import numpy as np
+
 from connectlib.algorithms import Algo
 from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 from connectlib.nodes.references.local_state import LocalStateRef

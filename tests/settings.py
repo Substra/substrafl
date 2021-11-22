@@ -83,6 +83,7 @@ class Network(BaseModel):
     msp_ids: List[str]
     clients: List[substra.sdk.client.Client]
     # Arbitrary type is used because substra Client is not pydantic compatible for now
+
     class Config:
         arbitrary_types_allowed = True
 

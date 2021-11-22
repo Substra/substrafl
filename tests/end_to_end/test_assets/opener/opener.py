@@ -1,7 +1,7 @@
+import pathlib
 import shutil
 
 import numpy as np
-import pathlib
 import substratools as tools
 
 

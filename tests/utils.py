@@ -1,6 +1,6 @@
 import time
-from substra.sdk.models import Status, ComputePlanStatus
 
+from substra.sdk.models import ComputePlanStatus, Status
 
 FUTURE_TIMEOUT = 3600
 FUTURE_POLLING_PERIOD = 1
