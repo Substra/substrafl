@@ -68,6 +68,16 @@ tests are passing on your machine:
 	# Run tests
 	pytest tests/
 
+If you want to run tests in local/debug mode :
+
+.. code:: bash
+
+	# set your spawner mode : 'docker'(default) or 'subprocess'
+	export DEBUG_SPAWNER=docker
+
+	# Run tests
+	pytest tests --local
+
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^
 
