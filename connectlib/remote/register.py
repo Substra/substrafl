@@ -34,12 +34,12 @@ RUN python{0} -m pip install -U pip
 # Install dependencies
 {2}
 
-COPY ./algo.py /algo/algo.py
-COPY ./{3} /algo/cls_cloudpickle
-COPY ./{4} /algo/cls_parameters.json
-COPY ./{5} /algo/remote_cls_parameters.json
+COPY ./algo.py algo.py
+COPY ./{3} cls_cloudpickle
+COPY ./{4} cls_parameters.json
+COPY ./{5} remote_cls_parameters.json
 
-ENTRYPOINT ["python{0}", "/algo/algo.py"]
+ENTRYPOINT ["python{0}", "algo.py"]
 """
 
 ALGO = """
