@@ -1,14 +1,20 @@
 import datetime
+import traceback
+from pathlib import Path
 from typing import List, Optional
 
 import substra
 
 from connectlib.algorithms import Algo
+from connectlib.dependency import Dependency
 from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 from connectlib.strategies import Strategy
 
 
 def execute_experiment(
+    # TODO: this is getting hard to read, we need to think of an other way to call execute_experiment.
+    # This should be done when we add the algo strategy layer.
+    # E.g.: create a dependencies pydantic class with three args
     client: substra.Client,
     algo: Algo,
     strategy: Strategy,
@@ -16,7 +22,7 @@ def execute_experiment(
     test_data_nodes: List[TestDataNode],
     aggregation_node: AggregationNode,
     num_rounds: int,
-    dependencies: Optional[List[str]] = None,
+    dependencies: Optional[Dependency] = None,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
     your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
@@ -42,12 +48,11 @@ def execute_experiment(
         test_data_nodes (List[TestDataNode]): List of the nodes where testing on data occurs
         aggregation_node (AggregationNode): The aggregation node, where all the shared tasks occur
         num_rounds (int): The number of time your strategy will be executed
-        dependencies (Optional[List[str]], optional): The list of public dependencies used by your algorithm. Defaults to None.
+        dependencies (Dependency, optional): The list of public dependencies used by your algorithm. Defaults to None.
 
     Returns:
         [ComputePlan]: The generated compute plan
     """
-    # TODO: aggregation_node should be optional
 
     # create computation graph
     for _ in range(num_rounds):
@@ -100,3 +105,34 @@ def execute_experiment(
     )
 
     return compute_plan
+
+
+def execute_experiment_caller() -> Path:
+    """Find the path of the file that called the :func:`~connectlib.run_experiment` function via the traceback.
+
+    Returns:
+        Optional[Path]: the path of the file that called :func:`~connectlib.run_experiment`
+    """
+    traces = traceback.extract_stack()
+    execute_experiment_trace_indexes = [
+        ind
+        for ind, trace in enumerate(traces)
+        if trace.filename.endswith("connectlib/experiment.py")
+        and trace.name == "execute_experiment"
+    ]
+
+    callers = [traces[ind - 1].filename for ind in execute_experiment_trace_indexes]
+
+    if len(callers) == 0:
+        raise AttributeError(
+            "This function is to be used inside the :func:`~run_experiment` function. "
+            "But no trace of it has been found."
+        )
+    if len(callers) > 1:
+        nl = "\n\t"
+        raise AttributeError(
+            """For now, connectlib doesn't support nested call of :func:~`connectlib.run_experiment` function. """
+            f"""But you called it {len(callers)} times from the following files {nl}{nl.join(callers)}"""
+        )
+
+    return Path(callers[0])

@@ -13,42 +13,12 @@
 # limitations under the License.
 
 """Packaging settings."""
-import os
-from codecs import open
-
 from setuptools import find_packages, setup
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-
-with open(os.path.join(here, "README.md"), "r", "utf-8") as fp:
-    readme = fp.read()
-
-about: dict = dict()
-with open(os.path.join(here, "connectlib", "__version__.py"), "r", "utf-8") as fp:
-    exec(fp.read(), about)
-
 setup(
-    name="connectlib",
-    version=about["__version__"],
-    description="Federated Learning library",
-    long_description="",
-    long_description_content_type="text/markdown",
-    url="https://owkin-connectlib.readthedocs-hosted.com/en/latest/",
-    author="Owkin",
-    author_email="flow@owkin.com",
-    license="Apache 2.0",
-    classifiers=[
-        "Intended Audience :: Developers",
-        "Topic :: Utilities",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-    ],
-    keywords=["connectlib"],
+    name="connectlibtestlibrary",
+    version="0.0.1",
+    description="testlib",
     packages=find_packages(exclude=["tests*"]),
     # Not compatible with substratools 0.8.0 because
     # that release is private and in the Docker container
@@ -59,7 +29,6 @@ setup(
         "substratools>=0.9.0",
         "substra>=0.13.0",
         "wheel",
-        "six",
     ],
     extras_require={
         "dev": [

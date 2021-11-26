@@ -1,3 +1,4 @@
+import itertools
 import os
 import shutil
 import subprocess
@@ -14,32 +15,36 @@ import substra
 import substratools
 
 import connectlib
+from connectlib.dependency import Dependency
 from connectlib.remote.methods import RemoteStruct
 
 # TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
-FROM python:{0}
-
+FROM python:{python_version}
 WORKDIR /sandbox
 ENV PYTHONPATH /sandbox
-
 RUN mkdir /wheels
 
 # install dependencies
-RUN python{0} -m pip install -U pip
+RUN python{python_version} -m pip install -U pip
 
 # Install connectlib, substra and substratools
-{1}
+{cl_deps}
 
-# Install dependencies
-{2}
+# PyPi dependencies
+{pypi_dependencies}
+
+# Copy local code
+{local_code}
+
+# Install local dependencies
+{local_dependencies}
 
 COPY ./algo.py algo.py
-COPY ./{3} cls_cloudpickle
-COPY ./{4} cls_parameters.json
-COPY ./{5} remote_cls_parameters.json
-
-ENTRYPOINT ["python{0}", "algo.py"]
+COPY ./{cloudpickle_path} cls_cloudpickle
+COPY ./{cls_parameters_path} cls_parameters.json
+COPY ./{remote_cls_parameters_path} remote_cls_parameters.json
+ENTRYPOINT ["python{python_version}", "algo.py"]
 """
 
 ALGO = """
@@ -61,7 +66,6 @@ if __name__ == "__main__":
 
     cls_cloudpickle_path = Path(__file__).parent / "cls_cloudpickle"
 
-    print(__file__)
     with cls_cloudpickle_path.open("rb") as f:
         cls = cloudpickle.load(f)
 
@@ -149,7 +153,7 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
 
 def prepare_substra_algo(
     remote_struct: RemoteStruct,
-    dependencies: Optional[List[str]] = None,
+    dependencies: Optional[Dependency] = None,
 ) -> Tuple[Path, Path]:
     # Create temporary directory where we will serialize:
     # - the class Cloudpickle
@@ -158,6 +162,7 @@ def prepare_substra_algo(
     # - the Dockerfile
     # - the description.md
     # - the algo.py entrypoint
+    # - the local dependencies
     operation_dir = Path(tempfile.mkdtemp())
 
     # serialize cls
@@ -173,7 +178,7 @@ def prepare_substra_algo(
     remote_cls_parameters_path = operation_dir / "remote_cls_parameters.json"
     remote_cls_parameters_path.write_text(remote_struct.remote_cls_parameters)
 
-    # get python version
+    # get Python version
     # Required to select the correct version of python inside the docker Image
     # Cloudpickle will crash if we don't deserialize with the same major.minor
     python_major_minor = ".".join(python_version().split(".")[:2])
@@ -182,6 +187,44 @@ def prepare_substra_algo(
     lib_modules = [substratools, substra, connectlib]  # owkin private dependencies
     install_cmd = get_local_lib(lib_modules, operation_dir, python_major_minor)
 
+    # Pypi dependencies docker command if specified by the user
+    pypi_dependencies_cmd = (
+        f"RUN python{python_major_minor} -m pip install --no-cache-dir {' '.join(dependencies.pypi_dependencies)}"
+        if len(dependencies.pypi_dependencies) > 0
+        else ""
+    )
+
+    # The files to copy to the container must be in the same folder as the Dockerfile
+    local_code_cmd = ""
+    local_dependencies_cmd = "RUN mkdir local_dependencies\n"
+
+    for path in itertools.chain(
+        dependencies.local_code, dependencies.local_dependencies
+    ):
+        if not (operation_dir / path.name).exists():
+            if path.is_dir():
+                shutil.copytree(path, operation_dir / path.name)
+            elif path.is_file():
+                shutil.copy(path, operation_dir / path.name)
+            else:
+                raise ValueError(f"Does not exist {path}")
+
+    for local_dep in dependencies.local_code:
+        if local_dep.is_dir():
+            local_code_cmd += (
+                f"RUN mkdir {local_dep.name}\nCOPY {local_dep.name} {local_dep.name}"
+            )
+        elif local_dep.is_file():
+            local_code_cmd += f"COPY {local_dep.name} {local_dep.name}"
+        else:
+            raise ValueError(f"{local_dep} is neither a directory nor a file.")
+
+    for local_dep in dependencies.local_dependencies:
+        local_dependencies_cmd += (
+            f"RUN mkdir local_dependencies/{local_dep.name}\n"
+            f"COPY {local_dep.name} local_dependencies/{local_dep.name}\n"
+            f"RUN python{python_major_minor} -m pip install --no-cache-dir -e local_dependencies/{local_dep.name}"
+        )
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
     algo_path.write_text(ALGO.format(remote_struct.remote_cls_name))
@@ -194,14 +237,14 @@ def prepare_substra_algo(
     dockerfile_path = operation_dir / "Dockerfile"
     dockerfile_path.write_text(
         DOCKERFILE_TEMPLATE.format(
-            python_major_minor,
-            install_cmd,
-            f"RUN python{python_major_minor} -m pip install " + " ".join(dependencies)
-            if dependencies is not None
-            else "",  # Dependencies
-            cloudpickle_path.name,
-            cls_parameters_path.name,
-            remote_cls_parameters_path.name,
+            python_version=python_major_minor,
+            cl_deps=install_cmd,
+            pypi_dependencies=pypi_dependencies_cmd,
+            local_dependencies=local_dependencies_cmd,
+            local_code=local_code_cmd,
+            cloudpickle_path=cloudpickle_path.name,
+            cls_parameters_path=cls_parameters_path.name,
+            remote_cls_parameters_path=remote_cls_parameters_path.name,
         )
     )
 
@@ -218,10 +261,11 @@ def register_aggregation_node_op(
     client: substra.Client,
     remote_struct: RemoteStruct,
     permissions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
+    dependencies: Optional[Dependency] = None,
 ) -> str:
     archive_path, description_path = prepare_substra_algo(
-        remote_struct, dependencies=dependencies
+        remote_struct,
+        dependencies=dependencies,
     )
 
     key = client.add_algo(
@@ -241,10 +285,11 @@ def register_data_node_op(
     client: substra.Client,
     remote_struct: RemoteStruct,
     permissions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[List[str]] = None,
+    dependencies: Optional[Dependency] = None,
 ) -> str:
     archive_path, description_path = prepare_substra_algo(
-        remote_struct, dependencies=dependencies
+        remote_struct,
+        dependencies=dependencies,
     )
 
     key = client.add_algo(

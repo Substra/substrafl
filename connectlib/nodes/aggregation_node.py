@@ -77,7 +77,7 @@ class AggregationNode(Node):
         Args:
             client (substra.Client): [description]
             permissions (substra.sdk.schemas.Permissions): [description]
-            dependencies (Optional[List[str]], optional): [description]. Defaults to None.
+            dependencies (Dependency, optional): [description]. Defaults to None.
         """
         for tuple in self.tuples:
             if isinstance(tuple["algo_key"], RemoteStruct):

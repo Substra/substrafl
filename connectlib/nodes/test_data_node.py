@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import substra
 
+import connectlib as cl
 from connectlib.nodes import Node
 
 
@@ -53,6 +54,6 @@ class TestDataNode(Node):
         self,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
-        dependencies: Optional[List[str]] = None,
+        dependencies: Optional[cl.dependency.Dependency] = None,
     ):
         pass

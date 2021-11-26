@@ -7,6 +7,7 @@ import utils
 
 from connectlib import execute_experiment
 from connectlib.algorithms import Algo
+from connectlib.dependency import Dependency
 from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
@@ -146,6 +147,7 @@ def test_fed_avg(asset_factory, network):
     # a generator with a fixed seed.
     aggregation_node = AggregationNode(network.msp_ids[0])
     my_algo0 = MyAlgo()
+    algo_deps = Dependency(pypi_dependencies=["pytest"])
     strategy = FedAVG(num_rounds=num_rounds, num_updates=2, batch_size=3)
 
     compute_plan = execute_experiment(
@@ -156,7 +158,7 @@ def test_fed_avg(asset_factory, network):
         test_data_nodes=test_data_nodes,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
-        dependencies=["six", "pytest"],
+        dependencies=algo_deps,
     )
 
     # Wait for the compute plan to be finished
