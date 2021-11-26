@@ -184,7 +184,13 @@ class AssetsFactory:
             data_manager_keys=datasets,
         )
 
-    def create_dataset(self, py_script, metric=None, permissions=None, metadata=None):
+    def create_dataset(
+        self,
+        py_script=DEFAULT_OPENER_SCRIPT,
+        metric=None,
+        permissions=None,
+        metadata=None,
+    ):
         py_script = DEFAULT_OPENER_SCRIPT
         idx = self._dataset_counter.inc()
         tmpdir = self._workdir / f"dataset-{idx}"
