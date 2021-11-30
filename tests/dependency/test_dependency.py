@@ -13,7 +13,7 @@ from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.exceptions import InvalidPathException
 from connectlib.remote import remote_data
-from connectlib.remote.register import prepare_substra_algo
+from connectlib.remote.register import create_substra_algo_files
 
 current_file = Path(__file__)
 
@@ -62,7 +62,7 @@ class TestLocalDependency:
     def _register_algo(self, my_algo, algo_deps, client):
         """Register a composite algo"""
         data_op = my_algo.train(data_samples=list(), shared_state=None, num_updates=4)
-        archive_path, description_path = prepare_substra_algo(
+        archive_path, description_path = create_substra_algo_files(
             data_op.remote_struct, dependencies=algo_deps
         )
         algo_query = substra.sdk.schemas.AlgoSpec(
