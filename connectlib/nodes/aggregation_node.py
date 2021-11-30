@@ -6,7 +6,7 @@ import substra
 from connectlib.nodes import Node
 from connectlib.nodes.references import SharedStateRef
 from connectlib.remote.methods import AggregateOperation, RemoteStruct
-from connectlib.remote.register import register_aggregation_node_op
+from connectlib.remote.register import register_algo
 
 SharedState = TypeVar("SharedState")
 
@@ -49,7 +49,7 @@ class AggregationNode(Node):
         op_id = uuid.uuid4().hex
 
         aggregate_tuple = {
-            "algo_key": operation.remote_struct,
+            "remote_operation": operation.remote_struct,
             "worker": self.node_id,
             "in_models_ids": [ref.key for ref in operation.shared_states]
             if operation.shared_states is not None
@@ -80,19 +80,20 @@ class AggregationNode(Node):
             dependencies (Dependency, optional): [description]. Defaults to None.
         """
         for tuple in self.tuples:
-            if isinstance(tuple["algo_key"], RemoteStruct):
-                remote_struct: RemoteStruct = tuple["algo_key"]
+            if isinstance(tuple["remote_operation"], RemoteStruct):
+                remote_struct: RemoteStruct = tuple["remote_operation"]
 
                 if remote_struct not in self.CACHE:
-                    operation_key = register_aggregation_node_op(
-                        client,
+                    algo_key = register_algo(
+                        client=client,
+                        is_composite=False,
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,
                     )
-                    self.CACHE[remote_struct] = operation_key
-
+                    self.CACHE[remote_struct] = algo_key
                 else:
-                    operation_key = self.CACHE[remote_struct]
+                    algo_key = self.CACHE[remote_struct]
 
-                tuple["algo_key"] = operation_key
+                del tuple["remote_operation"]
+                tuple["algo_key"] = algo_key

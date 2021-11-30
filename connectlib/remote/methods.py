@@ -9,6 +9,7 @@ from connectlib.remote.serializers import PickleSerializer, Serializer
 
 
 class RemoteDataMethod(substratools.CompositeAlgo):
+    # TODO: docstring, tests
     def __init__(
         self,
         instance,
@@ -30,8 +31,8 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         self,
         X: Any,
         y: Any,
-        head_model: Optional,  # instance of algo
-        trunk_model: Optional,  # shared state
+        head_model: Any,  # instance of algo
+        trunk_model: Any,  # shared state
         rank: int,
     ) -> Tuple:
         if not self.fake_traintuple:
@@ -50,7 +51,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         else:
             return head_model, trunk_model
 
-    def predict(self, X: Any, head_model: Optional, trunk_model: Optional):
+    def predict(self, X: Any, head_model: Any, trunk_model: Any):
         assert (
             head_model is not None
         ), "head model is None. Possibly you did not train() before running predict()"
@@ -77,6 +78,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
 
 
 class RemoteMethod(substratools.AggregateAlgo):
+    # TODO: docstring, tests
     def __init__(
         self,
         instance,
@@ -161,7 +163,7 @@ class RemoteStruct:
 class DataOperation:
     remote_struct: RemoteStruct
     data_samples: List[str]
-    shared_state: Optional
+    shared_state: Any
 
 
 @dataclass
@@ -171,14 +173,40 @@ class AggregateOperation:
 
 
 def remote_data(method: Callable):
+    """Decorator for a remote function containing a data_samples argument (e.g the Algo.train function)
+    With this decorator, when the function is called, it is not executed but it returns a DataOperation object containing
+    all the informations needed to execute it later (see connectlib.remote.methods.DataOperation).
+    - The decorated function definition should have at least a shared_state argument
+    - If the decorated function is called without a `_skip=True` argument, the arguments required are the ones in
+    remote_method_inner, and it should have at least a `datasamples` argument
+    - If the decorated function is called with a `_skip=True` argument, it should have the arguments of its original definition
+    - The decorated function should be within a class
+    - The init of the class must be
+    def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+    - self.args and self.kwargs will be given to the init, any other init argument is ignored (not saved in the RemoteStruct)
+
+    """
+
     def remote_method_inner(
         self,
         data_samples: Optional[List[str]] = None,
-        shared_state: Optional = None,
+        shared_state: Any = None,
         _skip: bool = False,
         fake_traintuple: bool = False,
         **method_parameters
     ) -> DataOperation:
+        """
+        Args:
+            data_samples (List[str]): The data samples paths. Defaults to None.
+            shared_state (Any): a shared state, could be a SharedStateRef object or anything else. Defaults to None.
+            _skip (bool, optional): if True, calls the decorated function. Defaults to False.
+            fake_traintuple (bool, optional): if True, the decorated function won't be executed (see RemoteDataMethod). Defaults to False.
+
+        Returns:
+            DataOperation: [description]
+        """
         if _skip:
             return method(self=self, shared_state=shared_state, **method_parameters)
 
@@ -209,6 +237,7 @@ def remote_data(method: Callable):
 
 
 def remote(method: Callable):
+    # TODO: add docstring
     def remote_method_inner(
         self,
         shared_states: Optional[List] = None,

@@ -151,18 +151,29 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
     return "\n".join(install_cmds)
 
 
-def prepare_substra_algo(
+def create_substra_algo_files(
     remote_struct: RemoteStruct,
     dependencies: Optional[Dependency] = None,
 ) -> Tuple[Path, Path]:
-    # Create temporary directory where we will serialize:
-    # - the class Cloudpickle
-    # - the instance parameters captured by Blueprint
-    # - the wheel of the current version of Connectlib if in editable mode
-    # - the Dockerfile
-    # - the description.md
-    # - the algo.py entrypoint
-    # - the local dependencies
+    """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
+    an archive (.tar.gz).
+
+    Necessary files :
+        - the class Cloudpickle
+        - the instance parameters captured by Blueprint
+        - the wheel of the current version of Connectlib if in editable mode
+        - the Dockerfile
+        - the description.md
+        - the algo.py entrypoint
+
+    Args:
+        remote_struct (RemoteStruct): A representation of a substra algorithm.
+        dependencies (Optional[List[str]], optional): The list of public dependencies of the algorithm. Defaults to None.
+
+    Returns:
+        Tuple[Path, Path]: The archive path and the description file path.
+    """
+
     operation_dir = Path(tempfile.mkdtemp())
 
     # serialize cls
@@ -257,16 +268,31 @@ def prepare_substra_algo(
     return archive_path, description_path
 
 
-def register_aggregation_node_op(
+def register_algo(
     client: substra.Client,
     remote_struct: RemoteStruct,
+    is_composite: bool,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Optional[Dependency] = None,
 ) -> str:
-    archive_path, description_path = prepare_substra_algo(
-        remote_struct,
-        dependencies=dependencies,
+    """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
+
+    Args:
+        client (substra.Client): The substra client.
+        remote_struct (RemoteStruct): The substra submitable algorithm representation.
+        is_composite (bool): Either to register a composite or an aggregate algorithm.
+        permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
+        dependencies (Optional[List[str]], optional): Public algorithm dependencies. Defaults to None.
+    Returns:
+        str: Substra algorithm key.
+    """
+    archive_path, description_path = create_substra_algo_files(
+        remote_struct, dependencies=dependencies
     )
+    if is_composite:
+        category = substra.sdk.schemas.AlgoCategory.composite
+    else:
+        category = substra.sdk.schemas.AlgoCategory.aggregate
 
     key = client.add_algo(
         substra.sdk.schemas.AlgoSpec(
@@ -275,32 +301,7 @@ def register_aggregation_node_op(
             file=archive_path,
             permissions=permissions,
             metadata=dict(),
-            category=substra.sdk.schemas.AlgoCategory.aggregate,
+            category=category,
         )
     )
-    return key
-
-
-def register_data_node_op(
-    client: substra.Client,
-    remote_struct: RemoteStruct,
-    permissions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[Dependency] = None,
-) -> str:
-    archive_path, description_path = prepare_substra_algo(
-        remote_struct,
-        dependencies=dependencies,
-    )
-
-    key = client.add_algo(
-        substra.sdk.schemas.AlgoSpec(
-            name=uuid.uuid4().hex,
-            description=description_path,
-            file=archive_path,
-            permissions=permissions,
-            metadata=dict(),
-            category=substra.sdk.schemas.AlgoCategory.composite,
-        )
-    )
-
     return key

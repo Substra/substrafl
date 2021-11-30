@@ -6,7 +6,7 @@ import substra
 from connectlib.nodes import Node
 from connectlib.nodes.references import LocalStateRef, SharedStateRef
 from connectlib.remote.methods import DataOperation, RemoteStruct
-from connectlib.remote.register import register_data_node_op
+from connectlib.remote.register import register_algo
 
 
 class TrainDataNode(Node):
@@ -67,7 +67,7 @@ class TrainDataNode(Node):
         op_id = str(uuid.uuid4())
 
         composite_traintuple = {
-            "algo_key": operation.remote_struct,
+            "remote_operation": operation.remote_struct,
             "data_manager_key": self.data_manager_key,
             "train_data_sample_keys": operation.data_samples,
             "in_head_model_id": local_state.key if local_state is not None else None,
@@ -105,20 +105,20 @@ class TrainDataNode(Node):
             if tuple.get("out_trunk_model_permissions", None) is None:
                 tuple["out_trunk_model_permissions"] = permissions
 
-            if isinstance(tuple["algo_key"], RemoteStruct):
-                remote_struct: RemoteStruct = tuple["algo_key"]
+            if isinstance(tuple["remote_operation"], RemoteStruct):
+                remote_struct: RemoteStruct = tuple["remote_operation"]
 
                 if remote_struct not in self.CACHE:
-                    # TODO : Should we remove this wrapping function ?
-                    operation_key = register_data_node_op(
-                        client,
+                    algo_key = register_algo(
+                        client=client,
+                        is_composite=True,
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,
                     )
-                    self.CACHE[remote_struct] = operation_key
-
+                    self.CACHE[remote_struct] = algo_key
                 else:
-                    operation_key = self.CACHE[remote_struct]
+                    algo_key = self.CACHE[remote_struct]
 
-                tuple["algo_key"] = operation_key
+                del tuple["remote_operation"]
+                tuple["algo_key"] = algo_key
