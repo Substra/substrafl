@@ -1,8 +1,11 @@
 name: pr-validation
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
-      - "main"
+      - main
 
 jobs:
   pr-validation:
