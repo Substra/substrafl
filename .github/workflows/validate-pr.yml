@@ -57,10 +57,15 @@ jobs:
              pip install -e substratools
              pip install -e connectlib[dev]
 
+      - name: Install package for tests
+        run: |
+             cd connectlib/tests/dependency/installable_library
+             pip install -e .
+
       - name: Run tests
         run: |
           cd connectlib
-          pytest --cov=connectlib --cov-append --cov-report=html:htmlcov --local
+          make test-local
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2

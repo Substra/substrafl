@@ -66,17 +66,35 @@ tests are passing on your machine:
 	pip install -e '.[dev]'
 
 	# Run tests
-	pytest tests/
+	make test
 
 If you want to run tests in local/debug mode :
 
 .. code:: bash
 
-	# set your spawner mode : 'docker'(default) or 'subprocess'
-	export DEBUG_SPAWNER=docker
+	# Run tests (both docker and subprocess mode)
+	make test-local
 
-	# Run tests
-	pytest tests --local
+    # Run tests only in docker mode (need docker to be running)
+    make test-docker
+
+    # Run tests only in subprocess mode
+    make test-subprocess
+
+    # Run tests in remote mode (need running docker + deploying substra)
+    # (https://github.com/owkin/tech-team/wiki/Deploy-Connect-locally-with-k3s)
+    make test-remote
+
+If you want to force the tests marked as "docker_only" into subprocess mode :
+
+.. code:: bash
+
+	# Install the library (done in docker before)
+    cd tests/dependency/installable_library
+    pip install -e .
+    cd -
+    export DEBUG_SPAWNER=subprocess
+    pytest tests --local
 
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^

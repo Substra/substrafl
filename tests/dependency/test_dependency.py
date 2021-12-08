@@ -42,6 +42,8 @@ def test_dependency_validators_no_setup_file():
         Dependency(local_dependencies=[current_file.parent])
 
 
+@pytest.mark.slow
+@pytest.mark.substra
 class TestLocalDependency:
     @pytest.fixture(scope="class")
     def dataset_key(self, asset_factory, network):
@@ -231,10 +233,13 @@ class TestLocalDependency:
         )
         utils.wait(client, composite_traintuple)
 
+    @pytest.mark.docker_only
     def test_local_dependencies_installable_library(
         self, network, dataset_key, data_sample_key
     ):
-        """Test that you can install a local library"""
+        """Test that you can install a local library
+        Automatically done in docker but need to be manually done if force in subprocess mode
+        """
 
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way

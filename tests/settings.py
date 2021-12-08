@@ -149,3 +149,15 @@ def remote_network():
         msp_ids.append(node.msp_id)
 
     return Network(clients=clients, msp_ids=msp_ids)
+
+
+def is_local_mode(request):
+    """Check if the run is done in local (if not then it is remote)
+
+    Args:
+        request: Pytest cli request.
+
+    Returns:
+        bool: True if the run is local, False if the run is remote
+    """
+    return request.config.getoption("--local")

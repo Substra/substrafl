@@ -11,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import pytest
 import sdk
 import substra
 
 
+@pytest.mark.substra
 def test_client(network):
     for client in network.clients:
         assert isinstance(client, substra.sdk.client.Client)
