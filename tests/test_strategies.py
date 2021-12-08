@@ -2,6 +2,7 @@ from logging import getLogger
 from pathlib import Path
 
 import numpy as np
+import pytest
 import substra
 import utils
 
@@ -21,6 +22,8 @@ DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
+@pytest.mark.slow
+@pytest.mark.substra
 def test_fed_avg(asset_factory, network):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.

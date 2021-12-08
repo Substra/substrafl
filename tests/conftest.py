@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import pytest
 import settings
 from sdk import data_factory
+from settings import is_local_mode
 
 
 def pytest_addoption(parser):
@@ -39,9 +39,9 @@ def network_cfg(request):
     Returns:
         settings.Settings: The entire :term:`Connect` network configuration.
     """
-    local = request.config.getoption("--local")
+    is_local = is_local_mode(request)
 
-    return settings.load_backend_config(debug=bool(local))
+    return settings.load_backend_config(debug=is_local)
 
 
 @pytest.fixture(scope="session")
@@ -60,9 +60,9 @@ def network(request):
     Returns:
         Network: All the elements needed to interact with the :term:`Connect` platform.
     """
-    local = request.config.getoption("--local")
+    is_local = is_local_mode(request)
 
-    network = settings.local_network() if local else settings.remote_network()
+    network = settings.local_network() if is_local else settings.remote_network()
     return network
 
 
