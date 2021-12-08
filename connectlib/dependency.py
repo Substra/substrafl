@@ -12,7 +12,7 @@ class Dependency(BaseModel):
     Args:
         dependencies (Optional[List[str]]): Python packages installable form pypi.
         local_dependencies (Optional[List[Path]]): Local installable packages. The command
-            `pip install -e .` will be executed in each of those folers hence a `setup.py` must be present in each
+            `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
         local_code (Optional[List[Path]]): Local relative imports used by your script. All files / folders must be at the same
             level than your script.
@@ -29,13 +29,13 @@ class Dependency(BaseModel):
         resolved_paths = list()
         for path in v:
             if not Path(path).exists():
-                not_existing_paths += f"\n\t{Path(path)} AS {Path(path).resolve()}"
+                not_existing_paths += [f"\n\t{Path(path)} AS {Path(path).resolve()}"]
             else:
                 resolved_paths.append(Path(path).resolve())
 
         if not_existing_paths:
             raise InvalidPathException(
-                f"Couldn't resolve :{not_existing_paths}\nPlease explicit the input path(s)."
+                f"Couldn't resolve :{''.join(not_existing_paths)}\nPlease explicit the input path(s)."
             )
 
         return resolved_paths
