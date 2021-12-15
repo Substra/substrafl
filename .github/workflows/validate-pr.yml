@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        python: [3.7, 3.8, 3.9, '3.10']
+        python: ['3.7', '3.8', '3.9']
 
     steps:
       - uses: actions/checkout@v2
@@ -25,6 +25,16 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
+
+      - name: Set up gcloud Cloud SDK environment
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure docker for GCP
+        run: gcloud auth configure-docker
+        shell: bash
 
       - name: Install lint checks
         run: |

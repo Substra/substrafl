@@ -16,7 +16,7 @@ MIN_NODES = 2
 
 
 class NodeCfg(BaseModel):
-    """Information needed to configure a Connect client to interract with a node.
+    """Information needed to configure a Connect client to interact with a node.
 
     Args:
         url (str): URL of the Connect node.
@@ -24,7 +24,7 @@ class NodeCfg(BaseModel):
             it ensures access to the associated node.
         username (str): A user define username to login to the Connect platform. This username will
             be the one used to access Connect frontend.
-        password (str): The passsword to login to the node.
+        password (str): The password to login to the node.
     """
 
     url: str
@@ -78,6 +78,7 @@ class Network(BaseModel):
         msp_ids (List[str]): Ids for each node of your network. These will be
             used as input permissions during the test.
         clients (List[substra.Client]): Substra clients managing the interaction with the :term:`Connect` platform.
+        n_nodes (int): The number of nodes in the network.
     """
 
     msp_ids: List[str]
@@ -87,6 +88,10 @@ class Network(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    @property
+    def n_nodes(self) -> int:
+        return len(self.msp_ids)
+
     @root_validator
     def consistent_clients_msp_ids(cls, values):
         """Msp_id is the id of a node. We need to associate one with each client to allow access to the pushed assets.
@@ -95,7 +100,8 @@ class Network(BaseModel):
         l_clients = len(values.get("clients"))
         assert (
             l_msp_ids == l_clients
-        ), f"`msp_ids` and `clients` must be of same length. Its are respectively {l_msp_ids} and {l_clients}"
+        ), f"`msp_ids` and `clients` must be of same length. Its are respectively {l_msp_ids} and {l_clients}."
+
         return values
 
 

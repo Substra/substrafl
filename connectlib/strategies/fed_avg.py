@@ -71,8 +71,8 @@ class FedAVG(Strategy):
     def avg_shared_states(
         self, shared_states: List[Dict[str, Union[int, np.ndarray]]]
     ) -> Dict[str, np.ndarray]:
-        """Compute the weighted avarage of all elements returned by the train
-        methode of the user defined algorithm.
+        """Compute the weighted average of all elements returned by the train
+        methods of the user defined algorithm.
         The average is weighted by the number of samples.
 
         E.g.: shared_states = [
