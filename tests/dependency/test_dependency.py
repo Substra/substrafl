@@ -4,9 +4,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 import substra
-import utils
-from local_code_file import combine_strings
-from local_code_subfolder.local_code import add_strings
 from pydantic import ValidationError
 
 from connectlib.algorithms import Algo
@@ -14,6 +11,10 @@ from connectlib.dependency import Dependency
 from connectlib.exceptions import InvalidPathException
 from connectlib.remote import remote_data
 from connectlib.remote.register import create_substra_algo_files
+
+from .. import utils
+from .local_code_file import combine_strings
+from .local_code_subfolder.local_code import add_strings
 
 current_file = Path(__file__)
 
@@ -45,22 +46,6 @@ def test_dependency_validators_no_setup_file():
 @pytest.mark.slow
 @pytest.mark.substra
 class TestLocalDependency:
-    @pytest.fixture(scope="class")
-    def dataset_key(self, asset_factory, network):
-        """Register a dataset"""
-        dataset_query = asset_factory.create_dataset()
-        dataset_key = network.clients[0].add_dataset(dataset_query)
-        return dataset_key
-
-    @pytest.fixture(scope="class")
-    def data_sample_key(self, asset_factory, network, dataset_key):
-        """Register a data sample"""
-        data_sample = asset_factory.create_data_sample(
-            datasets=[dataset_key], test_only=False, content="0,0"
-        )
-        sample_key = network.clients[0].add_data_sample(data_sample)
-        return sample_key
-
     def _register_algo(self, my_algo, algo_deps, client):
         """Register a composite algo"""
         data_op = my_algo.train(data_samples=list(), shared_state=None, num_updates=4)
@@ -93,7 +78,7 @@ class TestLocalDependency:
         composite_traintuple = client.get_composite_traintuple(composite_key)
         return composite_traintuple
 
-    def test_pypi_dependency(self, network, dataset_key, data_sample_key):
+    def test_pypi_dependency(self, network, numpy_datasets, constant_samples):
         """Test that dependencies from PyPi are installed."""
 
         class MyAlgo(Algo):
@@ -133,11 +118,13 @@ class TestLocalDependency:
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
         composite_traintuple = self._register_composite(
-            algo_key, dataset_key, data_sample_key, client
+            algo_key, numpy_datasets[0], constant_samples[0], client
         )
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_directory(self, network, dataset_key, data_sample_key):
+    def test_local_dependencies_directory(
+        self, network, numpy_datasets, constant_samples
+    ):
         """Test that you can import a directory"""
 
         class MyAlgo(Algo):
@@ -181,11 +168,11 @@ class TestLocalDependency:
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
         composite_traintuple = self._register_composite(
-            algo_key, dataset_key, data_sample_key, client
+            algo_key, numpy_datasets[0], constant_samples[0], client
         )
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_file(self, network, dataset_key, data_sample_key):
+    def test_local_dependencies_file(self, network, numpy_datasets, constant_samples):
         """Test that you can import a file"""
 
         class MyAlgo(Algo):
@@ -229,13 +216,13 @@ class TestLocalDependency:
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
         composite_traintuple = self._register_composite(
-            algo_key, dataset_key, data_sample_key, client
+            algo_key, numpy_datasets[0], constant_samples[0], client
         )
         utils.wait(client, composite_traintuple)
 
     @pytest.mark.docker_only
     def test_local_dependencies_installable_library(
-        self, network, dataset_key, data_sample_key
+        self, network, numpy_datasets, constant_samples
     ):
         """Test that you can install a local library
         Automatically done in docker but need to be manually done if force in subprocess mode
@@ -285,6 +272,6 @@ class TestLocalDependency:
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
         composite_traintuple = self._register_composite(
-            algo_key, dataset_key, data_sample_key, client
+            algo_key, numpy_datasets[0], constant_samples[0], client
         )
         utils.wait(client, composite_traintuple)

@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import shutil
+from pathlib import Path
 
+import numpy as np
 import pytest
-import settings
-from sdk import data_factory
-from settings import is_local_mode
+from substra.sdk.schemas import Permissions
+
+from . import assets_factory, settings
 
 
 def pytest_addoption(parser):
@@ -29,6 +32,15 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(scope="session")
+def session_dir():
+    temp_dir = Path.cwd() / "local-assets-cl"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    yield temp_dir
+    shutil.rmtree(temp_dir)
+
+
+@pytest.fixture(scope="session")
 def network_cfg(request):
     """Network configuration fixture.
     Loads the appropriate backend configuration based on the options passed to pytest.
@@ -39,7 +51,7 @@ def network_cfg(request):
     Returns:
         settings.Settings: The entire :term:`Connect` network configuration.
     """
-    is_local = is_local_mode(request)
+    is_local = settings.is_local_mode(request)
 
     return settings.load_backend_config(debug=is_local)
 
@@ -60,95 +72,61 @@ def network(request):
     Returns:
         Network: All the elements needed to interact with the :term:`Connect` platform.
     """
-    is_local = is_local_mode(request)
+    is_local = settings.is_local_mode(request)
 
     network = settings.local_network() if is_local else settings.remote_network()
     return network
 
 
-# TODO : the entire way of creating and using assets for the test needs to be redefine
-# This will be done in an other PR
-@pytest.fixture
-def dataset_query(tmpdir):
-    opener_path = tmpdir / "opener.py"
-    opener_path.write_text("raise ValueError()", encoding="utf-8")
+@pytest.fixture(scope="session")
+def default_permissions() -> Permissions:
+    """Default permissions fixture. Those are needed to add any asset to substra.
 
-    desc_path = tmpdir / "description.md"
-    desc_path.write_text("#Hello world", encoding="utf-8")
-
-    return {
-        "name": "dataset_name",
-        "data_opener": str(opener_path),
-        "type": "images",
-        "description": str(desc_path),
-        "metric_key": "",
-        "permissions": {
-            "public": True,
-            "authorized_ids": [],
-        },
-    }
-
-
-@pytest.fixture
-def metric_query(tmpdir):
-    metrics_path = tmpdir / "metrics.zip"
-    metrics_path.write_text("foo archive", encoding="utf-8")
-
-    desc_path = tmpdir / "description.md"
-    desc_path.write_text("#Hello world", encoding="utf-8")
-
-    return {
-        "name": "metrics_name",
-        "metrics": str(metrics_path),
-        "metrics_name": "name of the metrics",
-        "description": str(desc_path),
-        "test_data_manager_key": None,
-        "test_data_sample_keys": [],
-        "permissions": {
-            "public": True,
-            "authorized_ids": [],
-        },
-    }
-
-
-@pytest.fixture
-def data_sample_query(tmpdir):
-    data_sample_dir_path = tmpdir / "data_sample_0"
-    data_sample_file_path = data_sample_dir_path / "data.txt"
-    data_sample_file_path.write_text("Hello world 0", encoding="utf-8", ensure=True)
-
-    return {
-        "path": str(data_sample_dir_path),
-        "data_manager_keys": ["42"],
-        "test_only": False,
-    }
-
-
-@pytest.fixture
-def data_samples_query(tmpdir):
-    nb = 3
-    paths = []
-    for i in range(nb):
-        data_sample_dir_path = tmpdir / f"data_sample_{i}"
-        data_sample_file_path = data_sample_dir_path / "data.txt"
-        data_sample_file_path.write_text(
-            f"Hello world {i}", encoding="utf-8", ensure=True
-        )
-
-        paths.append(str(data_sample_dir_path))
-
-    return {
-        "paths": paths,
-        "data_manager_keys": ["42"],
-        "test_only": False,
-    }
+    Returns:
+        Permissions: Public permissions.
+    """
+    return Permissions(public=True, authorized_ids=[])
 
 
 @pytest.fixture(scope="session")
-def asset_factory():
-    return data_factory.AssetsFactory("test_debug")
+def numpy_datasets(network, session_dir, default_permissions):
+    """Create and add to the first node of the network an opener that will
+    load and save data, load and save numpy predictions.
+
+    Args:
+        network (Network): The defined substra network by the config files.
+        session_dir (Path): A temp file created for the pytest session.
+        default_permissions (Permissions): Default permissions for all of the assets
+        of the session.
+
+    Return:
+        str: The dataset key returned by substra.
+    """
+
+    dataset_key = assets_factory.add_numpy_datasets(
+        datasets_permissions=[default_permissions] * network.n_nodes,
+        clients=network.clients,
+        tmp_folder=session_dir,
+    )
+
+    return dataset_key
 
 
-@pytest.fixture()
-def data_sample(asset_factory):
-    return asset_factory.create_data_sample()
+@pytest.fixture(scope="session")
+def constant_samples(network, numpy_datasets, session_dir):
+    """0s and 1s data samples for clients 0 and 1.
+
+    Args:
+        network (Network): Substra network from the configuration file.
+        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each node.
+        session_dir (Path): A temp file created for the pytest session.
+    """
+
+    key = assets_factory.add_numpy_samples(
+        contents=[np.zeros((1, 2)), np.ones((1, 2))],
+        dataset_keys=numpy_datasets,
+        tmp_folder=session_dir,
+        clients=network.clients,
+    )
+
+    return key
