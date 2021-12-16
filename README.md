@@ -1,8 +1,4 @@
-<div align="center">
-
 # ConnectLib
-
-</div>
 
 ## Installation
 
@@ -16,7 +12,10 @@ With pip >= 19.0.0:
 pip install --extra-index-url <login>:<password>@pypi.owkin.com connectlib
 ```
 
-
 ## Contribute
 
 ConnectLib is open to contributions. Please have a look at the [Contribution Guidelines](https://owkin-connectlib.readthedocs-hosted.com/en/latest/contribute/contribution_process.html).
+
+## Release
+
+See the release process on the tech-team [releasing guide](https://github.com/owkin/tech-team/blob/main/releasing_guide.md#connectlib).
