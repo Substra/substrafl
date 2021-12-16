@@ -1,7 +1,7 @@
 Technical Guide
 ===============
 
-Merge requests
+Pull Requests
 --------------
 
 Description
@@ -9,15 +9,19 @@ Description
 
 - Fill in the required template:
 
-    -  if there in a associated issue, a reference to it (only need to write ``#{issue_number}`` in GitHub, e.g. ``#85``)
-    -  if there is no issue, a description of the problem it solves
-    -  a technical description of the implementation
+  -  if there in a associated issue, a reference to it (only need to write ``#{issue_number}`` in GitHub, e.g. ``#85``)
+  -  if there is no issue, a description of the problem it solves
+  -  a technical description of the implementation
 
-    Adding ``Closes #{issue_number}`` in the merge request description to automatically close the
-    issue once the request is merged into master.
+  Adding ``Closes #{issue_number}`` in the PR description to automatically close the
+  issue once the request is merged into master.
 
 - Be sure that your pull request contains tests that cover the changed or added code.
 - If your changes warrant a documentation change, the pull request must also update the documentation.
+- The PR name should use :ref:`conventional commit naming<Commits - format>`.
+- If your PR add changes that are visible to the user (usually ``feat``, ``fix`` and ``doc`` commits),
+  please update the changelog with at least your commit name.
+  The changelog is made for the connectlib users : you can add descriptions and precise api changes if needed.
 
 Commits - format
 ^^^^^^^^^^^^^^^^
@@ -27,7 +31,7 @@ work at the same time follow the **conventional commit** convention. If
 someone works on his own branch, then he is expected to **squash** his
 commits into one commit in the conventional format at the merge.
 
-::
+.. code::
 
    type(optional scope): one-liner description (less than 100 characters)
 
@@ -57,44 +61,108 @@ You need to clone the repository using ``git`` and place yourself in its directo
     git clone git@github.com:owkin/connectlib.git
     cd connectlib
 
-Now, install the required dependency and be sure that the current
-tests are passing on your machine:
+Now, install connectlib and its required dependencies:
 
 .. code:: bash
 
 	# create virtual env and install dev requirements
 	pip install -e '.[dev]'
 
-	# Run tests
-	make test
 
-If you want to run tests in local/debug mode :
+Tests
+^^^^^
 
-.. code:: bash
+Run the tests
+~~~~~~~~~~~~~
 
-	# Run tests (both docker and subprocess mode)
-	make test-local
+Some tests (marked with ``@substra``) use ``substra``, which has different backends.
 
-    # Run tests only in docker mode (need docker to be running)
-    make test-docker
+Requirements:
 
-    # Run tests only in subprocess mode
-    make test-subprocess
+   * If you want to use the local debug mode of substra with docker, you will need docker to be running on your machine
 
-    # Run tests in remote mode (need running docker + deploying substra)
-    # (https://github.com/owkin/tech-team/wiki/Deploy-Connect-locally-with-k3s)
-    make test-remote
+   * | If you want to use the remote mode of substra, you will need to deploy the whole substra stack (backend, orchestrator, hlf-k8s) following this
+      `guide <https://github.com/owkin/tech-team/wiki/Deploy-Connect-locally-with-k3s>`__.
 
-If you want to force the tests marked as "docker_only" into subprocess mode :
 
-.. code:: bash
+#. | If you want to run the tests with every ``substra`` mode (subprocess, docker, remote), e.g. before a release
+    (``@substra`` tests are ran with each different modes):
 
-	# Install the library (done in docker before)
-    cd tests/dependency/installable_library
-    pip install -e .
-    cd -
-    export DEBUG_SPAWNER=subprocess
-    pytest tests --local
+    .. code:: bash
+
+            make test
+
+#. If you want to run the tests using the local/debug mode of substra:
+
+    .. code:: bash
+
+            # Run all the tests in subprocess mode (no specific requirements)
+            make test-subprocess
+
+            # Run all the tests in docker mode
+            make test-docker
+
+            # Run tests with both docker and subprocess mode (@substra tests are ran twice with different modes)
+            make test-local
+
+#. If you want to run the tests using the remote mode of substra:
+
+    .. code:: bash
+
+            make test-remote
+
+#. Additionnal informations
+
+    Some tests are marked as ``docker_only`` and won't be run in subprocess mode with the ``make`` commands
+    because they test features that are not compatible with this mode.
+    If you need to force these tests into subprocess mode:
+
+    .. code:: bash
+
+        # Install the library (done in docker before)
+        cd tests/dependency/installable_library
+        pip install -e .
+        cd -
+        export DEBUG_SPAWNER=subprocess
+        pytest tests --local
+
+
+Write a test
+~~~~~~~~~~~~
+
+When appropriate, your code should be accompanied by corresponding tests.
+
+This is the tests structure:
+
+-  tests
+
+   -  resources (CAUTION: ADD YOUR RESOURCES IN GIT LFS)
+   -  conftest.py
+   -  <module_name>
+       - test_<file_name>.py
+       - ...
+   - ...
+
+You can refer to the `pytest <https://docs.pytest.org/en/latest/>`__
+documentation to understand fixtures and test cases.
+
+In ``conftest.py``, there are the
+`fixtures <https://docs.pytest.org/en/latest/fixture.html#fixture>`__
+used by all tests. You can also write your fixtures directly in the test
+file.
+
+The structure of the test files mirrors the structure of the package.
+The test file names must start with ``test_``.
+
+The test function names are of the format
+``test_{function_name}_{what_is_tested}``
+
+**Example**:
+
+- I wrote a function ``my_function`` in ``package > utils > functional.py``.
+- I add relevant tests in the test file: ``tests > utils > test_functional.py``
+- My test functions are named: ``test_my_function_accepts_nan``, ``test_my_function_error_if_input_dim_2``
+
 
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^
@@ -126,42 +194,3 @@ You can also run it anytime using:
 .. code:: bash
 
     pre-commit run --all-files
-
-Tests
-^^^^^
-
-Your code must always be accompanied by corresponding tests, if tests are not present your code will not be merged.
-
-This is the tests structure:
-
-   -  tests
-
-      -  resources (CAUTION: ADD YOUR RESOURCES IN GIT LFS)
-      -  conftest.py
-      -  <module_name>
-          - test_<file_name>.py
-          - ...
-      - ...
-
-Write a test
-~~~~~~~~~~~~
-
-You can refer to the `pytest <https://docs.pytest.org/en/latest/>`__
-documentation to understand fixtures and test cases.
-
-In ``conftest.py``, there are the
-`fixtures <https://docs.pytest.org/en/latest/fixture.html#fixture>`__
-used by all tests. You can also write your fixtures directly in the test
-file.
-
-The structure of the test files mirrors the structure of the package.
-The test file names must start with ``test_``.
-
-The test function names are of the format
-``test_{function_name}_{what_is_tested}``
-
-**Example**:
-
-- I wrote a function `my_function` in `package > utils > functional.py`.
-- I add relevant tests in the test file: `tests > utils > test_functional.py`
-- My test functions are named: `test_my_function_accepts_nan`, `test_my_function_error_if_input_dim_2`
