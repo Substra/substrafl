@@ -13,8 +13,6 @@ from connectlib.remote import remote_data
 from connectlib.remote.register import create_substra_algo_files
 
 from .. import utils
-from .local_code_file import combine_strings
-from .local_code_subfolder.local_code import add_strings
 
 current_file = Path(__file__)
 
@@ -112,9 +110,7 @@ class TestLocalDependency:
 
         client = network.clients[0]
         my_algo = MyAlgo()
-        algo_deps = Dependency(
-            pypi_dependencies=["pytest"],
-        )
+        algo_deps = Dependency(pypi_dependencies=["pytest"])
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
         composite_traintuple = self._register_composite(
@@ -141,6 +137,7 @@ class TestLocalDependency:
                 num_updates: int,
                 shared_state,
             ):
+                from local_code_subfolder.local_code import add_strings
 
                 some_strings = add_strings("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
@@ -172,6 +169,57 @@ class TestLocalDependency:
         )
         utils.wait(client, composite_traintuple)
 
+    def test_local_dependencies_file_in_directory(
+        self, network, numpy_datasets, constant_samples
+    ):
+        """Test that you can import a file that is in a subdirectory"""
+
+        class MyAlgo(Algo):
+            # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
+            # pytest calls it)
+            def delayed_init(self, seed: int, *args, **kwargs):
+                pass
+
+            @remote_data
+            def train(
+                self,
+                x: np.ndarray,
+                y: np.ndarray,
+                num_updates: int,
+                shared_state,
+            ):
+                from local_code_subfolder.local_code import add_strings
+
+                some_strings = add_strings("Foo", "Bar")
+                assert some_strings == "FooBar"  # For flake8 purposes
+
+                return dict(test=np.array(x), n_samples=len(x))
+
+            @remote_data
+            def predict(self, x: np.array, shared_state):
+                return shared_state["test"]
+
+            def load(self, path: Path):
+                return self
+
+            def save(self, path: Path):
+                assert path.parent.exists()
+                with path.open("w") as f:
+                    f.write("test")
+
+        client = network.clients[0]
+        my_algo = MyAlgo()
+        algo_deps = Dependency(
+            pypi_dependencies=["pytest"],
+            local_code=[current_file.parent / "local_code_subfolder" / "local_code.py"],
+        )
+        algo_key = self._register_algo(my_algo, algo_deps, client)
+
+        composite_traintuple = self._register_composite(
+            algo_key, numpy_datasets[0], constant_samples[0], client
+        )
+        utils.wait(client, composite_traintuple)
+
     def test_local_dependencies_file(self, network, numpy_datasets, constant_samples):
         """Test that you can import a file"""
 
@@ -189,6 +237,7 @@ class TestLocalDependency:
                 num_updates: int,
                 shared_state,
             ):
+                from local_code_file import combine_strings
 
                 some_strings = combine_strings("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
@@ -267,7 +316,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_dependencies=[Path(__file__).parent / "installable_library"],
+            local_dependencies=[current_file.parent / "installable_library"],
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 

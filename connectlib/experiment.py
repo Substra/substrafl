@@ -1,6 +1,4 @@
 import datetime
-import traceback
-from pathlib import Path
 from typing import List, Optional
 
 import substra
@@ -90,7 +88,9 @@ def execute_experiment(
         test_node.register_operations(client, permissions, dependencies=dependencies)
         testtuples += test_node.tuples
 
-    aggregation_node.register_operations(client, permissions, dependencies=dependencies)
+    # The aggregation operation is defined in the strategy, its dependencies are
+    # the strategy dependencies
+    aggregation_node.register_operations(client, permissions, dependencies=None)
 
     # Execute the compute plan
     compute_plan = client.add_compute_plan(
@@ -105,34 +105,3 @@ def execute_experiment(
     )
 
     return compute_plan
-
-
-def execute_experiment_caller() -> Path:
-    """Find the path of the file that called the :func:`~connectlib.run_experiment` function via the traceback.
-
-    Returns:
-        Optional[Path]: the path of the file that called :func:`~connectlib.run_experiment`
-    """
-    traces = traceback.extract_stack()
-    execute_experiment_trace_indexes = [
-        ind
-        for ind, trace in enumerate(traces)
-        if trace.filename.endswith("connectlib/experiment.py")
-        and trace.name == "execute_experiment"
-    ]
-
-    callers = [traces[ind - 1].filename for ind in execute_experiment_trace_indexes]
-
-    if len(callers) == 0:
-        raise AttributeError(
-            "This function is to be used inside the :func:`~run_experiment` function. "
-            "But no trace of it has been found."
-        )
-    if len(callers) > 1:
-        nl = "\n\t"
-        raise AttributeError(
-            """For now, connectlib doesn't support nested call of :func:~`connectlib.run_experiment` function. """
-            f"""But you called it {len(callers)} times from the following files {nl}{nl.join(callers)}"""
-        )
-
-    return Path(callers[0])
