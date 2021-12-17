@@ -1,4 +1,4 @@
-import itertools
+import inspect
 import os
 import shutil
 import subprocess
@@ -201,7 +201,7 @@ def create_substra_algo_files(
     # Pypi dependencies docker command if specified by the user
     pypi_dependencies_cmd = (
         f"RUN python{python_major_minor} -m pip install --no-cache-dir {' '.join(dependencies.pypi_dependencies)}"
-        if len(dependencies.pypi_dependencies) > 0
+        if dependencies is not None and len(dependencies.pypi_dependencies) > 0
         else ""
     )
 
@@ -209,10 +209,22 @@ def create_substra_algo_files(
     local_code_cmd = ""
     local_dependencies_cmd = "RUN mkdir local_dependencies\n"
 
-    for path in itertools.chain(
-        dependencies.local_code, dependencies.local_dependencies
-    ):
-        if not (operation_dir / path.name).exists():
+    if dependencies is not None:
+        algo_file_path = Path(inspect.getfile(remote_struct.cls)).parent
+        for path in dependencies.local_code:
+            relative_path = path.relative_to(algo_file_path)
+            (operation_dir / relative_path.parent).mkdir(exist_ok=True)
+            if path.is_dir():
+                shutil.copytree(path, operation_dir / relative_path)
+                local_code_cmd += f"RUN mkdir -p {relative_path}\n"
+            elif path.is_file():
+                shutil.copy(path, operation_dir / relative_path)
+                local_code_cmd += f"RUN mkdir -p {relative_path.parent}\n"
+            else:
+                raise ValueError(f"Does not exist {path}")
+            local_code_cmd += f"COPY {relative_path} {relative_path}\n"
+
+        for path in dependencies.local_dependencies:
             if path.is_dir():
                 shutil.copytree(path, operation_dir / path.name)
             elif path.is_file():
@@ -220,22 +232,12 @@ def create_substra_algo_files(
             else:
                 raise ValueError(f"Does not exist {path}")
 
-    for local_dep in dependencies.local_code:
-        if local_dep.is_dir():
-            local_code_cmd += (
-                f"RUN mkdir {local_dep.name}\nCOPY {local_dep.name} {local_dep.name}"
+            local_dependencies_cmd += (
+                f"RUN mkdir local_dependencies/{path.name}\n"
+                f"COPY {path.name} local_dependencies/{path.name}\n"
+                f"RUN python{python_major_minor} -m pip install --no-cache-dir -e local_dependencies/{path.name}"
             )
-        elif local_dep.is_file():
-            local_code_cmd += f"COPY {local_dep.name} {local_dep.name}"
-        else:
-            raise ValueError(f"{local_dep} is neither a directory nor a file.")
 
-    for local_dep in dependencies.local_dependencies:
-        local_dependencies_cmd += (
-            f"RUN mkdir local_dependencies/{local_dep.name}\n"
-            f"COPY {local_dep.name} local_dependencies/{local_dep.name}\n"
-            f"RUN python{python_major_minor} -m pip install --no-cache-dir -e local_dependencies/{local_dep.name}"
-        )
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
     algo_path.write_text(ALGO.format(remote_struct.remote_cls_name))
