@@ -75,13 +75,13 @@ jobs:
       - name: Run tests
         run: |
           cd connectlib
-          make test-local
+          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-local
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
         with:
           name: coverage
-          path: htmlcov
+          path: connectlib/htmlcov
 
   pr-validation-docs:
     runs-on: ubuntu-20.04
