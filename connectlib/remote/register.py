@@ -18,12 +18,15 @@ import connectlib
 from connectlib.dependency import Dependency
 from connectlib.remote.methods import RemoteStruct
 
+CONNECTLIB_FOLDER = "connectlib_internal"
+
 # TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
 FROM python:{python_version}
 WORKDIR /sandbox
 ENV PYTHONPATH /sandbox
-RUN mkdir /wheels
+
+COPY . .
 
 # install dependencies
 RUN python{python_version} -m pip install -U pip
@@ -40,10 +43,6 @@ RUN python{python_version} -m pip install -U pip
 # Install local dependencies
 {local_dependencies}
 
-COPY ./algo.py algo.py
-COPY ./{cloudpickle_path} cls_cloudpickle
-COPY ./{cls_parameters_path} cls_parameters.json
-COPY ./{remote_cls_parameters_path} remote_cls_parameters.json
 ENTRYPOINT ["python{python_version}", "algo.py"]
 """
 
@@ -53,30 +52,30 @@ import cloudpickle
 
 import substratools as tools
 
-from connectlib.remote.methods import {0}
+from connectlib.remote.methods import {csl_name}
 
 from pathlib import Path
 
 if __name__ == "__main__":
-    cls_parameters_path = Path(__file__).parent / "cls_parameters.json"
+    cls_parameters_path = Path(__file__).parent / "{connectlib_folder}" / "cls_parameters.json"
 
     with cls_parameters_path.open("r") as f:
         cls_parameters = json.load(f)
     print(cls_parameters)
 
-    cls_cloudpickle_path = Path(__file__).parent / "cls_cloudpickle"
+    cls_cloudpickle_path = Path(__file__).parent / "{connectlib_folder}" / "cls_cloudpickle"
 
     with cls_cloudpickle_path.open("rb") as f:
         cls = cloudpickle.load(f)
 
     instance = cls(*cls_parameters["args"], **cls_parameters["kwargs"])
 
-    remote_cls_parameters_path = Path(__file__).parent / "remote_cls_parameters.json"
+    remote_cls_parameters_path = Path(__file__).parent / "{connectlib_folder}" / "remote_cls_parameters.json"
 
     with remote_cls_parameters_path.open("r") as f:
         remote_cls_parameters = json.load(f)
 
-    tools.algo.execute({0}(instance, *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]))
+    tools.algo.execute({csl_name}(instance, *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]))
 """
 
 
@@ -95,6 +94,9 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
         str: dockerfile command for installing the given modules
     """
     install_cmds = []
+    wheels_dir = operation_dir / CONNECTLIB_FOLDER / "dist"
+    wheels_dir.mkdir(exist_ok=True)
+
     for lib_module in lib_modules:
         if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
             # TODO: add private pypi (eg user needs to pass the credentials)
@@ -102,10 +104,13 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
                 "You must have connectlib, substra and substratools in editable mode.\n"
                 "eg `pip install -e substra` in the substra directory"
             )
-        else:
-            lib_name = lib_module.__name__
-            lib_path = Path(lib_module.__file__).parents[1]
+        lib_name = lib_module.__name__
+        lib_path = Path(lib_module.__file__).parents[1]
+        wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
+        # Recreate the wheel only if it exists
+        # TODO: only for dev, see what we do in another PR
+        if not (lib_path / "dist" / wheel_name).exists():
             # if the right version of substra or substratools is not found, it will search if they are already
             # installed in 'dist' and take them from there.
             # sys.executable takes the Python interpreter run by the code and not the default one on the computer
@@ -135,19 +140,11 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
             except subprocess.CalledProcessError as e:
                 print(e.output)
 
-            # Get wheel name based on current version
-            wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
-            (operation_dir / "dist").mkdir(exist_ok=True)
-            shutil.copy(
-                lib_path / "dist" / wheel_name, operation_dir / "dist" / wheel_name
-            )
-
-            # Necessary command to install the wheel in the docker Image
-            install_cmd = (
-                f"COPY ./dist/{wheel_name} /wheels/{wheel_name}\n"
-                f"RUN cd /wheels && python{python_major_minor} -m pip install {wheel_name}\n"
-            )
-            install_cmds.append(install_cmd)
+        # Get wheel name based on current version
+        shutil.copy(lib_path / "dist" / wheel_name, wheels_dir / wheel_name)
+        # Necessary command to install the wheel in the docker image
+        install_cmd = f"RUN cd {CONNECTLIB_FOLDER}/dist && python{python_major_minor} -m pip install {wheel_name}\n"
+        install_cmds.append(install_cmd)
     return "\n".join(install_cmds)
 
 
@@ -175,18 +172,20 @@ def create_substra_algo_files(
     """
 
     operation_dir = Path(tempfile.mkdtemp())
+    connectlib_internal = operation_dir / CONNECTLIB_FOLDER
+    connectlib_internal.mkdir()
 
     # serialize cls
-    cloudpickle_path = operation_dir / "cls_cloudpickle"
+    cloudpickle_path = connectlib_internal / "cls_cloudpickle"
     with cloudpickle_path.open("wb") as f:
         cloudpickle.dump(remote_struct.cls, f)
 
     # serialize cls parameters
-    cls_parameters_path = operation_dir / "cls_parameters.json"
+    cls_parameters_path = connectlib_internal / "cls_parameters.json"
     cls_parameters_path.write_text(remote_struct.cls_parameters)
 
     # serialize remote cls parameters
-    remote_cls_parameters_path = operation_dir / "remote_cls_parameters.json"
+    remote_cls_parameters_path = connectlib_internal / "remote_cls_parameters.json"
     remote_cls_parameters_path.write_text(remote_struct.remote_cls_parameters)
 
     # get Python version
@@ -207,8 +206,7 @@ def create_substra_algo_files(
 
     # The files to copy to the container must be in the same folder as the Dockerfile
     local_code_cmd = ""
-    local_dependencies_cmd = "RUN mkdir local_dependencies\n"
-
+    local_dependencies_cmd = ""
     if dependencies is not None:
         algo_file_path = Path(inspect.getfile(remote_struct.cls)).parent
         for path in dependencies.local_code:
@@ -216,34 +214,32 @@ def create_substra_algo_files(
             (operation_dir / relative_path.parent).mkdir(exist_ok=True)
             if path.is_dir():
                 shutil.copytree(path, operation_dir / relative_path)
-                local_code_cmd += f"RUN mkdir -p {relative_path}\n"
             elif path.is_file():
                 shutil.copy(path, operation_dir / relative_path)
-                local_code_cmd += f"RUN mkdir -p {relative_path.parent}\n"
             else:
                 raise ValueError(f"Does not exist {path}")
-            local_code_cmd += f"COPY {relative_path} {relative_path}\n"
 
         for path in dependencies.local_dependencies:
+            dest_path = connectlib_internal / "local_dependencies" / path.name
             if path.is_dir():
-                shutil.copytree(path, operation_dir / path.name)
+                shutil.copytree(path, dest_path)
             elif path.is_file():
-                shutil.copy(path, operation_dir / path.name)
+                shutil.copy(path, dest_path)
             else:
                 raise ValueError(f"Does not exist {path}")
 
-            local_dependencies_cmd += (
-                f"RUN mkdir local_dependencies/{path.name}\n"
-                f"COPY {path.name} local_dependencies/{path.name}\n"
-                f"RUN python{python_major_minor} -m pip install --no-cache-dir -e local_dependencies/{path.name}"
-            )
+            local_dependencies_cmd += f"RUN python{python_major_minor} -m pip install --no-cache-dir -e {dest_path.relative_to(operation_dir)}"
 
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
-    algo_path.write_text(ALGO.format(remote_struct.remote_cls_name))
+    algo_path.write_text(
+        ALGO.format(
+            csl_name=remote_struct.remote_cls_name, connectlib_folder=CONNECTLIB_FOLDER
+        )
+    )
 
     # Write description
-    description_path = operation_dir / "description.md"
+    description_path = connectlib_internal / "description.md"
     description_path.write_text("# ConnnectLib Operation")
 
     # Write dockerfile based on template
