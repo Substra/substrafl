@@ -1,4 +1,4 @@
-## Related issue
+## Related issue or Asana card
 
 (`#` followed by the number of the issue)
 
@@ -8,9 +8,9 @@
 
 ## Please check if the PR fulfills these requirements
 
-- [ ] The commit message follows [our guidelines](https://owkin-connectlib.readthedocs-hosted.com/en/latest/contribute/technical_guide.html#commits-format)
+- [ ] The commit message follows [our guidelines](https://github.com/owkin/tech-team/blob/main/CONTRIBUTING.md#commit-message)
 - [ ] Tests for the changes have been added (for bug fixes / features)
 - [ ] Docs have been added / updated (for bug fixes / features)
-- [ ] The [coding conventions](https://owkin-connectlib.readthedocs-hosted.com/en/latest/contribute/technical_guide.html#pre-commit-hooks) are respected.
+- [ ] The [coding conventions](https://github.com/owkin/tech-team/blob/main/CONTRIBUTING.md#coding-guidelines) are respected.
 
-See the the [documentation on contributions](https://owkin-connectlib.readthedocs-hosted.com/en/latest/contribute/contribution_process.html) for more information.
+See the the [documentation on contributions](https://github.com/owkin/tech-team/blob/main/CONTRIBUTING.md#contributing-to-owkins-software) for more information.

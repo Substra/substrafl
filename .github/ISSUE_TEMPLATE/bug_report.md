@@ -28,7 +28,7 @@ Steps to reproduce the behavior:
 ## Environment
 
  - ConnectLib Version (e.g., 1.0):
- - Substra Version (e.g., 1.0):
+ - Connect Version (e.g., 1.0):
  - Python version:
  - Any other relevant information:
 
