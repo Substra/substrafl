@@ -1,5 +1,3 @@
-COV_OPTIONS = --cov=connectlib --cov-append --cov-report=html:htmlcov
-
 .PHONY: pyclean test test-remote test-local test-docker test-subprocess test-fast
 
 pyclean:
