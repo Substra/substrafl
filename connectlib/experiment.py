@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import List, Optional
 
 import substra
@@ -7,6 +8,8 @@ from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
 from connectlib.strategies import Strategy
+
+logger = logging.getLogger(__name__)
 
 
 def execute_experiment(
@@ -51,6 +54,7 @@ def execute_experiment(
     Returns:
         [ComputePlan]: The generated compute plan
     """
+    logger.info("Building the compute plan.")
 
     # create computation graph
     for _ in range(num_rounds):
@@ -60,7 +64,8 @@ def execute_experiment(
             aggregation_node=aggregation_node,
         )
 
-    strategy.predict(  # TODO rename 'predict' into 'predict_and_score' ? the outputs are metrics here
+    # TODO rename 'predict' into 'predict_and_score' ? the outputs are metrics here
+    strategy.predict(
         algo=algo,
         train_data_nodes=train_data_nodes,
         test_data_nodes=test_data_nodes,
@@ -78,6 +83,7 @@ def execute_experiment(
 
     # Register all operations in substra
     # Define the algorithms we need and submit them
+    logger.info("Submitting the algorithm to Connect.")
     composite_traintuples = []
     for train_node in train_data_nodes:
         train_node.register_operations(client, permissions, dependencies=dependencies)
@@ -93,6 +99,7 @@ def execute_experiment(
     aggregation_node.register_operations(client, permissions, dependencies=None)
 
     # Execute the compute plan
+    logger.info("Submitting the compute plan to Connect.")
     compute_plan = client.add_compute_plan(
         substra.sdk.schemas.ComputePlanSpec(
             composite_traintuples=composite_traintuples,
@@ -102,6 +109,12 @@ def execute_experiment(
             clean_models=True,  # set it to False if users need the intermediary models
         ),
         auto_batching=False,
+    )
+
+    logger.info(
+        ("The compute plan has been submitted to Connect, its key is {0}.").format(
+            compute_plan.key
+        )
     )
 
     return compute_plan
