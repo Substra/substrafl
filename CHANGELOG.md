@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: dependency management: the `local_code` dependencies are copied to the same folder structure relatively to the algo (#58)
+- fix: dependency management - it failed when resolving the `local_code` dependencies because the path to the algo was relative (#65)
 
 ### Added
 
