@@ -208,7 +208,7 @@ def create_substra_algo_files(
     local_code_cmd = ""
     local_dependencies_cmd = ""
     if dependencies is not None:
-        algo_file_path = Path(inspect.getfile(remote_struct.cls)).parent
+        algo_file_path = Path(inspect.getfile(remote_struct.cls)).resolve().parent
         for path in dependencies.local_code:
             relative_path = path.relative_to(algo_file_path)
             (operation_dir / relative_path.parent).mkdir(exist_ok=True)
