@@ -150,6 +150,7 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
 
 def create_substra_algo_files(
     remote_struct: RemoteStruct,
+    install_libraries: bool,
     dependencies: Optional[Dependency] = None,
 ) -> Tuple[Path, Path]:
     """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
@@ -165,6 +166,7 @@ def create_substra_algo_files(
 
     Args:
         remote_struct (RemoteStruct): A representation of a substra algorithm.
+        install_libraries (bool): whether we need to build the wheels and copy the files to install the libraries
         dependencies (Optional[List[str]], optional): The list of public dependencies of the algorithm. Defaults to None.
 
     Returns:
@@ -194,8 +196,10 @@ def create_substra_algo_files(
     python_major_minor = ".".join(python_version().split(".")[:2])
 
     # Build Connectlib, Substra and Substratools wheel if needed
-    lib_modules = [substratools, substra, connectlib]  # owkin private dependencies
-    install_cmd = get_local_lib(lib_modules, operation_dir, python_major_minor)
+    install_cmd = ""
+    if install_libraries:
+        lib_modules = [substratools, substra, connectlib]  # owkin private dependencies
+        install_cmd = get_local_lib(lib_modules, operation_dir, python_major_minor)
 
     # Pypi dependencies docker command if specified by the user
     pypi_dependencies_cmd = (
@@ -219,16 +223,17 @@ def create_substra_algo_files(
             else:
                 raise ValueError(f"Does not exist {path}")
 
-        for path in dependencies.local_dependencies:
-            dest_path = connectlib_internal / "local_dependencies" / path.name
-            if path.is_dir():
-                shutil.copytree(path, dest_path)
-            elif path.is_file():
-                shutil.copy(path, dest_path)
-            else:
-                raise ValueError(f"Does not exist {path}")
+        if install_libraries:
+            for path in dependencies.local_dependencies:
+                dest_path = connectlib_internal / "local_dependencies" / path.name
+                if path.is_dir():
+                    shutil.copytree(path, dest_path)
+                elif path.is_file():
+                    shutil.copy(path, dest_path)
+                else:
+                    raise ValueError(f"Does not exist {path}")
 
-            local_dependencies_cmd += f"RUN python{python_major_minor} -m pip install --no-cache-dir -e {dest_path.relative_to(operation_dir)}"
+                local_dependencies_cmd += f"RUN python{python_major_minor} -m pip install --no-cache-dir -e {dest_path.relative_to(operation_dir)}"
 
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
@@ -285,7 +290,9 @@ def register_algo(
         str: Substra algorithm key.
     """
     archive_path, description_path = create_substra_algo_files(
-        remote_struct, dependencies=dependencies
+        remote_struct,
+        dependencies=dependencies,
+        install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
     )
     if is_composite:
         category = substra.sdk.schemas.AlgoCategory.composite
