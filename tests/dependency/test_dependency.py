@@ -48,7 +48,10 @@ class TestLocalDependency:
         """Register a composite algo"""
         data_op = my_algo.train(data_samples=list(), shared_state=None, num_updates=4)
         archive_path, description_path = create_substra_algo_files(
-            data_op.remote_struct, dependencies=algo_deps
+            data_op.remote_struct,
+            dependencies=algo_deps,
+            install_libraries=client.backend_mode
+            != substra.BackendType.LOCAL_SUBPROCESS,
         )
         algo_query = substra.sdk.schemas.AlgoSpec(
             name="algo_test_deps",
