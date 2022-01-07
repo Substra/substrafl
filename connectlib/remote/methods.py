@@ -1,4 +1,3 @@
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
@@ -19,7 +18,6 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         shared_state_serializer: Type[Serializer] = PickleSerializer,
     ):
         self.instance = instance
-        self.instance.delayed_init(instance.seed, *instance.args, **instance.kwargs)
 
         self.method_name = method_name
         self.fake_traintuple = fake_traintuple
@@ -87,7 +85,6 @@ class RemoteMethod(substratools.AggregateAlgo):
         shared_state_serializer: Type[Serializer] = PickleSerializer,
     ):
         self.instance = instance
-        self.instance.delayed_init(instance.seed, *instance.args, **instance.kwargs)
 
         self.method_name = method_name
         self.method_parameters = method_parameters
@@ -152,9 +149,9 @@ class RemoteStruct:
         return hash(
             (
                 self.cls,
-                self.cls_parameters,
+                frozenset(self.cls_parameters),
                 self.remote_cls_name,
-                self.remote_cls_parameters,
+                frozenset(self.remote_cls_parameters),
             )
         )
 
@@ -216,14 +213,17 @@ def remote_data(method: Callable):
         assert "y" not in method_parameters.keys()
 
         cls = self.__class__
-        cls_parameters = json.dumps({"args": self.args, "kwargs": self.kwargs})
+        cls_parameters = {
+            "args": self.args,
+            "kwargs": self.kwargs,
+        }
 
         kwargs = {
             "method_name": method.__name__,
             "method_parameters": method_parameters,
             "fake_traintuple": fake_traintuple,
         }
-        remote_cls_parameters = json.dumps({"args": [], "kwargs": kwargs})
+        remote_cls_parameters = {"args": [], "kwargs": kwargs}
 
         return DataOperation(
             RemoteStruct(
@@ -248,13 +248,13 @@ def remote(method: Callable):
             return method(self=self, shared_states=shared_states, **method_parameters)
 
         cls = self.__class__
-        cls_parameters = json.dumps({"args": self.args, "kwargs": self.kwargs})
+        cls_parameters = {"args": self.args, "kwargs": self.kwargs}
 
         kwargs = {
             "method_name": method.__name__,
             "method_parameters": method_parameters,
         }
-        remote_cls_parameters = json.dumps({"args": [], "kwargs": kwargs})
+        remote_cls_parameters = {"args": [], "kwargs": kwargs}
 
         return AggregateOperation(
             RemoteStruct(cls, cls_parameters, "RemoteMethod", remote_cls_parameters),

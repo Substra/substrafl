@@ -1,4 +1,3 @@
-import json
 from typing import List
 
 # TODO: fix black/isort conflicts
@@ -37,7 +36,7 @@ def test_remote():
     assert isinstance(aggregate_op, AggregateOperation)
 
     # Reconstruct the RemoteClass from the RemoteStruct
-    remote_cls_parameters = json.loads(aggregate_op.remote_struct.cls_parameters)
+    remote_cls_parameters = aggregate_op.remote_struct.cls_parameters
     new_remote_class = aggregate_op.remote_struct.cls(
         *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]
     )
@@ -69,7 +68,7 @@ def test_remote_data():
     assert isinstance(data_op, DataOperation)
 
     # Reconstruct the RemoteClass from the RemoteStruct
-    remote_cls_parameters = json.loads(data_op.remote_struct.cls_parameters)
+    remote_cls_parameters = data_op.remote_struct.cls_parameters
     new_remote_class = data_op.remote_struct.cls(
         *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]
     )
@@ -96,9 +95,7 @@ def test_remote_data_get_method_from_remote_struct():
     new_remote_class = data_op.remote_struct.cls(data_op.remote_struct.cls_parameters)
     new_remote_data_func = getattr(
         new_remote_class,
-        json.loads(data_op.remote_struct.remote_cls_parameters)["kwargs"][
-            "method_name"
-        ],
+        data_op.remote_struct.remote_cls_parameters["kwargs"]["method_name"],
     )
 
     result = new_remote_data_func(x=4, y=5, _skip=True, shared_state=4)
@@ -122,7 +119,7 @@ def test_remote_data_extra_arg():
         y=5,
         _skip=True,
         shared_state=4,
-        **json.loads(data_op.remote_struct.remote_cls_parameters)["kwargs"][
+        **data_op.remote_struct.remote_cls_parameters["kwargs"][
             "method_parameters"
         ]  # extra arg is there
     )

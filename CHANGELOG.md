@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat: Add a FL algorithm wrapper in PyTorch for the federated averaging strategy (#60)
+
 ## [0.5.0] - 2021-12-31
 
 ### Fixed

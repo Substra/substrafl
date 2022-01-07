@@ -30,17 +30,12 @@ def test_fed_avg(
     class MyAlgo(Algo):
         # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
         # pytest calls it)
-        def delayed_init(self, seed: int, *args, **kwargs):
-            pass
 
         @remote_data
         def train(
             self,
             x: np.ndarray,
             y: np.ndarray,
-            num_updates: int,
-            n_rounds: int,
-            batch_size: int,
             shared_state,
         ):
             return dict(test=x, n_samples=len(x))
@@ -94,7 +89,7 @@ def test_fed_avg(
     aggregation_node = AggregationNode(network.msp_ids[0])
     my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"])
-    strategy = FedAVG(num_rounds=num_rounds, num_updates=2, batch_size=3)
+    strategy = FedAVG()
 
     compute_plan = execute_experiment(
         client=network.clients[0],

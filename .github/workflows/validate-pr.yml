@@ -39,8 +39,8 @@ jobs:
       - name: Install lint checks
         run: |
           pip install --upgrade pip
-          pip install pytest black flake8
-          pip install pre-commit
+          pip install --no-cache-dir pytest black flake8
+          pip install --no-cache-dir pre-commit
 
       - name: Code conventions
         run: |
@@ -63,14 +63,14 @@ jobs:
 
       - name: Install package
         run: |
-             pip install -e substra
-             pip install -e substratools
-             pip install -e connectlib[dev]
+             pip install --no-cache-dir -e substra
+             pip install --no-cache-dir -e substratools
+             pip install --no-cache-dir -e connectlib[dev]
 
       - name: Install package for tests
         run: |
              cd connectlib/tests/dependency/installable_library
-             pip install -e .
+             pip install --no-cache-dir -e .
 
       - name: Run tests
         run: |
@@ -93,7 +93,7 @@ jobs:
           python-version: 3.7
 
       - name: Install Dependencies
-        run: pip install -r docs/requirements.txt
+        run: pip install --no-cache-dir -r docs/requirements.txt
 
       - name: Test docs
         run: |
