@@ -43,25 +43,10 @@ class FedAVG(Strategy):
     - each :term:`node` is connected to :term:`aggregation node`. The communication
     rounds between each node and aggregation node might be frequent which might be expensive
     - some trust of the server coordinating the training is still required.
-
-    Args:
-        num_rounds (int): The number of times the algorithm will be trained on each client
-        num_updates (int): number of batches in each round. This arguments will be passed
-        to the `self.train` method of your `Algo` class
-        batch_size (int): The number of training examples utilized in one iteration
     """
 
-    def __init__(self, num_rounds: int, num_updates: int, batch_size: int):
-        self.num_rounds = num_rounds
-        self.num_updates = num_updates
-        self.batch_size = batch_size
-        seed = 42
-        super(FedAVG, self).__init__(
-            num_rounds=num_rounds,
-            num_updates=num_updates,
-            batch_size=batch_size,
-            seed=seed,
-        )
+    def __init__(self):
+        super(FedAVG, self).__init__()
 
         # States
         self.local_states: Optional[List[LocalStateRef]] = None
@@ -151,9 +136,9 @@ class FedAVG(Strategy):
         aggregation_node: AggregationNode,
     ):
         """One round of the Federated Averaging strategy:
-        - if they exist, set the model weights to the aggregated weights on each train data nodes
-        - perform a local update (train on n minibatches) of the models on each train data nodes
-        - aggregate the model shared_states
+            - if they exist, set the model weights to the aggregated weights on each train data nodes
+            - perform a local update (train on n minibatches) of the models on each train data nodes
+            - aggregate the model shared_states
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
@@ -173,9 +158,6 @@ class FedAVG(Strategy):
                 algo.train(  # type: ignore
                     node.data_sample_keys,
                     shared_state=self.avg_shared_state,
-                    num_updates=self.num_updates,
-                    n_rounds=self.num_rounds,
-                    batch_size=self.batch_size,
                 ),
                 local_state=previous_local_state,
             )

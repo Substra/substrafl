@@ -20,7 +20,7 @@ def test_avg_shared_states(n_samples, results):
         {"weights": 2 * np.ones((5, 10)), "n_samples": n_samples[2]},
     ]
 
-    MyFedAVG = FedAVG(num_rounds=0, num_updates=0, batch_size=0)
+    MyFedAVG = FedAVG()
     averaged_states = MyFedAVG.avg_shared_states(shared_states, _skip=True)
 
     assert (results == averaged_states["weights"]).all()
@@ -42,6 +42,6 @@ def test_avg_shared_states(n_samples, results):
 def test_avg_shared_states_no_n_samples_error(shared_states):
     # check if n_samples is not passed into avg_shared_states() error will be raised
     # check if no key is in the shared states error will be raised
-    MyFedAVG = FedAVG(num_rounds=0, num_updates=0, batch_size=0)
+    MyFedAVG = FedAVG()
     with pytest.raises(TypeError):
         MyFedAVG.avg_shared_states(shared_states, _skip=True)

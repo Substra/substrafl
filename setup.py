@@ -67,6 +67,7 @@ setup(
             "pytest-cov>=2.12.0",
             "pre-commit>=2.13.0",
             "types-PyYAML>=6.0.0",
+            "torch>=1.9.1",
         ],
     },
     python_requires=">=3.7",

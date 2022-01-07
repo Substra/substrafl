@@ -62,7 +62,7 @@ class NumpyOpener(tools.Opener):
 
     @classmethod
     def _get_y(cls, data):
-        return data[:, -1]
+        return data[:, -1:]
 
     @classmethod
     def _fake_data(cls, n_samples=None, n_col=3):
@@ -133,6 +133,7 @@ def add_numpy_datasets(
             data_opener=opener_path,
             description=description_path,
             permissions=permissions,
+            logs_permission=permissions,
         )
 
         keys.append(client.add_dataset(dataset_spec))
@@ -172,7 +173,6 @@ def add_numpy_samples(
     for client, content, dataset_key in zip(clients, contents, dataset_keys):
         data_sample_folder = Path(tempfile.mkdtemp(dir=tmp_folder))
         data_sample_file = data_sample_folder / "data.npy"
-
         np.save(data_sample_file, content)
 
         data_sample_spec = DataSampleSpec(
@@ -239,7 +239,7 @@ def add_python_metric(
     All the necessary files will be created in the tmp_folder.
 
     Args:
-        python_formula (str): A  pure python formula passed in a string.
+        python_formula (str): A pure python formula passed in a string.
             This formula must be based on y_pred and y_true variable which are both numpy array.
             The formula must return a float python object.
             E.g.: The Accuracy formula would be: (y_pred==y_true).sum()/y_true.shape[0] as no numpy function
@@ -274,3 +274,32 @@ def add_python_metric(
     )
     key = client.add_metric(metric_spec)
     return key
+
+
+def linear_data(
+    n_col: int = 3, n_samples: int = 11, weights_seed: int = 42, noise_seed: int = 12
+) -> np.ndarray:
+    """Generate 2D dataset fo n_col and n_samples. The data are linearly linked with less than
+    10% of noise.
+
+    Args:
+        n_col (int, optional): The wished number of column in the dataset. Defaults to 3.
+        n_samples (int, optional): The wished number of samples in the dataset. Defaults to 11.
+        weights_seed (int, optional): Used to set the weights. This ensure the reproducibility of the relation between the
+        features.
+        noise_seed (int, optional): Used to set the noise. This ensure the reproducibility of the noise added.
+
+    Returns:
+        np.ndarray: A 2D (n_samples, n_col) np.ndarray
+    """
+    np.random.seed(weights_seed)
+    random_content = np.random.uniform(0, 1, (n_samples, n_col - 1))
+
+    np.random.seed(noise_seed)
+    noise = np.random.normal(0, 0.01, (n_samples, n_col - 1))
+
+    target = (random_content + noise).sum(axis=1)
+
+    dataset = np.c_[random_content, target]
+
+    return dataset

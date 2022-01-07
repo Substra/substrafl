@@ -16,9 +16,16 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
+import torch.nn.functional as F
 from substra.sdk.schemas import Permissions
 
+from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
+
 from . import assets_factory, settings
+
+LINEAR_N_COL = 2
+LINEAR_N_TARGET = 1
 
 
 def pytest_addoption(parser):
@@ -89,6 +96,19 @@ def default_permissions() -> Permissions:
 
 
 @pytest.fixture(scope="session")
+def mae(network, default_permissions, session_dir):
+    key = assets_factory.add_python_metric(
+        python_formula="abs(y_pred-y_true).mean()",
+        name="MAE",
+        permissions=default_permissions,
+        client=network.clients[0],
+        tmp_folder=session_dir,
+    )
+
+    return key
+
+
+@pytest.fixture(scope="session")
 def numpy_datasets(network, session_dir, default_permissions):
     """Create and add to the first node of the network an opener that will
     load and save data, load and save numpy predictions.
@@ -130,3 +150,179 @@ def constant_samples(network, numpy_datasets, session_dir):
     )
 
     return key
+
+
+@pytest.fixture(scope="session")
+def train_linear_data_samples(network):
+    """Generates linear linked data for training purposes. The train_linear_data_samples data and test_linear_data_samples data are
+    linked with the same weights as they fixed per the same seed.
+
+    Args:
+        network (Network): Substra network from the configuration file.
+
+    Returns:
+        List[np.ndarray]: A list of linear data for each node of the network.
+    """
+    return [
+        assets_factory.linear_data(
+            n_col=LINEAR_N_COL + LINEAR_N_TARGET,
+            n_samples=1024,
+            weights_seed=42,
+            noise_seed=i,
+        )
+        for i in range(network.n_nodes)
+    ]
+
+
+@pytest.fixture(scope="session")
+def train_linear_nodes(network, numpy_datasets, train_linear_data_samples, session_dir):
+    """Linear linked data samples.
+
+    Args:
+        network (Network): Substra network from the configuration file.
+        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each node.
+        train_linear_data_samples (List[np.ndarray]): A List of linear linked data.
+        session_dir (Path): A temp file created for the pytest session.
+    """
+
+    linear_samples = assets_factory.add_numpy_samples(
+        # We set the weights seeds to ensure that all contents are linearly linked with the same weights but
+        # the noise is random so the data is not identical on every node.
+        contents=train_linear_data_samples,
+        dataset_keys=numpy_datasets,
+        clients=network.clients,
+        tmp_folder=session_dir,
+    )
+
+    train_data_nodes = [
+        TrainDataNode(
+            network.msp_ids[k],
+            numpy_datasets[k],
+            [linear_samples[k]],
+        )
+        for k in range(network.n_nodes)
+    ]
+
+    return train_data_nodes
+
+
+@pytest.fixture(scope="session")
+def test_linear_data_samples():
+    """Generates linear linked data for testing purposes. The train_linear_data_samples data and test_linear_data_samples data are
+    linked with the same weights as they fixed per the same seed.
+
+    Returns:
+        List[np.ndarray]: A one element list containing linear linked data.
+    """
+    return [
+        assets_factory.linear_data(
+            n_col=LINEAR_N_COL + LINEAR_N_TARGET,
+            n_samples=64,
+            weights_seed=42,
+            noise_seed=42,
+        )
+    ]
+
+
+@pytest.fixture(scope="session")
+def test_linear_nodes(
+    network,
+    numpy_datasets,
+    mae,
+    test_linear_data_samples,
+    session_dir,
+):
+    """Linear linked data samples.
+
+    Args:
+        network (Network): Substra network from the configuration file.
+        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each node.
+        mae (str): Mean absolute error metric for the TestDataNode
+        session_dir (Path): A temp file created for the pytest session.
+
+    Returns:
+        List[TestDataNode]: A one element list containing a connectlib TestDataNode for linear data with a mae metric.
+    """
+
+    linear_samples = assets_factory.add_numpy_samples(
+        # We set the weights seeds to ensure that all contents are linearly linked with the same weights but
+        # the noise is random so the data is not identical on every node.
+        contents=test_linear_data_samples,
+        dataset_keys=[numpy_datasets[0]],
+        clients=[network.clients[0]],
+        tmp_folder=session_dir,
+    )
+
+    test_data_nodes = [
+        TestDataNode(
+            network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae]
+        )
+    ]
+
+    return test_data_nodes
+
+
+@pytest.fixture(scope="session")
+def aggregation_node(network):
+    """The central node to use.
+
+    Args:
+        network (Network): Substra network from the configuration file.
+
+    Returns:
+        AggregationNode: Connectlib aggregation Node.
+    """
+    return AggregationNode(network.msp_ids[0])
+
+
+@pytest.fixture(scope="session")
+def torch_linear_model():
+    """Generates a basic torch model (Perceptron). This model can be trained on the linear data fixtures
+    as its number of input nodes is set per the LINEAR_N_COL variable which is also used to generates the linear
+    train and test data samples.
+
+    Returns:
+        torch.nn.Module: A torch perceptron trainable on the linear data.
+    """
+
+    class Perceptron(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear1 = torch.nn.Linear(LINEAR_N_COL, LINEAR_N_TARGET)
+
+        def forward(self, x):
+            out = self.linear1(x)
+            return out
+
+    return Perceptron
+
+
+@pytest.fixture(scope="session")
+def batch_norm_cnn():
+    """Generates a CNN model with 1d an 2d batch normalization layers
+
+    Returns:
+        torch.nn.Module: A torch CNN
+    """
+
+    class BatchNormCnn(torch.nn.Module):
+        def __init__(self):
+            super(BatchNormCnn, self).__init__()
+            self.conv1 = torch.nn.Conv2d(
+                in_channels=1, out_channels=10, kernel_size=5, stride=1
+            )
+            self.conv2 = torch.nn.Conv2d(10, 20, kernel_size=5)
+            self.conv2_bn = torch.nn.BatchNorm2d(20)
+            self.dense1 = torch.nn.Linear(in_features=320, out_features=50)
+            self.dense1_bn = torch.nn.BatchNorm1d(50)
+            self.dense2 = torch.nn.Linear(50, 1)
+
+        def forward(self, x):
+            x = F.relu(F.max_pool2d(self.conv1(x), 2))
+            x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
+            x = x.view(-1, 320)  # reshape
+            x = F.relu(self.dense1_bn(self.dense1(x)))
+            x = F.relu(self.dense2(x))
+            return F.sigmoid(x)
+
+    return BatchNormCnn

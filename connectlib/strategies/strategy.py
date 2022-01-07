@@ -10,13 +10,9 @@ SharedState = TypeVar("SharedState")
 
 
 class Strategy(ABC):
-    def __init__(self, seed: int = 42, *args, **kwargs):
-        self.seed = seed
+    def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-
-    def delayed_init(self, seed: int, *args, **kwargs):
-        pass
 
     @abstractmethod
     def perform_round(

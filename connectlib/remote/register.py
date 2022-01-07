@@ -57,10 +57,11 @@ from connectlib.remote.methods import {csl_name}
 from pathlib import Path
 
 if __name__ == "__main__":
-    cls_parameters_path = Path(__file__).parent / "{connectlib_folder}" / "cls_parameters.json"
+    cls_parameters_path = Path(__file__).parent / "{connectlib_folder}" / "cls_parameters"
 
-    with cls_parameters_path.open("r") as f:
-        cls_parameters = json.load(f)
+
+    with cls_parameters_path.open("rb") as f:
+        cls_parameters = cloudpickle.load(f)
     print(cls_parameters)
 
     cls_cloudpickle_path = Path(__file__).parent / "{connectlib_folder}" / "cls_cloudpickle"
@@ -70,10 +71,11 @@ if __name__ == "__main__":
 
     instance = cls(*cls_parameters["args"], **cls_parameters["kwargs"])
 
-    remote_cls_parameters_path = Path(__file__).parent / "{connectlib_folder}" / "remote_cls_parameters.json"
+    remote_cls_parameters_path = Path(__file__).parent / "{connectlib_folder}" / "remote_cls_parameters"
 
-    with remote_cls_parameters_path.open("r") as f:
-        remote_cls_parameters = json.load(f)
+
+    with remote_cls_parameters_path.open("rb") as f:
+        remote_cls_parameters = cloudpickle.load(f)
 
     tools.algo.execute({csl_name}(instance, *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]))
 """
@@ -183,12 +185,14 @@ def create_substra_algo_files(
         cloudpickle.dump(remote_struct.cls, f)
 
     # serialize cls parameters
-    cls_parameters_path = connectlib_internal / "cls_parameters.json"
-    cls_parameters_path.write_text(remote_struct.cls_parameters)
+    cls_parameters_path = connectlib_internal / "cls_parameters"
+    with cls_parameters_path.open("wb") as f:
+        cloudpickle.dump(remote_struct.cls_parameters, f)
 
     # serialize remote cls parameters
-    remote_cls_parameters_path = connectlib_internal / "remote_cls_parameters.json"
-    remote_cls_parameters_path.write_text(remote_struct.remote_cls_parameters)
+    remote_cls_parameters_path = connectlib_internal / "remote_cls_parameters"
+    with remote_cls_parameters_path.open("wb") as f:
+        cloudpickle.dump(remote_struct.remote_cls_parameters, f)
 
     # get Python version
     # Required to select the correct version of python inside the docker Image
@@ -256,7 +260,7 @@ def create_substra_algo_files(
             pypi_dependencies=pypi_dependencies_cmd,
             local_dependencies=local_dependencies_cmd,
             local_code=local_code_cmd,
-            cloudpickle_path=cloudpickle_path.name,
+            cls_path=remote_cls_parameters_path.name,
             cls_parameters_path=cls_parameters_path.name,
             remote_cls_parameters_path=remote_cls_parameters_path.name,
         )

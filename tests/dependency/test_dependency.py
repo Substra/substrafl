@@ -46,7 +46,7 @@ def test_dependency_validators_no_setup_file():
 class TestLocalDependency:
     def _register_algo(self, my_algo, algo_deps, client):
         """Register a composite algo"""
-        data_op = my_algo.train(data_samples=list(), shared_state=None, num_updates=4)
+        data_op = my_algo.train(data_samples=list(), shared_state=None)
         archive_path, description_path = create_substra_algo_files(
             data_op.remote_struct,
             dependencies=algo_deps,
@@ -85,15 +85,12 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
-            def delayed_init(self, seed: int, *args, **kwargs):
-                pass
 
             @remote_data
             def train(
                 self,
                 x: np.ndarray,
                 y: np.ndarray,
-                num_updates: int,
                 shared_state,
             ):
                 x = [4]
@@ -129,15 +126,12 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
-            def delayed_init(self, seed: int, *args, **kwargs):
-                pass
 
             @remote_data
             def train(
                 self,
                 x: np.ndarray,
                 y: np.ndarray,
-                num_updates: int,
                 shared_state,
             ):
                 from local_code_subfolder.local_code import add_strings
@@ -180,15 +174,12 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
-            def delayed_init(self, seed: int, *args, **kwargs):
-                pass
 
             @remote_data
             def train(
                 self,
                 x: np.ndarray,
                 y: np.ndarray,
-                num_updates: int,
                 shared_state,
             ):
                 from local_code_subfolder.local_code import add_strings
@@ -229,15 +220,12 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
-            def delayed_init(self, seed: int, *args, **kwargs):
-                pass
 
             @remote_data
             def train(
                 self,
                 x: np.ndarray,
                 y: np.ndarray,
-                num_updates: int,
                 shared_state,
             ):
                 from local_code_file import combine_strings
@@ -283,15 +271,12 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
-            def delayed_init(self, seed: int, *args, **kwargs):
-                pass
 
             @remote_data
             def train(
                 self,
                 x: np.ndarray,
                 y: np.ndarray,
-                num_updates: int,
                 shared_state,
             ):
                 # the import is here so that we can run the test without
