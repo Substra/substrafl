@@ -36,6 +36,12 @@ def pytest_addoption(parser):
         help="Run the tests on the local backend only (debug mode). "
         "Otherwise run the tests only on the remote backend.",
     )
+    parser.addoption(
+        "--nightly",
+        action="store_true",
+        help="Run the tests on the backend deployed by connect-test nightly (remote mode). "
+        "Otherwise run the tests only on the default remote backend.",
+    )
 
 
 @pytest.fixture(scope="session")
@@ -45,22 +51,6 @@ def session_dir():
 
     yield temp_dir
     shutil.rmtree(temp_dir)
-
-
-@pytest.fixture(scope="session")
-def network_cfg(request):
-    """Network configuration fixture.
-    Loads the appropriate backend configuration based on the options passed to pytest.
-
-    Args:
-        request: Pytest cli request.
-
-    Returns:
-        settings.Settings: The entire :term:`Connect` network configuration.
-    """
-    is_local = settings.is_local_mode(request)
-
-    return settings.load_backend_config(debug=is_local)
 
 
 @pytest.fixture(scope="session")
@@ -79,9 +69,14 @@ def network(request):
     Returns:
         Network: All the elements needed to interact with the :term:`Connect` platform.
     """
-    is_local = settings.is_local_mode(request)
+    is_local = request.config.getoption("--local")
+    is_nightly = request.config.getoption("--nightly")
 
-    network = settings.local_network() if is_local else settings.remote_network()
+    network = (
+        settings.local_network()
+        if is_local
+        else settings.remote_network(is_nightly=is_nightly)
+    )
     return network
 
 

@@ -8,9 +8,11 @@ from pydantic import BaseModel, root_validator, validator
 
 CURRENT_DIR = Path(__file__).parent
 
-LOCAL_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "local.yaml"
-REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "remote.yaml"
-
+DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "local.yaml"
+DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "remote.yaml"
+NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE = (
+    CURRENT_DIR / "connect_conf" / "nightly.yaml"
+)
 
 MIN_NODES = 2
 
@@ -45,9 +47,7 @@ class LocalConfiguration(BaseModel):
 
     @validator("n_local_nodes")
     def minimal_number_of_nodes(cls, v):
-        assert (
-            v >= MIN_NODES
-        ), f"Not enough nodes specified in configuration file ({LOCAL_NETWORK_CONFIGURATION_FILE}). "
+        assert v >= MIN_NODES, "Not enough nodes specified in configuration). "
         f"Found {v}, at least {MIN_NODES} are required."
         return v
 
@@ -63,9 +63,7 @@ class RemoteConfiguration(BaseModel):
 
     @validator("nodes")
     def minimal_number_of_nodes(cls, v):
-        assert (
-            len(v) >= MIN_NODES
-        ), f"Not enough nodes defined in your configuration file ({LOCAL_NETWORK_CONFIGURATION_FILE}). "
+        assert len(v) >= MIN_NODES, "Not enough nodes defined in your configuration. "
         f"Found {len(v)}, at least {MIN_NODES} is/are required."
         return v
 
@@ -112,7 +110,7 @@ def local_network():
     Returns:
         Network: A local network (debug mode) where all connect clients are duplicated from one an other.
     """
-    cfg = yaml.full_load(LOCAL_NETWORK_CONFIGURATION_FILE.read_text())
+    cfg = yaml.full_load(DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE.read_text())
 
     cfg = LocalConfiguration(n_local_nodes=cfg.get("n_local_nodes"))
     n_nodes = cfg.n_local_nodes
@@ -126,14 +124,23 @@ def local_network():
     return Network(clients=clients, msp_ids=msp_ids)
 
 
-def remote_network():
+def remote_network(is_nightly: bool = False):
     """Instantiates a remote connect network from the user defined configuration file.
     As the configuration is static and immutable, it is loaded only once from the disk.
+
+    Args:
+        is_nightly (bool): Set to True the substra network has to be configured to the connect-test.
 
     Returns:
         Network: A remote network.
     """
-    cfg = yaml.full_load(REMOTE_NETWORK_CONFIGURATION_FILE.read_text())
+    cfg_file = (
+        NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE
+        if is_nightly
+        else DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
+    )
+
+    cfg = yaml.full_load(cfg_file.read_text())
     cfg = RemoteConfiguration(
         nodes=[
             NodeCfg(
@@ -155,15 +162,3 @@ def remote_network():
         msp_ids.append(node.msp_id)
 
     return Network(clients=clients, msp_ids=msp_ids)
-
-
-def is_local_mode(request):
-    """Check if the run is done in local (if not then it is remote)
-
-    Args:
-        request: Pytest cli request.
-
-    Returns:
-        bool: True if the run is local, False if the run is remote
-    """
-    return request.config.getoption("--local")
