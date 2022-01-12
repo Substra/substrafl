@@ -29,3 +29,6 @@ test-subprocess: pyclean
 test-fast: pyclean
 	export DEBUG_SPAWNER=subprocess ;\
 	pytest tests ${COV_OPTIONS} --local -m "not slow and not docker_only"
+
+test-ci: pyclean
+	pytest tests --nightly
