@@ -17,12 +17,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
-from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
+from connectlib.nodes import AggregationNode
+from connectlib.nodes import TestDataNode
+from connectlib.nodes import TrainDataNode
 
-from . import assets_factory, settings
+from . import assets_factory
+from . import settings
 
 LINEAR_N_COL = 2
 LINEAR_N_TARGET = 1
@@ -72,11 +75,7 @@ def network(request):
     is_local = request.config.getoption("--local")
     is_nightly = request.config.getoption("--nightly")
 
-    network = (
-        settings.local_network()
-        if is_local
-        else settings.remote_network(is_nightly=is_nightly)
-    )
+    network = settings.local_network() if is_local else settings.remote_network(is_nightly=is_nightly)
     return network
 
 
@@ -149,8 +148,8 @@ def constant_samples(network, numpy_datasets, session_dir):
 
 @pytest.fixture(scope="session")
 def train_linear_data_samples(network):
-    """Generates linear linked data for training purposes. The train_linear_data_samples data and test_linear_data_samples data are
-    linked with the same weights as they fixed per the same seed.
+    """Generates linear linked data for training purposes. The train_linear_data_samples data and
+    test_linear_data_samples data are linked with the same weights as they fixed per the same seed.
 
     Args:
         network (Network): Substra network from the configuration file.
@@ -203,8 +202,8 @@ def train_linear_nodes(network, numpy_datasets, train_linear_data_samples, sessi
 
 @pytest.fixture(scope="session")
 def test_linear_data_samples():
-    """Generates linear linked data for testing purposes. The train_linear_data_samples data and test_linear_data_samples data are
-    linked with the same weights as they fixed per the same seed.
+    """Generates linear linked data for testing purposes. The train_linear_data_samples data and
+    test_linear_data_samples data are linked with the same weights as they fixed per the same seed.
 
     Returns:
         List[np.ndarray]: A one element list containing linear linked data.
@@ -248,11 +247,7 @@ def test_linear_nodes(
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [
-        TestDataNode(
-            network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae]
-        )
-    ]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae])]
 
     return test_data_nodes
 
@@ -303,9 +298,7 @@ def batch_norm_cnn():
     class BatchNormCnn(torch.nn.Module):
         def __init__(self):
             super(BatchNormCnn, self).__init__()
-            self.conv1 = torch.nn.Conv2d(
-                in_channels=1, out_channels=10, kernel_size=5, stride=1
-            )
+            self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=10, kernel_size=5, stride=1)
             self.conv2 = torch.nn.Conv2d(10, 20, kernel_size=5)
             self.conv2_bn = torch.nn.BatchNorm2d(20)
             self.dense1 = torch.nn.Linear(in_features=320, out_features=50)
@@ -313,11 +306,11 @@ def batch_norm_cnn():
             self.dense2 = torch.nn.Linear(50, 1)
 
         def forward(self, x):
-            x = F.relu(F.max_pool2d(self.conv1(x), 2))
-            x = F.relu(F.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
+            x = functional.relu(functional.max_pool2d(self.conv1(x), 2))
+            x = functional.relu(functional.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
             x = x.view(-1, 320)  # reshape
-            x = F.relu(self.dense1_bn(self.dense1(x)))
-            x = F.relu(self.dense2(x))
-            return F.sigmoid(x)
+            x = functional.relu(self.dense1_bn(self.dense1(x)))
+            x = functional.relu(self.dense2(x))
+            return functional.sigmoid(x)
 
     return BatchNormCnn

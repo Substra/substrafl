@@ -8,7 +8,9 @@ import tempfile
 import uuid
 from pathlib import Path
 from platform import python_version
-from typing import List, Optional, Tuple
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import cloudpickle
 import substra
@@ -150,7 +152,8 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
     return "\n".join(install_cmds)
 
 
-def create_substra_algo_files(
+# TODO: 'create_substra_algo_files' is too complex, consider refactoring
+def create_substra_algo_files(  # noqa: C901
     remote_struct: RemoteStruct,
     install_libraries: bool,
     dependencies: Optional[Dependency] = None,
@@ -169,7 +172,8 @@ def create_substra_algo_files(
     Args:
         remote_struct (RemoteStruct): A representation of a substra algorithm.
         install_libraries (bool): whether we need to build the wheels and copy the files to install the libraries
-        dependencies (Optional[List[str]], optional): The list of public dependencies of the algorithm. Defaults to None.
+        dependencies (Optional[List[str]], optional): The list of public dependencies of the algorithm.
+            Defaults to None.
 
     Returns:
         Tuple[Path, Path]: The archive path and the description file path.
@@ -237,15 +241,14 @@ def create_substra_algo_files(
                 else:
                     raise ValueError(f"Does not exist {path}")
 
-                local_dependencies_cmd += f"RUN python{python_major_minor} -m pip install --no-cache-dir -e {dest_path.relative_to(operation_dir)}"
+                local_dependencies_cmd += (
+                    f"RUN python{python_major_minor} -m pip install "
+                    f"--no-cache-dir -e {dest_path.relative_to(operation_dir)}"
+                )
 
     # Write template to algo.py
     algo_path = operation_dir / "algo.py"
-    algo_path.write_text(
-        ALGO.format(
-            csl_name=remote_struct.remote_cls_name, connectlib_folder=CONNECTLIB_FOLDER
-        )
-    )
+    algo_path.write_text(ALGO.format(csl_name=remote_struct.remote_cls_name, connectlib_folder=CONNECTLIB_FOLDER))
 
     # Write description
     description_path = connectlib_internal / "description.md"

@@ -1,10 +1,17 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
 
 import substratools
 
-from connectlib.remote.serializers import PickleSerializer, Serializer
+from connectlib.remote.serializers import PickleSerializer
+from connectlib.remote.serializers import Serializer
 
 
 class RemoteDataMethod(substratools.CompositeAlgo):
@@ -41,24 +48,18 @@ class RemoteDataMethod(substratools.CompositeAlgo):
                 instance = self.instance
 
             method_to_call = getattr(instance, self.method_name)
-            next_shared_state = method_to_call(
-                x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters
-            )
+            next_shared_state = method_to_call(x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters)
 
             return instance, next_shared_state
         else:
             return head_model, trunk_model
 
     def predict(self, X: Any, head_model: Any, trunk_model: Any):
-        assert (
-            head_model is not None
-        ), "head model is None. Possibly you did not train() before running predict()"
+        assert head_model is not None, "head model is None. Possibly you did not train() before running predict()"
         instance = head_model
 
         method_to_call = getattr(instance, self.method_name)
-        predictions = method_to_call(
-            x=X, shared_state=trunk_model, _skip=True, **self.method_parameters
-        )
+        predictions = method_to_call(x=X, shared_state=trunk_model, _skip=True, **self.method_parameters)
 
         return predictions
 
@@ -93,9 +94,7 @@ class RemoteMethod(substratools.AggregateAlgo):
 
     def aggregate(self, models, rank):
         method_to_call = getattr(self.instance, self.method_name)
-        next_shared_state = method_to_call(
-            shared_states=models, _skip=True, **self.method_parameters
-        )
+        next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
         return next_shared_state
 
@@ -171,18 +170,20 @@ class AggregateOperation:
 
 def remote_data(method: Callable):
     """Decorator for a remote function containing a data_samples argument (e.g the Algo.train function)
-    With this decorator, when the function is called, it is not executed but it returns a DataOperation object containing
-    all the informations needed to execute it later (see connectlib.remote.methods.DataOperation).
+    With this decorator, when the function is called, it is not executed but it returns a DataOperation
+    object containing all the informations needed to execute it later (see connectlib.remote.methods.DataOperation).
     - The decorated function definition should have at least a shared_state argument
     - If the decorated function is called without a `_skip=True` argument, the arguments required are the ones in
     remote_method_inner, and it should have at least a `datasamples` argument
-    - If the decorated function is called with a `_skip=True` argument, it should have the arguments of its original definition
+    - If the decorated function is called with a `_skip=True` argument, it should have the arguments of its original
+    definition
     - The decorated function should be within a class
     - The init of the class must be
     def __init__(self, *args, **kwargs):
             self.args = args
             self.kwargs = kwargs
-    - self.args and self.kwargs will be given to the init, any other init argument is ignored (not saved in the RemoteStruct)
+    - self.args and self.kwargs will be given to the init, any other init argument is ignored (not saved in the
+    RemoteStruct)
 
     """
 
@@ -192,14 +193,15 @@ def remote_data(method: Callable):
         shared_state: Any = None,
         _skip: bool = False,
         fake_traintuple: bool = False,
-        **method_parameters
+        **method_parameters,
     ) -> DataOperation:
         """
         Args:
             data_samples (List[str]): The data samples paths. Defaults to None.
             shared_state (Any): a shared state, could be a SharedStateRef object or anything else. Defaults to None.
             _skip (bool, optional): if True, calls the decorated function. Defaults to False.
-            fake_traintuple (bool, optional): if True, the decorated function won't be executed (see RemoteDataMethod). Defaults to False.
+            fake_traintuple (bool, optional): if True, the decorated function won't be executed (see RemoteDataMethod).
+                Defaults to False.
 
         Returns:
             DataOperation: [description]
@@ -226,9 +228,7 @@ def remote_data(method: Callable):
         remote_cls_parameters = {"args": [], "kwargs": kwargs}
 
         return DataOperation(
-            RemoteStruct(
-                cls, cls_parameters, "RemoteDataMethod", remote_cls_parameters
-            ),
+            RemoteStruct(cls, cls_parameters, "RemoteDataMethod", remote_cls_parameters),
             data_samples,
             shared_state,
         )
@@ -239,10 +239,7 @@ def remote_data(method: Callable):
 def remote(method: Callable):
     # TODO: add docstring
     def remote_method_inner(
-        self,
-        shared_states: Optional[List] = None,
-        _skip: bool = False,
-        **method_parameters
+        self, shared_states: Optional[List] = None, _skip: bool = False, **method_parameters
     ) -> AggregateOperation:
         if _skip:
             return method(self=self, shared_states=shared_states, **method_parameters)

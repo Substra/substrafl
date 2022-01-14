@@ -1,2 +1,2 @@
-class InvalidPathException(Exception):
+class InvalidPathError(Exception):
     pass

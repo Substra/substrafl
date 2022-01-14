@@ -14,7 +14,7 @@ def set_logging_level(loglevel):
     while len(logger.handlers) > 0:
         logger.removeHandler(logger.handlers[0])
 
-    consoleHandler = logging.StreamHandler()
+    console_handler = logging.StreamHandler()
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)

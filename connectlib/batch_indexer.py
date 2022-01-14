@@ -36,14 +36,18 @@ class NpIndexGenerator:
 
 
     Attributes:
-        n_samples (int): The number of samples in one epoch, i.e. the number of indexes you want to draw your batches from.
-        batch_size (Optional[int]): The size of each batch. If set to None, the batch_size will be the number of samples.
+        n_samples (int): The number of samples in one epoch, i.e. the number of indexes you want to draw your batches
+            from.
+        batch_size (Optional[int]): The size of each batch. If set to None, the batch_size will be the number of
+            samples.
         shuffle (bool, optional): Set to True to shuffle the indexes before each new epoch. Defaults to True.
-        drop_last (bool, optional): Set to True to drop the last incomplete batch, if the dataset size is not divisible by the
-            batch size. If False and the size of dataset is not divisible by the batch size, then the last batch will be smaller.
-            Defaults to True.
-        seed (int, optional): The seed to set the randomness of the generator and have reproducible results. Defaults to 42.
-        n_epoch_generated (int): The number of epoch already generated. Automatically initialize to 0 then incremented for each epoch.
+        drop_last (bool, optional): Set to True to drop the last incomplete batch, if the dataset size is not divisible
+            by the batch size. If False and the size of dataset is not divisible by the batch size, then the last batch
+            will be smaller. Defaults to True.
+        seed (int, optional): The seed to set the randomness of the generator and have reproducible results.
+            Defaults to 42.
+        n_epoch_generated (int): The number of epoch already generated. Automatically initialize to 0 then incremented
+            for each epoch.
     """
 
     def __init__(
@@ -63,29 +67,24 @@ class NpIndexGenerator:
 
         # Validates n_samples
         if n_samples < 0:
-            raise ValueError(
-                f"n_samples must be non negative but {n_samples} was passed."
-            )
+            raise ValueError(f"n_samples must be non negative but {n_samples} was passed.")
 
         self._n_samples: int = n_samples
 
         # Validates batch_size
         if batch_size is None:
-            logger.info(
-                "None was passed as a batch size. It will be set to n_sample size."
-            )
+            logger.info("None was passed as a batch size. It will be set to n_sample size.")
             self._batch_size: int = self._n_samples
 
         elif batch_size < 0:
-            raise ValueError(
-                f"batch_size must be non negative but {batch_size} was passed."
-            )
+            raise ValueError(f"batch_size must be non negative but {batch_size} was passed.")
 
         elif batch_size > n_samples:
             logger.info(
-                "The batch size ({batch_size}) is greater than the number of samples: n_samples. This is not allowed. Batch_size is now updated to equal number of samples ({n_samples})".format(
-                    batch_size=batch_size, n_samples=n_samples
-                )
+                (
+                    "The batch size ({batch_size}) is greater than the number of samples: n_samples."
+                    "This is not allowed. Batch_size is now updated to equal number of samples ({n_samples})"
+                ).format(batch_size=batch_size, n_samples=n_samples)
             )
             self._batch_size = self._n_samples
 
@@ -115,9 +114,9 @@ class NpIndexGenerator:
 
     def __next__(self):
         """Generates the next batch and modifies the state of the class. At each call, this function will update the
-        `self._to_draw` argument as `self._to_draw` contains the indexes that have not been already drawn during the current epoch.
-        At the beginning of each epoch, all indexes will be shuffled if needed but not the first time as it has already been done
-        at the initialization of the class.
+        `self._to_draw` argument as `self._to_draw` contains the indexes that have not been already drawn during the
+        current epoch. At the beginning of each epoch, all indexes will be shuffled if needed but not the first time
+        as it has already been done at the initialization of the class.
 
         Returns:
             np.ndarray: The batch indexes as a numpy array.
@@ -126,9 +125,7 @@ class NpIndexGenerator:
         batch, self._to_draw = np.split(self._to_draw, [self._batch_size])
 
         # If there are not enough indexes left for a complete round we re initialize
-        if (self._drop_last and self._to_draw.shape[0] < self._batch_size) or (
-            self._to_draw.shape[0] == 0
-        ):
+        if (self._drop_last and self._to_draw.shape[0] < self._batch_size) or (self._to_draw.shape[0] == 0):
             self._to_draw = np.arange(self._n_samples)
             self.n_epoch_generated += 1
 

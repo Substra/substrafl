@@ -1,0 +1,23 @@
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+[tool.isort]
+filter_files = true
+force_single_line = true
+line_length = 120
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = "--durations=0"
+markers = [
+    "slow", # mark test as slow.
+    "substra", # mark test as using substra.
+    "docker_only", # mark test as only useful in remote and local mode with DEBUG_SPAWNER set to docker.
+]
+filterwarnings = [
+    "ignore:.*TestDataNode.*:pytest.PytestCollectionWarning",
+    # ignore substra tools deprecation warning
+    "ignore:.*imp module.*:DeprecationWarning",
+]

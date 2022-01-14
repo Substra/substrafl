@@ -12,9 +12,7 @@ class RemoteClass:
         self.kwargs = kwargs
 
     @remote_data
-    def remote_data_func(
-        self, x: int, y: int, shared_state: int, extra_arg: int = 0
-    ) -> int:
+    def remote_data_func(self, x: int, y: int, shared_state: int, extra_arg: int = 0) -> int:
         return x + y + shared_state + extra_arg
 
     @remote
@@ -37,9 +35,7 @@ def test_remote():
 
     # Reconstruct the RemoteClass from the RemoteStruct
     remote_cls_parameters = aggregate_op.remote_struct.cls_parameters
-    new_remote_class = aggregate_op.remote_struct.cls(
-        *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]
-    )
+    new_remote_class = aggregate_op.remote_struct.cls(*remote_cls_parameters["args"], **remote_cls_parameters["kwargs"])
 
     # Check that the args are still there
     assert new_remote_class.args == (50, 20)
@@ -60,18 +56,14 @@ def test_remote_skip():
 def test_remote_data():
     """Test that the remote_data decorator works properly with the RemoteStruct"""
     my_remote_class = RemoteClass(50, 20, a=42, b=3)
-    data_op = my_remote_class.remote_data_func(
-        data_samples=["fake_path", "fake_path_2"], shared_state=None
-    )
+    data_op = my_remote_class.remote_data_func(data_samples=["fake_path", "fake_path_2"], shared_state=None)
     # Check that the output of a function decorated with remote_data is not the result
     # but a DataOperation object
     assert isinstance(data_op, DataOperation)
 
     # Reconstruct the RemoteClass from the RemoteStruct
     remote_cls_parameters = data_op.remote_struct.cls_parameters
-    new_remote_class = data_op.remote_struct.cls(
-        *remote_cls_parameters["args"], **remote_cls_parameters["kwargs"]
-    )
+    new_remote_class = data_op.remote_struct.cls(*remote_cls_parameters["args"], **remote_cls_parameters["kwargs"])
 
     # Check that the args are still there
     assert new_remote_class.args == (50, 20)
@@ -86,9 +78,7 @@ def test_remote_data_get_method_from_remote_struct():
     """Test that the remote_data decorator works properly with the RemoteStruct
     when getting the name of the method from the RemoteStruct"""
     my_remote_class = RemoteClass()
-    data_op = my_remote_class.remote_data_func(
-        data_samples=["fake_path", "fake_path_2"], shared_state=None
-    )
+    data_op = my_remote_class.remote_data_func(data_samples=["fake_path", "fake_path_2"], shared_state=None)
 
     assert isinstance(data_op, DataOperation)
 
@@ -119,9 +109,7 @@ def test_remote_data_extra_arg():
         y=5,
         _skip=True,
         shared_state=4,
-        **data_op.remote_struct.remote_cls_parameters["kwargs"][
-            "method_parameters"
-        ]  # extra arg is there
+        **data_op.remote_struct.remote_cls_parameters["kwargs"]["method_parameters"],  # extra arg is there
     )
 
     assert result == 113

@@ -1,6 +1,9 @@
 from abc import abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 
@@ -56,8 +59,8 @@ class Algo:
 
     @abstractmethod
     def load(self, path: Path) -> Any:
-        """Executed at the beginning of each step of the computation graph so for each organization, at each step of the computation graph
-        the previous local state can be retrieved.
+        """Executed at the beginning of each step of the computation graph so for each organization, at each step of
+        the computation graph the previous local state can be retrieved.
 
         Args:
             path (Path): The path where the previous local state has been saved.

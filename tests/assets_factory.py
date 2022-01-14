@@ -5,7 +5,10 @@ from typing import List
 
 import numpy as np
 from substra import Client
-from substra.sdk.schemas import DataSampleSpec, DatasetSpec, MetricSpec, Permissions
+from substra.sdk.schemas import DataSampleSpec
+from substra.sdk.schemas import DatasetSpec
+from substra.sdk.schemas import MetricSpec
+from substra.sdk.schemas import Permissions
 
 DEFAULT_SUBSTRATOOLS_VERSION = "0.9.0"
 
@@ -97,9 +100,7 @@ def generic_description(name: str, tmp_folder: Path) -> Path:
     return description_path
 
 
-def add_numpy_datasets(
-    datasets_permissions: Permissions, clients: List[Client], tmp_folder: Path
-) -> List[str]:
+def add_numpy_datasets(datasets_permissions: Permissions, clients: List[Client], tmp_folder: Path) -> List[str]:
     """Add a numpy opener with the corresponding datasets_permissions to the clients.
     Pairs are created based on their indexes.
     During the process a description.md and a opener.py files are created in the tmp_folder.
@@ -115,9 +116,10 @@ def add_numpy_datasets(
     Returns:
         str: The dataset keys returned by substra to clients.
     """
-    assert len(clients) == len(
-        datasets_permissions
-    ), "clients and datasets_permissions must have the same length as they are associated in pairs based on their indexes."
+    assert len(clients) == len(datasets_permissions), (
+        "clients and datasets_permissions must have the same length as they are associated in pairs based "
+        "on their indexes."
+    )
 
     tmp_opener_dir = Path(tempfile.mkdtemp(dir=tmp_folder))
 
@@ -148,8 +150,8 @@ def add_numpy_samples(
     tmp_folder: Path,
 ) -> List[str]:
     """Each client will associated one element of the contents list (pairs are made according to their respective index)
-    with the corresponding dataset key and submit it to substra. The content will be stored in the tmp_folder in the process.
-    All the samples will be added with the argument `test_only=False`
+    with the corresponding dataset key and submit it to substra. The content will be stored in the tmp_folder in the
+    process. All the samples will be added with the argument `test_only=False`
 
     Args:
         contents (List[np.ndarray]): Numpy contents to add to each node.
@@ -164,9 +166,10 @@ def add_numpy_samples(
         List[str]: A list of data_samples keys.
     """
 
-    assert (
-        len(clients) == len(contents) == len(dataset_keys)
-    ), "The number of passed contents, clients and dataset_keys must be the same as each client will submit the content and dataset with the same index than his."
+    assert len(clients) == len(contents) == len(dataset_keys), (
+        "The number of passed contents, clients and dataset_keys must be the same as each client will submit the "
+        "content and dataset with the same index than his."
+    )
 
     keys = []
 
@@ -276,17 +279,15 @@ def add_python_metric(
     return key
 
 
-def linear_data(
-    n_col: int = 3, n_samples: int = 11, weights_seed: int = 42, noise_seed: int = 12
-) -> np.ndarray:
+def linear_data(n_col: int = 3, n_samples: int = 11, weights_seed: int = 42, noise_seed: int = 12) -> np.ndarray:
     """Generate 2D dataset fo n_col and n_samples. The data are linearly linked with less than
     10% of noise.
 
     Args:
         n_col (int, optional): The wished number of column in the dataset. Defaults to 3.
         n_samples (int, optional): The wished number of samples in the dataset. Defaults to 11.
-        weights_seed (int, optional): Used to set the weights. This ensure the reproducibility of the relation between the
-        features.
+        weights_seed (int, optional): Used to set the weights. This ensure the reproducibility of the relation
+        between the features.
         noise_seed (int, optional): Used to set the noise. This ensure the reproducibility of the noise added.
 
     Returns:

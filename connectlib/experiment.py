@@ -1,12 +1,15 @@
 import datetime
 import logging
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import substra
 
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
-from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
+from connectlib.nodes import AggregationNode
+from connectlib.nodes import TestDataNode
+from connectlib.nodes import TrainDataNode
 from connectlib.strategies import Strategy
 
 logger = logging.getLogger(__name__)
@@ -74,12 +77,8 @@ def execute_experiment(
     # Computation graph is created
     # TODO: static checks on the graph
 
-    authorized_ids = list(
-        set([aggregation_node.node_id] + [node.node_id for node in train_data_nodes])
-    )
-    permissions = substra.sdk.schemas.Permissions(
-        public=False, authorized_ids=authorized_ids
-    )
+    authorized_ids = list(set([aggregation_node.node_id] + [node.node_id for node in train_data_nodes]))
+    permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
     # Register all operations in substra
     # Define the algorithms we need and submit them
@@ -111,10 +110,6 @@ def execute_experiment(
         auto_batching=False,
     )
 
-    logger.info(
-        ("The compute plan has been submitted to Connect, its key is {0}.").format(
-            compute_plan.key
-        )
-    )
+    logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
 
     return compute_plan
