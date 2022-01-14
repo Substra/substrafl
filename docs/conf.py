@@ -33,9 +33,9 @@ autodoc_mock_imports = [
 
 # -- Project information -----------------------------------------------------
 
-project = u"Connect Lib"
-copyright = u"2020, OWKIN"
-author = u"OWKIN"
+project = "Connect Lib"
+copyright = "2020, OWKIN"
+author = "OWKIN"
 version = _get_version()
 release = version
 
@@ -89,7 +89,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [u"_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -159,7 +159,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "connectlib.tex", u"ConnectLib Documentation", u"owkin", "manual"),
+    (master_doc, "connectlib.tex", "ConnectLib Documentation", "owkin", "manual"),
 ]
 
 
@@ -167,7 +167,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "connectlib", u"ConnectLib Documentation", [author], 1)]
+man_pages = [(master_doc, "connectlib", "ConnectLib Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -179,7 +179,7 @@ texinfo_documents = [
     (
         master_doc,
         "Connect Lib",
-        u"Connect Lib Documentation",
+        "Connect Lib Documentation",
         author,
         "Connect Lib",
         "One line description of project.",

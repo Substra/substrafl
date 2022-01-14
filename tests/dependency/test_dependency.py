@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
-from connectlib.exceptions import InvalidPathException
+from connectlib.exceptions import InvalidPathError
 from connectlib.remote import remote_data
 from connectlib.remote.register import create_substra_algo_files
 
@@ -17,14 +17,12 @@ from .. import utils
 current_file = Path(__file__)
 
 ASSETS_DIR = current_file.parents[1] / "end_to_end" / "test_assets"
-DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(
-    public=True, authorized_ids=list()
-)
+DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_ids=list())
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
 def test_dependency_validators_file_not_exist():
-    with pytest.raises(InvalidPathException):
+    with pytest.raises(InvalidPathError):
         # Can't find file.
         Dependency(local_code=[str(uuid.uuid4())])
 
@@ -36,7 +34,7 @@ def test_dependency_validators_not_valid_path():
 
 
 def test_dependency_validators_no_setup_file():
-    with pytest.raises(InvalidPathException):
+    with pytest.raises(InvalidPathError):
         # :arg:local_dependencies folders must contain a setup.py.
         Dependency(local_dependencies=[current_file.parent])
 
@@ -50,17 +48,14 @@ class TestLocalDependency:
         archive_path, description_path = create_substra_algo_files(
             data_op.remote_struct,
             dependencies=algo_deps,
-            install_libraries=client.backend_mode
-            != substra.BackendType.LOCAL_SUBPROCESS,
+            install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
         )
         algo_query = substra.sdk.schemas.AlgoSpec(
             name="algo_test_deps",
             category=substra.sdk.schemas.AlgoCategory.composite,
             description=description_path,
             file=archive_path,
-            permissions=substra.sdk.schemas.Permissions(
-                public=True, authorized_ids=list()
-            ),
+            permissions=substra.sdk.schemas.Permissions(public=True, authorized_ids=list()),
         )
         algo_key = client.add_algo(algo_query)
         return algo_key
@@ -71,9 +66,7 @@ class TestLocalDependency:
             algo_key=algo_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
-            out_trunk_model_permissions=substra.sdk.schemas.Permissions(
-                public=True, authorized_ids=list()
-            ),
+            out_trunk_model_permissions=substra.sdk.schemas.Permissions(public=True, authorized_ids=list()),
         )
         composite_key = client.add_composite_traintuple(composite_traintuple_query)
         composite_traintuple = client.get_composite_traintuple(composite_key)
@@ -113,14 +106,10 @@ class TestLocalDependency:
         algo_deps = Dependency(pypi_dependencies=["pytest"])
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
-        composite_traintuple = self._register_composite(
-            algo_key, numpy_datasets[0], constant_samples[0], client
-        )
+        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_directory(
-        self, network, numpy_datasets, constant_samples
-    ):
+    def test_local_dependencies_directory(self, network, numpy_datasets, constant_samples):
         """Test that you can import a directory"""
 
         class MyAlgo(Algo):
@@ -161,14 +150,10 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
-        composite_traintuple = self._register_composite(
-            algo_key, numpy_datasets[0], constant_samples[0], client
-        )
+        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_file_in_directory(
-        self, network, numpy_datasets, constant_samples
-    ):
+    def test_local_dependencies_file_in_directory(self, network, numpy_datasets, constant_samples):
         """Test that you can import a file that is in a subdirectory"""
 
         class MyAlgo(Algo):
@@ -209,9 +194,7 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
-        composite_traintuple = self._register_composite(
-            algo_key, numpy_datasets[0], constant_samples[0], client
-        )
+        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
     def test_local_dependencies_file(self, network, numpy_datasets, constant_samples):
@@ -255,15 +238,11 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
-        composite_traintuple = self._register_composite(
-            algo_key, numpy_datasets[0], constant_samples[0], client
-        )
+        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
     @pytest.mark.docker_only
-    def test_local_dependencies_installable_library(
-        self, network, numpy_datasets, constant_samples
-    ):
+    def test_local_dependencies_installable_library(self, network, numpy_datasets, constant_samples):
         """Test that you can install a local library
         Automatically done in docker but need to be manually done if force in subprocess mode
         """
@@ -308,7 +287,5 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
-        composite_traintuple = self._register_composite(
-            algo_key, numpy_datasets[0], constant_samples[0], client
-        )
+        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)

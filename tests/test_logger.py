@@ -10,9 +10,7 @@ def test_default_logging_level(caplog):
         logger.info("This should be logged")
         logger.debug("This should not be logged")
 
-        assert (
-            logging.getLogger("connectlib.junior").getEffectiveLevel() == logging.INFO
-        )
+        assert logging.getLogger("connectlib.junior").getEffectiveLevel() == logging.INFO
         assert len(caplog.records) == 1
         assert caplog.records[0].levelname == "INFO"
         assert caplog.records[0].msg == "This should be logged"
@@ -27,10 +25,7 @@ def test_set_logging_level(caplog):
         logger.warning("This should be logged")
         logger.info("This should not be logged")
 
-        assert (
-            logging.getLogger("connectlib.junior").getEffectiveLevel()
-            == logging.WARNING
-        )
+        assert logging.getLogger("connectlib.junior").getEffectiveLevel() == logging.WARNING
         assert len(caplog.records) == 1
         assert caplog.records[0].levelname == "WARNING"
         assert caplog.records[0].msg == "This should be logged"

@@ -13,7 +13,8 @@
 # limitations under the License.
 
 """Packaging settings."""
-from setuptools import find_packages, setup
+from setuptools import find_packages
+from setuptools import setup
 
 setup(
     name="connectlibtestlibrary",

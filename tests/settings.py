@@ -4,15 +4,15 @@ from typing import List
 
 import substra
 import yaml
-from pydantic import BaseModel, root_validator, validator
+from pydantic import BaseModel
+from pydantic import root_validator
+from pydantic import validator
 
 CURRENT_DIR = Path(__file__).parent
 
 DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "local.yaml"
 DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "remote.yaml"
-NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE = (
-    CURRENT_DIR / "connect_conf" / "nightly.yaml"
-)
+NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "nightly.yaml"
 
 MIN_NODES = 2
 
@@ -46,9 +46,10 @@ class LocalConfiguration(BaseModel):
     n_local_nodes: int
 
     @validator("n_local_nodes")
-    def minimal_number_of_nodes(cls, v):
-        assert v >= MIN_NODES, "Not enough nodes specified in configuration). "
-        f"Found {v}, at least {MIN_NODES} are required."
+    def minimal_number_of_nodes(cls, v):  # noqa: N805
+        assert (
+            v >= MIN_NODES
+        ), f"Not enough nodes specified in configuration. Found {v}, at least {MIN_NODES} are required."
         return v
 
 
@@ -62,9 +63,10 @@ class RemoteConfiguration(BaseModel):
     nodes: List[NodeCfg]
 
     @validator("nodes")
-    def minimal_number_of_nodes(cls, v):
-        assert len(v) >= MIN_NODES, "Not enough nodes defined in your configuration. "
-        f"Found {len(v)}, at least {MIN_NODES} is/are required."
+    def minimal_number_of_nodes(cls, v):  # noqa: N805
+        assert len(v) >= MIN_NODES, (
+            "Not enough nodes defined in your configuration. " f"Found {len(v)}, at least {MIN_NODES} is/are required."
+        )
         return v
 
 
@@ -91,7 +93,7 @@ class Network(BaseModel):
         return len(self.msp_ids)
 
     @root_validator
-    def consistent_clients_msp_ids(cls, values):
+    def consistent_clients_msp_ids(cls, values):  # noqa: N805
         """Msp_id is the id of a node. We need to associate one with each client to allow access to the pushed assets.
         msp_ids and clients must be of the same length"""
         l_msp_ids = len(values.get("msp_ids"))
@@ -134,11 +136,7 @@ def remote_network(is_nightly: bool = False):
     Returns:
         Network: A remote network.
     """
-    cfg_file = (
-        NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE
-        if is_nightly
-        else DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
-    )
+    cfg_file = NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE if is_nightly else DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
 
     cfg = yaml.full_load(cfg_file.read_text())
     cfg = RemoteConfiguration(

@@ -76,11 +76,7 @@ def test_pytorch_fedavg_algo(
     utils.wait(network.clients[0], compute_plan)
 
     # read the results from saved performances
-    testtuples = network.clients[0].list_testtuple(
-        filters=[f"testtuple:compute_plan_key:{compute_plan.key}"]
-    )
+    testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
 
-    assert list(testtuple.test.perfs.values())[0] == pytest.approx(
-        0.012787394571974166, rel=10e-6
-    )
+    assert list(testtuple.test.perfs.values())[0] == pytest.approx(0.012787394571974166, rel=10e-6)

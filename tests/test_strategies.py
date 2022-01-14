@@ -7,20 +7,21 @@ import pytest
 from connectlib import execute_experiment
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
-from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
+from connectlib.nodes import AggregationNode
+from connectlib.nodes import TestDataNode
+from connectlib.nodes import TrainDataNode
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
 
-from . import assets_factory, utils
+from . import assets_factory
+from . import utils
 
 logger = getLogger("tests")
 
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_fed_avg(
-    network, constant_samples, numpy_datasets, session_dir, default_permissions
-):
+def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default_permissions):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
     # predict() returns the data, score returned by AccuracyMetric (in the metric) is the mean of all the y_pred
@@ -106,9 +107,7 @@ def test_fed_avg(
     utils.wait(network.clients[0], compute_plan)
 
     # read the results from saved performances
-    testtuples = network.clients[0].list_testtuple(
-        filters=[f"testtuple:compute_plan_key:{compute_plan.key}"]
-    )
+    testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
 
     # assert that the metrics returns int(True) i.e. 1

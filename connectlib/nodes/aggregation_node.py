@@ -1,11 +1,14 @@
 import uuid
-from typing import List, Optional, TypeVar
+from typing import List
+from typing import Optional
+from typing import TypeVar
 
 import substra
 
 from connectlib.nodes import Node
 from connectlib.nodes.references import SharedStateRef
-from connectlib.remote.methods import AggregateOperation, RemoteStruct
+from connectlib.remote.methods import AggregateOperation
+from connectlib.remote.methods import RemoteStruct
 from connectlib.remote.register import register_algo
 
 SharedState = TypeVar("SharedState")
@@ -69,8 +72,8 @@ class AggregationNode(Node):
     ):
         """Define the algorithms for each operation and submit the aggregated tuple to substra.
 
-        Go through every operation in the computation graph, check what algorithm they use (identified by their RemoteStruct),
-        submit it to substra and save the genearated algo_key to self.CACHE.
+        Go through every operation in the computation graph, check what algorithm they use (identified by their
+        RemoteStruct), submit it to substra and save the genearated algo_key to self.CACHE.
         If two tuples depend on the same algorithm, the algorithm won't be added twice to substra as
         self.CACHE keeps the submitted algo keys in memory.
 

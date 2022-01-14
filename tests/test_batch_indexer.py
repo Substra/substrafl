@@ -11,13 +11,9 @@ from connectlib.batch_indexer import NpIndexGenerator
 @pytest.mark.parametrize("batch_size", [0, 3, 5, 8])
 def test_np_index_generator_drop_last(batch_size):
     # Check that if the last batch is dropped, all batches always have the same size, i.e. the batch size.
-    nig = NpIndexGenerator(
-        n_samples=10, batch_size=batch_size, shuffle=True, drop_last=True, seed=42
-    )
+    nig = NpIndexGenerator(n_samples=10, batch_size=batch_size, shuffle=True, drop_last=True, seed=42)
     for _ in range(9):
-        assert (
-            len(nig.__next__()) == batch_size
-        ), "All batches do not have the same size when drop_last is set to True."
+        assert len(nig.__next__()) == batch_size, "All batches do not have the same size when drop_last is set to True."
 
 
 @pytest.mark.parametrize("n_samples,batch_size", [(10, 3), (12, 5), (17, 11), (10, 5)])
@@ -105,18 +101,14 @@ def test_np_index_generator_batch_size_negative():
 )
 def test_np_index_generator_batch_shuffle(seed, results):
     # Check that the shuffling is properly seeded.
-    nig = NpIndexGenerator(
-        n_samples=3, batch_size=3, shuffle=True, drop_last=True, seed=seed
-    )
+    nig = NpIndexGenerator(n_samples=3, batch_size=3, shuffle=True, drop_last=True, seed=seed)
     for result in results:
         assert np.array_equal(result, nig.__next__())
 
 
 def test_np_index_generator_not_batch_shuffle():
     # Check that we can have not shuffled batches.
-    nig = NpIndexGenerator(
-        n_samples=3, batch_size=3, shuffle=False, drop_last=True, seed=42
-    )
+    nig = NpIndexGenerator(n_samples=3, batch_size=3, shuffle=False, drop_last=True, seed=42)
     res = np.arange(3)
 
     for _ in range(10):
@@ -139,10 +131,8 @@ def test_np_index_generator_check_epoch_consitency(n_samples, batch_size, drop_l
 
     n_epoch = nig.n_epoch_generated
     generated_epoch_indexes = np.array([])
-    for i in range(30):
-        generated_epoch_indexes = np.concatenate(
-            (generated_epoch_indexes, nig.__next__()), axis=0
-        )
+    for _ in range(30):
+        generated_epoch_indexes = np.concatenate((generated_epoch_indexes, nig.__next__()), axis=0)
         if n_epoch != nig.n_epoch_generated:
 
             # Check that there is no duplicates for the epoch
@@ -157,9 +147,7 @@ def test_np_index_generator_check_epoch_consitency(n_samples, batch_size, drop_l
     "n_samples,batch_size,drop_last,expected",
     [(10, 3, True, 3), (10, 5, True, 2), (10, 3, False, 4), (10, 5, False, 2)],
 )
-def test_np_index_generator_count_batch_per_epoch(
-    n_samples, batch_size, drop_last, expected
-):
+def test_np_index_generator_count_batch_per_epoch(n_samples, batch_size, drop_last, expected):
     # Check that for each epoch, the right number of batch is generated
     nig = NpIndexGenerator(
         n_samples=n_samples,
@@ -182,9 +170,7 @@ def test_np_index_generator_statefulness(session_dir):
     # Check that after saving and loading, the batch generator still has the same outputs.
     indexer_path = Path(tempfile.mkdtemp(dir=session_dir)) / "my_indexer"
 
-    nig = NpIndexGenerator(
-        n_samples=5, batch_size=3, shuffle=True, drop_last=True, seed=42
-    )
+    nig = NpIndexGenerator(n_samples=5, batch_size=3, shuffle=True, drop_last=True, seed=42)
 
     # Artificial 10 first batch
     for _ in range(10):

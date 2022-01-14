@@ -1,11 +1,15 @@
 import uuid
-from typing import List, Optional, Tuple
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import substra
 
 from connectlib.nodes import Node
-from connectlib.nodes.references import LocalStateRef, SharedStateRef
-from connectlib.remote.methods import DataOperation, RemoteStruct
+from connectlib.nodes.references import LocalStateRef
+from connectlib.nodes.references import SharedStateRef
+from connectlib.remote.methods import DataOperation
+from connectlib.remote.methods import RemoteStruct
 from connectlib.remote.register import register_algo
 
 
@@ -91,15 +95,16 @@ class TrainDataNode(Node):
     ):
         """Define the algorithms for each operation and submit the composite traintuple to substra.
 
-        Go through every operation in the computation graph, check what algorithm they use (identified by their RemoteStruct),
-        submit it to substra and save the genearated algo_key to self.CACHE.
+        Go through every operation in the computation graph, check what algorithm they use (identified by their
+        RemoteStruct), submit it to substra and save the genearated algo_key to self.CACHE.
         If two tuples depend on the same algorithm, the algorithm won't be added twice to substra as
         self.CACHE keeps the submitted algo keys in memory.
 
         Args:
             client (substra.Client): Substra client for the node.
             permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-            dependencies (List[str]): The list of pip public dependencies your algorithm relies on (e.g. ['torch', 'pandas==1.0.1'])
+            dependencies (List[str]): The list of pip public dependencies your algorithm relies on
+                (e.g. ['torch', 'pandas==1.0.1'])
         """
         for tuple in self.tuples:
             if tuple.get("out_trunk_model_permissions", None) is None:

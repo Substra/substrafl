@@ -1,6 +1,7 @@
 import time
 
-from substra.sdk.models import ComputePlanStatus, Status
+from substra.sdk.models import ComputePlanStatus
+from substra.sdk.models import Status
 
 FUTURE_TIMEOUT = 3600
 FUTURE_POLLING_PERIOD = 1
@@ -37,7 +38,7 @@ def wait(client, asset, timeout=FUTURE_TIMEOUT, raises=True):
     try:
         m = _get_methods[asset.__class__.__name__]
     except KeyError:
-        assert False, "Future not supported"
+        raise KeyError("Future not supported")
     getter = getattr(client, m)
 
     key = asset.key

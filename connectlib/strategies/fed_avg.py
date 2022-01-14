@@ -1,9 +1,14 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import numpy as np
 
 from connectlib.algorithms import Algo
-from connectlib.nodes import AggregationNode, TestDataNode, TrainDataNode
+from connectlib.nodes import AggregationNode
+from connectlib.nodes import TestDataNode
+from connectlib.nodes import TrainDataNode
 from connectlib.nodes.references.local_state import LocalStateRef
 from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote import remote
@@ -53,9 +58,7 @@ class FedAVG(Strategy):
         self.avg_shared_state: Optional[SharedStateRef] = None
 
     @remote
-    def avg_shared_states(
-        self, shared_states: List[Dict[str, Union[int, np.ndarray]]]
-    ) -> Dict[str, np.ndarray]:
+    def avg_shared_states(self, shared_states: List[Dict[str, Union[int, np.ndarray]]]) -> Dict[str, np.ndarray]:
         """Compute the weighted average of all elements returned by the train
         methods of the user defined algorithm.
         The average is weighted by the number of samples.
@@ -90,9 +93,7 @@ class FedAVG(Strategy):
                 "the train method of your algorithm always returns nothing. "
                 "It must returns a dict containing n_samples(int) and at least one other key (np.array)."
             )
-        if not (
-            all(["n_samples" in shared_state.keys() for shared_state in shared_states])
-        ):
+        if not (all(["n_samples" in shared_state.keys() for shared_state in shared_states])):
             raise TypeError(
                 "n_samples must be a key from all your shared_state. "
                 "This must be set in the returned element of the train method from your algorithm. "
@@ -143,7 +144,8 @@ class FedAVG(Strategy):
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
             train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local updates
-            aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states of the models
+            aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
+                of the models
         """
         next_local_states = []
         states_to_aggregate = []
@@ -180,20 +182,14 @@ class FedAVG(Strategy):
     ):
         for test_node in test_data_nodes:
             matching_train_nodes = [
-                train_node
-                for train_node in train_data_nodes
-                if train_node.node_id == test_node.node_id
+                train_node for train_node in train_data_nodes if train_node.node_id == test_node.node_id
             ]
             if len(matching_train_nodes) == 0:
-                raise NotImplementedError(
-                    "Cannot test on a node we did not train on for now."
-                )
+                raise NotImplementedError("Cannot test on a node we did not train on for now.")
 
             train_node = matching_train_nodes[0]
             node_index = train_data_nodes.index(train_node)
-            previous_local_state = (
-                self.local_states[node_index] if self.local_states is not None else None
-            )
+            previous_local_state = self.local_states[node_index] if self.local_states is not None else None
             assert previous_local_state is not None
 
             # Since the training round ends on an aggregation on the aggregation node
@@ -210,6 +206,4 @@ class FedAVG(Strategy):
                 local_state=previous_local_state,
             )
 
-            test_node.update_states(
-                traintuple_id=traintuple_id_ref.key
-            )  # Init state for testtuple
+            test_node.update_states(traintuple_id=traintuple_id_ref.key)  # Init state for testtuple

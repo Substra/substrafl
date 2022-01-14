@@ -1,4 +1,7 @@
-from typing import Any, Generator, List, Union
+from typing import Any
+from typing import Generator
+from typing import List
+from typing import Union
 
 import numpy as np
 import torch
@@ -37,18 +40,16 @@ def batch_norm_param(
     Yields:
         The running mean and variance of all batch norm layers parameters from the given model.
     """
-    for name, module in model.named_modules():
+    for _, module in model.named_modules():
         if is_batchnorm_layer(module):
             yield module.running_mean
             yield module.running_var
 
 
-def model_parameters(
-    model: torch.nn.Module, with_batch_norm_parameters: bool
-) -> torch.nn.parameter.Parameter:
-    """A generator of the given model parameters. The returned generator yields references hence all modification done to the yielded object will
-    be applied to the input model. If with_batch_norm_parameters is set to True, the running mean and the running variance of each batch
-    norm layer will be added after the "classic" parameters.
+def model_parameters(model: torch.nn.Module, with_batch_norm_parameters: bool) -> torch.nn.parameter.Parameter:
+    """A generator of the given model parameters. The returned generator yields references hence all modification done
+    to the yielded object will be applied to the input model. If with_batch_norm_parameters is set to True, the running
+    mean and the running variance of each batch norm layer will be added after the "classic" parameters.
 
     Args:
         model (torch.nn.Module): A torch model.
@@ -75,8 +76,9 @@ def get_parameters(
     model: torch.nn.Module,
     with_batch_norm_parameters: bool,
 ) -> List[torch.nn.parameter.Parameter]:
-    """Model parameters from the provided torch model. This function returns a copy not a reference. If with_batch_norm_parameters is set to True, the running mean and the
-    running variance of the batch norm layers will be added after the "classic" parameters of the model.
+    """Model parameters from the provided torch model. This function returns a copy not a reference. If
+    with_batch_norm_parameters is set to True, the running mean and the running variance of the batch norm
+    layers will be added after the "classic" parameters of the model.
 
     Args:
         model (torch.nn.Module): A torch model.
@@ -88,9 +90,7 @@ def get_parameters(
         List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model.
     """
 
-    iter_params = model_parameters(
-        model, with_batch_norm_parameters=with_batch_norm_parameters
-    )
+    iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
     parameters = [p.clone() for p in iter_params()]
 
     return parameters
@@ -101,25 +101,22 @@ def increment_parameters(
     gradients: Union[List[torch.nn.parameter.Parameter], np.ndarray],
     with_batch_norm_parameters: bool,
 ):
-    """Add the given gradient to the model parameters. If with_batch_norm_parameters is set to True, the operation will include the
-    running mean and the running variance of the batch norm layers (in this case, they must be included in the given gradient).
-    This function modifies the given model internally and therefore returns nothing.
+    """Add the given gradient to the model parameters. If with_batch_norm_parameters is set to True, the operation
+    will include the running mean and the running variance of the batch norm layers (in this case, they must be
+    included in the given gradient). This function modifies the given model internally and therefore returns nothing.
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        gradients (List[torch.nn.parameter.Parameter]): A list of torch parameters to add to the model, as ordered by the standard iterators.
-        with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of each batch norm layer will be included
-            in the model parameters to modify.
+        gradients (List[torch.nn.parameter.Parameter]): A list of torch parameters to add to the model, as ordered by
+            the standard iterators.
+        with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of each batch norm
+            layer will be included in the model parameters to modify.
     """
     # INFO: this is the faster way I found of checking that both model.parameters() and shared states has the
     # same length as model.parameters() is a generator.
-    iter_params = model_parameters(
-        model=model, with_batch_norm_parameters=with_batch_norm_parameters
-    )
+    iter_params = model_parameters(model=model, with_batch_norm_parameters=with_batch_norm_parameters)
     n_parameters = len(list(iter_params()))
-    assert n_parameters == len(
-        gradients
-    ), "Length of model parameters and gradients are unequal."
+    assert n_parameters == len(gradients), "Length of model parameters and gradients are unequal."
 
     for weights, gradient in zip(iter_params(), gradients):
         if isinstance(gradient, np.ndarray):
@@ -148,14 +145,12 @@ def subtract_parameters(
 
     model_gradient = []
 
-    assert len(parameters) == len(
-        old_parameters
-    ), "Length of model parameters and old_parameters are unequal."
+    assert len(parameters) == len(old_parameters), "Length of model parameters and old_parameters are unequal."
 
     for weights, old_weights in zip(parameters, old_parameters):
         assert weights.data.shape == old_weights.data.shape, (
-            f"The shape of the parameter weights ({weights.data.shape}) and of the old parameter weights ({old_weights.data.shape}) "
-            "are unequal."
+            f"The shape of the parameter weights ({weights.data.shape}) and of the old parameter weights "
+            f"({old_weights.data.shape}) are unequal."
         )
         model_gradient.append((weights - old_weights))
 
@@ -169,7 +164,8 @@ def set_parameters(
 ):
     """Sets the parameters of a pytorch model to the provided parameters. If with_batch_norm_parameters is set to True,
     the operation will include the running mean and the running variance of the batch norm layers (in this case, they
-    must be included in the given gradient). This function modifies the given model internally and therefore returns nothing.
+    must be included in the given gradient). This function modifies the given model internally and therefore returns
+    nothing.
 
     Args:
         model (torch.nn.Module): The torch model to modify.
@@ -177,12 +173,8 @@ def set_parameters(
         with_batch_norm_parameters (bool): Whether to the batch norm layers' internal parameters are provided and
             need to be included in the operation
     """
-    iter_params = model_parameters(
-        model, with_batch_norm_parameters=with_batch_norm_parameters
-    )
+    iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
     n_parameters = len(list(iter_params()))
-    assert n_parameters == len(
-        parameters
-    ), "Length of model parameters and provided parameters are unequal."
+    assert n_parameters == len(parameters), "Length of model parameters and provided parameters are unequal."
     for (p, w) in zip(iter_params(), parameters):
         p.data = w.data
