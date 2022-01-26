@@ -31,4 +31,4 @@ test-fast: pyclean
 	pytest tests ${COV_OPTIONS} --local -m "not slow and not docker_only"
 
 test-ci: pyclean
-	pytest tests --nightly
+	pytest tests --ci -m "substra"
