@@ -40,7 +40,7 @@ def pytest_addoption(parser):
         "Otherwise run the tests only on the remote backend.",
     )
     parser.addoption(
-        "--nightly",
+        "--ci",
         action="store_true",
         help="Run the tests on the backend deployed by connect-test nightly (remote mode). "
         "Otherwise run the tests only on the default remote backend.",
@@ -73,9 +73,9 @@ def network(request):
         Network: All the elements needed to interact with the :term:`Connect` platform.
     """
     is_local = request.config.getoption("--local")
-    is_nightly = request.config.getoption("--nightly")
+    is_ci = request.config.getoption("--ci")
 
-    network = settings.local_network() if is_local else settings.remote_network(is_nightly=is_nightly)
+    network = settings.local_network() if is_local else settings.remote_network(is_ci=is_ci)
     return network
 
 

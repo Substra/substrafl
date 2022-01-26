@@ -12,7 +12,7 @@ CURRENT_DIR = Path(__file__).parent
 
 DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "local.yaml"
 DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "remote.yaml"
-NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "nightly.yaml"
+CI_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "ci.yaml"
 
 MIN_NODES = 2
 
@@ -126,17 +126,17 @@ def local_network():
     return Network(clients=clients, msp_ids=msp_ids)
 
 
-def remote_network(is_nightly: bool = False):
+def remote_network(is_ci: bool = False):
     """Instantiates a remote connect network from the user defined configuration file.
     As the configuration is static and immutable, it is loaded only once from the disk.
 
     Args:
-        is_nightly (bool): Set to True the substra network has to be configured to the connect-test.
+        is_ci (bool): Set to True the substra network has to be configured to the connect-test.
 
     Returns:
         Network: A remote network.
     """
-    cfg_file = NIGHTLY_REMOTE_NETWORK_CONFIGURATION_FILE if is_nightly else DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
+    cfg_file = CI_REMOTE_NETWORK_CONFIGURATION_FILE if is_ci else DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
 
     cfg = yaml.full_load(cfg_file.read_text())
     cfg = RemoteConfiguration(
