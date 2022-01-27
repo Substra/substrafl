@@ -11,24 +11,18 @@ test-remote: pyclean
 	pytest tests ${COV_OPTIONS}
 
 test-local: pyclean
-	export DEBUG_SPAWNER=subprocess ;\
-	pytest tests ${COV_OPTIONS} --local -m "not substra" ;\
-	export DEBUG_SPAWNER=subprocess ;\
-	pytest tests ${COV_OPTIONS} --local -m "substra and not docker_only" ;\
-	export DEBUG_SPAWNER=docker ;\
-	pytest tests ${COV_OPTIONS} --local -m "substra"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "not substra"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "substra and not docker_only"
+	DEBUG_SPAWNER=docker pytest tests ${COV_OPTIONS} --local -m "substra"
 
 test-docker: pyclean
-	export DEBUG_SPAWNER=docker ;\
-	pytest tests ${COV_OPTIONS} --local
+	DEBUG_SPAWNER=docker pytest tests ${COV_OPTIONS} --local
 
 test-subprocess: pyclean
-	export DEBUG_SPAWNER=subprocess ;\
-	pytest tests ${COV_OPTIONS} --local -m "not docker_only"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "not docker_only"
 
 test-fast: pyclean
-	export DEBUG_SPAWNER=subprocess ;\
-	pytest tests ${COV_OPTIONS} --local -m "not slow and not docker_only"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "not slow and not docker_only"
 
 test-ci: pyclean
 	pytest tests --ci -m "substra"
