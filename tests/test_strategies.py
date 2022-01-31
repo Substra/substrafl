@@ -89,7 +89,7 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     # a generator with a fixed seed.
     aggregation_node = AggregationNode(network.msp_ids[0])
     my_algo0 = MyAlgo()
-    algo_deps = Dependency(pypi_dependencies=["pytest"])
+    algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAVG()
 
     compute_plan = execute_experiment(

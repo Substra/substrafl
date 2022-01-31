@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix: notebook dependency failure (#78)
+- feat: install connectlib from pypi (#71)
 
 ## [0.6.0] - 2021-12-31
 

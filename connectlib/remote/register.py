@@ -1,4 +1,5 @@
 import inspect
+import logging
 import shutil
 import subprocess
 import sys
@@ -8,7 +9,6 @@ import uuid
 from pathlib import Path
 from platform import python_version
 from typing import List
-from typing import Optional
 from typing import Tuple
 
 import cloudpickle
@@ -19,7 +19,11 @@ import connectlib
 from connectlib.dependency import Dependency
 from connectlib.remote.methods import RemoteStruct
 
+logger = logging.getLogger(__name__)
+
 CONNECTLIB_FOLDER = "connectlib_internal"
+LOCAL_WHEELS_FOLDER = Path.home() / ".connectlib"
+
 
 # TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
@@ -82,11 +86,13 @@ if __name__ == "__main__":
 """
 
 
-def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) -> str:
-    """Prepares the private libraries from lib_modules list
-    to be installed in the Docker and makes the command for dockerfile.
-    It first creates the wheel for each library. Each of the libraries must be already installed in the correct version
-    locally. Use command: `pip install -e library-name` in the directory of each library.
+def local_lib_install_command(lib_modules: List, operation_dir: Path, python_major_minor: str) -> str:
+    """Prepares the private modules from lib_modules list to be installed in a Docker image and generates the
+    appropriated install command for a dockerfile. It first creates the wheel for each library. Each of the
+    libraries must be already installed in the correct version locally. Use command:
+    `pip install -e library-name` in the directory of each library.
+
+    This allows one user to use custom version of the passed modules.
 
     Args:
         lib_modules (`list`): list of modules to be installed.
@@ -98,21 +104,21 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
     """
     install_cmds = []
     wheels_dir = operation_dir / CONNECTLIB_FOLDER / "dist"
-    wheels_dir.mkdir(exist_ok=True)
+    wheels_dir.mkdir(exist_ok=True, parents=True)
 
     for lib_module in lib_modules:
+        wheel_name = f"{lib_module.__name__}-{lib_module.__version__}-py3-none-any.whl"
+
         if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
-            # TODO: add private pypi (eg user needs to pass the credentials)
+            msg = ", ".join([lib.__name__ for lib in lib_modules])
             raise NotImplementedError(
-                "You must have connectlib, substra and substratools in editable mode.\n"
-                "eg `pip install -e substra` in the substra directory"
+                f"You must install {msg} in editable mode.\n" "eg `pip install -e substra` in the substra directory"
             )
         lib_name = lib_module.__name__
         lib_path = Path(lib_module.__file__).parents[1]
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
-        # Recreate the wheel only if it exists
-        # TODO: only for dev, see what we do in another PR
+        # Recreate the wheel only if it  exists
         if not (lib_path / "dist" / wheel_name).exists():
             # if the right version of substra or substratools is not found, it will search if they are already
             # installed in 'dist' and take them from there.
@@ -125,29 +131,85 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
                     "--find-links",
                     operation_dir / "dist/substratools",
                 ]
+            subprocess.check_output(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "wheel",
+                    ".",
+                    "-w",
+                    "dist",
+                    "--no-deps",
+                ]
+                + extra_args,
+                cwd=str(lib_path),
+            )
+
+        # Get wheel name based on current version
+        shutil.copy(lib_path / "dist" / wheel_name, wheels_dir / wheel_name)
+
+        # Necessary command to install the wheel in the docker image
+        install_cmd = f"RUN cd {CONNECTLIB_FOLDER}/dist && python{python_major_minor} -m pip install {wheel_name}\n"
+        install_cmds.append(install_cmd)
+
+    return "\n".join(install_cmds)
+
+
+def pypi_lib_install_command(lib_modules: List, operation_dir: Path, python_major_minor: str) -> str:
+    """Retrieves lib_modules' wheels from Owkin private repo (if needed) to be installed in a Docker image and generates
+    the appropriated install command for a dockerfile.
+
+    Args:
+        lib_modules (list): list of modules to be installed.
+        operation_dir (Path): PosixPath to the operation directory
+        python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
+
+    Returns:
+        str: dockerfile command for installing the given modules
+    """
+    install_cmds = []
+    wheels_dir = operation_dir / CONNECTLIB_FOLDER / "dist"
+    wheels_dir.mkdir(exist_ok=True, parents=True)
+
+    LOCAL_WHEELS_FOLDER.mkdir(exist_ok=True)
+
+    for lib_module in lib_modules:
+
+        wheel_name = f"{lib_module.__name__}-{lib_module.__version__}-py3-none-any.whl"
+
+        # Download only if exists
+        if not ((LOCAL_WHEELS_FOLDER / wheel_name).exists()):
             try:
                 subprocess.check_output(
                     [
                         sys.executable,
                         "-m",
                         "pip",
-                        "wheel",
-                        ".",
-                        "-w",
-                        "dist",
+                        "download",
+                        "--only-binary",
+                        ":all:",
+                        "--python-version",
+                        python_major_minor,
                         "--no-deps",
+                        "--implementation",
+                        "py",
+                        "-d",
+                        LOCAL_WHEELS_FOLDER,
+                        f"{lib_module.__name__}=={lib_module.__version__}",
                     ]
-                    + extra_args,
-                    cwd=str(lib_path),
                 )
             except subprocess.CalledProcessError as e:
-                print(e.output)
+                raise ConnectionError(
+                    "Couldn't access to Owkin pypi, please ensure you have access to https://pypi.owkin.com/simple/.",
+                    e.output,
+                )
 
         # Get wheel name based on current version
-        shutil.copy(lib_path / "dist" / wheel_name, wheels_dir / wheel_name)
-        # Necessary command to install the wheel in the docker image
+        shutil.copy(LOCAL_WHEELS_FOLDER / wheel_name, wheels_dir / wheel_name)
         install_cmd = f"RUN cd {CONNECTLIB_FOLDER}/dist && python{python_major_minor} -m pip install {wheel_name}\n"
         install_cmds.append(install_cmd)
+
     return "\n".join(install_cmds)
 
 
@@ -155,27 +217,26 @@ def get_local_lib(lib_modules: List, operation_dir: Path, python_major_minor) ->
 def create_substra_algo_files(  # noqa: C901
     remote_struct: RemoteStruct,
     install_libraries: bool,
-    dependencies: Optional[Dependency] = None,
+    dependencies: Dependency = Dependency(),  # noqa: B008
 ) -> Tuple[Path, Path]:
     """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
-    an archive (.tar.gz).
+        an archive (.tar.gz).
 
-    Necessary files :
-        - the class Cloudpickle
-        - the instance parameters captured by Blueprint
-        - the wheel of the current version of Connectlib if in editable mode
-        - the Dockerfile
-        - the description.md
-        - the algo.py entrypoint
+        Necessary files :
+            - the class Cloudpickle
+            - the instance parameters captured by Blueprint
+            - the wheel of the current version of Connectlib if in editable mode
+            - the Dockerfile
+            - the description.md
+            - the algo.py entrypoint
 
     Args:
         remote_struct (RemoteStruct): A representation of a substra algorithm.
         install_libraries (bool): whether we need to build the wheels and copy the files to install the libraries
-        dependencies (Optional[List[str]], optional): The list of public dependencies of the algorithm.
-            Defaults to None.
+        dependencies (Dependency): Algorithm dependencies.
 
-    Returns:
-        Tuple[Path, Path]: The archive path and the description file path.
+        Returns:
+            Tuple[Path, Path]: The archive path and the description file path.
     """
 
     operation_dir = Path(tempfile.mkdtemp())
@@ -204,9 +265,24 @@ def create_substra_algo_files(  # noqa: C901
 
     # Build Connectlib, Substra and Substratools wheel if needed
     install_cmd = ""
+
     if install_libraries:
         lib_modules = [substratools, substra, connectlib]  # owkin private dependencies
-        install_cmd = get_local_lib(lib_modules, operation_dir, python_major_minor)
+
+        # Install either from pypi wheel or repo in editable mode
+        install_cmd = (
+            local_lib_install_command(
+                lib_modules=lib_modules,
+                operation_dir=operation_dir,
+                python_major_minor=python_major_minor,
+            )
+            if dependencies.editable_mode
+            else pypi_lib_install_command(
+                lib_modules=lib_modules,
+                operation_dir=operation_dir,
+                python_major_minor=python_major_minor,
+            )
+        )
 
     # Pypi dependencies docker command if specified by the user
     pypi_dependencies_cmd = (
@@ -288,16 +364,16 @@ def register_algo(
     remote_struct: RemoteStruct,
     is_composite: bool,
     permissions: substra.sdk.schemas.Permissions,
-    dependencies: Optional[Dependency] = None,
+    dependencies: Dependency = Dependency(),  # noqa: B008
 ) -> str:
     """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
 
     Args:
         client (substra.Client): The substra client.
-        remote_struct (RemoteStruct): The substra submitable algorithm representation.
+        remote_struct (RemoteStruct): The substra submittable algorithm representation.
         is_composite (bool): Either to register a composite or an aggregate algorithm.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-        dependencies (Optional[List[str]], optional): Public algorithm dependencies. Defaults to None.
+        dependencies (Dependency): Algorithm dependencies. Default to Dependency().
     Returns:
         str: Substra algorithm key.
     """
