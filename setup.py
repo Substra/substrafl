@@ -70,6 +70,7 @@ setup(
             "pre-commit>=2.13.0",
             "types-PyYAML>=6.0.0",
             "torch>=1.9.1",
+            "nbmake>=1.1",
         ],
     },
     python_requires=">=3.7",

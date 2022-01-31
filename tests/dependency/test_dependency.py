@@ -1,10 +1,15 @@
+import sys
 import uuid
 from pathlib import Path
 
 import numpy as np
 import pytest
-import substra
 from pydantic import ValidationError
+from substra import BackendType
+from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoSpec
+from substra.sdk.schemas import CompositeTraintupleSpec
+from substra.sdk.schemas import Permissions
 
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
@@ -12,12 +17,15 @@ from connectlib.exceptions import InvalidPathError
 from connectlib.remote import remote_data
 from connectlib.remote.register import create_substra_algo_files
 
-from .. import utils
+CURRENT_FILE = Path(__file__)
 
-current_file = Path(__file__)
+# workaround to work with tests/dependency/test_local_dependencies_file_notebook.ipynb
+# because we can't import tests in the CI (interfere with substra/tests), and we can't do relative import with nbmake
+sys.path.append(str(CURRENT_FILE.parents[1]))
+import utils  # noqa: E402
 
-ASSETS_DIR = current_file.parents[1] / "end_to_end" / "test_assets"
-DEFAULT_PERMISSIONS = substra.sdk.schemas.Permissions(public=True, authorized_ids=list())
+ASSETS_DIR = CURRENT_FILE.parents[1] / "end_to_end" / "test_assets"
+DEFAULT_PERMISSIONS = Permissions(public=True, authorized_ids=list())
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
@@ -36,7 +44,7 @@ def test_dependency_validators_not_valid_path():
 def test_dependency_validators_no_setup_file():
     with pytest.raises(InvalidPathError):
         # :arg:local_dependencies folders must contain a setup.py.
-        Dependency(local_dependencies=[current_file.parent])
+        Dependency(local_dependencies=[CURRENT_FILE.parent])
 
 
 @pytest.mark.slow
@@ -48,25 +56,25 @@ class TestLocalDependency:
         archive_path, description_path = create_substra_algo_files(
             data_op.remote_struct,
             dependencies=algo_deps,
-            install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
+            install_libraries=client.backend_mode != BackendType.LOCAL_SUBPROCESS,
         )
-        algo_query = substra.sdk.schemas.AlgoSpec(
+        algo_query = AlgoSpec(
             name="algo_test_deps",
-            category=substra.sdk.schemas.AlgoCategory.composite,
+            category=AlgoCategory.composite,
             description=description_path,
             file=archive_path,
-            permissions=substra.sdk.schemas.Permissions(public=True, authorized_ids=list()),
+            permissions=Permissions(public=True, authorized_ids=list()),
         )
         algo_key = client.add_algo(algo_query)
         return algo_key
 
     def _register_composite(self, algo_key, dataset_key, data_sample_key, client):
         """Register a composite traintuple"""
-        composite_traintuple_query = substra.sdk.schemas.CompositeTraintupleSpec(
+        composite_traintuple_query = CompositeTraintupleSpec(
             algo_key=algo_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
-            out_trunk_model_permissions=substra.sdk.schemas.Permissions(public=True, authorized_ids=list()),
+            out_trunk_model_permissions=Permissions(public=True, authorized_ids=list()),
         )
         composite_key = client.add_composite_traintuple(composite_traintuple_query)
         composite_traintuple = client.get_composite_traintuple(composite_key)
@@ -146,7 +154,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_code=[current_file.parent / "local_code_subfolder"],
+            local_code=[CURRENT_FILE.parent / "local_code_subfolder"],
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
@@ -190,7 +198,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_code=[current_file.parent / "local_code_subfolder" / "local_code.py"],
+            local_code=[CURRENT_FILE.parent / "local_code_subfolder" / "local_code.py"],
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
@@ -234,7 +242,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_code=[current_file.parent / "local_code_file.py"],
+            local_code=[CURRENT_FILE.parent / "local_code_file.py"],
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
@@ -283,7 +291,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_dependencies=[current_file.parent / "installable_library"],
+            local_dependencies=[CURRENT_FILE.parent / "installable_library"],
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
