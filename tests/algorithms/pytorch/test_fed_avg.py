@@ -8,8 +8,7 @@ from connectlib import execute_experiment
 from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.dependency import Dependency
 from connectlib.strategies import FedAVG
-
-from ... import utils
+from tests import utils
 
 logger = logging.getLogger(__name__)
 

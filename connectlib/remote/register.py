@@ -1,5 +1,4 @@
 import inspect
-import os
 import shutil
 import subprocess
 import sys
@@ -220,7 +219,13 @@ def create_substra_algo_files(  # noqa: C901
     local_code_cmd = ""
     local_dependencies_cmd = ""
     if dependencies is not None:
-        algo_file_path = Path(inspect.getfile(remote_struct.cls)).resolve().parent
+        try:
+            algo_file_path = Path(inspect.getfile(remote_struct.cls)).resolve().parent
+        except TypeError:
+            # In a notebook, we get the TypeError: <class '__main__.MyAlgo'> is a built-in class
+            # To fix it, we use the cwd of the notebook and assume local dependencies are there
+            algo_file_path = Path.cwd().resolve()
+
         for path in dependencies.local_code:
             relative_path = path.relative_to(algo_file_path)
             (operation_dir / relative_path.parent).mkdir(exist_ok=True)
@@ -274,7 +279,7 @@ def create_substra_algo_files(  # noqa: C901
     with tarfile.open(archive_path, "w:gz") as tar:
         for filepath in operation_dir.glob("*"):
             if not filepath.name.endswith(".tar.gz"):
-                tar.add(filepath, arcname=os.path.basename(filepath), recursive=True)
+                tar.add(filepath, arcname=filepath.name, recursive=True)
     return archive_path, description_path
 
 
