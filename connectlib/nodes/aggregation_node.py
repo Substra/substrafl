@@ -1,10 +1,9 @@
 import uuid
-from typing import List
-from typing import Optional
 from typing import TypeVar
 
 import substra
 
+from connectlib.dependency import Dependency
 from connectlib.nodes import Node
 from connectlib.nodes.references import SharedStateRef
 from connectlib.remote.methods import AggregateOperation
@@ -68,7 +67,7 @@ class AggregationNode(Node):
         self,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
-        dependencies: Optional[List[str]] = None,
+        dependencies: Dependency(),  # noqa: B008
     ):
         """Define the algorithms for each operation and submit the aggregated tuple to substra.
 
@@ -78,9 +77,9 @@ class AggregationNode(Node):
         self.CACHE keeps the submitted algo keys in memory.
 
         Args:
-            client (substra.Client): [description]
-            permissions (substra.sdk.schemas.Permissions): [description]
-            dependencies (Dependency, optional): [description]. Defaults to None.
+            client (substra.Client): Substra defined client used to register the operation.
+            permissions (substra.sdk.schemas.Permissions): Substra permissions attached to the registered operation.
+            dependencies (Dependency, optional): Dependencies of the given operation. Defaults to Dependency().
         """
         for tuple in self.tuples:
             if isinstance(tuple["remote_operation"], RemoteStruct):

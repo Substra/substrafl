@@ -5,6 +5,7 @@ from typing import Tuple
 
 import substra
 
+from connectlib.dependency import Dependency
 from connectlib.nodes import Node
 from connectlib.nodes.references import LocalStateRef
 from connectlib.nodes.references import SharedStateRef
@@ -91,7 +92,7 @@ class TrainDataNode(Node):
         self,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
-        dependencies: Optional[List[str]] = None,
+        dependencies: Dependency = Dependency(),  # noqa: B008
     ):
         """Define the algorithms for each operation and submit the composite traintuple to substra.
 
@@ -103,8 +104,7 @@ class TrainDataNode(Node):
         Args:
             client (substra.Client): Substra client for the node.
             permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-            dependencies (List[str]): The list of pip public dependencies your algorithm relies on
-                (e.g. ['torch', 'pandas==1.0.1'])
+            dependencies (Dependency): Algorithm dependencies.
         """
         for tuple in self.tuples:
             if tuple.get("out_trunk_model_permissions", None) is None:

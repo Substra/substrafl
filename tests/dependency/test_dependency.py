@@ -32,19 +32,19 @@ LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 def test_dependency_validators_file_not_exist():
     with pytest.raises(InvalidPathError):
         # Can't find file.
-        Dependency(local_code=[str(uuid.uuid4())])
+        Dependency(local_code=[str(uuid.uuid4())], editable_mode=True)
 
 
 def test_dependency_validators_not_valid_path():
     with pytest.raises(ValidationError):
         # Can't pass non parsable object.
-        Dependency(local_dependencies=[{"a_random_test": 3}])
+        Dependency(local_dependencies=[{"a_random_test": 3}], editable_mode=True)
 
 
 def test_dependency_validators_no_setup_file():
     with pytest.raises(InvalidPathError):
         # :arg:local_dependencies folders must contain a setup.py.
-        Dependency(local_dependencies=[CURRENT_FILE.parent])
+        Dependency(local_dependencies=[CURRENT_FILE.parent], editable_mode=True)
 
 
 @pytest.mark.slow
@@ -111,7 +111,7 @@ class TestLocalDependency:
 
         client = network.clients[0]
         my_algo = MyAlgo()
-        algo_deps = Dependency(pypi_dependencies=["pytest"])
+        algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
@@ -155,6 +155,7 @@ class TestLocalDependency:
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
             local_code=[CURRENT_FILE.parent / "local_code_subfolder"],
+            editable_mode=True,
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
@@ -199,6 +200,7 @@ class TestLocalDependency:
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
             local_code=[CURRENT_FILE.parent / "local_code_subfolder" / "local_code.py"],
+            editable_mode=True,
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
@@ -243,6 +245,7 @@ class TestLocalDependency:
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
             local_code=[CURRENT_FILE.parent / "local_code_file.py"],
+            editable_mode=True,
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 
@@ -292,6 +295,7 @@ class TestLocalDependency:
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
             local_dependencies=[CURRENT_FILE.parent / "installable_library"],
+            editable_mode=True,
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)
 

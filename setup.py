@@ -60,6 +60,7 @@ setup(
         "substratools>=0.9.0",
         "substra>=0.13.0",
         "pydantic>=1.9.0",
+        "pip>=21.2",
         "wheel",
         "six",
     ],

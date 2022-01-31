@@ -61,6 +61,12 @@ jobs:
           token: ${{ secrets.ACCESS_TOKEN }}
           path: substra
 
+      - name: Login pypi
+        run: |
+             mkdir ~/.pip || touch ~/.pip/pip.conf
+             echo "[global]" >> ~/.pip/pip.conf
+             echo "extra-index-url = https://connectors-service-account:${{ secrets.TWINE_PASSWORD }}@pypi.owkin.com/simple" >> ~/.pip/pip.conf
+
       - name: Install package
         run: |
              pip install --no-cache-dir -e substra

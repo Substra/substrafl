@@ -1,7 +1,6 @@
 import datetime
 import logging
 from typing import List
-from typing import Optional
 
 import substra
 
@@ -26,7 +25,7 @@ def execute_experiment(
     test_data_nodes: List[TestDataNode],
     aggregation_node: AggregationNode,
     num_rounds: int,
-    dependencies: Optional[Dependency] = None,
+    dependencies: Dependency = Dependency(),  # noqa: B008
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
     your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
@@ -52,10 +51,11 @@ def execute_experiment(
         test_data_nodes (List[TestDataNode]): List of the nodes where testing on data occurs
         aggregation_node (AggregationNode): The aggregation node, where all the shared tasks occur
         num_rounds (int): The number of time your strategy will be executed
-        dependencies (Dependency, optional): The list of public dependencies used by your algorithm. Defaults to None.
+        dependencies (Dependency): Dependencies of the algorithm. It must be defined from connectlib Dependency class.
+        Defaults `Dependency()`.
 
     Returns:
-        [ComputePlan]: The generated compute plan
+        ComputePlan: The generated compute plan
     """
     logger.info("Building the compute plan.")
 
@@ -95,7 +95,12 @@ def execute_experiment(
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
-    aggregation_node.register_operations(client, permissions, dependencies=None)
+    # We still need to pass the information of the editable mode.
+    aggregation_node.register_operations(
+        client,
+        permissions,
+        dependencies=Dependency(editable_mode=dependencies.editable_mode),
+    )
 
     # Execute the compute plan
     logger.info("Submitting the compute plan to Connect.")

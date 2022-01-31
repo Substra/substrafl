@@ -57,7 +57,7 @@ def test_pytorch_fedavg_algo(
     num_rounds = 3
 
     my_algo = MyAlgo()
-    algo_deps = Dependency(pypi_dependencies=["torch", "numpy"])
+    algo_deps = Dependency(pypi_dependencies=["torch", "numpy"], editable_mode=True)
     strategy = FedAVG()
 
     compute_plan = execute_experiment(

@@ -13,6 +13,11 @@ class Dependency(BaseModel):
     """Dependency pydantic class.
 
     Args:
+        editable_mode (bool): If set to False, substra, connectlib and substra-tools used in the
+            Dockerfiles submitted to connect platform will be taken from owkin pypi. Be sure to have
+            access to owkin's pypi and configure accordingly your pip.conf.
+            If set to True, it will be the one installed in editable mode from your python environment.
+            Default to False.
         dependencies (Optional[List[str]]): Python packages installable form pypi.
         local_dependencies (Optional[List[Path]]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
@@ -21,6 +26,7 @@ class Dependency(BaseModel):
             at the same level than your script.
     """
 
+    editable_mode: bool = False
     pypi_dependencies: Optional[List[str]] = list()
     local_dependencies: Optional[List[PosixPath]] = list()
     local_code: Optional[List[PosixPath]] = list()
