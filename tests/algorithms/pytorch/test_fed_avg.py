@@ -7,6 +7,7 @@ import torch
 from connectlib import execute_experiment
 from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.dependency import Dependency
+from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.strategies import FedAVG
 from tests import utils
 
@@ -59,13 +60,16 @@ def test_pytorch_fedavg_algo(
     my_algo = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["torch", "numpy"], editable_mode=True)
     strategy = FedAVG()
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
+    )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
-        test_data_nodes=test_linear_nodes,
+        evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
@@ -77,5 +81,4 @@ def test_pytorch_fedavg_algo(
     # read the results from saved performances
     testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
-
     assert list(testtuple.test.perfs.values())[0] == pytest.approx(0.012787394571974166, rel=10e-6)
