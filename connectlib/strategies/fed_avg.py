@@ -180,6 +180,7 @@ class FedAVG(Strategy):
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
     ):
+
         for test_node in test_data_nodes:
             matching_train_nodes = [
                 train_node for train_node in train_data_nodes if train_node.node_id == test_node.node_id

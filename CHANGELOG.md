@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat: Add a FL algorithm wrapper in PyTorch for the federated averaging strategy (#60)
 - test: connect-test integration (#68)
+- feat: Add a possibility to test an algorithm on selected rounds or every n rounds (#79)
 
 ## [0.5.0] - 2021-12-31
 

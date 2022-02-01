@@ -6,8 +6,8 @@ import substra
 
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
+from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.nodes import AggregationNode
-from connectlib.nodes import TestDataNode
 from connectlib.nodes import TrainDataNode
 from connectlib.strategies import Strategy
 
@@ -22,9 +22,9 @@ def execute_experiment(
     algo: Algo,
     strategy: Strategy,
     train_data_nodes: List[TrainDataNode],
-    test_data_nodes: List[TestDataNode],
     aggregation_node: AggregationNode,
     num_rounds: int,
+    evaluation_strategy: EvaluationStrategy = None,
     dependencies: Dependency = Dependency(),  # noqa: B008
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
@@ -48,7 +48,8 @@ def execute_experiment(
         algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         strategy (Strategy): The strategy by which your algorithm will be executed
         train_data_nodes (List[TrainDataNode]): List of the nodes where training on data occurs
-        test_data_nodes (List[TestDataNode]): List of the nodes where testing on data occurs
+        evaluation_strategy (EvaluationStrategy): If None performance will not be measured at all.
+            Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         aggregation_node (AggregationNode): The aggregation node, where all the shared tasks occur
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency): Dependencies of the algorithm. It must be defined from connectlib Dependency class.
@@ -57,6 +58,19 @@ def execute_experiment(
     Returns:
         ComputePlan: The generated compute plan
     """
+    train_node_ids = [train_data_node.node_id for train_data_node in train_data_nodes]
+
+    if len(train_node_ids) != len(set(train_node_ids)):
+        raise ValueError("Training multiple algorithms on the same node is not supported right now.")
+
+    if evaluation_strategy is not None:
+        if evaluation_strategy.num_rounds is None:
+            evaluation_strategy.num_rounds = num_rounds
+        elif evaluation_strategy.num_rounds != num_rounds:
+            raise ValueError(
+                "num_rounds set in evaluation_strategy does not match num_rounds set in the experiment: "
+                f"{evaluation_strategy.num_rounds} is not {num_rounds}"
+            )
     logger.info("Building the compute plan.")
 
     # create computation graph
@@ -67,12 +81,12 @@ def execute_experiment(
             aggregation_node=aggregation_node,
         )
 
-    # TODO rename 'predict' into 'predict_and_score' ? the outputs are metrics here
-    strategy.predict(
-        algo=algo,
-        train_data_nodes=train_data_nodes,
-        test_data_nodes=test_data_nodes,
-    )
+        if evaluation_strategy is not None and next(evaluation_strategy):
+            strategy.predict(
+                algo=algo,
+                train_data_nodes=train_data_nodes,
+                test_data_nodes=evaluation_strategy.test_data_nodes,
+            )
 
     # Computation graph is created
     # TODO: static checks on the graph
@@ -89,8 +103,7 @@ def execute_experiment(
         composite_traintuples += train_node.tuples
 
     testtuples = []
-    for test_node in test_data_nodes:
-        test_node.register_operations(client, permissions, dependencies=dependencies)
+    for test_node in evaluation_strategy.test_data_nodes:
         testtuples += test_node.tuples
 
     # The aggregation operation is defined in the strategy, its dependencies are
