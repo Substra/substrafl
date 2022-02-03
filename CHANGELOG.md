@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Added
+
+## [0.7.0] - 2022-02-01
+
+### Fixed
+
 - fix: notebook dependency failure (#78)
+  You can now run a connectlib experiment with local dependencies in a Jupyter notebook
+
+### Added
+
+- feat: models can now be tested every n rounds, on the same nodes they were trained on (#79)
+  This feature introduces a new parameter `evaluation_strategy` in `execute_experiment`, which takes an `EvaluationStrategy` instance from `connectlib.evaluation_strategy`.
+  If this parameter is not given, performance will not be measured at all (previously, it was measured at the end of the experiment by default).
+
 - feat: install connectlib from pypi (#71)
 
 ## [0.6.0] - 2021-12-31
