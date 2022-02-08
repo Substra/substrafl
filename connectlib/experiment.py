@@ -103,8 +103,9 @@ def execute_experiment(
         composite_traintuples += train_node.tuples
 
     testtuples = []
-    for test_node in evaluation_strategy.test_data_nodes:
-        testtuples += test_node.tuples
+    if evaluation_strategy is not None:
+        for test_node in evaluation_strategy.test_data_nodes:
+            testtuples += test_node.tuples
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
