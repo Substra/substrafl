@@ -324,7 +324,7 @@ def create_substra_algo_files(  # noqa: C901
 
                 local_dependencies_cmd += (
                     f"RUN python{python_major_minor} -m pip install "
-                    f"--no-cache-dir -e {dest_path.relative_to(operation_dir)}"
+                    f"--no-cache-dir {dest_path.relative_to(operation_dir)}"
                 )
 
     # Write template to algo.py
