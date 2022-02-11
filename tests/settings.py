@@ -22,15 +22,12 @@ class NodeCfg(BaseModel):
 
     Args:
         url (str): URL of the Connect node.
-        msp_id (str): Node id. Passed as a permission when assets are added to Connect,
-            it ensures access to the associated node.
         username (str): A user define username to login to the Connect platform. This username will
             be the one used to access Connect frontend.
         password (str): The password to login to the node.
     """
 
     url: str
-    msp_id: str
     username: str
     password: str
 
@@ -143,7 +140,6 @@ def remote_network(is_ci: bool = False):
         nodes=[
             NodeCfg(
                 url=node_cfg.get("url"),
-                msp_id=node_cfg.get("msp_id"),
                 username=node_cfg.get("username"),
                 password=node_cfg.get("password"),
             )
@@ -157,6 +153,6 @@ def remote_network(is_ci: bool = False):
         client = substra.Client(debug=False, url=node.url)
         client.login(username=node.username, password=node.password)
         clients.append(client)
-        msp_ids.append(node.msp_id)
+        msp_ids += [n.id for n in client.list_node() if n.is_current]
 
     return Network(clients=clients, msp_ids=msp_ids)
