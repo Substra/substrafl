@@ -332,7 +332,7 @@ class TorchFedAvgAlgo(Algo):
         x_test = self._safe_preprocess(x=x)
 
         # Reduce memory consumption as we don't use the model gradients
-        with torch.no_grad():
+        with torch.inference_mode():
             # If needed, add the shared state to the model parameters
             if shared_state is not None:
                 weight_manager.increment_parameters(

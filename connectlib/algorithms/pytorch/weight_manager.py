@@ -89,9 +89,9 @@ def get_parameters(
     Returns:
         List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model.
     """
-
-    iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
-    parameters = [p.clone() for p in iter_params()]
+    with torch.inference_mode():
+        iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
+        parameters = [p.clone() for p in iter_params()]
 
     return parameters
 
@@ -112,20 +112,21 @@ def increment_parameters(
         with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of each batch norm
             layer will be included in the model parameters to modify.
     """
-    # INFO: this is the faster way I found of checking that both model.parameters() and shared states has the
-    # same length as model.parameters() is a generator.
-    iter_params = model_parameters(model=model, with_batch_norm_parameters=with_batch_norm_parameters)
-    n_parameters = len(list(iter_params()))
-    assert n_parameters == len(gradients), "Length of model parameters and gradients are unequal."
+    with torch.inference_mode():
+        # INFO: this is the faster way I found of checking that both model.parameters() and shared states has the
+        # same length as model.parameters() is a generator.
+        iter_params = model_parameters(model=model, with_batch_norm_parameters=with_batch_norm_parameters)
+        n_parameters = len(list(iter_params()))
+        assert n_parameters == len(gradients), "Length of model parameters and gradients are unequal."
 
-    for weights, gradient in zip(iter_params(), gradients):
-        if isinstance(gradient, np.ndarray):
-            gradient = torch.from_numpy(gradient)
-        assert gradient.data.shape == weights.data.shape, (
-            f"The shape of the model weights ({weights.data.shape}) and of the gradient ({gradient.data.shape}) "
-            "passed in the gradients argument are unequal."
-        )
-        weights.data += gradient.data
+        for weights, gradient in zip(iter_params(), gradients):
+            if isinstance(gradient, np.ndarray):
+                gradient = torch.from_numpy(gradient)
+            assert gradient.data.shape == weights.data.shape, (
+                f"The shape of the model weights ({weights.data.shape}) and of the gradient ({gradient.data.shape}) "
+                "passed in the gradients argument are unequal."
+            )
+            weights.data += gradient.data
 
 
 def subtract_parameters(
@@ -173,8 +174,9 @@ def set_parameters(
         with_batch_norm_parameters (bool): Whether to the batch norm layers' internal parameters are provided and
             need to be included in the operation
     """
-    iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
-    n_parameters = len(list(iter_params()))
-    assert n_parameters == len(parameters), "Length of model parameters and provided parameters are unequal."
-    for (p, w) in zip(iter_params(), parameters):
-        p.data = w.data
+    with torch.inference_mode():
+        iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
+        n_parameters = len(list(iter_params()))
+        assert n_parameters == len(parameters), "Length of model parameters and provided parameters are unequal."
+        for (p, w) in zip(iter_params(), parameters):
+            p.data = w.data
