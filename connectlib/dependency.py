@@ -54,12 +54,13 @@ class Dependency(BaseModel):
         """Check the presence of a setup.py file in the provided paths."""
         not_installable = list()
         for dependency_path in v:
-            if dependency_path.is_dir() and not (dependency_path / "setup.py").is_file():
+            installable_dir = (dependency_path / "setup.py").is_file() or (dependency_path / "pyproject.toml").is_file()
+            if dependency_path.is_dir() and not installable_dir:
                 not_installable.append(dependency_path)
             # The user can also give tar.gz archives
         if not_installable:
             raise InvalidPathError(
                 f"Passed folder must be installable python package. "
-                f"But no setup.py was found in :{', '.join([str(p) for p in not_installable])}"
+                f"But neither setup.py or pyproject.toml was found in :{', '.join([str(p) for p in not_installable])}"
             )
         return v

@@ -253,7 +253,8 @@ class TestLocalDependency:
         utils.wait(client, composite_traintuple)
 
     @pytest.mark.docker_only
-    def test_local_dependencies_installable_library(self, network, numpy_datasets, constant_samples):
+    @pytest.mark.parametrize("pkg_path", ["installable_library", "poetry_installable_library"])
+    def test_local_dependencies_installable_library(self, network, numpy_datasets, constant_samples, pkg_path):
         """Test that you can install a local library
         Automatically done in docker but need to be manually done if force in subprocess mode
         """
@@ -294,7 +295,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_dependencies=[CURRENT_FILE.parent / "installable_library"],
+            local_dependencies=[CURRENT_FILE.parent / pkg_path],
             editable_mode=True,
         )
         algo_key = self._register_algo(my_algo, algo_deps, client)

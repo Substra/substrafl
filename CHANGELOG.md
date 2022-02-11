@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix: `Dependency.local_package` are installed in no editable mode and additionally accepts `pyproject.yaml` as configuration file (#88)
 - fix: `execute_experiment` accepts `None` as `evaluation_strategy` (#83)
 
 ### Added
