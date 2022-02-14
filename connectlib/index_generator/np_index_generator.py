@@ -3,20 +3,22 @@ from typing import Optional
 
 import numpy as np
 
+from connectlib.index_generator.base import BaseIndexGenerator
+
 logger = logging.getLogger(__name__)
 
 
-class NpIndexGenerator:
+class NpIndexGenerator(BaseIndexGenerator):
     """An infinite index based batch generator. It will return an array of size `batch_size` indexes.
     If batch size is equal to zero, this will return an empty array.
-    Each batch is generated and returned via the class method `self.__next__()`. E.g. :
+    Each batch is generated and returned via the method `next`. E.g. :
 
         batch_generator = NpIndexGenerator(n_samples=10, batch_size=3)
 
-        batch_1 = NpIndexGenerator.__next__()
-        batch_2 = NpIndexGenerator.__next__()
+        batch_1 = next(NpIndexGenerator)
+        batch_2 = next(NpIndexGenerator)
         ...
-        batch_n = NpIndexGenerator.__next__()
+        batch_n = next(NpIndexGenerator)
 
     In that case, as the default seed is set, the results are deterministic :
         batch_1 = np.array([5, 6, 0])
@@ -61,35 +63,13 @@ class NpIndexGenerator:
         """Initialization of the generator."""
 
         # Initialization
+        super().__init__(
+            n_samples=n_samples,
+            batch_size=batch_size,
+        )
         self._shuffle: bool = shuffle
         self._drop_last: bool = drop_last
         self._seed: int = seed
-
-        # Validates n_samples
-        if n_samples < 0:
-            raise ValueError(f"n_samples must be non negative but {n_samples} was passed.")
-
-        self._n_samples: int = n_samples
-
-        # Validates batch_size
-        if batch_size is None:
-            logger.info("None was passed as a batch size. It will be set to n_sample size.")
-            self._batch_size: int = self._n_samples
-
-        elif batch_size < 0:
-            raise ValueError(f"batch_size must be non negative but {batch_size} was passed.")
-
-        elif batch_size > n_samples:
-            logger.info(
-                (
-                    "The batch size ({batch_size}) is greater than the number of samples: n_samples."
-                    "This is not allowed. Batch_size is now updated to equal number of samples ({n_samples})"
-                ).format(batch_size=batch_size, n_samples=n_samples)
-            )
-            self._batch_size = self._n_samples
-
-        else:
-            self._batch_size = batch_size
 
         # New properties
         self._n_batch_per_epoch: int = (
