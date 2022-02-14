@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from connectlib.batch_indexer import NpIndexGenerator
+from connectlib.index_generator.np_index_generator import NpIndexGenerator
 
 
 @pytest.mark.parametrize("batch_size", [0, 3, 5, 8])

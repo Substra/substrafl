@@ -1,17 +1,18 @@
 import logging
 from pathlib import Path
 from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import Tuple
+from typing import Type
 from typing import Union
 
 import numpy as np
 import torch
 
-from connectlib import NpIndexGenerator
 from connectlib.algorithms import Algo
+from connectlib.index_generator import BaseIndexGenerator
+from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
 
 from . import weight_manager
@@ -56,7 +57,7 @@ class TorchFedAvgAlgo(Algo):
     )
     ```
 
-    It will inherit of the following default arguments : `index_generator = NpIndexGenerator`, `scheduler = None`,
+    It will inherit of the following default arguments : `get_index_generator = NpIndexGenerator`, `scheduler = None`,
     `batch_size = None` and `with_batch_norm_parameters = False`
     which can be overwritten as arguments of the :func:`super().__init__` function within the `__init__` method of
     the child class. E.g.:
@@ -118,11 +119,12 @@ class TorchFedAvgAlgo(Algo):
             train function).
         batch_size (int, optional). The number of samples used for each updates. If None, the whole input data will be
             used. Defaults to None.
-        get_index_generator (Callable, optional). A function or a class returning a state full index generator. Must
-            expect two arguments: `n_samples` and `batch_size` and returns a deterministic generator exposing the
-            __next__() method. This method shall return a python object (batch_index) which will be used for selecting
-            each batch from the output of the _preprocess method during training in this way :
-            `x[batch_index], y[batch_index]`.  Defaults to NpIndexGenerator.
+        get_index_generator (Type[BaseIndexGenerator], optional). A class returning a stateful index generator. Must
+            inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
+            is used for selecting each batch from the output of the _preprocess method during training in this way :
+            `x[batch_index], y[batch_index]`. Defaults to NpIndexGenerator.
+            If overriden, the generator class must be defined either as part of a package or in a different file
+            than the one from which the `execute_experiment` function is called.
         with_batch_norm_parameters (bool). Whether to include the batch norm layer parameters in the fed avg strategy.
             Default to False.
     """
@@ -133,7 +135,7 @@ class TorchFedAvgAlgo(Algo):
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
         num_updates: int,
-        get_index_generator: Callable = NpIndexGenerator,
+        get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         batch_size: Optional[int] = None,
         with_batch_norm_parameters: bool = False,
