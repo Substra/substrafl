@@ -113,8 +113,8 @@ class TorchFedAvgAlgo(Algo):
         model (torch.nn.Modules): A torch model.
         criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
         optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-        scheduler (torch.optim.lr_scheduler._LRScheduler, optional). A torch scheduler. If None, no scheduler will be
-            used. Defaults to None.
+        scheduler (torch.optim.lr_scheduler._LRScheduler, optional). A torch scheduler that will be called at every
+        batch. If None, no scheduler will be used. Defaults to None.
         num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
             train function).
         batch_size (int, optional). The number of samples used for each updates. If None, the whole input data will be
@@ -123,7 +123,7 @@ class TorchFedAvgAlgo(Algo):
             inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
             is used for selecting each batch from the output of the _preprocess method during training in this way :
             `x[batch_index], y[batch_index]`. Defaults to NpIndexGenerator.
-            If overriden, the generator class must be defined either as part of a package or in a different file
+            If overridden, the generator class must be defined either as part of a package or in a different file
             than the one from which the `execute_experiment` function is called.
         with_batch_norm_parameters (bool). Whether to include the batch norm layer parameters in the fed avg strategy.
             Default to False.
@@ -191,7 +191,7 @@ class TorchFedAvgAlgo(Algo):
         return y_pred
 
     def _safe_preprocess(self, x: Any, y: Any = None) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
-        """Checks wether the user preprocessing function returns x, and/or y as a torch tensor.
+        """Checks whether the user preprocessing function returns x, and/or y as a torch tensor.
 
         Args:
             x (Any): Data returned per the get_x method of the opener.
@@ -237,7 +237,7 @@ class TorchFedAvgAlgo(Algo):
             * apply the provided (or default) _processing method to x and y
             * if a shared state is passed, set the parameters of the model to the provided shared state
             * train the model for n_updates
-            * compute the gradients of the training
+            * compute the weight update
 
         Args:
             x (Any): Input data.
@@ -246,7 +246,7 @@ class TorchFedAvgAlgo(Algo):
                 model. Defaults to None.
 
         Returns:
-            Dict[str, np.ndarray]: The gradients of the training.
+            Dict[str, np.ndarray]: weight update (delta between fine-tuned weights and previous weights)
         """
 
         # Ensure that we have the proper format
@@ -255,20 +255,22 @@ class TorchFedAvgAlgo(Algo):
         # Instantiate the index_generator
         if self.index_generator is None:
             self.index_generator = self.get_index_generator(n_samples=x.shape[0], batch_size=self.batch_size)
-        # Train mode for torch model
-        self.model.train()
+
         # The shared states is the average of the difference of the gradient for all nodes
         # Hence we need to add it to the previous local state parameters
         if shared_state is not None:
             weight_manager.increment_parameters(
                 model=self.model,
-                gradients=shared_state.values(),
+                updates=shared_state.values(),
                 with_batch_norm_parameters=self.with_batch_norm_parameters,
             )
 
         old_parameters = weight_manager.get_parameters(
             model=self.model, with_batch_norm_parameters=self.with_batch_norm_parameters
         )
+
+        # Train mode for torch model
+        self.model.train()
 
         # Train the model
         for _ in range(self.num_updates):
@@ -287,6 +289,8 @@ class TorchFedAvgAlgo(Algo):
             if self.scheduler is not None:
                 self.scheduler.step()
 
+        self.model.eval()
+
         model_gradient = weight_manager.subtract_parameters(
             parameters=weight_manager.get_parameters(
                 model=self.model,
@@ -303,7 +307,6 @@ class TorchFedAvgAlgo(Algo):
         )
 
         return_dict = {f"grad_{i}": g.cpu().detach().numpy() for i, g in enumerate(model_gradient)}
-        self.gradient_keys = return_dict.keys()
         return_dict["n_samples"] = x.shape[0]
         return return_dict
 
@@ -339,7 +342,7 @@ class TorchFedAvgAlgo(Algo):
             if shared_state is not None:
                 weight_manager.increment_parameters(
                     model=self.model,
-                    gradients=shared_state.values(),
+                    updates=shared_state.values(),
                     with_batch_norm_parameters=self.with_batch_norm_parameters,
                 )
 

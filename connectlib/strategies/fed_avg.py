@@ -18,7 +18,7 @@ from connectlib.strategies.strategy import Strategy
 class FedAVG(Strategy):
     """Federated averaging strategy.
     Federated averaging is the simplest federating strategy.
-    A round consists in a performing a predefined number of forward/backward
+    A round consists in performing a predefined number of forward/backward
     passes on each client, aggregating updates by computing their means and
     distributing the consensus update to all clients. In FedAvg, strategy is
     performed in a centralized way, where a single server or
@@ -37,17 +37,6 @@ class FedAVG(Strategy):
     local updates :math:`m` to perform, and where :math:`n_k` is the number of
     samples for worker :math:`k`, :math:`n = \\sum_{k=1}^K n_k` is the total
     number of samples.
-
-    **Adventages**:
-    - decoupling of model training from the need for direct access to the raw
-    training data
-    - significant reduction of privacy and security risks by (limiting the attack
-    surface only to the nodes)
-
-    **Disadventages**:
-    - each :term:`node` is connected to :term:`aggregation node`. The communication
-    rounds between each node and aggregation node might be frequent which might be expensive
-    - some trust of the server coordinating the training is still required.
     """
 
     def __init__(self):
@@ -60,8 +49,8 @@ class FedAVG(Strategy):
     @remote
     def avg_shared_states(self, shared_states: List[Dict[str, Union[int, np.ndarray]]]) -> Dict[str, np.ndarray]:
         """Compute the weighted average of all elements returned by the train
-        methods of the user defined algorithm.
-        The average is weighted by the number of samples.
+        methods of the user-defined algorithm.
+        The average is weighted by the proportion of the number of samples.
 
         E.g.: shared_states = [
             {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
@@ -82,7 +71,7 @@ class FedAVG(Strategy):
             TypeError: All elements to average must be of type np.array
 
         Returns:
-            Weights:
+            Weights: A dict containing the weighted average of each input parameters without the passed key "n_samples".
         """
         # get keys
         # TODO: for now an ugly conversion to list to be able to remove the element, improve
@@ -123,10 +112,8 @@ class FedAVG(Strategy):
             # For now each value of shared_states is an np.array.
             states = []
             for n_samples, state in zip(all_samples, shared_states):
-                states.append(state[key] * n_samples)
-            states = np.sum(states, axis=0)
-            # divide by the sum of all the samples
-            averaged_states[key] = states / n_all_samples
+                states.append(state[key] * (n_samples / n_all_samples))
+            averaged_states[key] = np.sum(states, axis=0)
 
         return averaged_states
 
@@ -138,7 +125,7 @@ class FedAVG(Strategy):
     ):
         """One round of the Federated Averaging strategy:
             - if they exist, set the model weights to the aggregated weights on each train data nodes
-            - perform a local update (train on n minibatches) of the models on each train data nodes
+            - perform a local update (train on n mini-batches) of the models on each train data nodes
             - aggregate the model shared_states
 
         Args:

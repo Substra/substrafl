@@ -98,35 +98,36 @@ def get_parameters(
 
 def increment_parameters(
     model: torch.nn.Module,
-    gradients: Union[List[torch.nn.parameter.Parameter], np.ndarray],
+    updates: Union[List[torch.nn.parameter.Parameter], np.ndarray],
     with_batch_norm_parameters: bool,
 ):
-    """Add the given gradient to the model parameters. If with_batch_norm_parameters is set to True, the operation
+    """Add the given update to the model parameters. If with_batch_norm_parameters is set to True, the operation
     will include the running mean and the running variance of the batch norm layers (in this case, they must be
-    included in the given gradient). This function modifies the given model internally and therefore returns nothing.
+    included in the given update). This function modifies the given model internally and therefore returns nothing.
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        gradients (List[torch.nn.parameter.Parameter]): A list of torch parameters to add to the model, as ordered by
-            the standard iterators.
+        updates (List[torch.nn.parameter.Parameter]): A list of torch parameters to add to the model, as ordered by
+            the standard iterators. The trainable parameters should come first followed by the batch norm parameters
+            if `with_batch_norm_parameters` is set to `True`.
         with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of each batch norm
-            layer will be included in the model parameters to modify.
+            layer will be included, after the trainable layers, in the model parameters to modify.
     """
     with torch.inference_mode():
         # INFO: this is the faster way I found of checking that both model.parameters() and shared states has the
         # same length as model.parameters() is a generator.
         iter_params = model_parameters(model=model, with_batch_norm_parameters=with_batch_norm_parameters)
         n_parameters = len(list(iter_params()))
-        assert n_parameters == len(gradients), "Length of model parameters and gradients are unequal."
+        assert n_parameters == len(updates), "Length of model parameters and updates are unequal."
 
-        for weights, gradient in zip(iter_params(), gradients):
-            if isinstance(gradient, np.ndarray):
-                gradient = torch.from_numpy(gradient)
-            assert gradient.data.shape == weights.data.shape, (
-                f"The shape of the model weights ({weights.data.shape}) and of the gradient ({gradient.data.shape}) "
-                "passed in the gradients argument are unequal."
+        for weights, update in zip(iter_params(), updates):
+            if isinstance(update, np.ndarray):
+                update = torch.from_numpy(update)
+            assert update.data.shape == weights.data.shape, (
+                f"The shape of the model weights ({weights.data.shape}) and of the update ({update.data.shape}) "
+                "passed in the updates argument are unequal."
             )
-            weights.data += gradient.data
+            weights.data += update.data
 
 
 def subtract_parameters(
@@ -144,7 +145,7 @@ def subtract_parameters(
         List[torch.nn.parameter.Parameter]: The subtraction of the given parameters.
     """
 
-    model_gradient = []
+    delta = []
 
     assert len(parameters) == len(old_parameters), "Length of model parameters and old_parameters are unequal."
 
@@ -153,9 +154,10 @@ def subtract_parameters(
             f"The shape of the parameter weights ({weights.data.shape}) and of the old parameter weights "
             f"({old_weights.data.shape}) are unequal."
         )
-        model_gradient.append((weights - old_weights))
+        with torch.inference_mode():
+            delta.append((weights - old_weights))
 
-    return model_gradient
+    return delta
 
 
 def set_parameters(
@@ -170,9 +172,11 @@ def set_parameters(
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        parameters (List[torch.nn.parameter.Parameter]): Model parameters, as ordered by the standard iterators.
+        parameters (List[torch.nn.parameter.Parameter]): Model parameters, as ordered by the standard iterators. The
+            trainable parameters should come first followed by the batch norm parameters if `with_batch_norm_parameters`
+            is set to `True`.
         with_batch_norm_parameters (bool): Whether to the batch norm layers' internal parameters are provided and
-            need to be included in the operation
+            need to be included in the operation.
     """
     with torch.inference_mode():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
