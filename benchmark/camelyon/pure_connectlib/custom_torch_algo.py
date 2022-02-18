@@ -66,7 +66,7 @@ class TorchFedAvgAlgo(Algo):
             * apply the provided (or default) _processing method to x and y
             * if a shared state is passed, set the parameters of the model to the provided shared state
             * train the model for n_updates
-            * compute the gradients of the training
+            * compute the weight update
 
         Args:
             x (Any): Input data.
@@ -75,7 +75,7 @@ class TorchFedAvgAlgo(Algo):
                 be set to the model. Defaults to None.
 
         Returns:
-            Dict[str, np.ndarray]: The gradients of the training.
+            Dict[str, np.ndarray]: weight update (delta between fine-tuned weights and previous weights)
         """
 
         # The shared states is the average of the difference of the gradient for all nodes
@@ -83,7 +83,7 @@ class TorchFedAvgAlgo(Algo):
         if shared_state is not None:
             weight_manager.increment_parameters(
                 model=self.model,
-                gradients=shared_state.values(),
+                updates=shared_state.values(),
                 with_batch_norm_parameters=self.with_batch_norm_parameters,
             )
 
@@ -109,7 +109,6 @@ class TorchFedAvgAlgo(Algo):
         )
 
         return_dict = {f"grad_{i}": g.cpu().detach().numpy() for i, g in enumerate(model_gradient)}
-        self.gradient_keys = return_dict.keys()
         return_dict["n_samples"] = 1
         return return_dict
 
@@ -143,7 +142,7 @@ class TorchFedAvgAlgo(Algo):
             if shared_state is not None:
                 weight_manager.increment_parameters(
                     model=self.model,
-                    gradients=shared_state.values(),
+                    updates=shared_state.values(),
                     with_batch_norm_parameters=self.with_batch_norm_parameters,
                 )
 
