@@ -104,13 +104,11 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
         num_rounds=num_rounds,
         dependencies=algo_deps,
     )
-
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
 
     # read the results from saved performances
     testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
-
     # assert that the metrics returns int(True) i.e. 1
     assert list(testtuple.test.perfs.values())[0] == 1

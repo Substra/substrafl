@@ -99,7 +99,8 @@ class EvaluationStrategy:
 
     @num_rounds.setter
     def num_rounds(self, num_rounds: int = None):
-        """Sets number of rounds (num_rounds) and checks if it is consistent with current evaluation strategy
+        """Sets number of rounds (num_rounds) and checks if it is consistent with current evaluation strategy.
+        The generator will be reset to the initial state each time num_rounds is set.
 
         Args:
             num_rounds (Optional[int]): Total number of rounds. If None the iterator may be called
@@ -109,6 +110,11 @@ class EvaluationStrategy:
         if num_rounds is not None:
             self._check_rounds_consistency(num_rounds)
         self._num_rounds = num_rounds
+        self.restart_rounds()
+
+    def restart_rounds(self):
+        """reinitializes current round to 0 (generator will start from the beginning)"""
+        self._current_round = 0
 
     def _check_rounds_consistency(self, num_rounds: Optional[int] = None):
         """Checks if the EvaluationStrategy is consistent with the number of rounds (num_rounds). If num_rounds was
