@@ -1,3 +1,4 @@
+import copy
 import datetime
 import logging
 from typing import List
@@ -58,6 +59,11 @@ def execute_experiment(
     Returns:
         ComputePlan: The generated compute plan
     """
+    train_data_nodes = copy.deepcopy(train_data_nodes)
+    aggregation_node = copy.deepcopy(aggregation_node)
+    strategy = copy.deepcopy(strategy)
+    evaluation_strategy = copy.deepcopy(evaluation_strategy)
+
     train_node_ids = [train_data_node.node_id for train_data_node in train_data_nodes]
 
     if len(train_node_ids) != len(set(train_node_ids)):
@@ -72,6 +78,9 @@ def execute_experiment(
                 f"{evaluation_strategy.num_rounds} is not {num_rounds}"
             )
     logger.info("Building the compute plan.")
+
+    # Reseting evaluation strategy
+    evaluation_strategy.restart_rounds()
 
     # create computation graph
     for _ in range(num_rounds):
@@ -94,12 +103,18 @@ def execute_experiment(
     authorized_ids = list(set([aggregation_node.node_id] + [node.node_id for node in train_data_nodes]))
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
+    # `register_operations` methods from the different nodes store the id of the already registered
+    # algorithm so we don't add them twice
+    operation_cache = dict()
+
     # Register all operations in substra
     # Define the algorithms we need and submit them
     logger.info("Submitting the algorithm to Connect.")
     composite_traintuples = []
     for train_node in train_data_nodes:
-        train_node.register_operations(client, permissions, dependencies=dependencies)
+        operation_cache = train_node.register_operations(
+            client, permissions, cache=operation_cache, dependencies=dependencies
+        )
         composite_traintuples += train_node.tuples
 
     testtuples = []
@@ -110,10 +125,8 @@ def execute_experiment(
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
     # We still need to pass the information of the editable mode.
-    aggregation_node.register_operations(
-        client,
-        permissions,
-        dependencies=Dependency(editable_mode=dependencies.editable_mode),
+    operation_cache = aggregation_node.register_operations(
+        client, permissions, cache=operation_cache, dependencies=Dependency(editable_mode=dependencies.editable_mode)
     )
 
     # Execute the compute plan

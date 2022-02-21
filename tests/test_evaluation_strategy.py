@@ -124,3 +124,26 @@ def test_docstring_examples(rounds, num_rounds, result):
                 next(evaluation_strategy)
         else:
             assert answer == next(evaluation_strategy)
+
+
+@pytest.mark.parametrize("rounds", [1, 2, 4, 10, [1], [1, 4]])
+def test_restart_rounds(rounds):
+    # tests running a second time an evaluation strategy after calling restart_rounds
+    # give the same results
+
+    n_nodes = 3
+    num_rounds = 10
+
+    # mock the test nodes
+    test_data_node = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_node] * n_nodes
+
+    evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
+    evaluation_strategy.num_rounds = num_rounds
+
+    res1 = [next(evaluation_strategy) for i in range(num_rounds)]
+    evaluation_strategy.restart_rounds()
+
+    res2 = [next(evaluation_strategy) for i in range(num_rounds)]
+
+    assert res1 == res2
