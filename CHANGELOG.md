@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improved
 
 - feat: `EvaluationStrategy` can now be reinitialized (#90)
+- Refactoring `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo`  (#92):
+  - replace the `_preprocess` and `_postprocess` functions by `_local_train` and `_local_predict`
+  - the user can override the `_get_len_from_x` function to get the number of samples in the dataset from x
+  - `batch_size` is now a required argument, and a warning is issued if it is None
+- The `connectlib.index_generator.np_index_generator.NpIndexGenerator` class now works with `torch.utils.data.DataLoader`, with `num_workers` > 0 (#92)
+- The benchmark uses `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` instead of its own custom algorithm (#92)
 
 ### Added
 

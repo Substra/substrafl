@@ -67,7 +67,6 @@ if __name__ == "__main__":
 
     with cls_parameters_path.open("rb") as f:
         cls_parameters = cloudpickle.load(f)
-    print(cls_parameters)
 
     cls_cloudpickle_path = Path(__file__).parent / "{connectlib_folder}" / "cls_cloudpickle"
 
