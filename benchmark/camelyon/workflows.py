@@ -8,12 +8,12 @@ from classic_algos.nn import Weldon
 from common.data_managers import CamelyonDataset
 from common.data_managers import DataLoaderWithMemory
 from pure_connectlib import register_assets
-from pure_connectlib.custom_torch_algo import TorchFedAvgAlgo
 from pure_torch.strategies import basic_fed_avg
 from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 
 from connectlib import execute_experiment
+from connectlib.algorithms.pytorch.fed_avg import TorchFedAvgAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.strategies import FedAVG
@@ -84,44 +84,36 @@ def connectlib_fed_avg(
                 criterion=criterion,
                 optimizer=optimizer,
                 num_updates=n_local_steps,
+                batch_size=batch_size,
             )
 
-        def local_training(self, x, y):
+        def _local_train(self, x, y):
             # The opener only give all the paths in x and nothin in y
-            indexes = np.loadtxt(Path(x[0]) / "index.csv", delimiter=",", dtype=str)
-            dataset = CamelyonDataset(indexes, Path(x[0]))
+            dataset = CamelyonDataset(data_indexes=x.indexes, img_path=x.path)
 
-            # BUG: The data loading is not properly done here as we don't save the state of the data loader
-            # ofter each round. As we do multiple epoch per round of the strategy this do not have a significant
-            # impact on the results.
-            dataloader = DataLoaderWithMemory(
+            dataloader = DataLoader(
                 dataset,
-                batch_size=batch_size,
-                shuffle=True,
-                drop_last=False,
+                batch_sampler=self._index_generator,
                 num_workers=num_workers,
             )
 
             # Train the model
-            for _ in range(self.num_updates):
-                x_batch, y_batch = dataloader.get_samples()
+            for x_batch, y_batch in dataloader:
 
                 # Forward pass
-                y_pred = self.model(x_batch)[0].reshape(-1)
+                y_pred = self._model(x_batch)[0].reshape(-1)
 
                 # Compute Loss
-                loss = self.criterion(y_pred, y_batch)
-                self.optimizer.zero_grad()
+                loss = self._criterion(y_pred, y_batch)
+                self._optimizer.zero_grad()
                 loss.backward()
-                self.optimizer.step()
+                self._optimizer.step()
 
-                if self.scheduler is not None:
-                    self.scheduler.step()
+                if self._scheduler is not None:
+                    self._scheduler.step()
 
-        def local_prediction(self, x):
-            indexes = np.loadtxt(Path(x[0]) / "index.csv", delimiter=",", dtype=str)
-            indexes = indexes[np.argsort(indexes[:, 0])]
-            dataset = CamelyonDataset(indexes, Path(x[0]))
+        def _local_predict(self, x):
+            dataset = CamelyonDataset(data_indexes=x.indexes, img_path=x.path)
             dataloader = DataLoader(
                 dataset,
                 batch_size=batch_size,
@@ -133,7 +125,7 @@ def connectlib_fed_avg(
             y_true = np.array([])
             with torch.no_grad():
                 for X, y in dataloader:
-                    y_pred.append(self.model(X)[0].reshape(-1))
+                    y_pred.append(self._model(X)[0].reshape(-1))
                     y_true = np.append(y_true, y.numpy())
 
             y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
@@ -148,7 +140,6 @@ def connectlib_fed_avg(
         pypi_dependencies=["torch", "numpy", "sklearn", "classic-algos==1.6.0"],
         local_code=[
             base / "common" / "data_managers.py",
-            base / "pure_connectlib" / "custom_torch_algo.py",
         ],
     )
 

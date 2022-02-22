@@ -1,5 +1,5 @@
 import math
-import os
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -20,7 +20,6 @@ class DataLoaderWithMemory:
         drop_last (bool, optional): Drop the last batch at the end of the epoch if ti's size is smaller
             than the batch size. Defaults to False.
         num_workers (int, optional): Number of torch worker to use. Defaults to 0.
-
     """
 
     def __init__(
@@ -58,7 +57,7 @@ class CamelyonDataset(Dataset):
 
     def __init__(self, data_indexes, img_path) -> None:
         self.data_indexes = data_indexes
-        self.img_path = img_path
+        self.img_path = Path(img_path)
 
     def __len__(self):
         return len(self.data_indexes)
@@ -66,9 +65,7 @@ class CamelyonDataset(Dataset):
     def __getitem__(self, index):
         """Get the needed item from index and preprocess them on the fly."""
         sample_file_path, target = self.data_indexes[index]
-        x = torch.from_numpy(
-            np.load(os.path.join(self.img_path, sample_file_path + ".npy")).astype(np.float32)[:, 3:]
-        ).to(device)
+        x = torch.from_numpy(np.load(self.img_path / (sample_file_path + ".npy")).astype(np.float32)[:, 3:]).to(device)
 
         y = torch.tensor(int(target == "Tumor")).type(torch.float32).to(device)
 

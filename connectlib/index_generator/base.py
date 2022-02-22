@@ -3,6 +3,8 @@ import logging
 from typing import Any
 from typing import Optional
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,6 +17,10 @@ class BaseIndexGenerator(abc.ABC):
         self,
         n_samples: int,
         batch_size: Optional[int],
+        num_updates: int,
+        shuffle: bool = True,
+        drop_last: bool = True,
+        seed: int = 42,
     ):
         """Init method
 
@@ -54,6 +60,31 @@ class BaseIndexGenerator(abc.ABC):
         else:
             self._batch_size = batch_size
 
+        self._rng = np.random.default_rng(seed)
+        self._shuffle: bool = shuffle
+        self._drop_last: bool = drop_last
+        self._num_updates: int = num_updates
+        self._counter: int = 0
+        self._n_epoch_generated: int = 0
+
+    @property
+    def counter(self) -> int:
+        """Number of calls made to the iterator
+
+        Returns:
+            int: Number of calls made to the iterator
+        """
+        return self._counter
+
+    @property
+    def n_epoch_generated(self) -> int:
+        """Number of epochs generated
+
+        Returns:
+            int: number of epochs generated
+        """
+        return self._n_epoch_generated
+
     def __iter__(self) -> "BaseIndexGenerator":
         """Required methods for generators."""
         return self
@@ -61,10 +92,21 @@ class BaseIndexGenerator(abc.ABC):
     @abc.abstractclassmethod
     def __next__(self) -> Any:
         """Shall return a python object (batch_index) which
-        is used for selecting each batch from the output of the _preprocess method during training in this way :
+        is used for selecting each batch in the training loop method during training in this way :
         `x[batch_index], y[batch_index]`
+
+        Shall also update self._counter and self._n_epoch_generated
+
+        After self._num_updates call, raise StopIteration.
 
         Returns:
             Any: The batch indexes.
         """
         raise NotImplementedError
+
+    def reset_counter(self):
+        """Reset the counter to
+        prepare for the next generation
+        of batches.
+        """
+        self._counter = 0

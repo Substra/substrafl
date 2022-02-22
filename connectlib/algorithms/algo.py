@@ -2,8 +2,6 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Any
 from typing import Dict
-from typing import Tuple
-from typing import Union
 
 import numpy as np
 
@@ -87,34 +85,3 @@ class Algo:
         """
 
         raise NotImplementedError
-
-    def _preprocess(self, x: Any, y: Any = None) -> Union[Any, Tuple[Any, Any]]:
-        """A 'glue' function to be used at the beginning of the `train` and `predict` methods to adapt the output
-        of the opener to the expected type of the `train` and `predict` methods.
-
-        Args:
-            x (Any): Could be the input of the train methods hence the results of the `get_x` method of the opener.
-            y (Any): Could be the input of the train methods hence the results of the `get_y` method of the opener.
-
-        Returns:
-            Union[Any, Tuple[Any, Any]]: (x, y) or y under an adapted format.
-        """
-
-        # For train
-        if y is not None:
-            return x, y
-
-        # For predict
-        return x
-
-    def _postprocess(self, y_proba: Any) -> Any:
-        """A 'glue' function to be used at the end of the `predict` method to adapt the output
-        of the opener to the expected input of the metric `save_prediction` function.
-
-        Args:
-            y_proba (Any): Could be the output of the predict method.
-
-        Returns:
-            Any: y_proba under an adapted format.
-        """
-        return y_proba

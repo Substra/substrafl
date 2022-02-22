@@ -16,9 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 def execute_experiment(
-    # TODO: this is getting hard to read, we need to think of an other way to call execute_experiment.
-    # This should be done when we add the algo strategy layer.
-    # E.g.: create a dependencies pydantic class with three args
     client: substra.Client,
     algo: Algo,
     strategy: Strategy,
@@ -98,8 +95,6 @@ def execute_experiment(
             )
 
     # Computation graph is created
-    # TODO: static checks on the graph
-
     authorized_ids = list(set([aggregation_node.node_id] + [node.node_id for node in train_data_nodes]))
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 

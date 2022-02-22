@@ -1,15 +1,31 @@
 import shutil
+from pathlib import Path
 
 import numpy as np
 import substratools as tools
 
 
+class Data:
+    def __init__(self, path: Path):
+        index_path = Path(path) / "index.csv"
+        assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
+        self.indexes = np.loadtxt(index_path, delimiter=",", dtype=str)
+        self.indexes = self.indexes[np.argsort(self.indexes[:, 0])]
+        self.path = path
+
+    def __len__(self):
+        return len(self.indexes)
+
+
 class MnistOpener(tools.Opener):
     def get_X(self, folders):  # noqa: N802
-        return folders
+        assert len(folders) == 1, "Only one data sample accepted here"
+        return Data(folders[0])
 
     def get_y(self, folders):
-        return folders
+        data = self.get_X(folders)
+        y_true = np.array([int(x == "Tumor") for x in data.indexes[:, 1]])
+        return y_true
 
     def save_predictions(self, y_pred, path):
         np.save(path, y_pred)

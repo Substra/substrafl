@@ -14,8 +14,8 @@ from tests import utils
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.slow
 @pytest.mark.substra
+@pytest.mark.slow
 def test_pytorch_fedavg_algo(
     network,
     torch_linear_model,
@@ -23,7 +23,11 @@ def test_pytorch_fedavg_algo(
     test_linear_nodes,
     aggregation_node,
 ):
-    # End to end test for torch fed avg algorithm
+    """End to end test for torch fed avg algorithm."""
+    num_updates = 100
+    num_rounds = 3
+    expected_performance = 0.0127768361
+
     seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
@@ -37,25 +41,16 @@ def test_pytorch_fedavg_algo(
                 model=perceptron,
                 criterion=torch.nn.MSELoss(),
                 optimizer=optimizer,
-                num_updates=100,
+                num_updates=num_updates,
+                batch_size=32,
             )
 
-        def _preprocess(self, x: Any, y: Any = None) -> torch.Tensor:
-            # convert numpy array to tensor.
-            if y is not None:
-                return (
-                    torch.from_numpy(x).float(),
-                    torch.from_numpy(y).float(),
-                )
-            else:
-                return torch.from_numpy(x).float()
+        def _local_train(self, x: Any, y: Any):
+            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
 
-        def _postprocess(self, y_pred: torch.Tensor):
-            # convert tensor to numpy array for evaluation.
-            y_pred = y_pred.detach().numpy()
-            return y_pred
-
-    num_rounds = 3
+        def _local_predict(self, x: Any) -> Any:
+            y_pred = super()._local_predict(torch.from_numpy(x).float())
+            return y_pred.detach().numpy()
 
     my_algo = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["torch", "numpy"], editable_mode=True)
@@ -81,4 +76,4 @@ def test_pytorch_fedavg_algo(
     # read the results from saved performances
     testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
-    assert list(testtuple.test.perfs.values())[0] == pytest.approx(0.012787394571974166, rel=10e-6)
+    assert list(testtuple.test.perfs.values())[0] == pytest.approx(expected_performance, rel=10e-6)
