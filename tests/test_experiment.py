@@ -7,6 +7,7 @@ from connectlib import execute_experiment
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.remote.methods import remote_data
 from connectlib.strategies import FedAVG
 
 
@@ -19,7 +20,19 @@ def test_execute_experiment_has_no_side_effect(network, train_linear_nodes, test
 
     class MyAlgo(Algo):
         # No need for full Algo as it is never really submitted to Substra for a run
-        pass
+        @remote_data
+        def train(self, x, y, shared_state):
+            pass
+
+        @remote_data
+        def predict(self, x, shared_state):
+            pass
+
+        def load(self, path):
+            pass
+
+        def save(self, path):
+            pass
 
     num_rounds = 2
     my_algo0 = MyAlgo()
