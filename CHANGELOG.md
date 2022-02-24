@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: `execute_experiment` has no side effects on its arguments (#90)
 - fix: `Dependency.local_package` are installed in no editable mode and additionally accepts `pyproject.yaml` as configuration file (#88)
 - fix: `execute_experiment` accepts `None` as `evaluation_strategy` (#83)
+- fix: The `connectlib.algorithms.algo.Algo` `abstractmethod` decorator is now taken into account (#96)
 
 ### Improved
 

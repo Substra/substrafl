@@ -1,24 +1,25 @@
-from abc import abstractmethod
+import abc
 from pathlib import Path
 from typing import Any
 from typing import Dict
 
 import numpy as np
 
-from connectlib.remote import remote_data
-
 Weights = Dict[str, np.ndarray]
 
 
-class Algo:
+class Algo(abc.ABC):
     """The base class to be inherited for connectlib algorithms."""
 
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
 
-    @remote_data
-    @abstractmethod
+    # The abstractmethod decorator has no effect when combined with @remote_data
+    # and @remote_data is there to indicate that it should be on the child class
+    # train function
+    # @remote_data
+    @abc.abstractmethod
     def train(self, x: Any, y: Any, shared_state: Weights) -> Weights:
         """Will be executed for each TrainDataNodes.
 
@@ -36,8 +37,11 @@ class Algo:
         """
         raise NotImplementedError
 
-    @remote_data
-    @abstractmethod
+    # The abstractmethod decorator has no effect when combined with @remote_data
+    # and @remote_data is there to indicate that it should be on the child class
+    # predict function
+    # @remote_data
+    @abc.abstractmethod
     def predict(self, x: Any, shared_state: Weights) -> Any:
         """Will be executed for each TestDataNodes. The returned object will be passed to the `save_predictions`
         function of the opener. The predictions are then loaded and used to calculate the metric.
@@ -55,7 +59,7 @@ class Algo:
         """
         raise NotImplementedError
 
-    @abstractmethod
+    @abc.abstractmethod
     def load(self, path: Path) -> Any:
         """Executed at the beginning of each step of the computation graph so for each organization, at each step of
         the computation graph the previous local state can be retrieved.
@@ -72,7 +76,7 @@ class Algo:
 
         raise NotImplementedError
 
-    @abstractmethod
+    @abc.abstractmethod
     def save(self, path: Path):
         """Executed at the end of each step of the computation graph so for each organization,
         the local state can be saved.
