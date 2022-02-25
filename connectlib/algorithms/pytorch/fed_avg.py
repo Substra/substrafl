@@ -158,6 +158,7 @@ class TorchFedAvgAlgo(Algo):
     ):
         """Initialize"""
         super().__init__()
+
         self._model = model
         self._criterion = criterion
         self._optimizer = optimizer
@@ -170,6 +171,15 @@ class TorchFedAvgAlgo(Algo):
 
         if batch_size is None:
             logger.warning("Batch size is none, the whole dataset will be used for each update.")
+
+    @property
+    def model(self) -> torch.nn.Module:
+        """Model exposed when the user downloads the model
+
+        Returns:
+            torch.nn.Module: model
+        """
+        return self._model
 
     @abc.abstractmethod
     def _local_train(

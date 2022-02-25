@@ -15,6 +15,16 @@ class Algo(abc.ABC):
         self.args = args
         self.kwargs = kwargs
 
+    @property
+    @abc.abstractmethod
+    def model(self) -> Any:
+        """Model exposed when the user downloads the model
+
+        Returns:
+            Any: model
+        """
+        raise NotImplementedError
+
     # The abstractmethod decorator has no effect when combined with @remote_data
     # and @remote_data is there to indicate that it should be on the child class
     # train function

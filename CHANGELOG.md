@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - feat: make a base class for the index generator and document it (#85)
+- The `Algo` now exposes a `model` property to get the model after downloading it from Connect (#99)
 
 ## [0.7.0] - 2022-02-01
 

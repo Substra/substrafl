@@ -20,6 +20,10 @@ def test_execute_experiment_has_no_side_effect(network, train_linear_nodes, test
 
     class MyAlgo(Algo):
         # No need for full Algo as it is never really submitted to Substra for a run
+        @property
+        def model(self):
+            return None
+
         @remote_data
         def train(self, x, y, shared_state):
             pass
