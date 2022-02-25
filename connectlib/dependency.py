@@ -1,9 +1,9 @@
 from pathlib import Path
 from pathlib import PosixPath
 from typing import List
-from typing import Optional
 
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import validator
 
 from connectlib.exceptions import InvalidPathError
@@ -18,18 +18,18 @@ class Dependency(BaseModel):
             access to owkin's pypi and configure accordingly your pip.conf.
             If set to True, it will be the one installed in editable mode from your python environment.
             Default to False.
-        dependencies (Optional[List[str]]): Python packages installable form pypi.
-        local_dependencies (Optional[List[Path]]): Local installable packages. The command
+        dependencies (List[str]): Python packages installable from pypi.
+        local_dependencies (List[Path]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
-        local_code (Optional[List[Path]]): Local relative imports used by your script. All files / folders must be
+        local_code (List[Path]): Local relative imports used by your script. All files / folders must be
             at the same level than your script.
     """
 
     editable_mode: bool = False
-    pypi_dependencies: Optional[List[str]] = list()
-    local_dependencies: Optional[List[PosixPath]] = list()
-    local_code: Optional[List[PosixPath]] = list()
+    pypi_dependencies: List[str] = Field(default_factory=list)
+    local_dependencies: List[PosixPath] = Field(default_factory=list)
+    local_code: List[PosixPath] = Field(default_factory=list)
 
     @validator("local_dependencies", "local_code")
     def resolve_path(cls, v):  # noqa: N805
