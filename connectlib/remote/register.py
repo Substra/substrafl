@@ -216,7 +216,7 @@ def pypi_lib_install_command(lib_modules: List, operation_dir: Path, python_majo
 def create_substra_algo_files(  # noqa: C901
     remote_struct: RemoteStruct,
     install_libraries: bool,
-    dependencies: Dependency = Dependency(),  # noqa: B008
+    dependencies: Dependency,
 ) -> Tuple[Path, Path]:
     """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
         an archive (.tar.gz).
@@ -237,7 +237,6 @@ def create_substra_algo_files(  # noqa: C901
         Returns:
             Tuple[Path, Path]: The archive path and the description file path.
     """
-
     operation_dir = Path(tempfile.mkdtemp())
     connectlib_internal = operation_dir / CONNECTLIB_FOLDER
     connectlib_internal.mkdir()
@@ -363,7 +362,7 @@ def register_algo(
     remote_struct: RemoteStruct,
     is_composite: bool,
     permissions: substra.sdk.schemas.Permissions,
-    dependencies: Dependency = Dependency(),  # noqa: B008
+    dependencies: Dependency,
 ) -> str:
     """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
 
@@ -372,7 +371,7 @@ def register_algo(
         remote_struct (RemoteStruct): The substra submittable algorithm representation.
         is_composite (bool): Either to register a composite or an aggregate algorithm.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-        dependencies (Dependency): Algorithm dependencies. Default to Dependency().
+        dependencies (Dependency): Algorithm dependencies.
     Returns:
         str: Substra algorithm key.
     """

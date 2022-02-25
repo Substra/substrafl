@@ -54,6 +54,6 @@ class TestDataNode(Node):
         self,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
-        dependencies: Dependency = Dependency(),  # noqa: B008
+        dependencies: Dependency,
     ):
         pass
