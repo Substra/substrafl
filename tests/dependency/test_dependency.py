@@ -86,6 +86,9 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
+            @property
+            def model(self):
+                return None
 
             @remote_data
             def train(
@@ -123,6 +126,9 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
+            @property
+            def model(self):
+                return None
 
             @remote_data
             def train(
@@ -168,6 +174,9 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
+            @property
+            def model(self):
+                return None
 
             @remote_data
             def train(
@@ -213,6 +222,9 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
+            @property
+            def model(self):
+                return None
 
             @remote_data
             def train(
@@ -262,6 +274,9 @@ class TestLocalDependency:
         class MyAlgo(Algo):
             # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
             # pytest calls it)
+            @property
+            def model(self):
+                return None
 
             @remote_data
             def train(

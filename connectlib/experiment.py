@@ -128,8 +128,8 @@ def execute_experiment(
                 "num_rounds set in evaluation_strategy does not match num_rounds set in the experiment: "
                 f"{evaluation_strategy.num_rounds} is not {num_rounds}"
             )
-    # Reseting evaluation strategy
-    evaluation_strategy.restart_rounds()
+        # Reset the evaluation strategy
+        evaluation_strategy.restart_rounds()
 
     logger.info("Building the compute plan.")
 
