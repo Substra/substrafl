@@ -76,6 +76,7 @@ def execute_experiment(
     num_rounds: int,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
+    clean_models: bool = True,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
     your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
@@ -104,6 +105,9 @@ def execute_experiment(
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, optional): Dependencies of the algorithm. It must be defined from
             the connectlib Dependency class. Defaults None.
+        clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
+            if you want to download or re-use intermediary models. This causes the disk space to fill
+            quickly so should be set to True unless needed. Default to True.
 
     Returns:
         ComputePlan: The generated compute plan
@@ -166,7 +170,7 @@ def execute_experiment(
             aggregatetuples=aggregation_tuples,
             testtuples=testtuples,
             tag=str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
-            clean_models=True,  # set it to False if users need the intermediary models
+            clean_models=clean_models,
         ),
         auto_batching=False,
     )

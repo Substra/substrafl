@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `batch_size` is now a required argument, and a warning is issued if it is None
 - The `connectlib.index_generator.np_index_generator.NpIndexGenerator` class now works with `torch.utils.data.DataLoader`, with `num_workers` > 0 (#92)
 - The benchmark uses `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` instead of its own custom algorithm (#92)
+- Add the `clean_models` option to the `execute_experiment` function (#100)
 
 ### Added
 
