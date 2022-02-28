@@ -120,6 +120,7 @@ def numpy_datasets(network, session_dir, default_permissions):
     dataset_key = assets_factory.add_numpy_datasets(
         datasets_permissions=[default_permissions] * network.n_nodes,
         clients=network.clients,
+        msp_ids=network.msp_ids,
         tmp_folder=session_dir,
     )
 

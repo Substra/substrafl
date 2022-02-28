@@ -29,6 +29,30 @@ def _assert_model_parameters_equal(model1, model2):
         assert torch.equal(params1, params2)
 
 
+def _download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
+    # Retrieve composite train tuple key
+    train_tasks = network.clients[0].list_composite_traintuple(
+        filters=[
+            f"composite_traintuple:compute_plan_key:{compute_plan.key}",
+            f"composite_traintuple:rank:{rank}",
+        ]
+    )
+
+    local_models = list()
+    for task in train_tasks:
+        for model in task.composite.models:
+            client = None
+            if task.worker == network.msp_ids[0]:
+                client = network.clients[0]
+            elif task.worker == network.msp_ids[1]:
+                client = network.clients[1]
+            client.download_model(model.key, session_dir)
+            model_path = session_dir / f"model_{model.key}"
+            if model.category == ModelType.head:
+                local_models.append(my_algo.load(model_path).model)
+    return local_models
+
+
 @pytest.mark.substra
 @pytest.mark.slow
 def test_pytorch_fedavg_algo_weights(
@@ -84,28 +108,14 @@ def test_pytorch_fedavg_algo_weights(
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
+        clean_models=False,
     )
 
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
 
-    def _download_composite_models_by_rank(rank: int):
-        # Retrieve composite train tuple key
-        train_tasks = network.clients[0].list_composite_traintuple(
-            filters=[f"compositetraintuple:compute_plan_key:{compute_plan.key}", f"compositetraintuple:rank:{rank}"]
-        )
-
-        local_models = list()
-        for task in train_tasks:
-            for model in task.composite.models:
-                network.clients[0].download_model(model.key, session_dir)
-                model_path = session_dir / f"model_{model.key}"
-                if model.category == ModelType.head:
-                    local_models.append(my_algo.load(model_path).model)
-        return local_models
-
-    rank_0_local_models = _download_composite_models_by_rank(rank=0)
-    rank_2_local_models = _download_composite_models_by_rank(rank=2)
+    rank_0_local_models = _download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=0)
+    rank_2_local_models = _download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=2)
 
     # Download the aggregate output
     aggregate_task = network.clients[0].list_aggregatetuple(
