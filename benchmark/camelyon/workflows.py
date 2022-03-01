@@ -159,6 +159,7 @@ def connectlib_fed_avg(
         aggregation_node=aggregation_node,
         num_rounds=n_rounds,
         dependencies=algo_deps,
+        experiment_folder=Path(__file__).resolve().parent / "experiment_folder",
     )
 
     # Read the results from saved performances

@@ -146,6 +146,7 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
+        experiment_folder=session_dir / "experiment_folder",
     )
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
