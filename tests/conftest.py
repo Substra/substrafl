@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import multiprocessing
 import shutil
 from pathlib import Path
 
@@ -45,6 +46,13 @@ def pytest_addoption(parser):
         help="Run the tests on the backend deployed by connect-test nightly (remote mode). "
         "Otherwise run the tests only on the default remote backend.",
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_multiprocessing_variable():
+    # https://github.com/pytest-dev/pytest-flask/issues/104
+    # necessary on OS X to run multiprocessing
+    multiprocessing.set_start_method("fork")
 
 
 @pytest.fixture(scope="session")
