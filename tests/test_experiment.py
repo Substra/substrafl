@@ -13,7 +13,9 @@ from connectlib.strategies import FedAVG
 
 # mocking the add_compute_plan as we don't want to test Substra, just the execute_experiment
 @patch("substra.Client.add_compute_plan", MagicMock(return_value=np.recarray(1, dtype=[("key", int)])))
-def test_execute_experiment_has_no_side_effect(network, train_linear_nodes, test_linear_nodes, aggregation_node):
+def test_execute_experiment_has_no_side_effect(
+    network, train_linear_nodes, test_linear_nodes, aggregation_node, session_dir
+):
     """Ensure that the execute_experiment run twice won't fail (which would be the case if the variables passed
     changed during the run). It mocks the add_compute_plan() of Substra so that substra code is never really
     executed"""
@@ -54,6 +56,7 @@ def test_execute_experiment_has_no_side_effect(network, train_linear_nodes, test
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     # this second run fails if the variables changed in the first run
@@ -66,6 +69,7 @@ def test_execute_experiment_has_no_side_effect(network, train_linear_nodes, test
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     assert sum(len(node.tuples) for node in test_linear_nodes) == 0

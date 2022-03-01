@@ -108,6 +108,7 @@ def test_pytorch_fedavg_algo_weights(
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
+        experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
     )
 
@@ -146,6 +147,7 @@ def test_pytorch_fedavg_algo_performance(
     train_linear_nodes,
     test_linear_nodes,
     aggregation_node,
+    session_dir,
 ):
     """End to end test for torch fed avg algorithm."""
     num_updates = 100
@@ -195,6 +197,7 @@ def test_pytorch_fedavg_algo_performance(
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     # Wait for the compute plan to be finished

@@ -1,9 +1,13 @@
 import copy
 import datetime
+import json
 import logging
+from pathlib import Path
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 import substra
 
@@ -12,6 +16,8 @@ from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.nodes import AggregationNode
 from connectlib.nodes import TrainDataNode
+from connectlib.nodes.node import OperationKey
+from connectlib.remote.methods import RemoteStruct
 from connectlib.strategies import Strategy
 
 logger = logging.getLogger(__name__)
@@ -23,7 +29,7 @@ def _register_operations(
     aggregation_node: AggregationNode,
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
-) -> Tuple[List[dict], List[dict], List[dict]]:
+) -> Tuple[List[dict], List[dict], List[dict], Dict[RemoteStruct, OperationKey]]:
     """Register the operations in Substra: define the algorithms we need and submit them
 
     Args:
@@ -34,7 +40,8 @@ def _register_operations(
         dependencies (Dependency): dependencies of the train algo
 
     Returns:
-        Tuple[List[dict], List[dict], List[dict]]: composite_traintuples, aggregation_tuples, testtuples specifications
+        Tuple[List[dict], List[dict], List[dict], Dict[RemoteStruct, OperationKey]]: composite_traintuples,
+            aggregation_tuples, testtuples specifications, operation_cache
     """
     # `register_operations` methods from the different nodes store the id of the already registered
     # algorithm so we don't add them twice
@@ -64,7 +71,64 @@ def _register_operations(
     )
     aggregation_tuples = aggregation_node.tuples
 
-    return composite_traintuples, aggregation_tuples, testtuples
+    return composite_traintuples, aggregation_tuples, testtuples, operation_cache
+
+
+def _save_experiment_summary(
+    experiment_folder: Path,
+    compute_plan: substra.sdk.models.ComputePlan,
+    strategy: Strategy,
+    num_rounds: int,
+    algo: Algo,
+    operation_cache: Dict[RemoteStruct, OperationKey],
+    train_data_nodes: TrainDataNode,
+    aggregation_node: AggregationNode,
+    evaluation_strategy: EvaluationStrategy,
+    timestamp: str,
+):
+    """Saves the experiment summary in `experiment_folder`, with the name format `{timestamp}_{compute_plan.key}.json`
+
+    Args:
+        experiment_folder (Union[str, Path]): path to the folder where the experiment summary is saved.
+        compute_plan (substra.sdk.models.ComputePlan): compute_plan
+        strategy (connectlib.strategies.Strategy): strategy
+        num_rounds (int): num_rounds
+        algo (connectlib.algorithms.Algo): algo
+        operation_cache (Dict[RemoteStruct, OperationKey]): operation_cache
+        train_data_nodes (connectlib.nodes.TrainDataNode): train_data_nodes
+        aggregation_node (connectlib.nodes.AggregationNode): aggregation_node
+        evaluation_strategy (connectlib.evaluation_strategy.EvaluationStrategy): evaluation_strategy
+        timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
+    """
+    # create the experiment folder if it doesn't exist
+    experiment_folder = Path(experiment_folder)
+    experiment_folder.mkdir(exist_ok=True)
+    experiment_summary = dict()
+
+    # add attributes of interest and summaries of the classes to the experiment summary
+    experiment_summary["compute_plan_key"] = str(compute_plan.key)
+    experiment_summary["strategy"] = type(strategy).__name__
+    experiment_summary["num_rounds"] = num_rounds
+    experiment_summary["algo"] = algo.summary()
+    experiment_summary["algo_keys"] = {
+        operation_cache[algo]: {
+            "type": str(algo.cls),
+            "method_name": str(algo.remote_cls_parameters["kwargs"]["method_name"]),
+        }
+        for algo in operation_cache
+    }
+    experiment_summary["train_data_nodes"] = [train_data_node.summary() for train_data_node in train_data_nodes]
+    experiment_summary["test_data_nodes"] = []
+    if evaluation_strategy is not None:
+        experiment_summary["test_data_nodes"] = [
+            test_data_node.summary() for test_data_node in evaluation_strategy.test_data_nodes
+        ]
+    experiment_summary["aggregation_node"] = aggregation_node.summary()
+
+    # Save the experiment summary
+    summary_file = experiment_folder / f"{timestamp}_{compute_plan.key}.json"
+    summary_file.write_text(json.dumps(experiment_summary, indent=4))
+    logger.info(("Experiment summary saved to {0}").format(summary_file))
 
 
 def execute_experiment(
@@ -74,6 +138,7 @@ def execute_experiment(
     train_data_nodes: List[TrainDataNode],
     aggregation_node: AggregationNode,
     num_rounds: int,
+    experiment_folder: Union[str, Path],
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
@@ -94,6 +159,8 @@ def execute_experiment(
 
     Finally, the compute plan is sent and executed.
 
+    The experiment summary is saved in `experiment_folder`, with the name format `{timestamp}_{compute_plan.key}.json`
+
     Args:
         client (substra.Client): A substra client to interact with the connect platform
         algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
@@ -105,6 +172,7 @@ def execute_experiment(
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, optional): Dependencies of the algorithm. It must be defined from
             the connectlib Dependency class. Defaults None.
+        experiment_folder (Union[str, Path]): path to the folder where the experiment summary is saved.
         clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
             quickly so should be set to True unless needed. Default to True.
@@ -154,7 +222,7 @@ def execute_experiment(
 
     # Computation graph is created
     logger.info("Submitting the algorithm to Connect.")
-    composite_traintuples, aggregation_tuples, testtuples = _register_operations(
+    composite_traintuples, aggregation_tuples, testtuples, operation_cache = _register_operations(
         client=client,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
@@ -164,17 +232,31 @@ def execute_experiment(
 
     # Execute the compute plan
     logger.info("Submitting the compute plan to Connect.")
+    timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
     compute_plan = client.add_compute_plan(
         substra.sdk.schemas.ComputePlanSpec(
             composite_traintuples=composite_traintuples,
             aggregatetuples=aggregation_tuples,
             testtuples=testtuples,
-            tag=str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")),
+            tag=timestamp,
             clean_models=clean_models,
         ),
         auto_batching=False,
     )
-
     logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
+
+    # save the experiment summary in experiment_folder
+    _save_experiment_summary(
+        experiment_folder=experiment_folder,
+        compute_plan=compute_plan,
+        strategy=strategy,
+        num_rounds=num_rounds,
+        algo=algo,
+        operation_cache=operation_cache,
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        evaluation_strategy=evaluation_strategy,
+        timestamp=timestamp,
+    )
 
     return compute_plan

@@ -420,3 +420,25 @@ class TorchFedAvgAlgo(Algo):
             path,
         )
         assert path.is_file(), f'Did not save the model properly {list(path.parent.glob("*"))}'
+
+    def summary(self):
+        """Summary of the class to be exposed in the experiment summary file
+
+        Returns:
+            summary (dict): a json-serializable dict with the attributes the user wants to store
+        """
+        summary = super().summary()
+        summary.update(
+            {
+                "model": str(type(self._model)),
+                "criterion": str(type(self._criterion)),
+                "optimizer": {
+                    "type": str(type(self._optimizer)),
+                    "parameters": self._optimizer.defaults,
+                },
+                "scheduler": None if self._scheduler is None else str(type(self._scheduler)),
+                "num_updates": self._num_updates,
+                "batch_size": self._batch_size,
+            }
+        )
+        return summary

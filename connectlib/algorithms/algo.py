@@ -99,3 +99,20 @@ class Algo(abc.ABC):
         """
 
         raise NotImplementedError
+
+    def summary(self) -> dict:
+        """Summary of the class to be exposed in the experiment summary file
+            For heriting classes, override this function and add super.summary()
+            e.g:
+                summary = super().summary()
+                summary.update(
+                    {
+                        "attribute": self.attribute,
+                        ...
+                    }
+                )
+                return summary
+        Returns:
+            summary (dict): a json-serializable dict with the attributes the user wants to store
+        """
+        return {"type": str(type(self))}

@@ -57,3 +57,19 @@ class TestDataNode(Node):
         dependencies: Dependency,
     ):
         pass
+
+    def summary(self) -> dict:
+        """Summary of the class to be exposed in the experiment summary file
+
+        Returns:
+            summary (dict): a json-serializable dict with the attributes the user wants to store
+        """
+        summary = super().summary()
+        summary.update(
+            {
+                "data_manager_key": self.data_manager_key,
+                "data_sample_keys": self.test_data_sample_keys,
+                "metric_keys": self.metric_keys,
+            }
+        )
+        return summary
