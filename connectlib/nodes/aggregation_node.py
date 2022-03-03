@@ -23,7 +23,7 @@ class AggregationNode(Node):
 
     """
 
-    def update_states(self, operation: AggregateOperation) -> SharedStateRef:
+    def update_states(self, operation: AggregateOperation, round_idx: int) -> SharedStateRef:
         """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
         This is done in a static way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (connectlib local reference of the algorithm)
@@ -31,8 +31,9 @@ class AggregationNode(Node):
 
         Args:
             operation (AggregateOperation): Automatically generated structure returned by
-            :func:`connectlib.remote.methods.remote` decoractor. This allows to register an
-            operation and execute it later on.
+                :func:`connectlib.remote.methods.remote` decoractor. This allows to register an
+                operation and execute it later on.
+            round_idx (int): Round number, it starts by zero.
 
         Raises:
             TypeError: operation must be an AggregateOperation, make sure to docorate your (user defined) aggregate
@@ -58,6 +59,9 @@ class AggregationNode(Node):
             else None,
             "tag": "aggregate",
             "aggregatetuple_id": op_id,
+            "metadata": {
+                "round_idx": round_idx,
+            },
         }
         self.tuples.append(aggregate_tuple)
 

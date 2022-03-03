@@ -35,6 +35,7 @@ class TestDataNode(Node):
     def update_states(
         self,
         traintuple_id: str,
+        round_idx: int,
     ):
         """Creating a test tuple based on the node characteristic.
 
@@ -47,6 +48,9 @@ class TestDataNode(Node):
                 "traintuple_id": traintuple_id,
                 "data_manager_key": self.data_manager_key,
                 "test_data_sample_keys": self.test_data_sample_keys,
+                "metadata": {
+                    "round_idx": round_idx,
+                },
             }
         )
 

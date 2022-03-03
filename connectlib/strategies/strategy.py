@@ -24,6 +24,7 @@ class Strategy(ABC):
         algo: Algo,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
+        round_idx: int,
     ):
         raise NotImplementedError
 
@@ -33,6 +34,7 @@ class Strategy(ABC):
         algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
+        round_idx: int,
     ):
         raise NotImplementedError
 
