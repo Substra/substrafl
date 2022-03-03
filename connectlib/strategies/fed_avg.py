@@ -61,7 +61,7 @@ class FedAVG(Strategy):
 
         Args:
             shared_states (List[Weights]): The list of the shared_state returned by
-            the train method of the algorithm for each node.
+                the train method of the algorithm for each node.
 
         Raises:
             TypeError: The train method of your algorithm must return a shared_state
@@ -122,6 +122,7 @@ class FedAVG(Strategy):
         algo: Algo,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
+        round_idx: int,
     ):
         """One round of the Federated Averaging strategy:
             - if they exist, set the model weights to the aggregated weights on each train data nodes
@@ -133,6 +134,7 @@ class FedAVG(Strategy):
             train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local updates
             aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
                 of the models
+            round_idx (int): Round number, it starts by zero.
         """
         next_local_states = []
         states_to_aggregate = []
@@ -149,13 +151,15 @@ class FedAVG(Strategy):
                     shared_state=self.avg_shared_state,
                 ),
                 local_state=previous_local_state,
+                round_idx=round_idx,
             )
             # keep the states in a list: one/node
             next_local_states.append(next_local_state)
             states_to_aggregate.append(next_shared_state)
 
         avg_shared_state = aggregation_node.update_states(
-            self.avg_shared_states(shared_states=states_to_aggregate)  # type: ignore
+            self.avg_shared_states(shared_states=states_to_aggregate),  # type: ignore
+            round_idx=round_idx,
         )
 
         self.local_states = next_local_states
@@ -166,6 +170,7 @@ class FedAVG(Strategy):
         algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
+        round_idx: int,
     ):
 
         for test_node in test_data_nodes:
@@ -192,6 +197,10 @@ class FedAVG(Strategy):
                     fake_traintuple=True,
                 ),
                 local_state=previous_local_state,
+                round_idx=round_idx,
             )
 
-            test_node.update_states(traintuple_id=traintuple_id_ref.key)  # Init state for testtuple
+            test_node.update_states(
+                traintuple_id=traintuple_id_ref.key,
+                round_idx=round_idx,
+            )  # Init state for testtuple

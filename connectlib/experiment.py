@@ -206,11 +206,12 @@ def execute_experiment(
     logger.info("Building the compute plan.")
 
     # create computation graph
-    for _ in range(num_rounds):
+    for round_idx in range(num_rounds):
         strategy.perform_round(
             algo=algo,
             train_data_nodes=train_data_nodes,
             aggregation_node=aggregation_node,
+            round_idx=round_idx,
         )
 
         if evaluation_strategy is not None and next(evaluation_strategy):
@@ -218,6 +219,7 @@ def execute_experiment(
                 algo=algo,
                 train_data_nodes=train_data_nodes,
                 test_data_nodes=evaluation_strategy.test_data_nodes,
+                round_idx=round_idx,
             )
 
     # Computation graph is created

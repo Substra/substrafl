@@ -43,6 +43,7 @@ class TrainDataNode(Node):
     def update_states(
         self,
         operation: DataOperation,
+        round_idx: int,
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
         """Adding a composite train tuple to the list of operations to
@@ -55,6 +56,7 @@ class TrainDataNode(Node):
             operation (DataOperation): Automatically generated structure returned by
             :func:`connectlib.remote.methods.remote_data` decoractor. This allows to register an
             operation and execute it later on.
+            round_idx (int): Round number, it starts by zero.
             local_state (Optional[LocalStateRef], optional): The parent task LocalStateRef. Defaults to None.
 
         Raises:
@@ -83,7 +85,9 @@ class TrainDataNode(Node):
             else None,  # user-defined id (last aggregation node task id)
             "tag": "train",
             "composite_traintuple_id": op_id,
-            "metadata": dict(),  # TODO: might add info here so that on the platform we see what the tuple does ?
+            "metadata": {
+                "round_idx": round_idx,
+            },
         }
 
         self.tuples.append(composite_traintuple)
