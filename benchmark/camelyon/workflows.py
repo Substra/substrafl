@@ -6,29 +6,29 @@ import substra
 import torch
 from classic_algos.nn import Weldon
 from common.data_managers import CamelyonDataset
-from common.data_managers import DataLoaderWithMemory
 from pure_connectlib import register_assets
 from pure_torch.strategies import basic_fed_avg
 from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 
 from connectlib import execute_experiment
-from connectlib.algorithms.pytorch.fed_avg import TorchFedAvgAlgo
+from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.index_generator import NpIndexGenerator
 from connectlib.strategies import FedAVG
 
 
 def connectlib_fed_avg(
     trains_folders: List[Path],
     test_folder: Path,
-    seed: int = 42,
-    batch_size: int = 16,
-    num_workers: int = 0,
-    n_centers: int = 2,
-    learning_rate: int = 0.01,
-    n_rounds: int = 3,
-    n_local_steps: int = 10,
+    seed: int,
+    batch_size: int,
+    n_centers: int,
+    learning_rate: int,
+    n_rounds: int,
+    n_local_steps: int,
+    num_workers: int,
 ) -> dict:
     """Execute Weldon algorithm for a fed avg strategy with connectlib API.
 
@@ -37,18 +37,17 @@ def connectlib_fed_avg(
             per center ending with `train_k` where k is the node number. Those folder can be generated with the
             register_assets.split_dataset function.
         test_folder (Path): The folder containing the test data.
-        seed (int, optional): Random seed. Defaults to 42.
-        batch_size (int, optional): Batch size to use for the training. Defaults to 16.
-        num_workers (int, optional): Number of worker used for the data loading in torch. Defaults to 0.
-        n_centers (int, optional): Number of centers to be used for the fed avg strategy. Defaults to 2.
-        learning_rate (int, optional): Learning rate to be used. Defaults to 0.01.
-        n_rounds (int, optional): Number of rounds for the strategy to be executed. Defaults to 3.
-        n_local_steps (int, optional): Number of updates for each step of the strategy. Defaults to 10.
+        seed (int): Random seed.
+        batch_size (int): Batch size to use for the training.
+        n_centers (int): Number of centers to be used for the fed avg strategy.
+        learning_rate (int): Learning rate to be used.
+        n_rounds (int): Number of rounds for the strategy to be executed.
+        n_local_steps (int): Number of updates for each step of the strategy.
+        num_workers (int): Number of workers for the torch dataloader.
 
     Returns:
         dict: Results of the experiment.
     """
-
     # Debug clients
     clients = [substra.Client(debug=True)] * n_centers
 
@@ -85,16 +84,22 @@ def connectlib_fed_avg(
                 optimizer=optimizer,
                 num_updates=n_local_steps,
                 batch_size=batch_size,
+                get_index_generator=NpIndexGenerator,
             )
 
         def _local_train(self, x, y):
             # The opener only give all the paths in x and nothin in y
             dataset = CamelyonDataset(data_indexes=x.indexes, img_path=x.path)
 
+            multiprocessing_context = None
+            if num_workers != 0:
+                multiprocessing_context = torch.multiprocessing.get_context("spawn")
+
             dataloader = DataLoader(
                 dataset,
                 batch_sampler=self._index_generator,
                 num_workers=num_workers,
+                multiprocessing_context=multiprocessing_context,
             )
 
             # Train the model
@@ -114,11 +119,17 @@ def connectlib_fed_avg(
 
         def _local_predict(self, x):
             dataset = CamelyonDataset(data_indexes=x.indexes, img_path=x.path)
+
+            multiprocessing_context = None
+            if num_workers != 0:
+                multiprocessing_context = torch.multiprocessing.get_context("spawn")
+
             dataloader = DataLoader(
                 dataset,
                 batch_size=batch_size,
                 drop_last=False,
                 num_workers=num_workers,
+                multiprocessing_context=multiprocessing_context,
             )
 
             y_pred = []
@@ -165,7 +176,7 @@ def connectlib_fed_avg(
     # Read the results from saved performances
     testtuples = clients[1].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
 
-    # Reseting the clients
+    # Resetting the clients
     # BUG: if we don't reset clients, substra tries to find an algo that do not exist
     # TODO: investigate
     del clients
@@ -177,13 +188,13 @@ def connectlib_fed_avg(
 def torch_fed_avg(
     trains_folders: List[Path],
     test_folder: Path,
-    seed: int = 42,
-    batch_size: int = 16,
-    num_workers: int = 0,
-    n_centers: int = 2,
-    learning_rate: int = 0.01,
-    n_rounds: int = 3,
-    n_local_steps: int = 10,
+    seed: int,
+    batch_size: int,
+    n_centers: int,
+    learning_rate: int,
+    n_rounds: int,
+    n_local_steps: int,
+    num_workers: int,
 ) -> float:
     """Execute Weldon algorithm for a fed avg strategy implemented in pure torch and python.
 
@@ -192,18 +203,17 @@ def torch_fed_avg(
             per center ending with `train_k` where k is the number of the node. Those folder can be generated with the
             register_assets.split_dataset function.
         test_folder (Path): The folder containing the test data.
-        seed (int, optional): Random seed. Defaults to 42.
-        batch_size (int, optional): Batch size to use for the training. Defaults to 16.
-        num_workers (int, optional): Number of worker used for the data loading in torch. Defaults to 0.
-        n_centers (int, optional): Number of centers to be used for the fed avg strategy. Defaults to 2.
-        learning_rate (int, optional): Learning rate to use. Defaults to 0.01.
-        n_rounds (int, optional): Number of rounds for the strategy to be executed. Defaults to 3.
-        n_local_steps (int, optional): Number of updates for each step of the strategy. Defaults to 10.
+        seed (int): Random seed.
+        batch_size (int): Batch size to use for the training.
+        n_centers (int): Number of centers to be used for the fed avg strategy.
+        learning_rate (int): Learning rate to use.
+        n_rounds (int): Number of rounds for the strategy to be executed.
+        n_local_steps (int): Number of updates for each step of the strategy.
+        num_workers (int): Number of workers for the torch dataloader.
 
     Returns:
-        float: Result of the experiment.
+        Tuple[float, dict]: Result of the experiment and more details on the speed.
     """
-
     train_datasets = [
         CamelyonDataset(
             data_indexes=np.loadtxt(Path(train_folder) / "index.csv", delimiter=",", dtype=str),
@@ -211,16 +221,30 @@ def torch_fed_avg(
         )
         for train_folder in trains_folders
     ]
-
-    train_dataloaders = [
-        DataLoaderWithMemory(
-            train_dataset,
+    batch_samplers = [
+        NpIndexGenerator(
+            n_samples=len(train_dataset),
             batch_size=batch_size,
+            num_updates=n_local_steps,
             shuffle=True,
-            drop_last=False,
-            num_workers=num_workers,
+            drop_last=True,
+            seed=42,
         )
         for train_dataset in train_datasets
+    ]
+
+    multiprocessing_context = None
+    if num_workers != 0:
+        multiprocessing_context = torch.multiprocessing.get_context("spawn")
+
+    train_dataloaders = [
+        DataLoader(
+            train_dataset,
+            batch_sampler=batch_sampler,
+            num_workers=num_workers,
+            multiprocessing_context=multiprocessing_context,
+        )
+        for batch_sampler, train_dataset in zip(batch_samplers, train_datasets)
     ]
 
     test_dataset = CamelyonDataset(
@@ -232,8 +256,9 @@ def torch_fed_avg(
         test_dataset,
         batch_size=batch_size,
         shuffle=False,
-        drop_last=False,
+        drop_last=True,
         num_workers=num_workers,
+        multiprocessing_context=multiprocessing_context,
     )
 
     # Models definition
@@ -261,7 +286,7 @@ def torch_fed_avg(
         criteria=criteria,
         dataloaders_train=train_dataloaders,
         num_rounds=n_rounds,
-        num_local_steps=n_local_steps,
+        batch_samplers=batch_samplers,
     )
 
     y_pred = []
@@ -275,4 +300,5 @@ def torch_fed_avg(
     # Fusion, sigmoid and to numpy
     y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
     metric = roc_auc_score(y_true, y_pred)
+
     return metric

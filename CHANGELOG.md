@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Connect tasks have a `round_idx` attribute in their metadata (#101)
 
+### Improved
+
+- benchmark:
+  - Use the same batch sampler between the torch and Connectlib examples (#94)
+  - Make it work with `num_workers` > 0 (#94)
+  - Explain the effect of the sub-sampling (#94)
+  - Update the default benchmark parameters in `benchmarks.sh` (#94)
+  - Add new curves to the plotting: when one parameter changes while the others stay the same (#94)
+
 ## [0.8.0] - 2022-03-01
 
 ### Fixed

@@ -8,7 +8,7 @@ def basic_fed_avg(  # noqa: C901
     criteria,
     dataloaders_train,
     num_rounds,
-    num_local_steps,
+    batch_samplers,
 ):
     """Basic implementation of federated averaging. It ensures that all
     networks have the same initialization and the same final value.
@@ -19,13 +19,14 @@ def basic_fed_avg(  # noqa: C901
         nets (List[torch.nn.Module]): List of pytorch module.
         optimizers (List[torch optimizers]): List of pytorch optimizers (1 per client).
         criteria (List[torch losses]): List of pytorch losses.
-        dataloaders_train (List[DataLoaderWithMemory]): List of local data loaders with memory (overrides DataLoaders)
+        dataloaders_train (List[torch.utils.data.DataLoader]): List of local data loaders (overrides DataLoaders)
         num_rounds (int): number of rounds
-        num_local_steps (int): Number of local batch updates before averaging weights
+        batch_samplers (List): List of batch samplers used in the train data loaders
+
+    Returns:
+        List[float]: time for each round
     """
-
     num_clients = len(nets)
-
     # Ensure all networks have the same initialization
     for net in nets[1:]:
         for p, p_ref in zip(net.parameters(), nets[0].parameters()):
@@ -34,10 +35,8 @@ def basic_fed_avg(  # noqa: C901
     # Placeholder for sent deltas
     deltas_sent = [None for _ in range(num_clients)]
     aggregated_delta_weights = None
-
     # Run the loop
     for idx_round in tqdm.tqdm(range(num_rounds), desc="Rounds"):
-
         # Simulating "in parallel local training"
         for idx_client in range(num_clients):
 
@@ -50,9 +49,8 @@ def basic_fed_avg(  # noqa: C901
             old_weights = [torch.clone(p.data) for p in nets[idx_client].parameters()]
 
             # Run local steps
-            for _ in range(num_local_steps):
+            for X, y in dataloaders_train[idx_client]:
                 optimizers[idx_client].zero_grad()
-                X, y = dataloaders_train[idx_client].get_samples()
                 y_pred = nets[idx_client](X)[0].reshape(-1)
                 loss = criteria[idx_client](y_pred, y)
                 loss.backward()
@@ -67,6 +65,10 @@ def basic_fed_avg(  # noqa: C901
             # Reset local network
             for p_new, p_old in zip(nets[idx_client].parameters(), old_weights):
                 p_new.data = p_old
+
+        # Reset the iterator
+        for idx_client in range(num_clients):
+            batch_samplers[idx_client].reset_counter()
 
         # Aggregation step
         aggregated_delta_weights = [None for _ in range(len(deltas_sent[0]))]
