@@ -1,5 +1,6 @@
 import argparse
 import json
+import multiprocessing
 import os
 import time
 from pathlib import Path
@@ -30,19 +31,25 @@ def fed_avg(params: dict):
     exp_params = params.copy()
 
     reset_data_folder()
-    trains_folders, test_folder = split_dataset(n_centers=params["n_centers"], sub_sampling=params["sub_sampling"])
+    trains_folders, test_folder = split_dataset(
+        n_centers=exp_params["n_centers"], sub_sampling=exp_params["sub_sampling"]
+    )
+
+    # Check on the number of samples
+    for train_folder in trains_folders:
+        len_data = len((Path(train_folder) / "index.csv").read_text().splitlines()) - 1
+        if len_data < exp_params["batch_size"]:
+            raise ValueError(
+                "The length of the dataset is smaller than the batch size, not allowed as it"
+                "skews the benchmark results (the batch size gets automatically adjusted in that case)."
+            )
+    run_keys = ["n_rounds", "seed", "batch_size", "n_centers", "learning_rate", "n_local_steps", "num_workers"]
 
     cl_start = time.time()
     cl_perf = connectlib_fed_avg(
         trains_folders=trains_folders,
         test_folder=test_folder,
-        seed=params["seed"],
-        batch_size=params["batch_size"],
-        num_workers=params["num_workers"],
-        n_centers=params["n_centers"],
-        learning_rate=params["learning_rate"],
-        n_rounds=params["n_rounds"],
-        n_local_steps=params["n_local_steps"],
+        **{k: v for k, v in exp_params.items() if k in run_keys},
     )
     cl_end = time.time()
 
@@ -50,13 +57,7 @@ def fed_avg(params: dict):
     sa_perf = torch_fed_avg(
         trains_folders=trains_folders,
         test_folder=test_folder,
-        seed=params["seed"],
-        batch_size=params["batch_size"],
-        num_workers=params["num_workers"],
-        n_centers=params["n_centers"],
-        learning_rate=params["learning_rate"],
-        n_rounds=params["n_rounds"],
-        n_local_steps=params["n_local_steps"],
+        **{k: v for k, v in exp_params.items() if k in run_keys},
     )
     sa_end = time.time()
 
@@ -81,27 +82,26 @@ def parse_params() -> dict:
 
     params = {
         "seed": 42,
-        "batch_size": 32,
-        "num_workers": 0,
         "n_centers": 2,
         "learning_rate": 0.01,
-        "n_rounds": 11,
-        "n_local_steps": 50,
+        "connectlib_version": connectlib.__version__,
+        "substra_version": substra.__version__,
+        "substratools_version": substratools.__version__,
     }
 
     parser = argparse.ArgumentParser("Default parser.")
-    parser.add_argument("--sub-sampling", type=float, default=0.1)
+    parser.add_argument("--sub-sampling", type=float, default=1)
     parser.add_argument("--n-rounds", type=int, default=2)
     parser.add_argument("--n-local-steps", type=int, default=2)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--num-workers", type=int, default=0)
 
     args = parser.parse_args()
-    params["sub_sampling"] = float(args.sub_sampling)
-    params["n_rounds"] = int(args.n_rounds)
-    params["n_local_steps"] = int(args.n_local_steps)
-
-    params["connectlib_version"] = connectlib.__version__
-    params["substra_version"] = substra.__version__
-    params["substratools_version"] = substratools.__version__
+    params["sub_sampling"] = args.sub_sampling
+    params["n_rounds"] = args.n_rounds
+    params["n_local_steps"] = args.n_local_steps
+    params["batch_size"] = args.batch_size
+    params["num_workers"] = args.num_workers
 
     return params
 
@@ -125,6 +125,10 @@ def read_results() -> dict:
 
 
 def main():
+    # https://github.com/pytest-dev/pytest-flask/issues/104
+    # necessary on OS X, Python >= 3.8 to run multiprocessing
+    multiprocessing.set_start_method("fork")
+
     os.environ["DEBUG_SPAWNER"] = "subprocess"
 
     # Get dataset

@@ -51,7 +51,9 @@ Some definitions :
 - `seed`: random seed used for results reproducibility
 - `pure_torch_perf`: AUC of torch fed avg performances
 - `pure_torch_time`: Torch fed avg execution time (s)
-- `sub_sampling`: the fraction of the dataset to use for the benchmark
+- `sub_sampling`: the fraction of the dataset to use for the benchmark - this has no impact on the duration of the training, but it impacts the size of the test set and the duration of the metric calculation.
+
+WARNING with the sub_sampling: if any center has less data than the batch size, the benchmarks throws an error. Since in that case the batch size would get automatically changed to be equal to the number of samples, it would skew the results.
 
 ### Execute one experiment
 
@@ -75,7 +77,9 @@ The possibility is given to change to some of the parameters from the cli :
 
 - n_local_steps with the --n-local-steps arg
 - n_rounds with the --n-rounds arg
-- sub_sampling with the --n-rounds arg
+- sub_sampling with the --sub-sampling arg
+- batch size with the --batch-size arg
+- number of workers with the --num-workers arg
 
 for example the following command will run the benchmark with 4 local steps, 2 rounds on half of the dataset.
 
