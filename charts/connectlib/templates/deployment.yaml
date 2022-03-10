@@ -35,8 +35,6 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            - name: SUBSTRA_TESTS_CONFIG_FILEPATH
-              value: /etc/substra/values.yaml
             - name: DOCKER_HOST
               value: tcp://localhost:2376
             - name: DOCKER_TLS_VERIFY
@@ -44,9 +42,6 @@ spec:
             - name: DOCKER_CERT_PATH
               value: /root/.docker/client
           volumeMounts:
-            - mountPath: /etc/substra/
-              name: values
-              readOnly: true
             - name: dind-certs
               mountPath: /root/.docker
             - name: tmp
@@ -78,9 +73,6 @@ spec:
           emptyDir: {}
         - name: dind-certs
           emptyDir: {}
-        - name: values
-          configMap:
-            name: {{ template "connectlib.fullname" . }}-configmap
         - name: tmp
           emptyDir: {}
         - name: local-worker
