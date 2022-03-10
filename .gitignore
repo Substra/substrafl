@@ -153,4 +153,4 @@ cython_debug/
 # Project dependent
 local-worker/
 **/local-assets-cl
-.whl
+*.whl

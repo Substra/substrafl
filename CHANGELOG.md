@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Explain the effect of the sub-sampling (#94)
   - Update the default benchmark parameters in `benchmarks.sh` (#94)
   - Add new curves to the plotting: when one parameter changes while the others stay the same (#94)
+  - Use connect-tools 0.10.0 as a base image for the Dockerfile
 
 ## [0.8.0] - 2022-03-01
 

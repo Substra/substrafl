@@ -146,12 +146,15 @@ def connectlib_fed_avg(
     my_algo = MyAlgo()
 
     # Algo dependencies
+    # Classic algos must be installed locally in editable mode
+    # for the Dockerfile mode
     base = Path(__file__).parent
     algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy", "sklearn", "classic-algos==1.6.0"],
+        pypi_dependencies=["torch", "numpy", "sklearn"],
         local_code=[
             base / "common" / "data_managers.py",
         ],
+        local_dependencies=[base / "classic_algos-1.6.0-py3-none-any.whl"],
     )
 
     # Custom Strategy used for the data loading (from custom_torch_algo.py file)

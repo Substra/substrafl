@@ -129,7 +129,7 @@ def main():
     # necessary on OS X, Python >= 3.8 to run multiprocessing
     multiprocessing.set_start_method("fork")
 
-    os.environ["DEBUG_SPAWNER"] = "subprocess"
+    os.environ["DEBUG_SPAWNER"] = "docker"
 
     # Get dataset
     fetch_camelyon()
