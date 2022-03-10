@@ -311,8 +311,10 @@ def create_substra_algo_files(  # noqa: C901
                 raise ValueError(f"Does not exist {path}")
 
         if install_libraries:
+            local_dep_dir = connectlib_internal / "local_dependencies"
+            local_dep_dir.mkdir(exist_ok=True)
             for path in dependencies.local_dependencies:
-                dest_path = connectlib_internal / "local_dependencies" / path.name
+                dest_path = local_dep_dir / path.name
                 if path.is_dir():
                     shutil.copytree(path, dest_path)
                 elif path.is_file():

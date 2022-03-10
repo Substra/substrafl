@@ -21,6 +21,13 @@ cd benchmark/camelyon
 pip install -r requirements.txt
 ```
 
+also do:
+
+```sh
+cd benchmark/camelyon
+pip download --no-deps classic-algos==1.6.0
+```
+
 ### Common error
 
 Please ensure that your python installation is complete. For Mac users if you get the following warning :
