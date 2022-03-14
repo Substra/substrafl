@@ -1,5 +1,5 @@
 Index Generator
 ===============
 
-.. automodule:: index_generator
+.. automodule:: connectlib.index_generator
     :members:

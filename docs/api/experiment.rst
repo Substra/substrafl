@@ -1,5 +1,5 @@
 Experiment
 ==========
 
-.. automodule:: experiment
+.. automodule:: connectlib.experiment
     :members:

@@ -29,7 +29,7 @@ class AggregationNode(Node):
 
         Args:
             operation (AggregateOperation): Automatically generated structure returned by
-                :func:`remote.methods.remote` decorator. This allows to register an
+                :func:`connectlib.remote.methods.remote` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts by zero.
 
