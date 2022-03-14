@@ -2,5 +2,5 @@ Dependency
 ==========
 
 
-.. automodule:: dependency
+.. automodule:: connectlib.dependency
     :members:

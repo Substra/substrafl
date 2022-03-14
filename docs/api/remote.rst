@@ -10,18 +10,18 @@ Connect algorithms.
 Serializers
 ^^^^^^^^^^^^
 
-.. automodule:: remote.serializers
+.. automodule:: connectlib.remote.serializers
     :members:
 
 
 Methods
 ^^^^^^^^
-.. automodule:: remote.methods
+.. automodule:: connectlib.remote.methods
     :members:
 
 
 Register
 ^^^^^^^^
 
-.. automodule:: remote.register
+.. automodule:: connectlib.remote.register
     :members:

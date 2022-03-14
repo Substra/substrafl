@@ -12,26 +12,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
 from datetime import date
 
-sys.path.insert(0, os.path.abspath("../connectlib"))
-
-
-def _get_version():
-    version_ = {}
-    with open("../connectlib/__version__.py") as fp:
-        exec(fp.read(), version_)  # pylint: disable=exec-used
-    return version_["__version__"]
-
+import connectlib
 
 # -- Project information -----------------------------------------------------
 
 project = "Connect Lib"
 copyright = f"{date.today().year}, OWKIN"
 author = "OWKIN"
-version = _get_version()
+version = connectlib.__version__
 release = version
 
 

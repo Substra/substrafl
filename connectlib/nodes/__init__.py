@@ -7,6 +7,7 @@ from connectlib.nodes.train_data_node import TrainDataNode
 
 # This is needed for auto doc to find that Node module's is nodes.node, otherwise when
 # trying to link Node references from one page to the Node documentation page, it fails.
+AggregationNode.__module__ = "nodes.aggregation_node"
 Node.__module__ = "nodes.node"
 OperationKey.__module__ = "nodes.node"
 

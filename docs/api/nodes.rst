@@ -4,28 +4,28 @@ Nodes
 
 AggregationNode
 ^^^^^^^^^^^^^^^
-.. autoclass:: nodes.aggregation_node.AggregationNode
+.. autoclass:: connectlib.nodes.aggregation_node.AggregationNode
     :members:
 
 
 TrainDataNode
 ^^^^^^^^^^^^^
-.. autoclass:: nodes.train_data_node.TrainDataNode
+.. autoclass:: connectlib.nodes.train_data_node.TrainDataNode
     :members:
 
 TestDataNode
 ^^^^^^^^^^^^
-.. autoclass:: nodes.test_data_node.TestDataNode
+.. autoclass:: connectlib.nodes.test_data_node.TestDataNode
     :members:
 
 Node
 ^^^^
-.. autoclass:: nodes.node.Node
+.. autoclass:: connectlib.nodes.node.Node
     :members:
 
 References
 ^^^^^^^^^^
-.. automodule:: nodes.references
-.. autoclass:: nodes.node.OperationKey
-.. autoclass:: nodes.references.local_state.LocalStateRef
-.. autoclass:: nodes.references.shared_state.SharedStateRef
+.. automodule:: connectlib.nodes.references
+.. autoclass:: connectlib.nodes.node.OperationKey
+.. autoclass:: connectlib.nodes.references.local_state.LocalStateRef
+.. autoclass:: connectlib.nodes.references.shared_state.SharedStateRef

@@ -2,5 +2,5 @@ Strategies
 ==========
 
 
-.. automodule:: strategies
+.. automodule:: connectlib.strategies
     :members:
