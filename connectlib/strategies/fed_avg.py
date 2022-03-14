@@ -5,32 +5,36 @@ from typing import Union
 
 import numpy as np
 
-from connectlib.algorithms import Algo
-from connectlib.nodes import AggregationNode
-from connectlib.nodes import TestDataNode
-from connectlib.nodes import TrainDataNode
+from connectlib.algorithms.algo import Algo
+from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.references.local_state import LocalStateRef
 from connectlib.nodes.references.shared_state import SharedStateRef
+from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote
 from connectlib.strategies.strategy import Strategy
 
 
 class FedAVG(Strategy):
     """Federated averaging strategy.
+
     Federated averaging is the simplest federating strategy.
     A round consists in performing a predefined number of forward/backward
     passes on each client, aggregating updates by computing their means and
     distributing the consensus update to all clients. In FedAvg, strategy is
     performed in a centralized way, where a single server or
-    :term:`aggregation node` communicates with a number of clients :term:`TrainDataNode`
-    and :term:`TestDataNode`.
+    ``AggregationNode`` communicates with a number of clients ``TrainDataNode``
+    and ``TestDataNode``.
 
     Formally, if :math:`w_t` denotes the parameters of the model at round
     :math:`t`, a single round consists in the following steps:
+
     .. math::
+
       \\Delta w_t^{k} = \\mathcal{O}^k_t(w_t| X_t^k, y_t^k, m)
       \\Delta w_t = \\sum_{k=1}^K \\frac{n_k}{n} \\Delta w_t^k
       w_{t + 1} = w_t + \\Delta w_t
+
     where :math:`\\mathcal{O}^k_t` is the local optimizer algorithm of client
     :math:`k` taking as argument the averaged weights as well as the
     :math:`t`-th batch of data for local worker :math:`k` and the number of
@@ -47,17 +51,20 @@ class FedAVG(Strategy):
         self.avg_shared_state: Optional[SharedStateRef] = None
 
     @remote
-    def avg_shared_states(self, shared_states: List[Dict[str, Union[int, np.ndarray]]]) -> Dict[str, np.ndarray]:
+    def avg_shared_states(self, shared_states: List[Dict[str, Union[str, np.ndarray]]]) -> Dict[str, np.ndarray]:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm.
         The average is weighted by the proportion of the number of samples.
 
-        E.g.: shared_states = [
-            {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
-            {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
-        ]
+        Example:
 
-        result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
+            .. code-block:: python
+
+                shared_states = [
+                    {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
+                    {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
+                ]
+                result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
 
         Args:
             shared_states (List[Weights]): The list of the shared_state returned by
@@ -68,7 +75,7 @@ class FedAVG(Strategy):
             TypeError: Each shared_state must contains the key **n_samples**
             TypeError: Each shared_state must contains at least one element to average
             TypeError: All the elements of shared_states must be similar (same keys)
-            TypeError: All elements to average must be of type np.array
+            TypeError: All elements to average must be of type np.ndarray
 
         Returns:
             Weights: A dict containing the weighted average of each input parameters without the passed key "n_samples".
@@ -80,19 +87,19 @@ class FedAVG(Strategy):
             raise TypeError(
                 "Your shared_states is empty. Please ensure that "
                 "the train method of your algorithm always returns nothing. "
-                "It must returns a dict containing n_samples(int) and at least one other key (np.array)."
+                "It must returns a dict containing n_samples(int) and at least one other key (np.ndarray)."
             )
         if not (all(["n_samples" in shared_state.keys() for shared_state in shared_states])):
             raise TypeError(
                 "n_samples must be a key from all your shared_state. "
                 "This must be set in the returned element of the train method from your algorithm. "
-                "It must be a dict containing n_samples(int) and at least one other key (np.array)."
+                "It must be a dict containing n_samples(int) and at least one other key (np.ndarray)."
             )
         if len(shared_states[0].keys()) == 1:
             raise TypeError(
                 "shared_state must contains at least one element to average."
                 "This must be set it in the returned element of the train method from your algorithm. "
-                "It must be a dict containing n_samples(int) and at least one other key (np.array)."
+                "It must be a dict containing n_samples(int) and at least one other key (np.ndarray)."
             )
         for shared_state in shared_states:
             for k, v in shared_state.items():
@@ -100,7 +107,7 @@ class FedAVG(Strategy):
                     raise TypeError(
                         "Except for the `n_samples`, the types of your shared_state must be numpy array. "
                         f"'{k}' is of type '{type(v)}' ."
-                        "It must be a dict containing n_samples(int) and at least one other key (np.array)."
+                        "It must be a dict containing n_samples(int) and at least one other key (np.ndarray)."
                     )
 
         averaged_states = {}
@@ -109,7 +116,7 @@ class FedAVG(Strategy):
 
         for key in shared_states[0].keys():
             # take each of the states,and multiply by the number of samples for each client and sum
-            # For now each value of shared_states is an np.array.
+            # For now each value of shared_states is an np.ndarray.
             states = []
             for n_samples, state in zip(all_samples, shared_states):
                 states.append(state[key] * (n_samples / n_all_samples))
@@ -125,6 +132,7 @@ class FedAVG(Strategy):
         round_idx: int,
     ):
         """One round of the Federated Averaging strategy:
+
             - if they exist, set the model weights to the aggregated weights on each train data nodes
             - perform a local update (train on n mini-batches) of the models on each train data nodes
             - aggregate the model shared_states

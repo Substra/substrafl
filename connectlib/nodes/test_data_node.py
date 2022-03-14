@@ -1,16 +1,11 @@
 from typing import List
 
-import substra
-
-from connectlib.dependency import Dependency
-from connectlib.nodes import Node
+from connectlib.nodes.node import Node
 
 
 class TestDataNode(Node):
     """A node on which you will test your algorithm.
     A TestDataNode must also be a train data node for now.
-
-    Inherits from :class:`connectlib.nodes.node.Node`
 
     Args:
         node_id (str): The substra node ID (shared with other nodes if permissions are needed)
@@ -54,19 +49,11 @@ class TestDataNode(Node):
             }
         )
 
-    def register_operations(
-        self,
-        client: substra.Client,
-        permissions: substra.sdk.schemas.Permissions,
-        dependencies: Dependency,
-    ):
-        pass
-
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file
 
         Returns:
-            summary (dict): a json-serializable dict with the attributes the user wants to store
+            dict: a json-serializable dict with the attributes the user wants to store
         """
         summary = super().summary()
         summary.update(

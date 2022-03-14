@@ -5,15 +5,17 @@ from pathlib import Path
 from typing import List
 from typing import TypeVar
 
-from connectlib.algorithms import Algo
-from connectlib.nodes import AggregationNode
-from connectlib.nodes import TestDataNode
-from connectlib.nodes import TrainDataNode
+from connectlib.algorithms.algo import Algo
+from connectlib.nodes.aggregation_node import AggregationNode
+from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.nodes.train_data_node import TrainDataNode
 
 SharedState = TypeVar("SharedState")
 
 
 class Strategy(ABC):
+    """Base strategy to be inherited from connectlib strategies."""
+
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs

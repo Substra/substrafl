@@ -41,3 +41,38 @@ Th FL group has two weeks to go over the PR once it is merged. The review by the
 
 The reviewer should be as clear as possible to avoid going back and forth between reviewer and dev. If necessary, the reviewer can
 propose a call with the dev.
+
+## Documentation
+
+Documentation of the api is generated from the connectlib repository thanks to the auto doc module.
+
+### Requirements
+
+You need to have connectlib.dev installed on your machine and some extra requirements. From the connectlib repo:
+
+```sh
+pip install -e .[dev]
+cd docs
+pip install -r requirements.txt
+```
+
+### Building the documentation
+
+You can build the documentation to see if your changes are well taken into account.
+From ./docs folder :
+
+```sh
+make clean && make html
+```
+
+No warning should be thrown by this command.
+
+Then open the `./docs/_build/index.html` file to see the results.
+
+You can also generate the documentation live so each of your changes are taken into account on the fly:
+
+```sh
+make livehtml
+```
+
+NB: Some time, `make livehtml` do not taken changes into account so running the `make html` command in parallel can be needed.

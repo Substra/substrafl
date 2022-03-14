@@ -8,9 +8,9 @@ from connectlib import execute_experiment
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.nodes import AggregationNode
-from connectlib.nodes import TestDataNode
-from connectlib.nodes import TrainDataNode
+from connectlib.nodes.aggregation_node import AggregationNode
+from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote_data
 from connectlib.strategies import FedAVG
 

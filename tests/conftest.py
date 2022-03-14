@@ -21,9 +21,9 @@ import torch
 import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
-from connectlib.nodes import AggregationNode
-from connectlib.nodes import TestDataNode
-from connectlib.nodes import TrainDataNode
+from connectlib.nodes.aggregation_node import AggregationNode
+from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.nodes.train_data_node import TrainDataNode
 
 from . import assets_factory
 from . import settings

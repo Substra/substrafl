@@ -2,11 +2,11 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from connectlib.nodes import TestDataNode
+from connectlib.nodes.test_data_node import TestDataNode
 
 
 class EvaluationStrategy:
-    def __init__(  # noqa: C901
+    def __init__(
         self,
         test_data_nodes: List[TestDataNode],
         rounds: Union[int, List[int]],
@@ -14,44 +14,11 @@ class EvaluationStrategy:
         """Creates an iterator which returns True or False depending on the defined strategy.
 
         Args:
-            test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested
+            test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested.
             rounds (Union[int, List[int]]): on which round the model is to be tested. If rounds is an int the model
-                will be tested every 'rounds' rounds starting from the first round. It will also be tested on the last
+                will be tested every ``rounds`` rounds starting from the first round. It will also be tested on the last
                 round. If rounds is a list the model will be tested on the index of a round given in the rounds list.
                 Note that the first round starts at 1.
-
-        Example 1:
-            Evaluation strategy which returns True every 2 rounds
-
-            ```python
-            my_evaluation_strategy = EvaluationStrategy(
-                test_data_nodes = list_of_test_data_nodes,
-                rounds = 2,
-            )
-            ```
-            every next `next(my_evaluation_strategy)` will return:
-            True
-            False
-            True
-            True
-            StopIteration Error
-
-        Example 2:
-            Evaluation strategy which returns True on rounds 1 and 2
-
-            ```python
-            my_evaluation_strategy = EvaluationStrategy(
-                test_data_nodes = list_of_test_data_nodes,
-                rounds = [1, 2],
-            )
-            ```
-            every next `next(my_evaluation_strategy)` will return:
-            True
-            True
-            False
-            False
-            False
-            StopIteration Error
 
         Raises:
             ValueError: test_data_nodes cannot be an empty list
@@ -60,8 +27,50 @@ class EvaluationStrategy:
             ValueError: if rounds is an int it must be strictly positive
             ValueError: if rounds is a list it cannot be empty
             TypeError: if rounds is a list it must be filled with variables of type int
-            ValueError: if rounds is a list it mubst be filled only with positive integers
+            ValueError: if rounds is a list it must be filled only with positive integers
 
+        Example:
+
+            Evaluation strategy which returns True every 2 rounds
+
+            .. code-block:: python
+
+                my_evaluation_strategy = EvaluationStrategy(
+                        test_data_nodes = list_of_test_data_nodes,
+                        rounds = 2,
+                    )
+
+            every next ``next(my_evaluation_strategy)`` will return:
+
+            .. code-block:: python
+
+                True
+                False
+                True
+                True
+                StopIteration Error
+
+        Example:
+
+            Evaluation strategy which returns True on rounds 1 and 2
+
+            .. code-block:: python
+
+                my_evaluation_strategy = EvaluationStrategy(
+                        test_data_nodes = list_of_test_data_nodes,
+                        rounds = [1, 2],
+                    )
+
+            every next ``next(my_evaluation_strategy)`` will return
+
+            .. code-block:: python
+
+                True
+                True
+                False
+                False
+                False
+                StopIteration Error
         """
         self._current_round = 0
         self.test_data_nodes = test_data_nodes
@@ -93,7 +102,7 @@ class EvaluationStrategy:
         """Property to get the num_rounds.
 
         Returns:
-             num_rounds ([int, None]): Total number of rounds.
+             Union[int, None]: Total number of rounds.
         """
         return self._num_rounds
 
@@ -105,7 +114,7 @@ class EvaluationStrategy:
         Args:
             num_rounds (Optional[int]): Total number of rounds. If None the iterator may be called
                 infinitely. If num_rounds is set the StopIteration Error will be raised if number of calls to next()
-                exeeds num_rounds. Defaults to None.
+                exceeds num_rounds. Defaults to None.
         """
         if num_rounds is not None:
             self._check_rounds_consistency(num_rounds)
@@ -123,7 +132,7 @@ class EvaluationStrategy:
         Args:
             num_rounds (Optional[int]): Total number of rounds. If None the iterator may be called
                 infinitely. If num_rounds is set the StopIteration Error will be raised if number of calls to next()
-                exeeds num_rounds. Defaults to None.
+                exceeds num_rounds. Defaults to None.
 
         Raises:
             ValueError: num_rounds must not be smaller than self._rounds if self._rounds is an int

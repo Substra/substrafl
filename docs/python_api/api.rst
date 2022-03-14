@@ -1,5 +1,0 @@
-FAKE API
-========
-
-Fake class
-----------

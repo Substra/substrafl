@@ -16,7 +16,7 @@ def test_local_lib_install_command(session_dir):
     libs = [connectlib, substra, substratools]
     operation_dir = Path(tempfile.mkdtemp(dir=session_dir.as_posix()))
 
-    _ = register.local_lib_install_command(
+    _ = register._local_lib_install_command(
         lib_modules=libs,
         operation_dir=operation_dir,
         python_major_minor=PYTHON_VERSION,
@@ -51,7 +51,7 @@ def test_pypi_lib_install_command(session_dir):
     substratools_version = substratools.__version__
     substratools.__version__ = "0.9.1"
 
-    _ = register.pypi_lib_install_command(
+    _ = register._pypi_lib_install_command(
         lib_modules=libs, python_major_minor=PYTHON_VERSION, operation_dir=operation_dir
     )
 

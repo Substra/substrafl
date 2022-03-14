@@ -1,7 +1,8 @@
 from typing import Dict
 from typing import List
+from typing import NewType
 
-OperationKey = str
+OperationKey = NewType("OperationKey", str)
 
 
 class Node:
@@ -11,18 +12,25 @@ class Node:
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file
-            For heriting classes, override this function and add super.summary()
-            e.g:
-                summary = super().summary()
-                summary.update(
-                    {
-                        "attribute": self.attribute,
-                        ...
-                    }
-                )
-                return summary
+        For heriting classes, override this function and add ``super.summary()``
+
+        Example:
+
+                .. code-block:: python
+
+                    def summary(self):
+
+                        summary = super().summary()
+                        summary.update(
+                            {
+                                "attribute": self.attribute,
+                                ...
+                            }
+                        )
+                        return summary
+
         Returns:
-            summary (dict): a json-serializable dict with the attributes the user wants to store
+            dict: a json-serializable dict with the attributes the user wants to store
         """
         return {
             "node_id": self.node_id,

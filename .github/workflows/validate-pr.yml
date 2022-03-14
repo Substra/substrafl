@@ -96,10 +96,18 @@ jobs:
 
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.9
+
+      - name: Login pypi
+        run: |
+             mkdir ~/.pip || touch ~/.pip/pip.conf
+             echo "[global]" >> ~/.pip/pip.conf
+             echo "extra-index-url = https://connectors-service-account:${{ secrets.TWINE_PASSWORD }}@pypi.owkin.com/simple" >> ~/.pip/pip.conf
 
       - name: Install Dependencies
-        run: pip install --no-cache-dir -r docs/requirements.txt
+        run: |
+          pip install --no-cache-dir .[dev]
+          pip install --no-cache-dir -r docs/requirements.txt
 
       - name: Test docs
         run: |

@@ -7,10 +7,10 @@ from typing import Tuple
 import substra
 
 from connectlib.dependency import Dependency
-from connectlib.nodes import Node
-from connectlib.nodes import OperationKey
-from connectlib.nodes.references import LocalStateRef
-from connectlib.nodes.references import SharedStateRef
+from connectlib.nodes.node import Node
+from connectlib.nodes.node import OperationKey
+from connectlib.nodes.references.local_state import LocalStateRef
+from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote.methods import DataOperation
 from connectlib.remote.methods import RemoteStruct
 from connectlib.remote.register import register_algo
@@ -18,10 +18,8 @@ from connectlib.remote.register import register_algo
 
 class TrainDataNode(Node):
     """
-    A predefine structure that allows you to register operations
+    A predefined structure that allows you to register operations
     on your train node in a static way before submitting them to substra.
-
-    Inherits from :class:`connectlib.nodes.node.Node`
 
     Args:
         node_id (str): The substra node ID (shared with other nodes if permissions are needed)
@@ -54,14 +52,14 @@ class TrainDataNode(Node):
 
         Args:
             operation (DataOperation): Automatically generated structure returned by
-            :func:`connectlib.remote.methods.remote_data` decoractor. This allows to register an
-            operation and execute it later on.
+                ``connectlib.remote.methods.remote_data`` decorator. This allows to register an
+                operation and execute it later on.
             round_idx (int): Round number, it starts by zero.
-            local_state (Optional[LocalStateRef], optional): The parent task LocalStateRef. Defaults to None.
+            local_state (Optional[LocalStateRef], Optional): The parent task LocalStateRef. Defaults to None.
 
         Raises:
-            TypeError: operation must be a DataOperation, make sure to docorate the train and predict methods of
-            your algorithm with @remote
+            TypeError: operation must be a DataOperation, make sure to decorate the train and predict methods of
+                your algorithm with @remote
 
         Returns:
             Tuple[LocalStateRef, SharedStateRef]: Identifications for the results of this operation.
@@ -147,7 +145,7 @@ class TrainDataNode(Node):
         """Summary of the class to be exposed in the experiment summary file
 
         Returns:
-            summary (dict): a json-serializable dict with the attributes the user wants to store
+            dict: a json-serializable dict with the attributes the user wants to store
         """
         summary = super().summary()
         summary.update(

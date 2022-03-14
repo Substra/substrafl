@@ -2,7 +2,7 @@ import pickle
 from pathlib import Path
 from typing import Any
 
-from .serializer import Serializer
+from connectlib.remote.serializers.serializer import Serializer
 
 
 class PickleSerializer(Serializer):

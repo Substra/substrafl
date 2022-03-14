@@ -5,9 +5,9 @@ from typing import TypeVar
 import substra
 
 from connectlib.dependency import Dependency
-from connectlib.nodes import Node
-from connectlib.nodes import OperationKey
-from connectlib.nodes.references import SharedStateRef
+from connectlib.nodes.node import Node
+from connectlib.nodes.node import OperationKey
+from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote.methods import AggregateOperation
 from connectlib.remote.methods import RemoteStruct
 from connectlib.remote.register import register_algo
@@ -16,10 +16,8 @@ SharedState = TypeVar("SharedState")
 
 
 class AggregationNode(Node):
-    """The node which applies operations to the shared states which are received from TrainDataNode data operations.
-    The result is sent to the TrainDataNode and/or TestDataNode data operations.
-
-    Inherits from :class:`connectlib.nodes.node.Node`
+    """The node which applies operations to the shared states which are received from ``TrainDataNode`` data operations.
+    The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.
 
     """
 
@@ -31,13 +29,13 @@ class AggregationNode(Node):
 
         Args:
             operation (AggregateOperation): Automatically generated structure returned by
-                :func:`connectlib.remote.methods.remote` decoractor. This allows to register an
+                :func:`remote.methods.remote` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts by zero.
 
         Raises:
-            TypeError: operation must be an AggregateOperation, make sure to docorate your (user defined) aggregate
-            function of the strategy with @remote.
+            TypeError: operation must be an AggregateOperation, make sure to decorate your (user defined) aggregate
+                function of the strategy with @remote.
 
         Returns:
             SharedStateRef: Identification for the result of this operation.
