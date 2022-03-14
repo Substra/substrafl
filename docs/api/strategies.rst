@@ -1,0 +1,6 @@
+Strategies
+==========
+
+
+.. automodule:: strategies
+    :members:

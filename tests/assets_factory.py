@@ -290,11 +290,11 @@ def linear_data(n_col: int = 3, n_samples: int = 11, weights_seed: int = 42, noi
     10% of noise.
 
     Args:
-        n_col (int, optional): The wished number of column in the dataset. Defaults to 3.
-        n_samples (int, optional): The wished number of samples in the dataset. Defaults to 11.
-        weights_seed (int, optional): Used to set the weights. This ensure the reproducibility of the relation
+        n_col (int, Optional): The wished number of column in the dataset. Defaults to 3.
+        n_samples (int, Optional): The wished number of samples in the dataset. Defaults to 11.
+        weights_seed (int, Optional): Used to set the weights. This ensure the reproducibility of the relation
         between the features.
-        noise_seed (int, optional): Used to set the noise. This ensure the reproducibility of the noise added.
+        noise_seed (int, Optional): Used to set the noise. This ensure the reproducibility of the noise added.
 
     Returns:
         np.ndarray: A 2D (n_samples, n_col) np.ndarray

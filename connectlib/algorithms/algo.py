@@ -5,8 +5,6 @@ from typing import Dict
 
 import numpy as np
 
-Weights = Dict[str, np.ndarray]
-
 
 class Algo(abc.ABC):
     """The base class to be inherited for connectlib algorithms."""
@@ -30,20 +28,20 @@ class Algo(abc.ABC):
     # train function
     # @remote_data
     @abc.abstractmethod
-    def train(self, x: Any, y: Any, shared_state: Weights) -> Weights:
+    def train(self, x: Any, y: Any, shared_state: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         """Will be executed for each TrainDataNodes.
 
         Args:
-            x (Any): The output of the `get_x` method of the opener.
-            y (Any): The output of the `get_y` method of the opener.
-            shared_state (Weights): None for the first round of the computation graph
-            then the returned object from the pervious node of the computation graph.
+            x (Any): The output of the ``get_x`` method of the opener.
+            y (Any): The output of the ``get_y`` method of the opener.
+            shared_state (Dict[str, np.ndarray]): None for the first round of the computation graph
+                then the returned object from the previous node of the computation graph.
 
         Raises:
             NotImplementedError
 
         Returns:
-            Weights: The object passed to the next node of the computation graph.
+            Dict[str, np.ndarray]: The object passed to the next node of the computation graph.
         """
         raise NotImplementedError
 
@@ -52,14 +50,14 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, x: Any, shared_state: Weights) -> Any:
-        """Will be executed for each TestDataNodes. The returned object will be passed to the `save_predictions`
+    def predict(self, x: Any, shared_state: Dict[str, np.ndarray]) -> Any:
+        """Will be executed for each TestDataNodes. The returned object will be passed to the ``save_predictions``
         function of the opener. The predictions are then loaded and used to calculate the metric.
 
         Args:
-            x (Any): The output of the `get_x` method of the opener.
-            shared_state (Weights): None for the first round of the computation graph
-            then the returned object from the pervious node of the computation graph.
+            x (Any): The output of the ``get_x`` method of the opener.
+            shared_state (Dict[str, np.ndarray]): None for the first round of the computation graph
+                then the returned object from the previous node of the computation graph.
 
         Raises:
             NotImplementedError
@@ -101,18 +99,25 @@ class Algo(abc.ABC):
         raise NotImplementedError
 
     def summary(self) -> dict:
-        """Summary of the class to be exposed in the experiment summary file
-            For heriting classes, override this function and add super.summary()
-            e.g:
-                summary = super().summary()
-                summary.update(
-                    {
-                        "attribute": self.attribute,
-                        ...
-                    }
-                )
-                return summary
+        """Summary of the class to be exposed in the experiment summary file.
+        For child classes, override this function and add ``super.summary()``
+
+        Example:
+
+                .. code-block:: python
+
+                    def summary(self):
+
+                        summary = super().summary()
+                        summary.update(
+                            {
+                                "attribute": self.attribute,
+                                ...
+                            }
+                        )
+                        return summary
+
         Returns:
-            summary (dict): a json-serializable dict with the attributes the user wants to store
+            dict: a json-serializable dict with the attributes the user wants to store
         """
         return {"type": str(type(self))}

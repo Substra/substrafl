@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The Connect tasks have a `round_idx` attribute in their metadata (#101)
+- doc: add python api to documentation #105
 
 ### Improved
 

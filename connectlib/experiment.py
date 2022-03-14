@@ -11,14 +11,14 @@ from typing import Union
 
 import substra
 
-from connectlib.algorithms import Algo
+from connectlib.algorithms.algo import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.nodes import AggregationNode
-from connectlib.nodes import TrainDataNode
+from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.node import OperationKey
+from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote.methods import RemoteStruct
-from connectlib.strategies import Strategy
+from connectlib.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
 
@@ -149,9 +149,11 @@ def execute_experiment(
 
     In connectlib, operations are linked to each other statically before being submitted to substra.
 
-    The execution of :
-        * the `self.perform_round` method from the passed strategy **num_rounds** times
-        * the `self.predict` methods from the passed strategy
+    The execution of:
+
+        - the `self.perform_round` method from the passed strategy **num_rounds** times
+        - the `self.predict` methods from the passed strategy
+
     generate the static graph of operations.
 
     Each element necessary for those operations (CompositeTrainTuples, TestTuples and Algorithms)
@@ -166,11 +168,11 @@ def execute_experiment(
         algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         strategy (Strategy): The strategy by which your algorithm will be executed
         train_data_nodes (List[TrainDataNode]): List of the nodes where training on data occurs
-        evaluation_strategy (EvaluationStrategy, optional): If None performance will not be measured at all.
+        evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         aggregation_node (AggregationNode): The aggregation node, where all the shared tasks occur
         num_rounds (int): The number of time your strategy will be executed
-        dependencies (Dependency, optional): Dependencies of the algorithm. It must be defined from
+        dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the connectlib Dependency class. Defaults None.
         experiment_folder (Union[str, Path]): path to the folder where the experiment summary is saved.
         clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False

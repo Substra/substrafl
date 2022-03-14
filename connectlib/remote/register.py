@@ -1,3 +1,6 @@
+"""
+Create the Connect algo assets and register them to the platform.
+"""
 import inspect
 import logging
 import shutil
@@ -85,16 +88,16 @@ if __name__ == "__main__":
 """
 
 
-def local_lib_install_command(lib_modules: List, operation_dir: Path, python_major_minor: str) -> str:
+def _local_lib_install_command(lib_modules: List, operation_dir: Path, python_major_minor: str) -> str:
     """Prepares the private modules from lib_modules list to be installed in a Docker image and generates the
     appropriated install command for a dockerfile. It first creates the wheel for each library. Each of the
     libraries must be already installed in the correct version locally. Use command:
-    `pip install -e library-name` in the directory of each library.
+    ``pip install -e library-name`` in the directory of each library.
 
     This allows one user to use custom version of the passed modules.
 
     Args:
-        lib_modules (`list`): list of modules to be installed.
+        lib_modules (list): list of modules to be installed.
         operation_dir (Path): PosixPath to the operation directory
         python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
 
@@ -155,7 +158,7 @@ def local_lib_install_command(lib_modules: List, operation_dir: Path, python_maj
     return "\n".join(install_cmds)
 
 
-def pypi_lib_install_command(lib_modules: List, operation_dir: Path, python_major_minor: str) -> str:
+def _pypi_lib_install_command(lib_modules: List, operation_dir: Path, python_major_minor: str) -> str:
     """Retrieves lib_modules' wheels from Owkin private repo (if needed) to be installed in a Docker image and generates
     the appropriated install command for a dockerfile.
 
@@ -212,8 +215,8 @@ def pypi_lib_install_command(lib_modules: List, operation_dir: Path, python_majo
     return "\n".join(install_cmds)
 
 
-# TODO: 'create_substra_algo_files' is too complex, consider refactoring
-def create_substra_algo_files(  # noqa: C901
+# TODO: '_create_substra_algo_files' is too complex, consider refactoring
+def _create_substra_algo_files(  # noqa: C901
     remote_struct: RemoteStruct,
     install_libraries: bool,
     dependencies: Dependency,
@@ -221,7 +224,8 @@ def create_substra_algo_files(  # noqa: C901
     """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
         an archive (.tar.gz).
 
-        Necessary files :
+        Necessary files:
+
             - the class Cloudpickle
             - the instance parameters captured by Blueprint
             - the wheel of the current version of Connectlib if in editable mode
@@ -269,13 +273,13 @@ def create_substra_algo_files(  # noqa: C901
 
         # Install either from pypi wheel or repo in editable mode
         install_cmd = (
-            local_lib_install_command(
+            _local_lib_install_command(
                 lib_modules=lib_modules,
                 operation_dir=operation_dir,
                 python_major_minor=python_major_minor,
             )
             if dependencies.editable_mode
-            else pypi_lib_install_command(
+            else _pypi_lib_install_command(
                 lib_modules=lib_modules,
                 operation_dir=operation_dir,
                 python_major_minor=python_major_minor,
@@ -374,10 +378,11 @@ def register_algo(
         is_composite (bool): Either to register a composite or an aggregate algorithm.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
         dependencies (Dependency): Algorithm dependencies.
+
     Returns:
         str: Substra algorithm key.
     """
-    archive_path, description_path = create_substra_algo_files(
+    archive_path, description_path = _create_substra_algo_files(
         remote_struct,
         dependencies=dependencies,
         install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,

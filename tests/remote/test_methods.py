@@ -21,7 +21,7 @@ class RemoteClass:
 
 
 # TODO: test fake_traintuple
-# TODO: test RemoteDataMethod
+# TODO: test _RemoteDataMethod
 
 
 def test_remote():

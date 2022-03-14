@@ -1,4 +1,4 @@
-from connectlib.algorithms.pytorch.fed_avg import TorchFedAvgAlgo
+from connectlib.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
 
 __all__ = [
     "TorchFedAvgAlgo",

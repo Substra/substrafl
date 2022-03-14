@@ -14,6 +14,7 @@
 #
 import os
 import sys
+from datetime import date
 
 sys.path.insert(0, os.path.abspath("../connectlib"))
 
@@ -25,16 +26,10 @@ def _get_version():
     return version_["__version__"]
 
 
-# Mock imports
-# Required for all dependencies
-autodoc_mock_imports = [
-    "substra",
-]
-
 # -- Project information -----------------------------------------------------
 
 project = "Connect Lib"
-copyright = "2020, OWKIN"
+copyright = f"{date.today().year}, OWKIN"
 author = "OWKIN"
 version = _get_version()
 release = version
@@ -50,14 +45,14 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx_rtd_theme",
-    "sphinx.ext.napoleon",
     "sphinx.ext.ifconfig",
-    "sphinx_click",
-    "recommonmark",
+    "myst_parser",
     "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
 ]
 
 intersphinx_mapping = {
@@ -67,13 +62,21 @@ intersphinx_mapping = {
     "torch": ("https://pytorch.org/docs/stable/", None),
 }
 
+autosectionlabel_prefix_document = True
+
+# Napoleon settings
+# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+# templates_path = []
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = [".rst", ".md"]
+# source_suffix = [".rst", ".md"]
 # source_suffix = '.rst'
 
 # The master toctree document.
@@ -155,38 +158,6 @@ latex_elements = {
     # 'figure_align': 'htbp',
 }
 
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, "connectlib.tex", "ConnectLib Documentation", "owkin", "manual"),
-]
-
-
-# -- Options for manual page output ------------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "connectlib", "ConnectLib Documentation", [author], 1)]
-
-
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "Connect Lib",
-        "Connect Lib Documentation",
-        author,
-        "Connect Lib",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
-]
-
 
 # -- Options for Epub output -------------------------------------------------
 
@@ -206,13 +177,33 @@ epub_title = project
 epub_exclude_files = ["search.html"]
 
 
+# As we defined the type of our args, auto doc is trying to find a link to a
+# documentation for each type specified
+# The following elements are the link that auto doc were not able to do
+nitpick_ignore = [
+    ("py:class", "pydantic.main.BaseModel"),
+    ("py:class", "np.ndarray"),
+    ("py:class", "Path"),
+    ("py:class", "torch.nn.modules.module.Module"),
+    ("py:class", "torch.nn.Module.loss._Loss"),
+    ("py:class", "torch.optim.lr_scheduler._LRScheduler"),
+    ("py:class", "substra.sdk.schemas.Permissions"),
+    ("py:class", "substra.Client"),
+    ("py:class", "ComputePlan"),
+    ("py:class", "pydantic.main.BaseModel"),
+]
+
 html_css_files = [
     "fonts.css",
     "owkin.css",
     "sidebar.css",
 ]
 
-autodoc_typehints = "description"
+autodoc_default_options = {
+    "show-inheritance": True,
+}
+
+autoclass_content = "both"
 
 html_logo = "static/logo.svg"
 html_show_sourcelink = False
