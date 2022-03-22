@@ -1,8 +1,9 @@
 import abc
 import logging
+from enum import IntEnum
 from pathlib import Path
 from typing import Any
-from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Type
 
@@ -15,15 +16,27 @@ from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
+from connectlib.schemas import ScaffoldAveragedStates
+from connectlib.schemas import ScaffoldSharedState
 
 logger = logging.getLogger(__name__)
 
-# TODO/INFO : for the next strategy, all methods and args of this class could be wrapped into a generic TorchAlgo
-# class. Every strategy class could inherit from it.
+
+class CUpdateRule(IntEnum):
+    """The rule used to update the client control variate
+
+    Values:
+
+        - STABLE (1): The stable rule, I in the Scaffold paper (not implemented)
+        - FAST (2): The fast rule, II in the Scaffold paper
+    """
+
+    STABLE = 1
+    FAST = 2
 
 
-class TorchFedAvgAlgo(Algo):
-    """To be inherited. Wraps the necessary operation so a torch model can be trained in the Federated Averaging strategy.
+class TorchScaffoldAlgo(Algo):
+    """To be inherited. Wraps the necessary operation so a torch model can be trained in the Scaffold strategy.
 
     It inherits of the following default methods : ``train``, ``predict``, ``load``
     and ``save`` which can be overwritten in the child class.
@@ -51,12 +64,15 @@ class TorchFedAvgAlgo(Algo):
             than the one from which the ``execute_experiment`` function is called.
         with_batch_norm_parameters (bool). Whether to include the batch norm layer parameters in the fed avg strategy.
             Defaults to False.
+        c_update_rule (CUpdateRule): The rule used to update the
+            client control variate.
+            Defaults to CUpdateRule.FAST.
 
     Example:
 
         .. code-block:: python
 
-            class MyAlgo(TorchFedAvgAlgo):
+            class MyAlgo(TorchScaffoldAlgo):
                 def __init__(
                     self,
                 ):
@@ -71,17 +87,22 @@ class TorchFedAvgAlgo(Algo):
                     x: Any,
                     y: Any,
                 ):
+                    # for each update
                     for batch_index in self._index_generator:
+                        # get minibatch
                         x_batch, y_batch = x[batch_index], y[batch_index]
-
                         # Forward pass
                         y_pred = self._model(x_batch)
-
                         # Compute Loss
                         loss = self._criterion(y_pred, y_batch)
                         self._optimizer.zero_grad()
+                        # backward pass: compute the gradients
                         loss.backward()
+                        # forward pass: update the weights.
                         self._optimizer.step()
+
+                        # scaffold specific: to keep between _optimizer.step() and _scheduler.step()
+                        self._scaffold_weight_update()
 
                         if self._scheduler is not None:
                             self._scheduler.step()
@@ -117,19 +138,33 @@ class TorchFedAvgAlgo(Algo):
         get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
+        c_update_rule: CUpdateRule = CUpdateRule.FAST,
     ):
-        """Initialize"""
+        """Initialize
+        Will be called at each call of the `train()` or `predict()` function
+        For round>2, some attributes will then be overritten by their previous states in the `load()` function,
+        before the `train()` or `predict()` function is ran
+        """
         super().__init__()
 
         self._model = model
         self._criterion = criterion
         self._optimizer = optimizer
         self._num_updates = num_updates
+        self._batch_size = batch_size
         self._get_index_generator = get_index_generator
         self._scheduler = scheduler
-        self._batch_size = batch_size
         self._with_batch_norm_parameters = with_batch_norm_parameters
+        self._c_update_rule = CUpdateRule(c_update_rule)
         self._index_generator: Optional[BaseIndexGenerator] = None
+        # ci in the paper
+        self._client_control_variate: List[torch.Tensor] = None
+        # c in the paper
+        self._server_control_variate: List[torch.Tensor] = None
+        # the lr used by optimizer.step()
+        self._current_lr: float = None
+        # the delta_variate used in _scaffold_weight_update()
+        self._delta_variate: List[torch.Tensor] = None
 
         if batch_size is None:
             logger.warning("Batch size is set to none, the whole dataset will be used for each update.")
@@ -142,6 +177,41 @@ class TorchFedAvgAlgo(Algo):
             torch.nn.Module: model
         """
         return self._model
+
+    def _update_current_lr(self):
+        """method to get the current learning rate from the scheduler, or the optimizer if no scheduler.
+        If the optimizer has no learning rate, default value is 1.0 (the lr has no effect)
+        Different use cases: https://discuss.pytorch.org/t/get-current-lr-of-optimizer-with-adaptive-lr/24851/6
+
+        Returns:
+            float: current learning rate
+        """
+        if self._scheduler and self._scheduler.get_last_lr():
+            self._current_lr = self._scheduler.get_last_lr()[0]
+        elif self._optimizer.param_groups[0]["lr"]:
+            # TODO(sci-review): check if we need to implement the use case where there is different lr per param_group
+            self._current_lr = float(self._optimizer.param_groups[0]["lr"])
+        elif self._optimizer.defaults["lr"]:
+            logger.warning("Could not get the current optimizer learning rate. `optimizer.defaults['lr']` will be used")
+            self._current_lr = float(self._optimizer.defaults["lr"])
+        else:
+            logger.warning(
+                "Could not get the optimizer learning rate. The default value of 1.0 will be used when"
+                "computing the Scaffold weight_update"
+            )
+            self._current_lr = 1.0
+
+    def _scaffold_weight_update(self):
+        # Adding control variates on weights times learning rate
+        # Scaffold paper's Algo step 10.2 :  yi = last_yi - lr * ( - ci + c) = last_yi + lr * ( ci - c)
+        # <=> model = last_model + lr * delta_variate
+        self._update_current_lr()
+        weight_manager.increment_parameters(
+            model=self._model,
+            updates=self._delta_variate,
+            with_batch_norm_parameters=self._with_batch_norm_parameters,
+            updates_multiplier=self._current_lr,
+        )
 
     @abc.abstractmethod
     def _local_train(
@@ -161,17 +231,25 @@ class TorchFedAvgAlgo(Algo):
             x (Any): x as returned by the opener
             y (Any): y as returned by the opener
         """
+        # for each update
         for batch_index in self._index_generator:
+            # get minibatch
             x_batch, y_batch = x[batch_index], y[batch_index]
-
             # Forward pass
             y_pred = self._model(x_batch)
-
             # Compute Loss
             loss = self._criterion(y_pred, y_batch)
             self._optimizer.zero_grad()
+            # backward pass: compute the gradients
             loss.backward()
+            # forward pass: update the weights.
+            # TODO(sci-review): check that we execute Scaffold paper's Algo step 10.1:
+            # if optimizer=SGD, yi = last_yi - lr * grads,
+            # with the same lr as _get_current_lr() (used in step 10.2)
             self._optimizer.step()
+
+            # scaffold specific: to keep between _optimizer.step() and _scheduler.step()
+            self._scaffold_weight_update()
 
             if self._scheduler is not None:
                 self._scheduler.step()
@@ -212,30 +290,33 @@ class TorchFedAvgAlgo(Algo):
         self,
         x: Any,
         y: Any,
-        shared_state=None,  # Set to None per default for clarity reason as the decorator will do it if
-        # the arg shared_state is not passed.
-    ) -> Dict[str, np.ndarray]:
-        """Train method of the fed avg strategy implemented with torch. This method will execute the following
+        shared_state: ScaffoldAveragedStates = None,  # Set to None per default for clarity reason as
+        #  the decorator will do it if the arg shared_state is not passed.
+        local_state=None,
+    ) -> ScaffoldSharedState:
+        """Train method of the Scaffold strategy implemented with torch. This method will execute the following
         operations:
 
             * instantiates the provided (or default) batch indexer
-            * apply the provided (or default) _processing method to x and y
             * if a shared state is passed, set the parameters of the model to the provided shared state
             * train the model for n_updates
-            * compute the weight update
+            * compute the weight update and control variate update
 
         Args:
             x (Any): Input data.
             y (Any): Input target.
-            shared_state (Dict[str, np.ndarray], Optional): Dict containing torch parameters that will be set to the
-                model. Defaults to None.
+            shared_state (ScaffoldAveragedStates): Shared state sent by the aggregate_node
+                (returned by the func strategies.scaffold.avg_shared_states)
+                Defaults to None.
+
 
         Returns:
-            Dict[str, np.ndarray]: weight update (delta between fine-tuned weights and previous weights)
+            shared_state (ScaffoldSharedState): the shared states of the Algo
         """
 
-        # Instantiate the index_generator
-        if self._index_generator is None:
+        if shared_state is None:  # first round
+            # Instantiate the index_generator
+            assert self._index_generator is None
             self._index_generator = self._get_index_generator(
                 n_samples=self._get_len_from_x(x),
                 batch_size=self._batch_size,
@@ -243,19 +324,53 @@ class TorchFedAvgAlgo(Algo):
                 shuffle=True,
                 drop_last=False,
             )
-        self._index_generator.reset_counter()
 
-        # The shared states is the average of the difference of the gradient for all nodes
-        # Hence we need to add it to the previous local state parameters
-        if shared_state is not None:
+            # client_control_variate = zeros matrix with the shape of the model weights
+            assert self._client_control_variate is None
+            self._client_control_variate = weight_manager.zeros_like_parameters(
+                self.model, with_batch_norm_parameters=self._with_batch_norm_parameters
+            )
+            # we initialize the server_control_variate (c in the paper) here so we don't have to do
+            # an initialization round
+            assert self._server_control_variate is None
+            self._server_control_variate = weight_manager.zeros_like_parameters(
+                self.model, with_batch_norm_parameters=self._with_batch_norm_parameters
+            )
+        else:  # round>1
+            # The shared states is the average of the difference of the weight_update for all nodes
+            # Hence we need to add it to the previous local state parameters
+            # Scaffold paper's Algo step 17: model = model + aggregation_lr * weight_update
+            # here shared_state.avg_weight_update is already aggregation_lr * weight_update,
+            # cf strategies.scaffold.avg_shared_states
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.values(),
+                updates=shared_state.avg_weight_update,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
+            # get the server_control_variate from the aggregator
+            self._server_control_variate = [torch.from_numpy(t) for t in shared_state.server_control_variate]
 
-        old_parameters = weight_manager.get_parameters(
+            # These should have been loaded by the load() function
+            assert self._client_control_variate is not None
+            assert self._index_generator is not None
+
+        assert (
+            self._num_updates > 0
+        ), "num_updates should be > 0 because we divide by it for control_variate_update and we compute the "
+        "self._current_lr in _local_train()"
+
+        self._index_generator.reset_counter()
+
+        # save original parameters to compute the weight updates and reset the model parameters after
+        # the model is trained
+        original_parameters = weight_manager.get_parameters(
             model=self._model, with_batch_norm_parameters=self._with_batch_norm_parameters
+        )
+
+        # compute delta_variate = ci-c for Scaffold paper's Algo step 10.2 (self._scaffold_weight_update())
+        self._delta_variate = weight_manager.subtract_parameters(
+            parameters=self._client_control_variate,
+            parameters_to_subtract=self._server_control_variate,
         )
 
         # Train mode for torch model
@@ -276,33 +391,55 @@ class TorchFedAvgAlgo(Algo):
 
         self._model.eval()
 
-        model_gradient = weight_manager.subtract_parameters(
+        # Scaffold paper's Algo step 12+13.1: compute weight_update = (yi-x)
+        weight_update = weight_manager.subtract_parameters(
             parameters=weight_manager.get_parameters(
                 model=self._model,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             ),
-            parameters_to_subtract=old_parameters,
+            parameters_to_subtract=original_parameters,
+        )
+
+        if self._c_update_rule == CUpdateRule.FAST:
+            # right_multiplier = -1 / (lr*num_updates)
+            # TODO(sci-review): for now we take the lr from the latest optimizer.step(), be sure this is the right one
+            right_multiplier = -1.0 / (self._current_lr * self._num_updates)
+            # Scaffold paper's Algo step 12+13.2: control_variate_update = -c - weight_update / (lr*num_updates)
+            control_variate_update = weight_manager.weighted_sum_parameters(
+                parameters_list=[self._server_control_variate, weight_update], coefficient_list=[-1.0, right_multiplier]
+            )
+        else:
+            # TODO(sci-review): implement rule 1 ? and add tests
+            raise NotImplementedError("rule 1 not implemented")
+
+        # Scaffold paper's Algo step 14: ci = ci + control_variate_update
+        self._client_control_variate = weight_manager.add_parameters(
+            parameters=self._client_control_variate,
+            parameters_to_add=control_variate_update,
         )
 
         # Re set to the previous state
         weight_manager.set_parameters(
             model=self._model,
-            parameters=old_parameters,
+            parameters=original_parameters,
             with_batch_norm_parameters=self._with_batch_norm_parameters,
         )
 
-        return_dict = {f"grad_{i}": g.cpu().detach().numpy() for i, g in enumerate(model_gradient)}
-        return_dict["n_samples"] = self._get_len_from_x(x)
+        # Scaffold paper's Algo step 13: return model_weight_update & control_variate_update
+        return_dict = ScaffoldSharedState(
+            weight_update=[w.cpu().detach().numpy() for w in weight_update],
+            control_variate_update=[c.cpu().detach().numpy() for c in control_variate_update],
+            server_control_variate=[s.cpu().detach().numpy() for s in self._server_control_variate],
+            n_samples=self._get_len_from_x(x),
+        )
         return return_dict
 
     @remote_data
     def predict(
         self,
         x: np.ndarray,
-        shared_state: Dict[
-            str, np.ndarray
-        ] = None,  # Set to None per default for clarity reason as the decorator will do it if the arg shared_state
-        # is not passed.
+        shared_state: ScaffoldAveragedStates = None,  # Set to None per default for clarity reason as the decorator
+        # will do it if the arg shared_state is not passed.
     ):
         """Predict method of the fed avg strategy. Executes the following operation :
             * apply user defined (or default) _process method to x
@@ -318,13 +455,13 @@ class TorchFedAvgAlgo(Algo):
         Returns:
             Any: Model prediction post precessed by the _postprocess class method.
         """
-        # Reduce memory consumption as we don't use the model gradients
+        # Reduce memory consumption as we don't use the model weight_update
         with torch.inference_mode():
             # If needed, add the shared state to the model parameters
             if shared_state is not None:
                 weight_manager.increment_parameters(
                     model=self._model,
-                    updates=shared_state.values(),
+                    updates=shared_state.avg_weight_update,
                     with_batch_norm_parameters=self._with_batch_norm_parameters,
                 )
 
@@ -333,13 +470,14 @@ class TorchFedAvgAlgo(Algo):
         predictions = self._local_predict(x)
         return predictions
 
-    def load(self, path: Path) -> "TorchFedAvgAlgo":
+    def load(self, path: Path) -> "TorchScaffoldAlgo":
         """Load the stateful arguments of this class, i.e.:
 
             * self._model
             * self._optimizer
             * self._scheduler (if provided)
             * self._index_generator
+            * self._client_control_variate
             * torch rng state
 
         Args:
@@ -359,6 +497,8 @@ class TorchFedAvgAlgo(Algo):
 
         self._index_generator = checkpoint["index_generator"]
 
+        self._client_control_variate = checkpoint["client_control_variate"]
+
         torch.set_rng_state(checkpoint["rng_state"])
         return self
 
@@ -368,6 +508,7 @@ class TorchFedAvgAlgo(Algo):
             * self._optimizer
             * self._scheduler (if provided)
             * self._index_generator
+            * self._client_control_variate
             * torch rng state
 
         Args:
@@ -380,6 +521,7 @@ class TorchFedAvgAlgo(Algo):
                 "scheduler_state_dict": self._scheduler.state_dict() if self._scheduler is not None else None,
                 "index_generator": self._index_generator,
                 "rng_state": torch.get_rng_state(),
+                "client_control_variate": self._client_control_variate,
             },
             path,
         )

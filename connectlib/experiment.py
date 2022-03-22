@@ -186,7 +186,7 @@ def execute_experiment(
         experiment_folder (Union[str, Path]): path to the folder where the experiment summary is saved.
         clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
-            quickly so should be set to True unless needed. Default to True.
+            quickly so should be set to True unless needed. Defaults to True.
 
     Returns:
         ComputePlan: The generated compute plan

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+
+- feat: Scaffold strategy (#89)
 - feat: add one node strategy (#106)
 - The Connect tasks have a `round_idx` attribute in their metadata (#101)
 - doc: add python api to documentation #105
