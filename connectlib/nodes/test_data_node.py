@@ -35,7 +35,7 @@ class TestDataNode(Node):
         """Creating a test tuple based on the node characteristic.
 
         Args:
-            traintuple_id (str): The substra parant id
+            traintuple_id (str): The substra parent id
         """
         self.tuples.append(
             {

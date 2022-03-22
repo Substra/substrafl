@@ -307,6 +307,7 @@ def batch_norm_cnn():
     class BatchNormCnn(torch.nn.Module):
         def __init__(self):
             super(BatchNormCnn, self).__init__()
+            torch.manual_seed(42)
             self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=10, kernel_size=5, stride=1)
             self.conv2 = torch.nn.Conv2d(10, 20, kernel_size=5)
             self.conv2_bn = torch.nn.BatchNorm2d(20)
