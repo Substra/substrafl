@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def _register_operations(
     client: substra.Client,
     train_data_nodes: List[TrainDataNode],
-    aggregation_node: AggregationNode,
+    aggregation_node: Optional[AggregationNode],
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
 ) -> Tuple[List[dict], List[dict], List[dict], Dict[RemoteStruct, OperationKey]]:
@@ -34,8 +34,8 @@ def _register_operations(
 
     Args:
         client (substra.Client): substra client
-        train_data_nodes (List[TrainDataNode]):list of train data nodes
-        aggregation_node (AggregationNode): the aggregation node
+        train_data_nodes (List[TrainDataNode]): list of train data nodes
+        aggregation_node (Optional[AggregationNode]): the aggregation node for centralized strategies
         evaluation_strategy (Optional[EvaluationStrategy]): the evaluation strategy if there is one
         dependencies (Dependency): dependencies of the train algo
 
@@ -46,8 +46,10 @@ def _register_operations(
     # `register_operations` methods from the different nodes store the id of the already registered
     # algorithm so we don't add them twice
     operation_cache = dict()
+    train_data_nodes_id = {node.node_id for node in train_data_nodes}
+    aggregation_node_id = {aggregation_node.node_id} if aggregation_node is not None else set()
 
-    authorized_ids = list(set([aggregation_node.node_id] + [node.node_id for node in train_data_nodes]))
+    authorized_ids = list(train_data_nodes_id | aggregation_node_id)
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
     composite_traintuples = []
@@ -66,10 +68,15 @@ def _register_operations(
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
     # We still need to pass the information of the editable mode.
-    operation_cache = aggregation_node.register_operations(
-        client, permissions, cache=operation_cache, dependencies=Dependency(editable_mode=dependencies.editable_mode)
-    )
-    aggregation_tuples = aggregation_node.tuples
+    aggregation_tuples = []
+    if aggregation_node is not None:
+        operation_cache = aggregation_node.register_operations(
+            client,
+            permissions,
+            cache=operation_cache,
+            dependencies=Dependency(editable_mode=dependencies.editable_mode),
+        )
+        aggregation_tuples = aggregation_node.tuples
 
     return composite_traintuples, aggregation_tuples, testtuples, operation_cache
 
@@ -82,7 +89,7 @@ def _save_experiment_summary(
     algo: Algo,
     operation_cache: Dict[RemoteStruct, OperationKey],
     train_data_nodes: TrainDataNode,
-    aggregation_node: AggregationNode,
+    aggregation_node: Optional[AggregationNode],
     evaluation_strategy: EvaluationStrategy,
     timestamp: str,
 ):
@@ -95,9 +102,9 @@ def _save_experiment_summary(
         num_rounds (int): num_rounds
         algo (connectlib.algorithms.Algo): algo
         operation_cache (Dict[RemoteStruct, OperationKey]): operation_cache
-        train_data_nodes (connectlib.nodes.TrainDataNode): train_data_nodes
-        aggregation_node (connectlib.nodes.AggregationNode): aggregation_node
-        evaluation_strategy (connectlib.evaluation_strategy.EvaluationStrategy): evaluation_strategy
+        train_data_nodes (TrainDataNode): train_data_nodes
+        aggregation_node (Optional[AggregationNode]): aggregation_node
+        evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
     """
     # create the experiment folder if it doesn't exist
@@ -123,7 +130,8 @@ def _save_experiment_summary(
         experiment_summary["test_data_nodes"] = [
             test_data_node.summary() for test_data_node in evaluation_strategy.test_data_nodes
         ]
-    experiment_summary["aggregation_node"] = aggregation_node.summary()
+
+    experiment_summary["aggregation_node"] = aggregation_node.summary() if aggregation_node is not None else None
 
     # Save the experiment summary
     summary_file = experiment_folder / f"{timestamp}_{compute_plan.key}.json"
@@ -136,9 +144,9 @@ def execute_experiment(
     algo: Algo,
     strategy: Strategy,
     train_data_nodes: List[TrainDataNode],
-    aggregation_node: AggregationNode,
     num_rounds: int,
     experiment_folder: Union[str, Path],
+    aggregation_node: Optional[AggregationNode] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
@@ -170,7 +178,8 @@ def execute_experiment(
         train_data_nodes (List[TrainDataNode]): List of the nodes where training on data occurs
         evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
-        aggregation_node (AggregationNode): The aggregation node, where all the shared tasks occur
+        aggregation_node (Optional[AggregationNode]): For centralized strategy, the aggregation node, where all the
+            shared tasks occurs else None.
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the connectlib Dependency class. Defaults None.
@@ -237,6 +246,7 @@ def execute_experiment(
     # Execute the compute plan
     logger.info("Submitting the compute plan to Connect.")
     timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
+
     compute_plan = client.add_compute_plan(
         substra.sdk.schemas.ComputePlanSpec(
             composite_traintuples=composite_traintuples,

@@ -1,6 +1,5 @@
 import logging
 import pickle
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,7 +16,6 @@ from connectlib.strategies import FedAVG
 from tests import utils
 
 logger = logging.getLogger(__name__)
-current_folder = Path(__file__).parent
 
 
 def _assert_model_parameters_equal(model1, model2):
@@ -70,8 +68,6 @@ def test_pytorch_fedavg_algo_weights(
     num_rounds = 2
     batch_size = 1
 
-    seed = 42
-    torch.manual_seed(seed)
     perceptron = torch_linear_model()
 
     class MyAlgo(TorchFedAvgAlgo):

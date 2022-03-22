@@ -7,6 +7,9 @@ Torch Algorithms
 .. autoclass:: connectlib.algorithms.pytorch.TorchFedAvgAlgo
     :members:
 
+.. autoclass:: connectlib.algorithms.pytorch.TorchOneNodeAlgo
+    :members:
+
 Torch functions
 ^^^^^^^^^^^^^^^^^^
 

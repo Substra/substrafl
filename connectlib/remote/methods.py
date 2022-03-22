@@ -66,7 +66,7 @@ class _RemoteDataMethod(substratools.CompositeAlgo):
             else:
                 instance = self.instance
 
-            method_to_call = getattr(instance, self.method_name)
+            method_to_call = instance.train
             next_shared_state = method_to_call(x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters)
 
             return instance, next_shared_state
@@ -87,7 +87,7 @@ class _RemoteDataMethod(substratools.CompositeAlgo):
         assert head_model is not None, "head model is None. Possibly you did not train() before running predict()"
         instance = head_model
 
-        method_to_call = getattr(instance, self.method_name)
+        method_to_call = instance.predict
         predictions = method_to_call(x=X, shared_state=trunk_model, _skip=True, **self.method_parameters)
 
         return predictions

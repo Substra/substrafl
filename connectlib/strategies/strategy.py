@@ -3,6 +3,7 @@ from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
 from typing import List
+from typing import Optional
 from typing import TypeVar
 
 from connectlib.algorithms.algo import Algo
@@ -25,7 +26,7 @@ class Strategy(ABC):
         self,
         algo: Algo,
         train_data_nodes: List[TrainDataNode],
-        aggregation_node: AggregationNode,
+        aggregation_node: Optional[AggregationNode],
         round_idx: int,
     ):
         raise NotImplementedError

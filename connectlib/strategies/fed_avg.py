@@ -144,6 +144,9 @@ class FedAVG(Strategy):
                 of the models
             round_idx (int): Round number, it starts by zero.
         """
+        if aggregation_node is None:
+            raise ValueError("In FedAvg strategy aggregation node cannot be None")
+
         next_local_states = []
         states_to_aggregate = []
         for i, node in enumerate(train_data_nodes):
