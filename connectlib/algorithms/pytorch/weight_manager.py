@@ -100,6 +100,7 @@ def increment_parameters(
     model: torch.nn.Module,
     updates: Union[List[torch.nn.parameter.Parameter], np.ndarray],
     with_batch_norm_parameters: bool,
+    updates_multiplier: float = 1.0,
 ):
     """Add the given update to the model parameters. If with_batch_norm_parameters is set to True, the operation
     will include the running mean and the running variance of the batch norm layers (in this case, they must be
@@ -107,11 +108,14 @@ def increment_parameters(
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        updates (List[torch.nn.parameter.Parameter]): A list of torch parameters to add to the model, as ordered by
-            the standard iterators. The trainable parameters should come first followed by the batch norm parameters
-            if `with_batch_norm_parameters` is set to `True`.
-        with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of each batch norm
-            layer will be included, after the trainable layers, in the model parameters to modify.
+        updates (Union[List[torch.nn.parameter.Parameter], np.ndarray]): A list of torch parameters to add to the model,
+            as ordered by the standard iterators. The trainable parameters should come first followed by the batch norm
+            parameters if `with_batch_norm_parameters` is set to `True`. If the type is np.ndarray, it is converted in
+            `torch.Tensor`.
+        with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of
+            each batch norm layer will be included, after the trainable layers, in the model parameters to modify.
+        updates_multiplier (float, Optional): The coefficient which multiplies the updates before being added to the
+            model. Defaults to 1.0.
     """
     with torch.inference_mode():
         # INFO: this is the faster way I found of checking that both model.parameters() and shared states has the
@@ -127,37 +131,82 @@ def increment_parameters(
                 f"The shape of the model weights ({weights.data.shape}) and of the update ({update.data.shape}) "
                 "passed in the updates argument are unequal."
             )
-            weights.data += update.data
+            weights.data += updates_multiplier * update.data
 
 
 def subtract_parameters(
     parameters: List[torch.nn.parameter.Parameter],
-    old_parameters: List[torch.nn.parameter.Parameter],
+    parameters_to_subtract: List[torch.nn.parameter.Parameter],
 ) -> List[torch.nn.parameter.Parameter]:
-    """Subtract the given list of torch parameters i.e. : parameters - old_parameters.
+    """
+    subtract the given list of torch parameters i.e. : parameters - parameters_to_subtract.
     Those elements can be extracted from a model thanks to the :func:`~get_parameters` function.
 
     Args:
         parameters (List[torch.nn.parameter.Parameter]): A list of torch parameters.
-        old_parameters (List[torch.nn.parameter.Parameter]): A list of torch parameters.
+        parameters_to_subtract (List[torch.nn.parameter.Parameter]): A list of torch parameters.
 
     Returns:
         List[torch.nn.parameter.Parameter]: The subtraction of the given parameters.
     """
+    return weighted_sum_parameters(
+        parameters_list=[parameters, parameters_to_subtract],
+        coefficient_list=[1, -1],
+    )
 
-    delta = []
 
-    assert len(parameters) == len(old_parameters), "Length of model parameters and old_parameters are unequal."
+def add_parameters(
+    parameters: List[torch.nn.parameter.Parameter],
+    parameters_to_add: List[torch.nn.parameter.Parameter],
+) -> List[torch.nn.parameter.Parameter]:
+    """
+    add the given list of torch parameters i.e. : parameters - parameters_to_add.
+    Those elements can be extracted from a model thanks to the :func:`~get_parameters` function.
 
-    for weights, old_weights in zip(parameters, old_parameters):
-        assert weights.data.shape == old_weights.data.shape, (
-            f"The shape of the parameter weights ({weights.data.shape}) and of the old parameter weights "
-            f"({old_weights.data.shape}) are unequal."
-        )
+    Args:
+        parameters (List[torch.nn.parameter.Parameter]): A list of torch parameters.
+        parameters_to_add (List[torch.nn.parameter.Parameter]): A list of torch parameters.
+
+    Returns:
+        List[torch.nn.parameter.Parameter]: The addion of the given parameters.
+    """
+    return weighted_sum_parameters(
+        parameters_list=[parameters, parameters_to_add],
+        coefficient_list=[1, 1],
+    )
+
+
+def weighted_sum_parameters(
+    parameters_list: List[List[torch.Tensor]],
+    coefficient_list: List[float],
+) -> List[torch.Tensor]:
+    """
+    Do a weighted sum of the given lists of torch parameters.
+    Those elements can be extracted from a model thanks to the :func:`~get_parameters` function.
+
+    Args:
+        parameters_list (List[List[torch.Tensor]]): A list of List of torch parameters.
+        coefficient_list (List[float]): A list of coefficients which will be applied to each list of parameters.
+    Returns:
+        List[torch.nn.parameter.Parameter]: The weighted sum of the given list of torch parameters.
+    """
+
+    weighted_sum = []
+
+    assert all(
+        len(parameters_list[0]) == len(parameters) for parameters in parameters_list
+    ), "The number of parameters in each List is not the same"
+
+    assert len(parameters_list) == len(coefficient_list), "There must be a coefficient for each List of parameters"
+
+    for parameters_to_sum in zip(*parameters_list):
+        assert all(
+            parameters_to_sum[0].data.shape == parameter.data.shape for parameter in parameters_to_sum
+        ), "The shape of the parameters are unequal."
         with torch.inference_mode():
-            delta.append((weights - old_weights))
+            weighted_sum.append(sum(param * coeff for param, coeff in zip(parameters_to_sum, coefficient_list)))
 
-    return delta
+    return weighted_sum
 
 
 def set_parameters(
@@ -167,7 +216,7 @@ def set_parameters(
 ):
     """Sets the parameters of a pytorch model to the provided parameters. If with_batch_norm_parameters is set to True,
     the operation will include the running mean and the running variance of the batch norm layers (in this case, they
-    must be included in the given gradient). This function modifies the given model internally and therefore returns
+    must be included in the given parameters). This function modifies the given model internally and therefore returns
     nothing.
 
     Args:
@@ -184,3 +233,27 @@ def set_parameters(
         assert n_parameters == len(parameters), "Length of model parameters and provided parameters are unequal."
         for (p, w) in zip(iter_params(), parameters):
             p.data = w.data
+
+
+def zeros_like_parameters(
+    model: torch.nn.Module,
+    with_batch_norm_parameters: bool,
+) -> List[torch.Tensor]:
+    """Copy the model parameters from the provided torch model and sets values to zero.
+    If with_batch_norm_parameters is set to True, the running mean and the running variance of the batch norm
+    layers will be added after the "classic" parameters of the model.
+
+    Args:
+        model (torch.nn.Module): A torch model.
+        with_batch_norm_parameters (bool): If set to True, the running mean
+            and the running variance of each batch norm layer will be added
+            after the "classic" parameters.
+
+    Returns:
+        List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model with values set to zero.
+    """
+    with torch.inference_mode():
+        iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
+        parameters = [torch.zeros_like(p) for p in iter_params()]
+
+    return parameters

@@ -324,3 +324,14 @@ def batch_norm_cnn():
             return functional.sigmoid(x)
 
     return BatchNormCnn
+
+
+@pytest.fixture(scope="session")
+def rtol():
+    """
+    relative tolerance for pytest.approx()
+
+    Returns:
+        float: rtol
+    """
+    return 10e-6

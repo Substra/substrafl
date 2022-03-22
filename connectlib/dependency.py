@@ -17,7 +17,7 @@ class Dependency(BaseModel):
             Dockerfiles submitted to connect platform will be taken from owkin pypi. Be sure to have
             access to owkin's pypi and configure accordingly your pip.conf.
             If set to True, it will be the one installed in editable mode from your python environment.
-            Default to False.
+            Defaults to False.
         dependencies (List[str]): Python packages installable from pypi.
         local_dependencies (List[Path]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each

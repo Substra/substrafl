@@ -4,51 +4,17 @@ from typing import Any
 
 import pytest
 import torch
-from substra.sdk.models import ModelType
 
 from connectlib import execute_experiment
 from connectlib.algorithms.pytorch import TorchFedAvgAlgo
-from connectlib.algorithms.pytorch.weight_manager import get_parameters
 from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.strategies import FedAvg
 from tests import utils
+from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
 
 logger = logging.getLogger(__name__)
-
-
-def _assert_model_parameters_equal(model1, model2):
-    model1_params = get_parameters(model1, with_batch_norm_parameters=True)
-    model2_params = get_parameters(model2, with_batch_norm_parameters=True)
-    assert len(model1_params) == len(model2_params)
-
-    for params1, params2 in zip(model1_params, model2_params):
-        assert torch.equal(params1, params2)
-
-
-def _download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
-    # Retrieve composite train tuple key
-    train_tasks = network.clients[0].list_composite_traintuple(
-        filters=[
-            f"composite_traintuple:compute_plan_key:{compute_plan.key}",
-            f"composite_traintuple:rank:{rank}",
-        ]
-    )
-
-    local_models = list()
-    for task in train_tasks:
-        for model in task.composite.models:
-            client = None
-            if task.worker == network.msp_ids[0]:
-                client = network.clients[0]
-            elif task.worker == network.msp_ids[1]:
-                client = network.clients[1]
-            client.download_model(model.key, session_dir)
-            model_path = session_dir / f"model_{model.key}"
-            if model.category == ModelType.head:
-                local_models.append(my_algo.load(model_path).model)
-    return local_models
 
 
 @pytest.mark.substra
@@ -111,8 +77,8 @@ def test_pytorch_fedavg_algo_weights(
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
 
-    rank_0_local_models = _download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=0)
-    rank_2_local_models = _download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=2)
+    rank_0_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=0)
+    rank_2_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=2)
 
     # Download the aggregate output
     aggregate_task = network.clients[0].list_aggregatetuple(
@@ -124,15 +90,15 @@ def test_pytorch_fedavg_algo_weights(
     aggregate_model = pickle.loads(model_path.read_bytes())
 
     # Assert the model initialisation is the same for every model
-    _assert_model_parameters_equal(rank_0_local_models[0], rank_0_local_models[1])
+    assert_model_parameters_equal(rank_0_local_models[0].model, rank_0_local_models[1].model)
 
     # Assert that the weights are well set
     for model_0, model_2 in zip(rank_0_local_models, rank_2_local_models):
-        increment_parameters(model_0, aggregate_model.values(), with_batch_norm_parameters=True)
-        _assert_model_parameters_equal(model_0, model_2)
+        increment_parameters(model_0.model, aggregate_model.values(), with_batch_norm_parameters=True)
+        assert_model_parameters_equal(model_0.model, model_2.model)
 
     # The local models are always the same on every node
-    _assert_model_parameters_equal(rank_2_local_models[0], rank_2_local_models[1])
+    assert_model_parameters_equal(rank_2_local_models[0].model, rank_2_local_models[1].model)
 
 
 @pytest.mark.substra
@@ -144,6 +110,7 @@ def test_pytorch_fedavg_algo_performance(
     test_linear_nodes,
     aggregation_node,
     session_dir,
+    rtol,
 ):
     """End to end test for torch fed avg algorithm."""
     num_updates = 100
@@ -201,4 +168,4 @@ def test_pytorch_fedavg_algo_performance(
 
     testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
-    assert list(testtuple.test.perfs.values())[0] == pytest.approx(expected_performance, rel=10e-6)
+    assert list(testtuple.test.perfs.values())[0] == pytest.approx(expected_performance, rel=rtol)

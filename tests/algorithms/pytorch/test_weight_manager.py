@@ -74,7 +74,7 @@ def test_torch_set_parameters(model, with_batch_norm_parameters, request):
 @pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_cnn"])
 @pytest.mark.parametrize("with_batch_norm_parameters", [True, False])
 def test_subtract_parameters(model, with_batch_norm_parameters, request):
-    # Test that the subtract_parameters method of two identical methods returns zeros like
+    # Test that the subtract_parameters method of two identical models returns zeros like
     # parameters
 
     torch.manual_seed(42)
@@ -116,3 +116,40 @@ def test_increment_parameters(model, with_batch_norm_parameters, request):
 
     for parameter1, parameter2 in zip(parameters1, parameters2):
         assert torch.equal(parameter1, 2 * parameter2)
+
+
+@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_cnn"])
+@pytest.mark.parametrize("with_batch_norm_parameters", [True, False])
+def test_add_parameters(model, with_batch_norm_parameters, request):
+    # Test that the add_parameters method of two identical models returns the first model with parameters mutiplied by 2
+
+    torch.manual_seed(42)
+    my_model1 = request.getfixturevalue(model)()
+
+    torch.manual_seed(42)
+    my_model2 = request.getfixturevalue(model)()
+
+    added_parameters = weight_manager.add_parameters(
+        weight_manager.get_parameters(my_model1, with_batch_norm_parameters=with_batch_norm_parameters),
+        weight_manager.get_parameters(my_model2, with_batch_norm_parameters=with_batch_norm_parameters),
+    )
+
+    for parameter, parameter_1 in zip(
+        added_parameters,
+        weight_manager.get_parameters(my_model1, with_batch_norm_parameters=with_batch_norm_parameters),
+    ):
+        assert torch.equal(parameter, 2 * parameter_1)
+
+
+def test_weighted_sum_parameters():
+    # Test that -1 * my_parameters + 2 * my_parameters = my_parameters
+
+    my_parameters = [torch.Tensor([1.0, 2.0, 3.0]), torch.Tensor([1.0, 2.0, 3.0])]
+
+    result = weight_manager.weighted_sum_parameters(
+        parameters_list=[my_parameters, my_parameters],
+        coefficient_list=[-1.0, 2.0],
+    )
+
+    for parameter, parameter_1 in zip(result, my_parameters):
+        assert torch.equal(parameter, parameter_1)

@@ -1,6 +1,7 @@
 import time
 
 from substra.sdk.models import ComputePlanStatus
+from substra.sdk.models import ModelType
 from substra.sdk.models import Status
 
 FUTURE_TIMEOUT = 3600
@@ -68,3 +69,27 @@ def wait(client, asset, timeout=FUTURE_TIMEOUT, raises=True):
         raise FutureFailureError(f"Future execution canceled on {asset}")
 
     return asset
+
+
+def download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
+    # Retrieve composite train tuple key
+    train_tasks = network.clients[0].list_composite_traintuple(
+        filters=[
+            f"composite_traintuple:compute_plan_key:{compute_plan.key}",
+            f"composite_traintuple:rank:{rank}",
+        ]
+    )
+
+    local_models = list()
+    for task in train_tasks:
+        for model in task.composite.models:
+            client = None
+            if task.worker == network.msp_ids[0]:
+                client = network.clients[0]
+            elif task.worker == network.msp_ids[1]:
+                client = network.clients[1]
+            client.download_model(model.key, session_dir)
+            model_path = session_dir / f"model_{model.key}"
+            if model.category == ModelType.head:
+                local_models.append(my_algo.load(model_path))
+    return local_models
