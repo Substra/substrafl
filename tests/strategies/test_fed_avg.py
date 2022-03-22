@@ -12,7 +12,7 @@ from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.test_data_node import TestDataNode
 from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote_data
-from connectlib.strategies import FedAVG
+from connectlib.strategies import FedAvg
 
 from .. import assets_factory
 from .. import utils
@@ -36,8 +36,8 @@ def test_avg_shared_states(n_samples, results):
         {"weights": 2 * np.ones((5, 10)), "n_samples": n_samples[2]},
     ]
 
-    MyFedAVG = FedAVG()
-    averaged_states = MyFedAVG.avg_shared_states(shared_states, _skip=True)
+    MyFedAvg = FedAvg()
+    averaged_states = MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
     assert (results == averaged_states["weights"]).all()
 
@@ -58,9 +58,9 @@ def test_avg_shared_states(n_samples, results):
 def test_avg_shared_states_no_n_samples_error(shared_states):
     # check if n_samples is not passed into avg_shared_states() error will be raised
     # check if no key is in the shared states error will be raised
-    MyFedAVG = FedAVG()
+    MyFedAvg = FedAvg()
     with pytest.raises(TypeError):
-        MyFedAVG.avg_shared_states(shared_states, _skip=True)
+        MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
 
 @pytest.mark.slow
@@ -134,7 +134,7 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     aggregation_node = AggregationNode(network.msp_ids[0])
     my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-    strategy = FedAVG()
+    strategy = FedAvg()
     # test every two rounds
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=2)
     compute_plan = execute_experiment(
