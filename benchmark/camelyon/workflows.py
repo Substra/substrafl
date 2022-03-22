@@ -16,7 +16,7 @@ from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.index_generator import NpIndexGenerator
-from connectlib.strategies import FedAVG
+from connectlib.strategies import FedAvg
 
 
 def connectlib_fed_avg(
@@ -158,7 +158,7 @@ def connectlib_fed_avg(
     )
 
     # Custom Strategy used for the data loading (from custom_torch_algo.py file)
-    strategy = FedAVG()
+    strategy = FedAvg()
 
     # Evaluation strategy
     evaluation = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=[n_rounds])

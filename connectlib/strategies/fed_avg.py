@@ -15,7 +15,7 @@ from connectlib.remote import remote
 from connectlib.strategies.strategy import Strategy
 
 
-class FedAVG(Strategy):
+class FedAvg(Strategy):
     """Federated averaging strategy.
 
     Federated averaging is the simplest federating strategy.
@@ -44,7 +44,7 @@ class FedAVG(Strategy):
     """
 
     def __init__(self):
-        super(FedAVG, self).__init__()
+        super(FedAvg, self).__init__()
 
         # States
         self.local_states: Optional[List[LocalStateRef]] = None

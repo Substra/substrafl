@@ -8,7 +8,7 @@ from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.remote.methods import remote_data
-from connectlib.strategies import FedAVG
+from connectlib.strategies import FedAvg
 
 
 # mocking the add_compute_plan as we don't want to test Substra, just the execute_experiment
@@ -43,7 +43,7 @@ def test_execute_experiment_has_no_side_effect(
     num_rounds = 2
     my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-    strategy = FedAVG()
+    strategy = FedAvg()
     # test every two rounds
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, rounds=2)
 

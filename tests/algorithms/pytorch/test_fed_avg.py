@@ -12,7 +12,7 @@ from connectlib.algorithms.pytorch.weight_manager import get_parameters
 from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.strategies import FedAVG
+from connectlib.strategies import FedAvg
 from tests import utils
 
 logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ def test_pytorch_fedavg_algo_weights(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
     )
-    strategy = FedAVG()
+    strategy = FedAvg()
     my_eval_strategy = None
 
     compute_plan = execute_experiment(
@@ -179,7 +179,7 @@ def test_pytorch_fedavg_algo_performance(
         editable_mode=True,
     )
 
-    strategy = FedAVG()
+    strategy = FedAvg()
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
     )
