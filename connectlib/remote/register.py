@@ -120,8 +120,15 @@ def _local_lib_install_command(lib_modules: List, operation_dir: Path, python_ma
         lib_path = Path(lib_module.__file__).parents[1]
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
-        # Recreate the wheel only if it  exists
-        if not (lib_path / "dist" / wheel_name).exists():
+        wheel_path = lib_path / "dist" / wheel_name
+        # Recreate the wheel only if it does not exist
+        if wheel_path.exists():
+            logger.warning(
+                f"Existing wheel {wheel_path} will be used to build {lib_name}. "
+                "It may lead to errors if you are using an unreleased version of this lib: "
+                "if it's the case, you can delete the wheel and it will be re-generated."
+            )
+        else:
             # if the right version of substra or substratools is not found, it will search if they are already
             # installed in 'dist' and take them from there.
             # sys.executable takes the Python interpreter run by the code and not the default one on the computer
@@ -149,7 +156,7 @@ def _local_lib_install_command(lib_modules: List, operation_dir: Path, python_ma
             )
 
         # Get wheel name based on current version
-        shutil.copy(lib_path / "dist" / wheel_name, wheels_dir / wheel_name)
+        shutil.copy(wheel_path, wheels_dir / wheel_name)
 
         # Necessary command to install the wheel in the docker image
         install_cmd = f"RUN cd {CONNECTLIB_FOLDER}/dist && python{python_major_minor} -m pip install {wheel_name}\n"
@@ -337,7 +344,7 @@ def _create_substra_algo_files(  # noqa: C901
 
     # Write description
     description_path = connectlib_internal / "description.md"
-    description_path.write_text("# ConnnectLib Operation")
+    description_path.write_text("# ConnectLib Operation")
 
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
