@@ -3,6 +3,8 @@ repos:
     rev: 21.11b1
     hooks:
       - id: black
+        # need to pin click because of issue: https://github.com/psf/black/issues/2964
+        additional_dependencies: ['click==8.0.4']
         args: [--line-length=120]
 
   - repo: https://gitlab.com/pycqa/flake8
