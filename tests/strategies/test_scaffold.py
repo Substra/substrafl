@@ -47,7 +47,7 @@ def test_avg_shared_states(n_samples, results, rtol):
 
     shared_states = [
         ScaffoldSharedState(
-            weight_update=weight,
+            parameters_update=weight,
             control_variate_update=weight,
             n_samples=n_sample,
             server_control_variate=[np.zeros((2, 3)), np.zeros((1, 2))],
@@ -57,9 +57,9 @@ def test_avg_shared_states(n_samples, results, rtol):
     my_scaffold = Scaffold(aggregation_lr=1)
     averaged_states: ScaffoldAveragedStates = my_scaffold.avg_shared_states(shared_states, _skip=True)
 
-    assert_array_list_allclose(array_list_1=results, array_list_2=averaged_states.avg_weight_update, rtol=rtol)
+    assert_array_list_allclose(array_list_1=results, array_list_2=averaged_states.avg_parameters_update, rtol=rtol)
     # as server_control_variate = np.zeros and aggregation_lr=1, the new server_control_variate is equal
-    # to avg_weight_update == results
+    # to avg_parameters_update == results
     assert_array_list_allclose(array_list_1=results, array_list_2=averaged_states.server_control_variate, rtol=rtol)
 
 
@@ -68,7 +68,7 @@ def test_avg_shared_states(n_samples, results, rtol):
     [
         [],
         ScaffoldSharedState(
-            weight_update=[np.array([0, 1, 1])],
+            parameters_update=[np.array([0, 1, 1])],
             control_variate_update=[np.array([0, 1, 1])],
             n_samples=1,
             server_control_variate=[np.array([0, 1, 1])],
@@ -126,7 +126,7 @@ def test_scaffold(network, constant_samples, numpy_datasets, session_dir, defaul
             shared_state,
         ):
             return ScaffoldSharedState(
-                weight_update=[x],
+                parameters_update=[x],
                 control_variate_update=[x * 2],
                 server_control_variate=[np.zeros_like(x)],
                 n_samples=len(x),
@@ -134,12 +134,13 @@ def test_scaffold(network, constant_samples, numpy_datasets, session_dir, defaul
 
         @remote_data
         def predict(self, x: np.array, shared_state: ScaffoldAveragedStates):
-            # avg_weight_update = mean(weight_update) * aggregation_lr = (0+1)/2 * aggregation_lr = 1/2 * aggregation_lr
-            assert shared_state.avg_weight_update[0] == np.ones(1) * 0.5 * aggregation_lr
+            # avg_parameters_update = mean(parameters_update) * aggregation_lr = (0+1)/2 * aggregation_lr
+            #   = 1/2 * aggregation_lr
+            assert shared_state.avg_parameters_update[0] == np.ones(1) * 0.5 * aggregation_lr
             # server_control_variate = server_control_variate + mean(control_variate_update) = 0 + (0+2)/2 = 1
             assert shared_state.server_control_variate[0] == np.ones(1)
             # return should be 0.5 * aggregation_lr + 1
-            return shared_state.avg_weight_update[0] + shared_state.server_control_variate[0]
+            return shared_state.avg_parameters_update[0] + shared_state.server_control_variate[0]
 
         def load(self, path: Path):
             return self

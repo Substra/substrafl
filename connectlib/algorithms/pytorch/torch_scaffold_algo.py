@@ -102,7 +102,7 @@ class TorchScaffoldAlgo(Algo):
                         self._optimizer.step()
 
                         # scaffold specific: to keep between _optimizer.step() and _scheduler.step()
-                        self._scaffold_weight_update()
+                        self._scaffold_parameters_update()
 
                         if self._scheduler is not None:
                             self._scheduler.step()
@@ -163,7 +163,7 @@ class TorchScaffoldAlgo(Algo):
         self._server_control_variate: List[torch.Tensor] = None
         # the lr used by optimizer.step()
         self._current_lr: float = None
-        # the delta_variate used in _scaffold_weight_update()
+        # the delta_variate used in _scaffold_parameters_update()
         self._delta_variate: List[torch.Tensor] = None
 
         if batch_size is None:
@@ -197,11 +197,11 @@ class TorchScaffoldAlgo(Algo):
         else:
             logger.warning(
                 "Could not get the optimizer learning rate. The default value of 1.0 will be used when"
-                "computing the Scaffold weight_update"
+                "computing the Scaffold parameters_update"
             )
             self._current_lr = 1.0
 
-    def _scaffold_weight_update(self):
+    def _scaffold_parameters_update(self):
         # Adding control variates on weights times learning rate
         # Scaffold paper's Algo step 10.2 :  yi = last_yi - lr * ( - ci + c) = last_yi + lr * ( ci - c)
         # <=> model = last_model + lr * delta_variate
@@ -249,7 +249,7 @@ class TorchScaffoldAlgo(Algo):
             self._optimizer.step()
 
             # scaffold specific: to keep between _optimizer.step() and _scheduler.step()
-            self._scaffold_weight_update()
+            self._scaffold_parameters_update()
 
             if self._scheduler is not None:
                 self._scheduler.step()
@@ -337,14 +337,14 @@ class TorchScaffoldAlgo(Algo):
                 self.model, with_batch_norm_parameters=self._with_batch_norm_parameters
             )
         else:  # round>1
-            # The shared states is the average of the difference of the weight_update for all nodes
+            # The shared states is the average of the difference of the parameters_update for all nodes
             # Hence we need to add it to the previous local state parameters
-            # Scaffold paper's Algo step 17: model = model + aggregation_lr * weight_update
-            # here shared_state.avg_weight_update is already aggregation_lr * weight_update,
+            # Scaffold paper's Algo step 17: model = model + aggregation_lr * parameters_update
+            # here shared_state.avg_parameters_update is already aggregation_lr * parameters_update,
             # cf strategies.scaffold.avg_shared_states
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.avg_weight_update,
+                updates=shared_state.avg_parameters_update,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
             # get the server_control_variate from the aggregator
@@ -367,7 +367,7 @@ class TorchScaffoldAlgo(Algo):
             model=self._model, with_batch_norm_parameters=self._with_batch_norm_parameters
         )
 
-        # compute delta_variate = ci-c for Scaffold paper's Algo step 10.2 (self._scaffold_weight_update())
+        # compute delta_variate = ci-c for Scaffold paper's Algo step 10.2 (self._scaffold_parameters_update())
         self._delta_variate = weight_manager.subtract_parameters(
             parameters=self._client_control_variate,
             parameters_to_subtract=self._server_control_variate,
@@ -391,8 +391,8 @@ class TorchScaffoldAlgo(Algo):
 
         self._model.eval()
 
-        # Scaffold paper's Algo step 12+13.1: compute weight_update = (yi-x)
-        weight_update = weight_manager.subtract_parameters(
+        # Scaffold paper's Algo step 12+13.1: compute parameters_update = (yi-x)
+        parameters_update = weight_manager.subtract_parameters(
             parameters=weight_manager.get_parameters(
                 model=self._model,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
@@ -404,9 +404,9 @@ class TorchScaffoldAlgo(Algo):
             # right_multiplier = -1 / (lr*num_updates)
             # TODO(sci-review): for now we take the lr from the latest optimizer.step(), be sure this is the right one
             right_multiplier = -1.0 / (self._current_lr * self._num_updates)
-            # Scaffold paper's Algo step 12+13.2: control_variate_update = -c - weight_update / (lr*num_updates)
+            # Scaffold paper's Algo step 12+13.2: control_variate_update = -c - parameters_update / (lr*num_updates)
             control_variate_update = weight_manager.weighted_sum_parameters(
-                parameters_list=[self._server_control_variate, weight_update],
+                parameters_list=[self._server_control_variate, parameters_update],
                 coefficient_list=[-1.0, right_multiplier],
             )
         else:
@@ -428,7 +428,7 @@ class TorchScaffoldAlgo(Algo):
 
         # Scaffold paper's Algo step 13: return model_weight_update & control_variate_update
         return_dict = ScaffoldSharedState(
-            weight_update=[w.cpu().detach().numpy() for w in weight_update],
+            parameters_update=[w.cpu().detach().numpy() for w in parameters_update],
             control_variate_update=[c.cpu().detach().numpy() for c in control_variate_update],
             server_control_variate=[s.cpu().detach().numpy() for s in self._server_control_variate],
             n_samples=self._get_len_from_x(x),
@@ -457,13 +457,13 @@ class TorchScaffoldAlgo(Algo):
         Returns:
             typing.Any: Model prediction post precessed by the _postprocess class method.
         """
-        # Reduce memory consumption as we don't use the model weight_update
+        # Reduce memory consumption as we don't use the model parameters_update
         with torch.inference_mode():
             # If needed, add the shared state to the model parameters
             if shared_state is not None:
                 weight_manager.increment_parameters(
                     model=self._model,
-                    updates=shared_state.avg_weight_update,
+                    updates=shared_state.avg_parameters_update,
                     with_batch_norm_parameters=self._with_batch_norm_parameters,
                 )
 

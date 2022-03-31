@@ -47,7 +47,7 @@ class Scaffold(Strategy):
         self._avg_shared_state: Optional[SharedStateRef] = None
 
     def _check_shared_states(self, shared_states: List[ScaffoldSharedState]):
-        """Check the Scaffold assumptions: server_control_variate, weight_update and server_control_variate have the
+        """Check the Scaffold assumptions: server_control_variate, parameters_update and server_control_variate have the
         same lenght for all the shared states, and all server_control_variate are equal.
 
         Args:
@@ -65,9 +65,9 @@ class Scaffold(Strategy):
             assert len(shared_state.control_variate_update) == len(
                 shared_states[0].control_variate_update
             ), "the length of control_variate_update should be the same for each shared_state"
-            assert len(shared_state.weight_update) == len(
-                shared_states[0].weight_update
-            ), "the length of weight_update should be the same for each shared_state"
+            assert len(shared_state.parameters_update) == len(
+                shared_states[0].parameters_update
+            ), "the length of parameters_update should be the same for each shared_state"
             assert len(shared_state.server_control_variate) == len(
                 shared_states[0].server_control_variate
             ), "the length of server_control_variate should be the same for each shared_state"
@@ -80,8 +80,8 @@ class Scaffold(Strategy):
         assert (
             len(shared_states[0].control_variate_update)
             == len(shared_states[0].server_control_variate)
-            == len(shared_states[0].weight_update)
-        ), "the length of server_control_variate, weight_update and server_control_variate should be the same"
+            == len(shared_states[0].parameters_update)
+        ), "the length of server_control_variate, parameters_update and server_control_variate should be the same"
 
     def _weight_arrays(
         self,
@@ -152,7 +152,8 @@ class Scaffold(Strategy):
         client_weight: np.ndarray,
     ) -> List[np.ndarray]:
         """Computes the weighted average of the weight updates and applies the aggregation learning rate,
-        according to Scaffold paper's Algo steps 16.2 + 17.2: `delta_x = global_lr * sum([client_weight*weight_update])`
+        according to Scaffold paper's Algo steps 16.2 + 17.2:
+        `delta_x = global_lr * sum([client_weight*parameters_update])`
 
         Args:
             weight_updates (typing.List[typing.List[numpy.ndarray]]): the weight updates of the clients
@@ -209,8 +210,8 @@ class Scaffold(Strategy):
                 control_variate_updates=[shared_state.control_variate_update for shared_state in shared_states],
                 client_weight=client_weight,
             ),
-            avg_weight_update=self._avg_weight_update(
-                weight_updates=[shared_state.weight_update for shared_state in shared_states],
+            avg_parameters_update=self._avg_weight_update(
+                weight_updates=[shared_state.parameters_update for shared_state in shared_states],
                 client_weight=client_weight,
             ),
         )
@@ -287,7 +288,7 @@ class Scaffold(Strategy):
             assert previous_local_state is not None
 
             # Since the training round ends on an aggregation on the aggregation node
-            # we need to get the aggregated weight_update back to the test node
+            # we need to get the aggregated parameters_update back to the test node
             traintuple_id_ref, _ = train_node.update_states(
                 # here we could also use algo.train or whatever method marked as @remote_data
                 # in the algo because fake_traintuple is true so the method name and the method
