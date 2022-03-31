@@ -91,14 +91,14 @@ class Scaffold(Strategy):
     ) -> List[np.ndarray]:
         """apply the `client_weight` to the arrays of the layer `layer_idx` in `states_to_aggregate`
         Args:
-            client_weight (np.ndarray): array of shape (num_clients,). Contains the weight of each client (n_samples /
-                n_all_samples).
-            states_to_aggregate (List[List[np.ndarray]]): List of the states (List[ndarray]) on which the weights are
-                applied.
+            client_weight (numpy.ndarray): array of shape (num_clients,). Contains the weight of
+                each client (n_samples / n_all_samples).
+            states_to_aggregate (typing.List[typing.List[numpy.ndarray]]): List of the states on
+                which the weights are applied.
             layer_idx (int): the selected layer
 
         Returns:
-            List[np.ndarray]: the weighted arrays of the layer `layer_idx`
+            typing.List[numpy.ndarray]: the weighted arrays of the layer `layer_idx`
         """
         weighted_arrays = []
         assert len(client_weight) == len(
@@ -122,14 +122,14 @@ class Scaffold(Strategy):
         according to Scaffold paper's Algo steps 16.1 + 17.1: `c = c + sum([client_weight*control_variate_update])`
 
         Args:
-            server_control_variate (List[np.ndarray]): the server control variate
-            control_variate_updates (List[List[np.ndarray]]): the control variate updates from the shared state of each
-                client.
-            client_weight (np.ndarray): array of shape (num_clients,). Contains the weight of each client (n_samples /
-                n_all_samples).
+            server_control_variate (typing.List[numpy.ndarray]): the server control variate
+            control_variate_updates (typing.List[typing.List[numpy.ndarray]]): the control variate updates from
+                the shared state of each client.
+            client_weight (numpy.ndarray): array of shape (num_clients,). Contains the weight of each client
+                (n_samples / n_all_samples).
 
         Returns:
-            List[np.ndarray]: the updated server_control_variate
+            typing.List[numpy.ndarray]: the updated server_control_variate
         """
         updated_server_control_variate = []
         # aggregate the arrays at pos i of each client state
@@ -155,12 +155,12 @@ class Scaffold(Strategy):
         according to Scaffold paper's Algo steps 16.2 + 17.2: `delta_x = global_lr * sum([client_weight*weight_update])`
 
         Args:
-            weight_updates (List[List[np.ndarray]]): the weight updates of the clients
-            client_weight (np.ndarray): array of shape (num_clients,). Contains the weight of each client (n_samples /
-                n_all_samples).
+            weight_updates (typing.List[typing.List[numpy.ndarray]]): the weight updates of the clients
+            client_weight (numpy.ndarray): array of shape (num_clients,). Contains the weight of each client
+                (n_samples / n_all_samples).
 
         Returns:
-            List[np.ndarray]: the averaged weight updates
+            typing.List[numpy.ndarray]: the averaged weight updates
         """
         averaged_weight_update = []
         # aggregate the arrays at pos i of each client state
@@ -179,16 +179,18 @@ class Scaffold(Strategy):
     def avg_shared_states(self, shared_states: List[ScaffoldSharedState]) -> ScaffoldAveragedStates:
         """Performs the aggregation of the shared states returned by the train
         methods of the user-defined algorithm, according to the server operations of the Scaffold Algo.
+
         1. Computes the weighted average of the weight updates and applies the aggregation learning rate
         2. Updates the server control variate with the weighted average of the control variate updates
+
         The average is weighted by the proportion of the number of samples.
 
         Args:
-            shared_states (List[ScaffoldSharedState]): Shared state returned by the train method of the algorithm for
-                each client (e.g. algorithms.pytorch.scaffold.train)
+            shared_states (typing.List[ScaffoldSharedState]): Shared state returned by the train method of
+                the algorithm for each client (e.g. algorithms.pytorch.scaffold.train)
 
         Returns:
-            averaged_states (ScaffoldAveragedStates): averaged weight updates and updated server control variate
+            ScaffoldAveragedStates: averaged weight updates and updated server control variate
         """
         # TODO: Do separate function for pytorch to avoid converting in np
 
@@ -230,7 +232,7 @@ class Scaffold(Strategy):
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
-            train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local updates
+            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
             aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
                 of the models
             round_idx (int): Round number, it starts by zero.

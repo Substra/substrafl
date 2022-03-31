@@ -48,21 +48,21 @@ class TorchScaffoldAlgo(Algo):
     The ``predict`` method calls the ``_local_predict`` method to generate the predictions.
 
     Attributes:
-        criterion (torch.nn.Module.loss._Loss): A torch criterion (loss).
+        criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
         optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-        scheduler (torch.optim.lr_scheduler._LRScheduler, Optional). A torch scheduler that will be called at every
-        batch. If None, no scheduler will be used. Defaults to None.
+        scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
+            batch. If None, no scheduler will be used. Defaults to None.
         num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
             train function).
-        batch_size (int, Optional). The number of samples used for each updates. If None, the whole input data will be
+        batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will be
             used.
-        get_index_generator (Type[BaseIndexGenerator], Optional). A class returning a stateful index generator. Must
+        get_index_generator (Type[BaseIndexGenerator], Optional): A class returning a stateful index generator. Must
             inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
             is used for selecting each batch from the output of the _preprocess method during training in this way :
             ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
             If overridden, the generator class must be defined either as part of a package or in a different file
             than the one from which the ``execute_experiment`` function is called.
-        with_batch_norm_parameters (bool). Whether to include the batch norm layer parameters in the fed avg strategy.
+        with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg strategy.
             Defaults to False.
         c_update_rule (CUpdateRule): The rule used to update the
             client control variate.
@@ -228,8 +228,8 @@ class TorchScaffoldAlgo(Algo):
         of the federated learning strategy.
 
         Args:
-            x (Any): x as returned by the opener
-            y (Any): y as returned by the opener
+            x (typing.Any): x as returned by the opener
+            y (typing.Any): y as returned by the opener
         """
         # for each update
         for batch_index in self._index_generator:
@@ -259,10 +259,10 @@ class TorchScaffoldAlgo(Algo):
         """Prediction on x
 
         Args:
-            x (Any): x as returned by the opener
+            x (typing.Any): x as returned by the opener
 
         Returns:
-            Any: predictions in the format saved then loaded by the opener
+            typing.Any: predictions in the format saved then loaded by the opener
             to calculate the metric
         """
         with torch.inference_mode():
@@ -277,7 +277,7 @@ class TorchScaffoldAlgo(Algo):
         if needed.
 
         Args:
-            x (Any): x returned by the opener
+            x (typing.Any): x returned by the opener
                 get_X function
 
         Returns:
@@ -303,15 +303,15 @@ class TorchScaffoldAlgo(Algo):
             * compute the weight update and control variate update
 
         Args:
-            x (Any): Input data.
-            y (Any): Input target.
+            x (typing.Any): Input data.
+            y (typing.Any): Input target.
             shared_state (ScaffoldAveragedStates): Shared state sent by the aggregate_node
                 (returned by the func strategies.scaffold.avg_shared_states)
                 Defaults to None.
 
 
         Returns:
-            shared_state (ScaffoldSharedState): the shared states of the Algo
+            ScaffoldSharedState: the shared states of the Algo
         """
 
         if shared_state is None:  # first round
@@ -406,7 +406,8 @@ class TorchScaffoldAlgo(Algo):
             right_multiplier = -1.0 / (self._current_lr * self._num_updates)
             # Scaffold paper's Algo step 12+13.2: control_variate_update = -c - weight_update / (lr*num_updates)
             control_variate_update = weight_manager.weighted_sum_parameters(
-                parameters_list=[self._server_control_variate, weight_update], coefficient_list=[-1.0, right_multiplier]
+                parameters_list=[self._server_control_variate, weight_update],
+                coefficient_list=[-1.0, right_multiplier],
             )
         else:
             # TODO(sci-review): implement rule 1 ? and add tests
@@ -441,19 +442,20 @@ class TorchScaffoldAlgo(Algo):
         shared_state: ScaffoldAveragedStates = None,  # Set to None per default for clarity reason as the decorator
         # will do it if the arg shared_state is not passed.
     ):
-        """Predict method of the fed avg strategy. Executes the following operation :
+        """Predict method of the fed avg strategy. Executes the following operation:
+
             * apply user defined (or default) _process method to x
             * if a shared state is given, add it to the model parameters
             * apply the model to the input data (model(x))
             * apply user defined (or default) _postprocess method to the model results
 
         Args:
-            x (np.ndarray): Input data.
-            shared_state (Dict[str, np.ndarray], Optional): If not None, the shared state will be added to the model
-                parameters' before computing the predictions. Defaults to None.
+            x (numpy.ndarray): Input data.
+            shared_state (typing.Dict[str, numpy.ndarray], Optional): If not None, the shared state will be added
+                to the model parameters' before computing the predictions. Defaults to None.
 
         Returns:
-            Any: Model prediction post precessed by the _postprocess class method.
+            typing.Any: Model prediction post precessed by the _postprocess class method.
         """
         # Reduce memory consumption as we don't use the model weight_update
         with torch.inference_mode():
@@ -481,7 +483,7 @@ class TorchScaffoldAlgo(Algo):
             * torch rng state
 
         Args:
-            path (Path): The path where the class has been saved.
+            path (pathlib.Path): The path where the class has been saved.
 
         Returns:
             TorchFedAvgAlgo: The class with the loaded elements.
@@ -504,6 +506,7 @@ class TorchScaffoldAlgo(Algo):
 
     def save(self, path: Path):
         """Saves all the stateful elements of the class to the specified path, i.e.:
+
             * self._model
             * self._optimizer
             * self._scheduler (if provided)
@@ -512,7 +515,7 @@ class TorchScaffoldAlgo(Algo):
             * torch rng state
 
         Args:
-            path (Path): A path where to save the class.
+            path (pathlib.Path): A path where to save the class.
         """
         torch.save(
             {

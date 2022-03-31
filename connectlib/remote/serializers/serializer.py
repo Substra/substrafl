@@ -8,6 +8,12 @@ class Serializer(ABC):
     @staticmethod
     @abstractmethod
     def save(state: Any, path: Path):
+        """Save the state to the path
+
+        Args:
+            state (typing.Any): state to save
+            path (pathlib.Path): path where to save it
+        """
         raise NotImplementedError
 
     @staticmethod

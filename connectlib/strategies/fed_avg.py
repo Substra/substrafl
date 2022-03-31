@@ -51,7 +51,7 @@ class FedAvg(Strategy):
         self.avg_shared_state: Optional[SharedStateRef] = None
 
     @remote
-    def avg_shared_states(self, shared_states: List[Dict[str, Union[str, np.ndarray]]]) -> Dict[str, np.ndarray]:
+    def avg_shared_states(self, shared_states: List[Dict[str, Union[int, np.ndarray]]]) -> Dict[str, np.ndarray]:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm.
         The average is weighted by the proportion of the number of samples.
@@ -67,8 +67,8 @@ class FedAvg(Strategy):
                 result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
 
         Args:
-            shared_states (List[Weights]): The list of the shared_state returned by
-                the train method of the algorithm for each node.
+            shared_states (typing.List[typing.Dict[str, typing.Union[int, numpy.ndarray]]]): The list of the
+                shared_state returned by the train method of the algorithm for each node.
 
         Raises:
             TypeError: The train method of your algorithm must return a shared_state
@@ -78,7 +78,8 @@ class FedAvg(Strategy):
             TypeError: All elements to average must be of type np.ndarray
 
         Returns:
-            Weights: A dict containing the weighted average of each input parameters without the passed key "n_samples".
+            typing.Dict[str, numpy.ndarray]: A dict containing the weighted average of each input parameters
+            without the passed key "n_samples".
         """
         # get keys
         # TODO: for now an ugly conversion to list to be able to remove the element, improve
@@ -87,19 +88,19 @@ class FedAvg(Strategy):
             raise TypeError(
                 "Your shared_states is empty. Please ensure that "
                 "the train method of your algorithm always returns nothing. "
-                "It must returns a dict containing n_samples(int) and at least one other key (np.ndarray)."
+                "It must returns a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
             )
         if not (all(["n_samples" in shared_state.keys() for shared_state in shared_states])):
             raise TypeError(
                 "n_samples must be a key from all your shared_state. "
                 "This must be set in the returned element of the train method from your algorithm. "
-                "It must be a dict containing n_samples(int) and at least one other key (np.ndarray)."
+                "It must be a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
             )
         if len(shared_states[0].keys()) == 1:
             raise TypeError(
                 "shared_state must contains at least one element to average."
                 "This must be set it in the returned element of the train method from your algorithm. "
-                "It must be a dict containing n_samples(int) and at least one other key (np.ndarray)."
+                "It must be a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
             )
         for shared_state in shared_states:
             for k, v in shared_state.items():
@@ -107,7 +108,7 @@ class FedAvg(Strategy):
                     raise TypeError(
                         "Except for the `n_samples`, the types of your shared_state must be numpy array. "
                         f"'{k}' is of type '{type(v)}' ."
-                        "It must be a dict containing n_samples(int) and at least one other key (np.ndarray)."
+                        "It must be a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
                     )
 
         averaged_states = {}
@@ -139,7 +140,7 @@ class FedAvg(Strategy):
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
-            train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local updates
+            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
             aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
                 of the models
             round_idx (int): Round number, it starts by zero.

@@ -34,14 +34,14 @@ def _register_operations(
 
     Args:
         client (substra.Client): substra client
-        train_data_nodes (List[TrainDataNode]): list of train data nodes
-        aggregation_node (Optional[AggregationNode]): the aggregation node for centralized strategies
-        evaluation_strategy (Optional[EvaluationStrategy]): the evaluation strategy if there is one
+        train_data_nodes (typing.List[TrainDataNode]): list of train data nodes
+        aggregation_node (typing.Optional[AggregationNode]): the aggregation node for centralized strategies
+        evaluation_strategy (typing.Optional[EvaluationStrategy]): the evaluation strategy if there is one
         dependencies (Dependency): dependencies of the train algo
 
     Returns:
-        Tuple[List[dict], List[dict], List[dict], Dict[RemoteStruct, OperationKey]]: composite_traintuples,
-            aggregation_tuples, testtuples specifications, operation_cache
+        typing.Tuple[typing.List[dict], typing.List[dict], typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
+        composite_traintuples, aggregation_tuples, testtuples specifications, operation_cache
     """
     # `register_operations` methods from the different nodes store the id of the already registered
     # algorithm so we don't add them twice
@@ -96,14 +96,14 @@ def _save_experiment_summary(
     """Saves the experiment summary in `experiment_folder`, with the name format `{timestamp}_{compute_plan.key}.json`
 
     Args:
-        experiment_folder (Union[str, Path]): path to the folder where the experiment summary is saved.
+        experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         compute_plan (substra.sdk.models.ComputePlan): compute_plan
         strategy (connectlib.strategies.Strategy): strategy
         num_rounds (int): num_rounds
         algo (connectlib.algorithms.Algo): algo
-        operation_cache (Dict[RemoteStruct, OperationKey]): operation_cache
+        operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
         train_data_nodes (TrainDataNode): train_data_nodes
-        aggregation_node (Optional[AggregationNode]): aggregation_node
+        aggregation_node (typing.Optional[AggregationNode]): aggregation_node
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
     """
@@ -175,15 +175,15 @@ def execute_experiment(
         client (substra.Client): A substra client to interact with the connect platform
         algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         strategy (Strategy): The strategy by which your algorithm will be executed
-        train_data_nodes (List[TrainDataNode]): List of the nodes where training on data occurs
+        train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data occurs
         evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
-        aggregation_node (Optional[AggregationNode]): For centralized strategy, the aggregation node, where all the
-            shared tasks occurs else None.
+        aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation node,
+            where all the shared tasks occurs else None.
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the connectlib Dependency class. Defaults None.
-        experiment_folder (Union[str, Path]): path to the folder where the experiment summary is saved.
+        experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
             quickly so should be set to True unless needed. Defaults to True.

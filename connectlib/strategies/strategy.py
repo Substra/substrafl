@@ -1,7 +1,5 @@
-import json
 from abc import ABC
 from abc import abstractmethod
-from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import TypeVar
@@ -29,6 +27,15 @@ class Strategy(ABC):
         aggregation_node: Optional[AggregationNode],
         round_idx: int,
     ):
+        """Perform one round of the strategy
+
+        Args:
+            algo (Algo): algo with the code to execute on the node
+            train_data_nodes (typing.List[TrainDataNode]): list of the train nodes
+            aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
+                centralised strategy, unused otherwise
+            round_idx (int): index of the round
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -39,11 +46,14 @@ class Strategy(ABC):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
+        """Predict function of the strategy: evaluate the model.
+        Gets the model for a train node and evaluate it on the
+        test nodes.
+
+        Args:
+            algo (Algo): algo with the code to execute on the node
+            test_data_nodes (typing.List[TestDataNode]): list of nodes on which to evaluate
+            train_data_nodes (typing.List[TrainDataNode]): list of nodes on which the model has been trained
+            round_idx (int): index of the round
+        """
         raise NotImplementedError
-
-    def load(self, path: Path):
-        pass
-
-    def save(self, path: Path):
-        with path.open("w") as f:
-            json.dump({"args": self.args, "kwargs": {**self.kwargs, "seed": self.seed}}, f)

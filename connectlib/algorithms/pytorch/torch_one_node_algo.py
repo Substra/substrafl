@@ -24,21 +24,21 @@ class TorchOneNodeAlgo(Algo):
     :func:``super().__init__`` function within the ``__init__`` method of the child class.
 
     Attributes:
-        criterion (torch.nn.Module.loss._Loss): A torch criterion (loss).
+        criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
         optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-        scheduler (torch.optim.lr_scheduler._LRScheduler, Optional). A torch scheduler that will be called at every
-        batch: If None, no scheduler will be used. Defaults to None.
+        scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
+            batch. If None, no scheduler will be used. Defaults to None.
         num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
             train function).
         batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will be
             used.
-        get_index_generator (Type[BaseIndexGenerator], Optional). A class returning a stateful index generator. Must
+        get_index_generator (Type[BaseIndexGenerator], Optional): A class returning a stateful index generator. Must
             inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
             is used for selecting each batch during training in this way :
             ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
             If overridden, the generator class must be defined either as part of a package or in a different file
             than the one from which the ``execute_experiment`` function is called.
-        with_batch_norm_parameters (bool). Whether to include the batch norm layer parameters in the OneNode strategy.
+        with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the OneNode strategy.
             Default to False.
 
     Example:
@@ -196,8 +196,8 @@ class TorchOneNodeAlgo(Algo):
         of the federated learning strategy.
 
         Args:
-            x (Any): x as returned by the opener
-            y (Any): y as returned by the opener
+            x (typing.Any): x as returned by the opener
+            y (typing.Any): y as returned by the opener
         """
         for batch_index in self._index_generator:
             x_batch, y_batch = x[batch_index], y[batch_index]
@@ -219,10 +219,10 @@ class TorchOneNodeAlgo(Algo):
         """Prediction on x
 
         Args:
-            x (Any): x as returned by the opener
+            x (typing.Any): x as returned by the opener
 
         Returns:
-            Any: predictions in the format saved then loaded by the opener
+            typing.Any: predictions in the format saved then loaded by the opener
             to calculate the metric
         """
 
@@ -238,7 +238,7 @@ class TorchOneNodeAlgo(Algo):
         if needed.
 
         Args:
-            x (Any): x returned by the opener
+            x (typing.Any): x returned by the opener
             get_X function
 
         Returns:
@@ -256,14 +256,14 @@ class TorchOneNodeAlgo(Algo):
         """Train method of the OneNode strategy implemented with torch.
 
         Args:
-            x (Any): Input data.
-            y (Any): Input target.
-            shared_state (Dict[str, np.ndarray], Optional): Kept for consistency, setting this parameter won't have any
-                effect. Defaults to None.
+            x (typing.Any): Input data.
+            y (typing.Any): Input target.
+            shared_state (typing.Dict[str, numpy.ndarray], Optional): Kept for consistency, setting this parameter
+                won't have any effect. Defaults to None.
 
         Returns:
-            Dict[None, np.ndarray]: weight update which is an empty array. OneNode strategy is not using shared state
-                and this return is only for consistency
+            Dict[None, numpy.ndarray]: weight update which is an empty array. OneNode strategy is not using
+                shared state and this return is only for consistency
         """
 
         # Instantiate the index_generator
@@ -310,9 +310,9 @@ class TorchOneNodeAlgo(Algo):
         """Predict method of the OneNode strategy. It will perform local predictions on x.
 
         Args:
-            x (np.ndarray): Input data.
-            shared_state (Dict[str, np.ndarray], Optional): If not None, the shared state will be added to the model
-                parameters' before computing the predictions. Defaults to None.
+            x (numpy.ndarray): Input data.
+            shared_state (typing.Dict[str, numpy.ndarray], Optional): If not None, the shared state will be added to
+                the model parameters' before computing the predictions. Defaults to None.
 
         Returns:
             Any: Model prediction.
@@ -331,7 +331,7 @@ class TorchOneNodeAlgo(Algo):
             * torch rng state
 
         Args:
-            path (Path): The path where the class has been saved.
+            path (pathlib.Path): The path where the class has been saved.
 
         Returns:
             TorchOneNodeAlgo: The class with the loaded elements.
@@ -360,7 +360,7 @@ class TorchOneNodeAlgo(Algo):
             * torch rng state
 
         Args:
-            path (Path): A path where to save the class.
+            path (pathlib.Path): A path where to save the class.
         """
         torch.save(
             {

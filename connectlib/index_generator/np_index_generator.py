@@ -113,7 +113,7 @@ class NpIndexGenerator(BaseIndexGenerator):
             StopIteration: when this function has been called ``self._num_updates`` times.
 
         Returns:
-            np.ndarray: The batch indexes as a numpy array.
+            numpy.ndarray: The batch indexes as a numpy array.
         """
         if self._counter == self._num_updates:
             raise StopIteration

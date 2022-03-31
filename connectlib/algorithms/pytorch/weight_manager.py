@@ -1,4 +1,3 @@
-from typing import Any
 from typing import Generator
 from typing import List
 from typing import Union
@@ -26,7 +25,7 @@ def is_batchnorm_layer(layer: torch.nn.Module) -> bool:
 
 def batch_norm_param(
     model: torch.nn.Module,
-) -> Generator[torch.nn.parameter.Parameter, Any, Any]:
+) -> Generator[torch.nn.parameter.Parameter, None, None]:
     """Generator of the internal parameters of the batch norm layers
     of the model. This yields references hence all modification done to the yielded object will
     be applied to the input model.
@@ -38,7 +37,7 @@ def batch_norm_param(
         model (torch.nn.Module): A torch model.
 
     Yields:
-        The running mean and variance of all batch norm layers parameters from the given model.
+        float: The running mean and variance of all batch norm layers parameters from the given model.
     """
     for _, module in model.named_modules():
         if is_batchnorm_layer(module):
@@ -58,7 +57,7 @@ def model_parameters(model: torch.nn.Module, with_batch_norm_parameters: bool) -
             after the "classic" parameters.
 
     Returns:
-        Generator[torch.nn.parameter.Parameter, Any, Any]: A python generator of torch parameters.
+        typing.Generator[torch.nn.parameter.Parameter, typing.Any, typing.Any]: A python generator of torch parameters.
     """
 
     def my_iterator():
@@ -87,7 +86,7 @@ def get_parameters(
             after the "classic" parameters.
 
     Returns:
-        List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model.
+        typing.List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model.
     """
     with torch.inference_mode():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
@@ -108,10 +107,10 @@ def increment_parameters(
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        updates (Union[List[torch.nn.parameter.Parameter], np.ndarray]): A list of torch parameters to add to the model,
-            as ordered by the standard iterators. The trainable parameters should come first followed by the batch norm
-            parameters if `with_batch_norm_parameters` is set to `True`. If the type is np.ndarray, it is converted in
-            `torch.Tensor`.
+        updates (typing.Union[typing.List[torch.nn.parameter.Parameter], numpy.ndarray]): A list of torch parameters
+            to add to the model, as ordered by the standard iterators. The trainable parameters should come first
+            followed by the batch norm parameters if `with_batch_norm_parameters` is set to `True`.
+            If the type is np.ndarray, it is converted in `torch.Tensor`.
         with_batch_norm_parameters (bool): If set to True, the running mean and the running variance of
             each batch norm layer will be included, after the trainable layers, in the model parameters to modify.
         updates_multiplier (float, Optional): The coefficient which multiplies the updates before being added to the
@@ -143,11 +142,11 @@ def subtract_parameters(
     Those elements can be extracted from a model thanks to the :func:`~get_parameters` function.
 
     Args:
-        parameters (List[torch.nn.parameter.Parameter]): A list of torch parameters.
-        parameters_to_subtract (List[torch.nn.parameter.Parameter]): A list of torch parameters.
+        parameters (typing.List[torch.nn.parameter.Parameter]): A list of torch parameters.
+        parameters_to_subtract (typing.List[torch.nn.parameter.Parameter]): A list of torch parameters.
 
     Returns:
-        List[torch.nn.parameter.Parameter]: The subtraction of the given parameters.
+        typing.List[torch.nn.parameter.Parameter]: The subtraction of the given parameters.
     """
     return weighted_sum_parameters(
         parameters_list=[parameters, parameters_to_subtract],
@@ -164,11 +163,11 @@ def add_parameters(
     Those elements can be extracted from a model thanks to the :func:`~get_parameters` function.
 
     Args:
-        parameters (List[torch.nn.parameter.Parameter]): A list of torch parameters.
-        parameters_to_add (List[torch.nn.parameter.Parameter]): A list of torch parameters.
+        parameters (typing.List[torch.nn.parameter.Parameter]): A list of torch parameters.
+        parameters_to_add (typing.List[torch.nn.parameter.Parameter]): A list of torch parameters.
 
     Returns:
-        List[torch.nn.parameter.Parameter]: The addion of the given parameters.
+        typing.List[torch.nn.parameter.Parameter]: The addion of the given parameters.
     """
     return weighted_sum_parameters(
         parameters_list=[parameters, parameters_to_add],
@@ -185,10 +184,10 @@ def weighted_sum_parameters(
     Those elements can be extracted from a model thanks to the :func:`~get_parameters` function.
 
     Args:
-        parameters_list (List[List[torch.Tensor]]): A list of List of torch parameters.
-        coefficient_list (List[float]): A list of coefficients which will be applied to each list of parameters.
+        parameters_list (typing.List[List[torch.Tensor]]): A list of List of torch parameters.
+        coefficient_list (typing.List[float]): A list of coefficients which will be applied to each list of parameters.
     Returns:
-        List[torch.nn.parameter.Parameter]: The weighted sum of the given list of torch parameters.
+        typing.List[torch.nn.parameter.Parameter]: The weighted sum of the given list of torch parameters.
     """
 
     weighted_sum = []
@@ -221,8 +220,8 @@ def set_parameters(
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        parameters (List[torch.nn.parameter.Parameter]): Model parameters, as ordered by the standard iterators. The
-            trainable parameters should come first followed by the batch norm parameters if `with_batch_norm_parameters`
+        parameters (typing.List[torch.nn.parameter.Parameter]): Model parameters, as ordered by the standard iterators.
+        The trainable parameters should come first followed by the batch norm parameters if `with_batch_norm_parameters`
             is set to `True`.
         with_batch_norm_parameters (bool): Whether to the batch norm layers' internal parameters are provided and
             need to be included in the operation.
@@ -250,7 +249,8 @@ def zeros_like_parameters(
             after the "classic" parameters.
 
     Returns:
-        List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model with values set to zero.
+        typing.List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model
+        with values set to zero.
     """
     with torch.inference_mode():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)

@@ -19,7 +19,7 @@ class Algo(abc.ABC):
         """Model exposed when the user downloads the model
 
         Returns:
-            Any: model
+            typing.Any: model
         """
         raise NotImplementedError
 
@@ -32,16 +32,16 @@ class Algo(abc.ABC):
         """Will be executed for each TrainDataNodes.
 
         Args:
-            x (Any): The output of the ``get_x`` method of the opener.
-            y (Any): The output of the ``get_y`` method of the opener.
-            shared_state (Dict[str, np.ndarray]): None for the first round of the computation graph
+            x (typing.Any): The output of the ``get_x`` method of the opener.
+            y (typing.Any): The output of the ``get_y`` method of the opener.
+            shared_state (typing.Dict[str, numpy.ndarray]): None for the first round of the computation graph
                 then the returned object from the previous node of the computation graph.
 
         Raises:
             NotImplementedError
 
         Returns:
-            Dict[str, np.ndarray]: The object passed to the next node of the computation graph.
+            typing.Dict[str, numpy.ndarray]: The object passed to the next node of the computation graph.
         """
         raise NotImplementedError
 
@@ -55,15 +55,15 @@ class Algo(abc.ABC):
         function of the opener. The predictions are then loaded and used to calculate the metric.
 
         Args:
-            x (Any): The output of the ``get_x`` method of the opener.
-            shared_state (Dict[str, np.ndarray]): None for the first round of the computation graph
+            x (typing.Any): The output of the ``get_x`` method of the opener.
+            shared_state (typing.Dict[str, numpy.ndarray]): None for the first round of the computation graph
                 then the returned object from the previous node of the computation graph.
 
         Raises:
             NotImplementedError
 
         Returns:
-            Any: The model prediction.
+            typing.Any: The model prediction.
         """
         raise NotImplementedError
 
@@ -73,13 +73,13 @@ class Algo(abc.ABC):
         the computation graph the previous local state can be retrieved.
 
         Args:
-            path (Path): The path where the previous local state has been saved.
+            path (pathlib.Path): The path where the previous local state has been saved.
 
         Raises:
             NotImplementedError
 
         Returns:
-            Any: The loaded element.
+            typing.Any: The loaded element.
         """
 
         raise NotImplementedError
@@ -90,7 +90,7 @@ class Algo(abc.ABC):
         the local state can be saved.
 
         Args:
-            path (Path): The path where the previous local state has been saved.
+            path (pathlib.Path): The path where the previous local state has been saved.
 
         Raises:
             NotImplementedError
