@@ -110,7 +110,7 @@ def test_pytorch_scaffold_algo_weights(
 
     # Assert that the weights are well set
     for model_0, model_2 in zip(rank_0_local_models, rank_2_local_models):
-        increment_parameters(model_0.model, aggregate_model.avg_weight_update, with_batch_norm_parameters=True)
+        increment_parameters(model_0.model, aggregate_model.avg_parameters_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_0.model, model_2.model)
 
     # The local models and _client_control_variate are always the same on every node, as both nodes have the same data
@@ -236,8 +236,8 @@ def test_train_skip(rtol):
     shared_states: ScaffoldSharedState = my_algo.train(x=x, y=y, shared_state=None, _skip=True)
 
     # the model should overfit so that weight_updates (= the new weighs) = a in x=ay+b
-    assert np.allclose(a, shared_states.weight_update, rtol=rtol)
-    # lr * num_updates = 1 so control_variate_update = - weight_update
+    assert np.allclose(a, shared_states.parameters_update, rtol=rtol)
+    # lr * num_updates = 1 so control_variate_update = - parameters_update
     assert np.allclose(-1 * a, shared_states.control_variate_update, rtol=rtol)
     assert np.allclose(n_samples, shared_states.n_samples, rtol)
     # server_control_variate is init to zero should not be modified
@@ -246,7 +246,7 @@ def test_train_skip(rtol):
     # we create a ScaffoldAveragedStates with the ouput state of the train fct and predict on x
     avg_shared_states = ScaffoldAveragedStates(
         server_control_variate=shared_states.control_variate_update,
-        avg_weight_update=shared_states.weight_update,
+        avg_parameters_update=shared_states.parameters_update,
     )
     predictions = my_algo.predict(x=x, shared_state=avg_shared_states, _skip=True)
 

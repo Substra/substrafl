@@ -246,7 +246,7 @@ class TorchFedAvgAlgo(Algo):
             )
         self._index_generator.reset_counter()
 
-        # The shared states is the average of the difference of the gradient for all nodes
+        # The shared states is the average of the model parameter updates for all nodes
         # Hence we need to add it to the previous local state parameters
         if shared_state is not None:
             weight_manager.increment_parameters(
@@ -277,7 +277,7 @@ class TorchFedAvgAlgo(Algo):
 
         self._model.eval()
 
-        model_gradient = weight_manager.subtract_parameters(
+        parameters_update = weight_manager.subtract_parameters(
             parameters=weight_manager.get_parameters(
                 model=self._model,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
@@ -292,7 +292,7 @@ class TorchFedAvgAlgo(Algo):
             with_batch_norm_parameters=self._with_batch_norm_parameters,
         )
 
-        return_dict = {f"grad_{i}": g.cpu().detach().numpy() for i, g in enumerate(model_gradient)}
+        return_dict = {f"param_{i}": p.cpu().detach().numpy() for i, p in enumerate(parameters_update)}
         return_dict["n_samples"] = self._get_len_from_x(x)
         return return_dict
 

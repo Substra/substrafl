@@ -11,7 +11,7 @@ class ScaffoldSharedState(BaseModel):
     (e.g. algorithms.pytorch.scaffold.train)
 
     Args:
-        weight_update (List[numpy.ndarray]): the weight update of the client
+        parameters_update (typing.List[numpy.ndarray]): the weight update of the client
             (delta between fine-tuned weights and previous weights)
         control_variate_update (List[numpy.ndarray]): the control_variate update of the client
         n_samples (int): the number of samples of the client
@@ -20,7 +20,7 @@ class ScaffoldSharedState(BaseModel):
             should be the same for each client as it should not be modified in the client Algo
     """
 
-    weight_update: List[np.ndarray]
+    parameters_update: List[np.ndarray]
     control_variate_update: List[np.ndarray]
     n_samples: int
     server_control_variate: List[np.ndarray]
@@ -33,12 +33,13 @@ class ScaffoldAveragedStates(BaseModel):
     """Shared state sent by the aggregate_node (returned by the func strategies.scaffold.avg_shared_states)
 
     Args:
-        server_control_variate (List[numpy.ndarray]): the new server_control_variate sent to the clients
-        avg_weight_update (List[numpy.ndarray]): the weighted average of the weight_update from each client
+        server_control_variate (typing.List[numpy.ndarray]): the new server_control_variate sent to the clients
+        avg_parameters_update (typing.List[numpy.ndarray]): the weighted average of the parameters_update from each
+            client
     """
 
     server_control_variate: List[np.ndarray]  # the new server_control_variate sent to the clients
-    avg_weight_update: List[np.ndarray]  # the weighted average of the weight_update from each client
+    avg_parameters_update: List[np.ndarray]  # the weighted average of the parameters_update from each client
 
     class Config:
         arbitrary_types_allowed = True
