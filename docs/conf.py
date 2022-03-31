@@ -42,7 +42,6 @@ extensions = [
     "myst_parser",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
-    "sphinx_autodoc_typehints",
 ]
 
 intersphinx_mapping = {
@@ -52,6 +51,7 @@ intersphinx_mapping = {
     "torch": ("https://pytorch.org/docs/stable/", None),
 }
 
+autodoc_typehints = "both"
 autosectionlabel_prefix_document = True
 
 # Napoleon settings
@@ -172,15 +172,15 @@ epub_exclude_files = ["search.html"]
 # The following elements are the link that auto doc were not able to do
 nitpick_ignore = [
     ("py:class", "pydantic.main.BaseModel"),
-    ("py:class", "np.ndarray"),
-    ("py:class", "Path"),
     ("py:class", "torch.nn.modules.module.Module"),
-    ("py:class", "torch.nn.Module.loss._Loss"),
+    ("py:class", "torch.nn.modules.loss._Loss"),
+    ("py:class", "torch.optim.optimizer.Optimizer"),
     ("py:class", "torch.optim.lr_scheduler._LRScheduler"),
     ("py:class", "substra.sdk.schemas.Permissions"),
     ("py:class", "substra.Client"),
+    ("py:class", "substra.sdk.client.Client"),
+    ("py:class", "substra.sdk.models.ComputePlan"),
     ("py:class", "ComputePlan"),
-    ("py:class", "pydantic.main.BaseModel"),
 ]
 
 html_css_files = [

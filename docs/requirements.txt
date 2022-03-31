@@ -7,5 +7,4 @@ myst-parser==0.16.1
 # but docutils 0.17 changed the output html markup, breaking the RTD theme
 # original issue: https://github.com/sphinx-doc/sphinx/issues/9051
 docutils==0.16
-sphinx-autodoc-typehints==1.17.0
 sphinx_click==3.1.0

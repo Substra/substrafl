@@ -50,10 +50,10 @@ class _RemoteDataMethod(substratools.CompositeAlgo):
         """train method
 
         Args:
-            X (Any): X as returned by the opener get_X
-            y (Any): y as returned by the opener get_y
-            head_model (Any): incoming local state
-            trunk_model (Any): incoming shared state
+            X (typing.Any): X as returned by the opener get_X
+            y (typing.Any): y as returned by the opener get_y
+            head_model (typing.Any): incoming local state
+            trunk_model (typing.Any): incoming shared state
             rank (int): rank in the CP, by order of execution
 
         Returns:
@@ -77,9 +77,9 @@ class _RemoteDataMethod(substratools.CompositeAlgo):
         """predict function
 
         Args:
-            X (Any): X as returned by the opener get_X
-            head_model (Any): incoming local state
-            trunk_model (Any): incoming shared state
+            X (typing.Any): X as returned by the opener get_X
+            head_model (typing.Any): incoming local state
+            trunk_model (typing.Any): incoming shared state
 
         Returns:
             Any: predictions
@@ -107,7 +107,7 @@ class _RemoteDataMethod(substratools.CompositeAlgo):
         """Save the trunk model
 
         Args:
-            model (Any): Trunk model to save
+            model (typing.Any): Trunk model to save
             path (str): Path where to save the model
         """
         self.shared_state_serializer.save(model, Path(path))
@@ -127,7 +127,7 @@ class _RemoteDataMethod(substratools.CompositeAlgo):
         """Save the head model
 
         Args:
-            model (Any): Head model to save
+            model (typing.Any): Head model to save
             path (str): Path where to save the model
         """
         model.save(Path(path))
@@ -274,7 +274,7 @@ def remote_data(method: Callable):
         method (Callable): Method to wrap so that it is executed on the remote server
     """
 
-    @wraps(remote_data)
+    @wraps(method)
     def remote_method_inner(
         self,
         data_samples: Optional[List[str]] = None,
@@ -286,13 +286,14 @@ def remote_data(method: Callable):
         """
         Args:
             data_samples (List[str]): The data samples paths. Defaults to None.
-            shared_state (Any): a shared state, could be a SharedStateRef object or anything else. Defaults to None.
+            shared_state (typing.Any): a shared state, could be a SharedStateRef object or anything else. Defaults to
+                None.
             _skip (bool, Optional): if True, calls the decorated function. Defaults to False.
             fake_traintuple (bool, Optional): if True, the decorated function won't be executed (see _RemoteDataMethod).
                 Defaults to False.
 
         Returns:
-            DataOperation: [description]
+            DataOperation: resulting DataOperation
         """
         if _skip:
             return method(self=self, shared_state=shared_state, **method_parameters)
@@ -351,7 +352,7 @@ def remote(method: Callable):
         method (Callable): Method to wrap so that it is executed on the remote server
     """
 
-    @wraps(remote)
+    @wraps(method)
     def remote_method_inner(
         self, shared_states: Optional[List] = None, _skip: bool = False, **method_parameters
     ) -> AggregateOperation:

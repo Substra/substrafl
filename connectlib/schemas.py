@@ -1,3 +1,5 @@
+"""Schemas used in the application.
+"""
 from typing import List
 
 import numpy as np
@@ -9,11 +11,11 @@ class ScaffoldSharedState(BaseModel):
     (e.g. algorithms.pytorch.scaffold.train)
 
     Args:
-        weight_update (List[np.ndarray]): the weight update of the client
+        weight_update (List[numpy.ndarray]): the weight update of the client
             (delta between fine-tuned weights and previous weights)
-        control_variate_update (List[np.ndarray]): the control_variate update of the client
+        control_variate_update (List[numpy.ndarray]): the control_variate update of the client
         n_samples (int): the number of samples of the client
-        server_control_variate (List[np.ndarray]): the server control variate (`c`in the Scaffold paper's
+        server_control_variate (List[numpy.ndarray]): the server control variate (``c`` in the Scaffold paper's
             Algo). It is sent by every client as the aggregation node doesn't have a persistent state, and
             should be the same for each client as it should not be modified in the client Algo
     """
@@ -31,8 +33,8 @@ class ScaffoldAveragedStates(BaseModel):
     """Shared state sent by the aggregate_node (returned by the func strategies.scaffold.avg_shared_states)
 
     Args:
-        server_control_variate (List[np.ndarray]): the new server_control_variate sent to the clients
-        avg_weight_update (List[np.ndarray]): the weighted average of the weight_update from each client
+        server_control_variate (List[numpy.ndarray]): the new server_control_variate sent to the clients
+        avg_weight_update (List[numpy.ndarray]): the weighted average of the weight_update from each client
     """
 
     server_control_variate: List[np.ndarray]  # the new server_control_variate sent to the clients

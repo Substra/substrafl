@@ -9,6 +9,5 @@ from connectlib.nodes.train_data_node import TrainDataNode
 # trying to link Node references from one page to the Node documentation page, it fails.
 AggregationNode.__module__ = "nodes.aggregation_node"
 Node.__module__ = "nodes.node"
-OperationKey.__module__ = "nodes.node"
 
 __all__ = ["Node", "AggregationNode", "TrainDataNode", "TestDataNode", "OperationKey"]

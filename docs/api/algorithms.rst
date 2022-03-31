@@ -10,7 +10,6 @@ TorchFedAvgAlgo
 .. autoclass:: connectlib.algorithms.pytorch.TorchFedAvgAlgo
     :members:
 
-
 TorchScaffoldAlgo
 -----------------
 

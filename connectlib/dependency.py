@@ -19,10 +19,10 @@ class Dependency(BaseModel):
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.
         dependencies (List[str]): Python packages installable from pypi.
-        local_dependencies (List[Path]): Local installable packages. The command
+        local_dependencies (List[pathlib.Path]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
-        local_code (List[Path]): Local relative imports used by your script. All files / folders must be
+        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders must be
             at the same level than your script.
     """
 

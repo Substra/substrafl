@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Improved
+
+- API documentation: fix the docstrings and the display of the documentation for some functions (#122)
+
 ## [0.9.0a1] - 2022-03-29
 
 ### Added
