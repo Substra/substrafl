@@ -50,7 +50,7 @@ class NumpyOpener(tools.Opener):
         shutil.move(str(path) + ".npy", path)
 
     def get_predictions(self, path):
-        return np.load(path)
+        return np.load(path, allow_pickle=True)
 
     def fake_X(self, n_samples=None):
         data = self._fake_data(n_samples)
@@ -79,7 +79,7 @@ class NumpyOpener(tools.Opener):
             paths += [
                 os.path.join(folder, f) for f in os.listdir(folder) if f[-4:] == ".npy"
             ]
-        return np.concatenate([np.load(file) for file in paths], axis=0)
+        return np.concatenate([np.load(file, allow_pickle=True) for file in paths], axis=0)
 """
 
 

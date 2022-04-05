@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improved
 
 - API documentation: fix the docstrings and the display of the documentation for some functions (#122)
+- (BREAKING CHANGE) FedAvg strategy: the train function must return a FedAvgSharedState, the average function returns a FedAvgAveragedState.
+    No need to change your code if you use TorchFedAvgAlgo (#126)
 
 ## [0.9.0a1] - 2022-03-29
 

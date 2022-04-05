@@ -12,6 +12,8 @@ from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.test_data_node import TestDataNode
 from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote_data
+from connectlib.schemas import FedAvgAveragedState
+from connectlib.schemas import FedAvgSharedState
 from connectlib.strategies import FedAvg
 
 from .. import assets_factory
@@ -31,35 +33,41 @@ logger = getLogger("tests")
 def test_avg_shared_states(n_samples, results):
 
     shared_states = [
-        {"weights": np.ones((5, 10)), "n_samples": n_samples[0]},
-        {"weights": np.zeros((5, 10)), "n_samples": n_samples[1]},
-        {"weights": 2 * np.ones((5, 10)), "n_samples": n_samples[2]},
+        FedAvgSharedState(parameters_update=[np.ones((5, 10))], n_samples=n_samples[0]),
+        FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=n_samples[1]),
+        FedAvgSharedState(parameters_update=[2 * np.ones((5, 10))], n_samples=n_samples[2]),
     ]
 
     MyFedAvg = FedAvg()
     averaged_states = MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
-    assert (results == averaged_states["weights"]).all()
+    assert (results == averaged_states.avg_parameters_update).all()
 
 
-@pytest.mark.parametrize(
-    "shared_states",
-    [
-        [{"key1": np.array([1, 2, 3])}],
-        [],
-        [{}],
-        [{"n_samples": 1}],
-        [
-            {"n_samples": 1, "weights": np.array([0, 1, 1])},
-            {"n_samples": 1, "weights": [0, 1, 1]},
-        ],
-    ],
-)
-def test_avg_shared_states_no_n_samples_error(shared_states):
-    # check if n_samples is not passed into avg_shared_states() error will be raised
-    # check if no key is in the shared states error will be raised
+def test_avg_shared_states_different_layers():
+    shared_states = [
+        FedAvgSharedState(
+            parameters_update=[np.asarray([[0, 1], [2, 4]]), np.asarray([[6, 8], [10, 12]])], n_samples=1
+        ),
+        FedAvgSharedState(
+            parameters_update=[np.asarray([[16, 20], [18, 20]]), np.asarray([[22, 24], [26, 28]])], n_samples=3
+        ),
+    ]
+
     MyFedAvg = FedAvg()
-    with pytest.raises(TypeError):
+    avg_states = MyFedAvg.avg_shared_states(shared_states, _skip=True)
+    expected_result = [np.asarray([[12, 15.25], [14, 16]]), np.asarray([[18, 20], [22, 24]])]
+    assert np.allclose(avg_states.avg_parameters_update, expected_result)
+
+
+def test_avg_shared_states_different_length():
+    shared_states = [
+        FedAvgSharedState(parameters_update=[np.ones((5, 10)), np.ones((5, 10))], n_samples=1),
+        FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=1),
+    ]
+
+    MyFedAvg = FedAvg()
+    with pytest.raises(AssertionError):
         MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
 
@@ -86,11 +94,11 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
             y: np.ndarray,
             shared_state,
         ):
-            return dict(test=x, n_samples=len(x))
+            return FedAvgSharedState(n_samples=len(x), parameters_update=[np.asarray(e) for e in x])
 
         @remote_data
-        def predict(self, x: np.array, shared_state):
-            return shared_state["test"]
+        def predict(self, x: np.array, shared_state: FedAvgAveragedState):
+            return shared_state.avg_parameters_update
 
         def load(self, path: Path):
             return self
@@ -106,7 +114,8 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     metric = assets_factory.add_python_metric(
         client=network.clients[0],
         tmp_folder=session_dir,
-        python_formula="int((y_pred == np.ones(1)*0.5).all())",  # Check that all shared states values are 0.5
+        # Check that all shared states values are 0.5
+        python_formula="int((y_pred == np.ones(1)*0.5).all())",
         name="Average",
         permissions=default_permissions,
     )

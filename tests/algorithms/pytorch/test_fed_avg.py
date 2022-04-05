@@ -94,7 +94,7 @@ def test_pytorch_fedavg_algo_weights(
 
     # Assert that the weights are well set
     for model_0, model_2 in zip(rank_0_local_models, rank_2_local_models):
-        increment_parameters(model_0.model, aggregate_model.values(), with_batch_norm_parameters=True)
+        increment_parameters(model_0.model, aggregate_model.avg_parameters_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_0.model, model_2.model)
 
     # The local models are always the same on every node

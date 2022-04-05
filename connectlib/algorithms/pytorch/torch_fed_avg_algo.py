@@ -2,10 +2,8 @@ import abc
 import logging
 from pathlib import Path
 from typing import Any
-from typing import Dict
 from typing import Optional
 from typing import Type
-from typing import Union
 
 import numpy as np
 import torch
@@ -16,6 +14,8 @@ from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
+from connectlib.schemas import FedAvgAveragedState
+from connectlib.schemas import FedAvgSharedState
 
 logger = logging.getLogger(__name__)
 
@@ -213,9 +213,9 @@ class TorchFedAvgAlgo(Algo):
         self,
         x: Any,
         y: Any,
-        shared_state: Optional[Dict[str, np.ndarray]] = None,  # Set to None per default for clarity reason as
+        shared_state: Optional[FedAvgAveragedState] = None,  # Set to None per default for clarity reason as
         # the decorator will do it if the arg shared_state is not passed.
-    ) -> Dict[str, Union[int, np.ndarray]]:
+    ) -> FedAvgSharedState:
         """Train method of the fed avg strategy implemented with torch. This method will execute the following
         operations:
 
@@ -228,15 +228,16 @@ class TorchFedAvgAlgo(Algo):
         Args:
             x (typing.Any): Input data.
             y (typing.Any): Input target.
-            shared_state (typing.Dict[str, numpy.ndarray], Optional): Dict containing torch parameters that
+            shared_state (FedAvgAveragedState, Optional): Dict containing torch parameters that
                 will be set to the model. Defaults to None.
 
         Returns:
-            typing.Dict[str, typing.Union[int, numpy.ndarray]]: weight update (delta between fine-tuned
+            FedAvgSharedState: weight update (delta between fine-tuned
             weights and previous weights)
         """
-        # Instantiate the index_generator
-        if self._index_generator is None:
+        if shared_state is None:
+            # Instantiate the index_generator
+            assert self._index_generator is None
             self._index_generator = self._get_index_generator(
                 n_samples=self._get_len_from_x(x),
                 batch_size=self._batch_size,
@@ -244,16 +245,17 @@ class TorchFedAvgAlgo(Algo):
                 shuffle=True,
                 drop_last=False,
             )
-        self._index_generator.reset_counter()
-
-        # The shared states is the average of the model parameter updates for all nodes
-        # Hence we need to add it to the previous local state parameters
-        if shared_state is not None:
+        else:
+            assert self._index_generator is not None
+            # The shared states is the average of the model parameter updates for all nodes
+            # Hence we need to add it to the previous local state parameters
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.values(),
+                updates=shared_state.avg_parameters_update,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
+
+        self._index_generator.reset_counter()
 
         old_parameters = weight_manager.get_parameters(
             model=self._model, with_batch_norm_parameters=self._with_batch_norm_parameters
@@ -292,16 +294,17 @@ class TorchFedAvgAlgo(Algo):
             with_batch_norm_parameters=self._with_batch_norm_parameters,
         )
 
-        return_dict = {f"param_{i}": p.cpu().detach().numpy() for i, p in enumerate(parameters_update)}
-        return_dict["n_samples"] = self._get_len_from_x(x)
-        return return_dict
+        return FedAvgSharedState(
+            n_samples=self._get_len_from_x(x),
+            parameters_update=[p.cpu().detach().numpy() for p in parameters_update],
+        )
 
     @remote_data
     def predict(
         self,
         x: np.ndarray,
-        shared_state: Dict[
-            str, np.ndarray
+        shared_state: Optional[
+            FedAvgAveragedState
         ] = None,  # Set to None per default for clarity reason as the decorator will do it if the arg shared_state
         # is not passed.
     ):
@@ -314,7 +317,7 @@ class TorchFedAvgAlgo(Algo):
 
         Args:
             x (numpy.ndarray): Input data.
-            shared_state (typing.Dict[str, numpy.ndarray], Optional): If not None, the shared state
+            shared_state (typing.Optional[FedAvgAveragedState], Optional): If not None, the shared state
                 will be added to the model parameters' before computing the predictions.
                 Defaults to None.
 
@@ -327,7 +330,7 @@ class TorchFedAvgAlgo(Algo):
             if shared_state is not None:
                 weight_manager.increment_parameters(
                     model=self._model,
-                    updates=shared_state.values(),
+                    updates=shared_state.avg_parameters_update,
                     with_batch_norm_parameters=self._with_batch_norm_parameters,
                 )
 
