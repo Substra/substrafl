@@ -1,7 +1,5 @@
-from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Union
 
 import numpy as np
 
@@ -12,6 +10,8 @@ from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.nodes.test_data_node import TestDataNode
 from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote
+from connectlib.schemas import FedAvgAveragedState
+from connectlib.schemas import FedAvgSharedState
 from connectlib.strategies.strategy import Strategy
 
 
@@ -51,7 +51,7 @@ class FedAvg(Strategy):
         self.avg_shared_state: Optional[SharedStateRef] = None
 
     @remote
-    def avg_shared_states(self, shared_states: List[Dict[str, Union[int, np.ndarray]]]) -> Dict[str, np.ndarray]:
+    def avg_shared_states(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm.
         The average is weighted by the proportion of the number of samples.
@@ -67,7 +67,7 @@ class FedAvg(Strategy):
                 result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
 
         Args:
-            shared_states (typing.List[typing.Dict[str, typing.Union[int, numpy.ndarray]]]): The list of the
+            shared_states (typing.List[FedAvgSharedState]): The list of the
                 shared_state returned by the train method of the algorithm for each node.
 
         Raises:
@@ -78,52 +78,32 @@ class FedAvg(Strategy):
             TypeError: All elements to average must be of type np.ndarray
 
         Returns:
-            typing.Dict[str, numpy.ndarray]: A dict containing the weighted average of each input parameters
+            FedAvgAveragedState: A dict containing the weighted average of each input parameters
             without the passed key "n_samples".
         """
-        # get keys
-        # TODO: for now an ugly conversion to list to be able to remove the element, improve
-        # shared_states -> list of weights at each client
         if len(shared_states) == 0:
             raise TypeError(
                 "Your shared_states is empty. Please ensure that "
-                "the train method of your algorithm always returns nothing. "
-                "It must returns a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
+                "the train method of your algorithm returns a FedAvgSharedState object."
             )
-        if not (all(["n_samples" in shared_state.keys() for shared_state in shared_states])):
-            raise TypeError(
-                "n_samples must be a key from all your shared_state. "
-                "This must be set in the returned element of the train method from your algorithm. "
-                "It must be a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
-            )
-        if len(shared_states[0].keys()) == 1:
-            raise TypeError(
-                "shared_state must contains at least one element to average."
-                "This must be set it in the returned element of the train method from your algorithm. "
-                "It must be a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
-            )
-        for shared_state in shared_states:
-            for k, v in shared_state.items():
-                if k != "n_samples" and not (isinstance(v, np.ndarray)):
-                    raise TypeError(
-                        "Except for the `n_samples`, the types of your shared_state must be numpy array. "
-                        f"'{k}' is of type '{type(v)}' ."
-                        "It must be a dict containing n_samples(int) and at least one other key (numpy.ndarray)."
-                    )
 
-        averaged_states = {}
-        all_samples = np.array([state.pop("n_samples") for state in shared_states])
-        n_all_samples = np.sum(all_samples)
+        assert all(
+            [
+                len(shared_state.parameters_update) == len(shared_states[0].parameters_update)
+                for shared_state in shared_states
+            ]
+        ), "Not the same number of layers for every input parameters."
 
-        for key in shared_states[0].keys():
-            # take each of the states,and multiply by the number of samples for each client and sum
-            # For now each value of shared_states is an np.ndarray.
-            states = []
-            for n_samples, state in zip(all_samples, shared_states):
-                states.append(state[key] * (n_samples / n_all_samples))
-            averaged_states[key] = np.sum(states, axis=0)
+        n_all_samples = sum([state.n_samples for state in shared_states])
 
-        return averaged_states
+        averaged_states = list()
+        for idx in range(len(shared_states[0].parameters_update)):
+            states = list()
+            for state in shared_states:
+                states.append(state.parameters_update[idx] * (state.n_samples / n_all_samples))
+            averaged_states.append(np.sum(states, axis=0))
+
+        return FedAvgAveragedState(avg_parameters_update=averaged_states)
 
     def perform_round(
         self,

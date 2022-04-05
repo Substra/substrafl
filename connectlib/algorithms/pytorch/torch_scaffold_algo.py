@@ -290,9 +290,8 @@ class TorchScaffoldAlgo(Algo):
         self,
         x: Any,
         y: Any,
-        shared_state: ScaffoldAveragedStates = None,  # Set to None per default for clarity reason as
+        shared_state: Optional[ScaffoldAveragedStates] = None,  # Set to None per default for clarity reason as
         #  the decorator will do it if the arg shared_state is not passed.
-        local_state=None,
     ) -> ScaffoldSharedState:
         """Train method of the Scaffold strategy implemented with torch. This method will execute the following
         operations:
@@ -305,7 +304,7 @@ class TorchScaffoldAlgo(Algo):
         Args:
             x (typing.Any): Input data.
             y (typing.Any): Input target.
-            shared_state (ScaffoldAveragedStates): Shared state sent by the aggregate_node
+            shared_state (typing.Optional[ScaffoldAveragedStates]): Shared state sent by the aggregate_node
                 (returned by the func strategies.scaffold.avg_shared_states)
                 Defaults to None.
 
