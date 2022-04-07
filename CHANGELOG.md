@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.9.0a2](https://github.com/owkin/connectlib/releases/tag/0.9.0a2) - 2022-04-07
+
 - feat: Add the optional argument "compute_plan_tag" to give the user the possibility to choose its own tag (timestamp by default) #128
 
 ### Improved
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING CHANGE) FedAvg strategy: the train function must return a FedAvgSharedState, the average function returns a FedAvgAveragedState.
     No need to change your code if you use TorchFedAvgAlgo (#126)
 
-## [0.9.0a1] - 2022-03-29
+## [0.9.0a1](https://github.com/owkin/connectlib/releases/tag/0.9.0a1) - 2022-03-29
 
 ### Added
 
@@ -39,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add new curves to the plotting: when one parameter changes while the others stay the same (#94)
   - Use connect-tools 0.10.0 as a base image for the Dockerfile
 
-## [0.8.0] - 2022-03-01
+## [0.8.0](https://github.com/owkin/connectlib/releases/tag/0.8.0) - 2022-03-01
 
 ### Fixed
 
@@ -65,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `Algo` now exposes a `model` property to get the model after downloading it from Connect (#99)
 - (BREAKING CHANGE) experiment summary is saved as a json in `experiment_folder` (#98)
 
-## [0.7.0] - 2022-02-01
+## [0.7.0](https://github.com/owkin/connectlib/releases/tag/0.7.0) - 2022-02-01
 
 ### Fixed
 
@@ -80,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat: install connectlib from pypi (#71)
 
-## [0.6.0] - 2021-12-31
+## [0.6.0](https://github.com/owkin/connectlib/releases/tag/0.6.0) - 2021-12-31
 
 ### Fixed
 
@@ -92,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: connect-test integration (#68)
 - feat: Add a possibility to test an algorithm on selected rounds or every n rounds (#79)
 
-## [0.5.0] - 2021-12-31
+## [0.5.0](https://github.com/owkin/connectlib/releases/tag/0.5.0) - 2021-12-31
 
 ### Fixed
 
@@ -105,19 +107,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: more logs + function to set the logging level (#56)
 - Subprocess mode is now faster as it fully reuses the user environment instead of re building the connect related parts (substra #119 and #63)
 
-## [0.4.0] - 2021-12-10
+## [0.4.0](https://github.com/owkin/connectlib/releases/tag/0.4.0) - 2021-12-10
 
 ### Fixed
 
 - fix: error message for local dependency (#52)
 
-## [0.3.0] - 2021-11-29
+## [0.3.0](https://github.com/owkin/connectlib/releases/tag/0.3.0) - 2021-11-29
 
 ### Added
 
 - feat: User custom dependencies (#41)
 - feat: support substra subprocess mode (#43)
 
-## [0.2.0] - 2021-11-08
+## [0.2.0](https://github.com/owkin/connectlib/releases/tag/0.2.0) - 2021-11-08
 
 [Unreleased]: https://github.com/owkin/connectlib/compare/0.3.0...HEAD
