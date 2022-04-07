@@ -1,6 +1,4 @@
-import abc
 import logging
-from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -9,7 +7,7 @@ from typing import Type
 import numpy as np
 import torch
 
-from connectlib.algorithms import Algo
+from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.index_generator import NpIndexGenerator
@@ -18,28 +16,10 @@ from connectlib.remote import remote_data
 logger = logging.getLogger(__name__)
 
 
-class TorchOneNodeAlgo(Algo):
+class TorchOneNodeAlgo(TorchAlgo):
     """To be inherited. Wraps the necessary operation so a torch model can be trained in the One Node strategy.
     The child class must at least define : ``model``, ``criterion``, ``optimizer``, ``num_updates`` as arguments of the
     :func:``super().__init__`` function within the ``__init__`` method of the child class.
-
-    Attributes:
-        criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
-        optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-        scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
-            batch. If None, no scheduler will be used. Defaults to None.
-        num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
-            train function).
-        batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will be
-            used.
-        get_index_generator (Type[BaseIndexGenerator], Optional): A class returning a stateful index generator. Must
-            inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
-            is used for selecting each batch during training in this way :
-            ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
-            If overridden, the generator class must be defined either as part of a package or in a different file
-            than the one from which the ``execute_experiment`` function is called.
-        with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the OneNode strategy.
-            Default to False.
 
     Example:
 
@@ -155,103 +135,46 @@ class TorchOneNodeAlgo(Algo):
         batch_size: Optional[int],
         get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-        with_batch_norm_parameters: bool = False,
     ):
-        super().__init__()
-
-        self._model = model
-        self._criterion = criterion
-        self._optimizer = optimizer
-        self._num_updates = num_updates
-        self._get_index_generator = get_index_generator
-        self._scheduler = scheduler
-        self._batch_size = batch_size
-        self._with_batch_norm_parameters = with_batch_norm_parameters
-        self._index_generator: Optional[BaseIndexGenerator] = None
-
-        if batch_size is None:
-            logger.warning("Batch size is none, the whole dataset will be used for each update.")
-
-    @property
-    def model(self) -> torch.nn.Module:
-        """Model exposed when the user downloads the model
-
-        Returns:
-            torch.nn.Module: model
-        """
-        return self._model
-
-    @abc.abstractmethod
-    def _local_train(
-        self,
-        x: Any,
-        y: Any,
-    ):
-        """Local training loop
-
-        Train the model on num_updates minibatches, using the
-        self._index_generator generator to generate the batches.
-        WARNING: you must use next(self._index_generator) at each minibatch,
-        to ensure that you are using the batches are correct between 2 rounds
-        of the federated learning strategy.
+        """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
+        For round>=2, some attributes will then be overwritten by their previous states in the `load()` function,
+        before the `train()` or `predict()` function is ran.
 
         Args:
-            x (typing.Any): x as returned by the opener
-            y (typing.Any): y as returned by the opener
+            Args:
+            model (torch.nn.modules.module.Module): A torch model.
+            criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
+            optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
+            scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
+                batch. If None, no scheduler will be used. Defaults to None.
+            num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
+                train function).
+            batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
+                be used.
+            get_index_generator (typing.Type[BaseIndexGenerator], Optional): A class returning a stateful index
+                generator.
+                Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
+                which is used for selecting each batch from the output of the _preprocess method during training in
+                this way: ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
+                If overridden, the generator class must be defined either as part of a package or in a different file
+                than the one from which the ``execute_experiment`` function is called.
         """
-        for batch_index in self._index_generator:
-            x_batch, y_batch = x[batch_index], y[batch_index]
-
-            # Forward pass
-            y_pred = self._model(x_batch)
-
-            # Compute Loss
-            loss = self._criterion(y_pred, y_batch)
-            self._optimizer.zero_grad()
-            loss.backward()
-            self._optimizer.step()
-
-            if self._scheduler is not None:
-                self._scheduler.step()
-
-    @abc.abstractmethod
-    def _local_predict(self, x: Any) -> Any:
-        """Prediction on x
-
-        Args:
-            x (typing.Any): x as returned by the opener
-
-        Returns:
-            typing.Any: predictions in the format saved then loaded by the opener
-            to calculate the metric
-        """
-
-        with torch.inference_mode():
-            y = self._model(x)
-        return y
-
-    def _get_len_from_x(self, x: Any) -> int:
-        """Get the length of the dataset from
-        x as returned by the opener.
-
-        Default: returns len(x). Override
-        if needed.
-
-        Args:
-            x (typing.Any): x returned by the opener
-            get_X function
-
-        Returns:
-            int: Number of samples in the dataset
-        """
-        return len(x)
+        super().__init__(
+            model=model,
+            criterion=criterion,
+            optimizer=optimizer,
+            num_updates=num_updates,
+            batch_size=batch_size,
+            get_index_generator=get_index_generator,
+            scheduler=scheduler,
+        )
 
     @remote_data
     def train(
         self,
         x: Any,
         y: Any,
-        shared_state=None,  # Set to None per default for clarity reason as the decorator will do it
+        shared_state=None,  # Is always None for this strategy
     ) -> Dict[str, np.ndarray]:
         """Train method of the OneNode strategy implemented with torch.
 
@@ -262,8 +185,8 @@ class TorchOneNodeAlgo(Algo):
                 won't have any effect. Defaults to None.
 
         Returns:
-            Dict[None, numpy.ndarray]: weight update which is an empty array. OneNode strategy is not using
-                shared state and this return is only for consistency
+            Dict[str, numpy.ndarray]: weight update which is an empty array. OneNode strategy is not using
+            shared state and this return is only for consistency
         """
 
         # Instantiate the index_generator
@@ -302,96 +225,20 @@ class TorchOneNodeAlgo(Algo):
     def predict(
         self,
         x: np.ndarray,
-        shared_state: Dict[
-            str, np.ndarray
-        ] = None,  # Set to None per default for clarity reason as the decorator will do it as the arg shared_state
-        # should not be passed.
+        shared_state: Dict[str, np.ndarray] = None,  # Is always None for this strategy
     ):
-        """Predict method of the OneNode strategy. It will perform local predictions on x.
+        """Predict method of the one node strategy. Executes the following operation:
+
+            * Apply the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict`
+            * Return the predictions
 
         Args:
-            x (numpy.ndarray): Input data.
-            shared_state (typing.Dict[str, numpy.ndarray], Optional): If not None, the shared state will be added to
-                the model parameters' before computing the predictions. Defaults to None.
+            x (typing.Any): Input data.
+            shared_state (typing.Dict[str, numpy.ndarray]): The shared state is added
+                to the model parameters before computing the predictions.
 
         Returns:
-            Any: Model prediction.
+            typing.Any: Model prediction post precessed by the _postprocess class method.
         """
-
         predictions = self._local_predict(x)
         return predictions
-
-    def load(self, path: Path):
-        """Load the stateful arguments of this class, i.e.:
-
-            * self._model
-            * self._optimizer
-            * self._scheduler (if provided)
-            * self._index_generator
-            * torch rng state
-
-        Args:
-            path (pathlib.Path): The path where the class has been saved.
-
-        Returns:
-            TorchOneNodeAlgo: The class with the loaded elements.
-        """
-        assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-
-        checkpoint = torch.load(path, map_location="cpu")
-        self._model.load_state_dict(checkpoint["model_state_dict"])
-        self._optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-
-        if self._scheduler is not None:
-            self._scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-
-        self._index_generator = checkpoint["index_generator"]
-
-        torch.set_rng_state(checkpoint["rng_state"])
-        return self
-
-    def save(self, path: Path):
-        """Saves all the stateful elements of the class to the specified path, i.e.:
-
-            * self._model
-            * self._optimizer
-            * self._scheduler (if provided)
-            * self._index_generator
-            * torch rng state
-
-        Args:
-            path (pathlib.Path): A path where to save the class.
-        """
-        torch.save(
-            {
-                "model_state_dict": self._model.state_dict(),
-                "optimizer_state_dict": self._optimizer.state_dict(),
-                "scheduler_state_dict": self._scheduler.state_dict() if self._scheduler is not None else None,
-                "index_generator": self._index_generator,
-                "rng_state": torch.get_rng_state(),
-            },
-            path,
-        )
-        assert path.is_file(), f'Did not save the model properly {list(path.parent.glob("*"))}'
-
-    def summary(self):
-        """Summary of the class to be exposed in the experiment summary file
-
-        Returns:
-            dict : a json-serializable dict with the attributes the user wants to store
-        """
-        summary = super().summary()
-        summary.update(
-            {
-                "model": str(type(self._model)),
-                "criterion": str(type(self._criterion)),
-                "optimizer": {
-                    "type": str(type(self._optimizer)),
-                    "parameters": self._optimizer.defaults,
-                },
-                "scheduler": None if self._scheduler is None else str(type(self._scheduler)),
-                "num_updates": self._num_updates,
-                "batch_size": self._batch_size,
-            }
-        )
-        return summary

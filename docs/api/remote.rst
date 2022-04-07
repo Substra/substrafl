@@ -11,17 +11,14 @@ Serializers
 ^^^^^^^^^^^^
 
 .. automodule:: connectlib.remote.serializers
-    :members:
 
 
 Methods
 ^^^^^^^^
 .. automodule:: connectlib.remote.methods
-    :members:
 
 
 Register
 ^^^^^^^^
 
 .. automodule:: connectlib.remote.register
-    :members:

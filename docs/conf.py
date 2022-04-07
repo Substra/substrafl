@@ -50,9 +50,16 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "torch": ("https://pytorch.org/docs/stable/", None),
 }
-
-autodoc_typehints = "both"
 autosectionlabel_prefix_document = True
+
+# autodoc settings
+autodoc_default_options = {
+    "show-inheritance": True,
+    "members": True,
+}
+autoclass_content = "both"
+autodoc_typehints = "both"
+
 
 # Napoleon settings
 # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
@@ -188,12 +195,6 @@ html_css_files = [
     "owkin.css",
     "sidebar.css",
 ]
-
-autodoc_default_options = {
-    "show-inheritance": True,
-}
-
-autoclass_content = "both"
 
 html_logo = "static/logo.svg"
 html_show_sourcelink = False
