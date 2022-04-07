@@ -1,6 +1,4 @@
-import abc
 import logging
-from pathlib import Path
 from typing import Any
 from typing import Optional
 from typing import Type
@@ -8,8 +6,8 @@ from typing import Type
 import numpy as np
 import torch
 
-from connectlib.algorithms.algo import Algo
 from connectlib.algorithms.pytorch import weight_manager
+from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.index_generator import NpIndexGenerator
@@ -19,39 +17,24 @@ from connectlib.schemas import FedAvgSharedState
 
 logger = logging.getLogger(__name__)
 
-# TODO/INFO : for the next strategy, all methods and args of this class could be wrapped into a generic TorchAlgo
-# class. Every strategy class could inherit from it.
 
-
-class TorchFedAvgAlgo(Algo):
+class TorchFedAvgAlgo(TorchAlgo):
     """To be inherited. Wraps the necessary operation so a torch model can be trained in the Federated Averaging strategy.
 
-    It inherits of the following default methods : ``train``, ``predict``, ``load``
-    and ``save`` which can be overwritten in the child class.
-    It must define the ``_local_train`` and ``_local_predict`` methods.
+    The ``train`` method:
 
-    The ``train`` method updates the weights of the model with the aggregated weights, initialises or
-    loads the index generator, calls the ``_local_train`` method to do the local training then gets
-    the weight updates from the models and sends them to the aggregator.
-    The ``predict`` method calls the ``_local_predict`` method to generate the predictions.
+        - updates the weights of the model with the aggregated weights,
+        - initialises or loads the index generator,
+        - calls the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_train` method to do the local
+          training
+        - then gets the weight updates from the models and sends them to the aggregator.
 
-    Attributes:
-        criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
-        optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-        scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
-            batch. If None, no scheduler will be used. Defaults to None.
-        num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
-            train function).
-        batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will be
-            used.
-        get_index_generator (typing.Type[BaseIndexGenerator], Optional): A class returning a stateful index generator.
-            Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
-            is used for selecting each batch from the output of the _preprocess method during training in this way:
-            ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
-            If overridden, the generator class must be defined either as part of a package or in a different file
-            than the one from which the ``execute_experiment`` function is called.
-        with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg strategy.
-            Defaults to False.
+    The ``predict`` method calls the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict` method to
+    generate the predictions.
+
+    The child class must implement the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_train` and
+    :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict` methods, and can override
+    other methods if necessary.
 
     Example:
 
@@ -94,7 +77,7 @@ class TorchFedAvgAlgo(Algo):
 
     The algo needs to get the number of samples in the dataset from the x sent by the opener.
     By default, it uses len(x). If that is not the proper way of getting the number of samples,
-    override the ``_get_len_from_x`` function
+    override the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._get_len_from_x` function
 
     Example:
 
@@ -119,94 +102,41 @@ class TorchFedAvgAlgo(Algo):
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
     ):
-        """Initialize"""
-        super().__init__()
+        """
+        The ``__init__`` functions is called at each call of the `train()` or `predict()` function
+        For round>=2, some attributes will then be overwritten by their previous states in the `load()` function,
+        before the `train()` or `predict()` function is ran.
 
-        self._model = model
-        self._criterion = criterion
-        self._optimizer = optimizer
-        self._num_updates = num_updates
-        self._get_index_generator = get_index_generator
-        self._scheduler = scheduler
-        self._batch_size = batch_size
+        Args:
+            model (torch.nn.modules.module.Module): A torch model.
+            criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
+            optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
+            scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
+                batch. If None, no scheduler will be used. Defaults to None.
+            num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
+                train function).
+            batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
+                be used.
+            get_index_generator (typing.Type[BaseIndexGenerator], Optional): A class returning a stateful index
+                generator.
+                Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
+                which is used for selecting each batch from the output of the _preprocess method during training in
+                this way: ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
+                If overridden, the generator class must be defined either as part of a package or in a different file
+                than the one from which the ``execute_experiment`` function is called.
+            with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
+                strategy. Defaults to False.
+        """
+        super().__init__(
+            model=model,
+            criterion=criterion,
+            optimizer=optimizer,
+            num_updates=num_updates,
+            batch_size=batch_size,
+            get_index_generator=get_index_generator,
+            scheduler=scheduler,
+        )
         self._with_batch_norm_parameters = with_batch_norm_parameters
-        self._index_generator: Optional[BaseIndexGenerator] = None
-
-        if batch_size is None:
-            logger.warning("Batch size is set to none, the whole dataset will be used for each update.")
-
-    @property
-    def model(self) -> torch.nn.Module:
-        """Model exposed when the user downloads the model
-
-        Returns:
-            torch.nn.Module: model
-        """
-        return self._model
-
-    @abc.abstractmethod
-    def _local_train(
-        self,
-        x: Any,
-        y: Any,
-    ):
-        """Local training loop
-
-        Train the model on num_updates minibatches, using the
-        self._index_generator generator to generate the batches.
-        WARNING: you must use next(self._index_generator) at each minibatch,
-        to ensure that the batches you are using are correct between 2 rounds
-        of the federated learning strategy.
-
-        Args:
-            x (typing.Any): x as returned by the opener
-            y (typing.Any): y as returned by the opener
-        """
-        for batch_index in self._index_generator:
-            x_batch, y_batch = x[batch_index], y[batch_index]
-
-            # Forward pass
-            y_pred = self._model(x_batch)
-
-            # Compute Loss
-            loss = self._criterion(y_pred, y_batch)
-            self._optimizer.zero_grad()
-            loss.backward()
-            self._optimizer.step()
-
-            if self._scheduler is not None:
-                self._scheduler.step()
-
-    @abc.abstractmethod
-    def _local_predict(self, x: Any) -> Any:
-        """Prediction on x
-
-        Args:
-            x (typing.Any): x as returned by the opener
-
-        Returns:
-            typing.Any: predictions in the format saved then loaded by the opener
-            to calculate the metric
-        """
-        with torch.inference_mode():
-            y = self._model(x)
-        return y
-
-    def _get_len_from_x(self, x: Any) -> int:
-        """Get the length of the dataset from
-        x as returned by the opener.
-
-        Default: returns len(x). Override
-        if needed.
-
-        Args:
-            x (typing.Any): x returned by the opener
-                get_X function
-
-        Returns:
-            int: Number of samples in the dataset
-        """
-        return len(x)
 
     @remote_data
     def train(
@@ -303,94 +233,35 @@ class TorchFedAvgAlgo(Algo):
     def predict(
         self,
         x: np.ndarray,
-        shared_state: Optional[
-            FedAvgAveragedState
-        ] = None,  # Set to None per default for clarity reason as the decorator will do it if the arg shared_state
-        # is not passed.
+        shared_state: FedAvgAveragedState,
     ):
-        """Predict method of the fed avg strategy. Executes the following operation:
+        """Predict method of the federated averaging strategy. Executes the following operation:
 
-            * apply user defined (or default) _process method to x
-            * if a shared state is given, add it to the model parameters
-            * apply the model to the input data (model(x))
-            * apply user defined (or default) _postprocess method to the model results
+            * If a shared state is given, add it to the model parameters
+            * Apply the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict`
+            * Return the predictions
 
         Args:
-            x (numpy.ndarray): Input data.
-            shared_state (typing.Optional[FedAvgAveragedState], Optional): If not None, the shared state
-                will be added to the model parameters' before computing the predictions.
-                Defaults to None.
+            x (typing.Any): Input data.
+            shared_state (FedAvgAveragedState): The shared state is added
+                to the model parameters before computing the predictions.
 
         Returns:
             typing.Any: Model prediction post precessed by the _postprocess class method.
         """
         # Reduce memory consumption as we don't use the model gradients
         with torch.inference_mode():
-            # If needed, add the shared state to the model parameters
-            if shared_state is not None:
-                weight_manager.increment_parameters(
-                    model=self._model,
-                    updates=shared_state.avg_parameters_update,
-                    with_batch_norm_parameters=self._with_batch_norm_parameters,
-                )
+            # Add the shared state to the model parameters
+            weight_manager.increment_parameters(
+                model=self._model,
+                updates=shared_state.avg_parameters_update,
+                with_batch_norm_parameters=self._with_batch_norm_parameters,
+            )
 
             self._model.eval()
 
         predictions = self._local_predict(x)
         return predictions
-
-    def load(self, path: Path) -> "TorchFedAvgAlgo":
-        """Load the stateful arguments of this class, i.e.:
-
-            * self._model
-            * self._optimizer
-            * self._scheduler (if provided)
-            * self._index_generator
-            * torch rng state
-
-        Args:
-            path (pathlib.Path): The path where the class has been saved.
-
-        Returns:
-            TorchFedAvgAlgo: The class with the loaded elements.
-        """
-        assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-
-        checkpoint = torch.load(path, map_location="cpu")
-        self._model.load_state_dict(checkpoint["model_state_dict"])
-        self._optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-
-        if self._scheduler is not None:
-            self._scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-
-        self._index_generator = checkpoint["index_generator"]
-
-        torch.set_rng_state(checkpoint["rng_state"])
-        return self
-
-    def save(self, path: Path):
-        """Saves all the stateful elements of the class to the specified path, i.e.:
-
-            * self._model
-            * self._optimizer
-            * self._scheduler (if provided)
-            * self._index_generator
-            * torch rng state
-
-        Args:
-            path (pathlib.Path): A path where to save the class.
-        """
-        torch.save(
-            {
-                "model_state_dict": self._model.state_dict(),
-                "optimizer_state_dict": self._optimizer.state_dict(),
-                "scheduler_state_dict": self._scheduler.state_dict() if self._scheduler is not None else None,
-                "index_generator": self._index_generator,
-                "rng_state": torch.get_rng_state(),
-            },
-            path,
-        )
-        assert path.is_file(), f'Did not save the model properly {list(path.parent.glob("*"))}'
 
     def summary(self):
         """Summary of the class to be exposed in the experiment summary file
@@ -401,15 +272,7 @@ class TorchFedAvgAlgo(Algo):
         summary = super().summary()
         summary.update(
             {
-                "model": str(type(self._model)),
-                "criterion": str(type(self._criterion)),
-                "optimizer": {
-                    "type": str(type(self._optimizer)),
-                    "parameters": self._optimizer.defaults,
-                },
-                "scheduler": None if self._scheduler is None else str(type(self._scheduler)),
-                "num_updates": self._num_updates,
-                "batch_size": self._batch_size,
+                "with_batch_norm_parameters": str(self._with_batch_norm_parameters),
             }
         )
         return summary

@@ -8,31 +8,38 @@ TorchFedAvgAlgo
 -----------------
 
 .. autoclass:: connectlib.algorithms.pytorch.TorchFedAvgAlgo
-    :members:
+    :private-members: _get_len_from_x, _local_train, _local_predict
+    :inherited-members:
 
 TorchScaffoldAlgo
 -----------------
 
 .. automodule:: connectlib.algorithms.pytorch.torch_scaffold_algo
-    :members:
+    :private-members: _get_len_from_x, _local_train, _local_predict
+    :inherited-members:
 
 
 TorchOneNodeAlgo
 -----------------
 
 .. autoclass:: connectlib.algorithms.pytorch.TorchOneNodeAlgo
-    :members:
+    :private-members: _get_len_from_x, _local_train, _local_predict
+    :inherited-members:
 
+Torch Base Class
+-----------------
+
+.. autoclass:: connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo
+    :private-members:
+    :inherited-members:
 
 Torch functions
 ^^^^^^^^^^^^^^^^^^
 
 .. automodule:: connectlib.algorithms.pytorch.weight_manager
-    :members:
-
 
 Base Class
 ^^^^^^^^^^
 
 .. autoclass:: connectlib.algorithms.algo.Algo
-    :members:
+    :private-members:

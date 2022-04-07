@@ -1,9 +1,6 @@
 import abc
 from pathlib import Path
 from typing import Any
-from typing import Dict
-
-import numpy as np
 
 
 class Algo(abc.ABC):
@@ -28,20 +25,25 @@ class Algo(abc.ABC):
     # train function
     # @remote_data
     @abc.abstractmethod
-    def train(self, x: Any, y: Any, shared_state: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        """Will be executed for each TrainDataNodes.
+    def train(self, x: Any, y: Any, shared_state: Any) -> Any:
+        """Is executed for each TrainDataNodes.
+        This functions takes the x, y from the opener, plus the shared state from the aggregator if there is one,
+        and returns a shared state (state to send to the aggregator). Any variable that needs to be saved and updated
+        from one round to another should be an attribute of ``self`` (e.g. ``self._my_local_state_variable``), and be
+        saved and loaded in the :py:func:`~connectlib.algorithms.algo.Algo.save` and
+        :py:func:`~connectlib.algorithms.algo.Algo.load` functions.
 
         Args:
             x (typing.Any): The output of the ``get_x`` method of the opener.
             y (typing.Any): The output of the ``get_y`` method of the opener.
-            shared_state (typing.Dict[str, numpy.ndarray]): None for the first round of the computation graph
+            shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous node of the computation graph.
 
         Raises:
             NotImplementedError
 
         Returns:
-            typing.Dict[str, numpy.ndarray]: The object passed to the next node of the computation graph.
+            typing.Any: The object passed to the next node of the computation graph.
         """
         raise NotImplementedError
 
@@ -50,13 +52,13 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, x: Any, shared_state: Dict[str, np.ndarray]) -> Any:
-        """Will be executed for each TestDataNodes. The returned object will be passed to the ``save_predictions``
+    def predict(self, x: Any, shared_state: Any) -> Any:
+        """Is executed for each TestDataNodes. The returned object will be passed to the ``save_predictions``
         function of the opener. The predictions are then loaded and used to calculate the metric.
 
         Args:
             x (typing.Any): The output of the ``get_x`` method of the opener.
-            shared_state (typing.Dict[str, numpy.ndarray]): None for the first round of the computation graph
+            shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous node of the computation graph.
 
         Raises:
