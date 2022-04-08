@@ -150,7 +150,7 @@ def execute_experiment(
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
-    compute_plan_tag: Optional[str] = None,
+    tag: Optional[str] = None,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
     your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
@@ -188,7 +188,7 @@ def execute_experiment(
         clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
             quickly so should be set to True unless needed. Defaults to True.
-        compute_plan_tag (str, Optional): Optional tag chosen by the user to identify the compute plan. If None,
+        tag (str, Optional): Optional tag chosen by the user to identify the compute plan. If None,
             the compute plan tag is set to the timestamp.
 
     Returns:
@@ -255,7 +255,7 @@ def execute_experiment(
             composite_traintuples=composite_traintuples,
             aggregatetuples=aggregation_tuples,
             testtuples=testtuples,
-            tag=compute_plan_tag or timestamp,
+            tag=tag or timestamp,
             clean_models=clean_models,
         ),
         auto_batching=False,
