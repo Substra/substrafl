@@ -1,3 +1,4 @@
+import sys
 import tarfile
 import tempfile
 from pathlib import Path
@@ -11,10 +12,14 @@ from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import MetricSpec
 from substra.sdk.schemas import Permissions
 
-DEFAULT_SUBSTRATOOLS_VERSION = "0.9.0"
+DEFAULT_SUBSTRATOOLS_VERSION = (
+    f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
+)
+
+DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"gcr.io/connect-314908/connect-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
 
 DEFAULT_METRICS_DOCKERFILE = f"""
-FROM gcr.io/connect-314908/connect-tools:{DEFAULT_SUBSTRATOOLS_VERSION}
+FROM {DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE}
 COPY metrics.py .
 ENTRYPOINT ["python3", "metrics.py"]
 """
