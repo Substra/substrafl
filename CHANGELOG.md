@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Changed
+
+- feat: rename "compute_plan_tag" to "tag" #131
+
 ## [0.9.0a2](https://github.com/owkin/connectlib/releases/tag/0.9.0a2) - 2022-04-07
 
 - feat: Add the optional argument "compute_plan_tag" to give the user the possibility to choose its own tag (timestamp by default) #128
