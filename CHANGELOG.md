@@ -5,38 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.9.0](https://github.com/owkin/connectlib/releases/tag/0.9.0a2) - 2022-04-11
 
 ## Changed
 
 - feat: rename "compute_plan_tag" to "tag" #131
-
-## [0.9.0a2](https://github.com/owkin/connectlib/releases/tag/0.9.0a2) - 2022-04-07
-
 - feat: Add the optional argument "compute_plan_tag" to give the user the possibility to choose its own tag (timestamp by default) #128
+- feat: Scaffold strategy (#89)
+- feat: add one node strategy (#106)
+- The Connect tasks have a `round_idx` attribute in their metadata (#101)
+- doc: add python api to documentation (#105)
 
 ### Improved
 
 - API documentation: fix the docstrings and the display of the documentation for some functions (#122)
 - (BREAKING CHANGE) FedAvg strategy: the train function must return a FedAvgSharedState, the average function returns a FedAvgAveragedState.
     No need to change your code if you use TorchFedAvgAlgo (#126)
-
-## [0.9.0a1](https://github.com/owkin/connectlib/releases/tag/0.9.0a1) - 2022-03-29
-
-### Added
-
-- feat: Scaffold strategy (#89)
-- feat: add one node strategy (#106)
-- The Connect tasks have a `round_idx` attribute in their metadata (#101)
-- doc: add python api to documentation (#105)
-
-### Fixed
-
-- fix: naming changed from FedAVG to FedAvg (#114)
-- fix: log a warning if an existing wheel is used to build the docker image (#116)
-
-### Improved
-
 - benchmark:
   - Use the same batch sampler between the torch and Connectlib examples (#94)
   - Make it work with `num_workers` > 0 (#94)
@@ -44,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update the default benchmark parameters in `benchmarks.sh` (#94)
   - Add new curves to the plotting: when one parameter changes while the others stay the same (#94)
   - Use connect-tools 0.10.0 as a base image for the Dockerfile
+
+### Fixed
+
+- fix: naming changed from FedAVG to FedAvg (#114)
+- fix: log a warning if an existing wheel is used to build the docker image (#116)
 
 ## [0.8.0](https://github.com/owkin/connectlib/releases/tag/0.8.0) - 2022-03-01
 
