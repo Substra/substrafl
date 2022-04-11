@@ -12,6 +12,7 @@ from connectlib.algorithms.pytorch import TorchScaffoldAlgo
 from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import NumUpdatesValueError
 from connectlib.schemas import ScaffoldAveragedStates
 from connectlib.schemas import ScaffoldSharedState
 from connectlib.strategies import Scaffold
@@ -327,3 +328,30 @@ def test_update_current_lr(rtol):
     my_algo._scheduler.step()
     my_algo._update_current_lr()
     assert pytest.approx(my_algo._current_lr, rel=rtol) == initial_lr * 0.1
+
+
+@pytest.mark.parametrize("num_updates", [-10, 0])
+def test_pytorch_num_updates_error(num_updates):
+    """Check that num_updates <= 0 raise a ValueError."""
+
+    class MyAlgo(TorchScaffoldAlgo):
+        def __init__(
+            self,
+        ):
+            super().__init__(
+                optimizer=None,
+                criterion=None,
+                model=None,
+                num_updates=num_updates,
+                batch_size=32,
+            )
+
+        def _local_train(self, x: Any, y: Any):
+            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
+
+        def _local_predict(self, x: Any) -> Any:
+            y_pred = super()._local_predict(torch.from_numpy(x).float())
+            return y_pred.detach().numpy()
+
+    with pytest.raises(NumUpdatesValueError):
+        MyAlgo()

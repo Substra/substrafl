@@ -12,6 +12,7 @@ import torch
 from connectlib.algorithms.pytorch import weight_manager
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.exceptions import IndexGeneratorUpdateError
+from connectlib.exceptions import NumUpdatesValueError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
@@ -151,6 +152,8 @@ class TorchScaffoldAlgo(TorchAlgo):
             c_update_rule (CUpdateRule): The rule used to update the
                 client control variate.
                 Defaults to CUpdateRule.FAST.
+        Raises:
+            :ref:`~connectlib.exceptions.NumUpdatesValueError`: If `num_updates` is inferior or equal to zero.
         """
         super().__init__(
             model=model,
@@ -161,6 +164,8 @@ class TorchScaffoldAlgo(TorchAlgo):
             get_index_generator=get_index_generator,
             scheduler=scheduler,
         )
+        if self._num_updates <= 0:
+            raise NumUpdatesValueError("Num_updates needs to be superior to 0 for TorchScaffoldAlgo.")
         self._with_batch_norm_parameters = with_batch_norm_parameters
         self._c_update_rule = CUpdateRule(c_update_rule)
         # ci in the paper
@@ -349,11 +354,6 @@ class TorchScaffoldAlgo(TorchAlgo):
             # These should have been loaded by the load() function
             assert self._client_control_variate is not None
             assert self._index_generator is not None
-
-        assert (
-            self._num_updates > 0
-        ), "num_updates should be > 0 because we divide by it for control_variate_update and we compute the "
-        "self._current_lr in _local_train()"
 
         self._index_generator.reset_counter()
 
