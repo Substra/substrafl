@@ -401,7 +401,7 @@ def register_algo(
 
     key = client.add_algo(
         substra.sdk.schemas.AlgoSpec(
-            name=uuid.uuid4().hex,
+            name=str(uuid.uuid4()),
             description=description_path,
             file=archive_path,
             permissions=permissions,

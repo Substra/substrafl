@@ -46,7 +46,7 @@ class AggregationNode(Node):
                 "Have you decorated your method with @remote?",
             )
 
-        op_id = uuid.uuid4().hex
+        op_id = str(uuid.uuid4())
 
         aggregate_tuple = {
             "remote_operation": operation.remote_struct,
