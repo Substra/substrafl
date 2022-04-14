@@ -71,7 +71,6 @@ def test_avg_shared_states_different_length():
         MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
 
-@pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.substra
 def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default_permissions):
