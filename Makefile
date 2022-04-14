@@ -25,4 +25,4 @@ test-fast: pyclean
 	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local --nbmake -m "not slow and not docker_only"
 
 test-ci: pyclean
-	pytest tests --ci -m "substra"
+	pytest tests --ci -m "e2e"
