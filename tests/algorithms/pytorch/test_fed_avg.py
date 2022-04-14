@@ -101,6 +101,7 @@ def test_pytorch_fedavg_algo_weights(
     assert_model_parameters_equal(rank_2_local_models[0].model, rank_2_local_models[1].model)
 
 
+@pytest.mark.e2e
 @pytest.mark.substra
 @pytest.mark.slow
 def test_pytorch_fedavg_algo_performance(
