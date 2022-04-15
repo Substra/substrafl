@@ -1,16 +1,22 @@
 class InvalidPathError(Exception):
-    """Invalid path"""
+    """Invalid path."""
 
     pass
 
 
 class IndexGeneratorUpdateError(Exception):
-    """The index generator has not been updated properly"""
+    """The index generator has not been updated properly."""
 
     pass
 
 
 class NumUpdatesValueError(Exception):
-    """The num_update has been set to an non-authorize value"""
+    """The num_update has been set to an non-authorize value."""
+
+    pass
+
+
+class ConnectToolsDeprecationWarning(DeprecationWarning):
+    """The connect-tools version used is deprecated."""
 
     pass
