@@ -9,6 +9,7 @@ import sys
 import tarfile
 import tempfile
 import uuid
+import warnings
 from pathlib import Path
 from platform import python_version
 from typing import List
@@ -17,20 +18,27 @@ from typing import Tuple
 import cloudpickle
 import substra
 import substratools
+from packaging import version
 
 import connectlib
 from connectlib.dependency import Dependency
+from connectlib.exceptions import ConnectToolsDeprecationWarning
 from connectlib.remote.methods import RemoteStruct
 
 logger = logging.getLogger(__name__)
 
+MINIMAL_DOCKER_CONNECT_TOOLS_VERSION = "0.10.0"
+
+_DEFAULT_CONNECT_TOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
+{connect_tools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
+
 CONNECTLIB_FOLDER = "connectlib_internal"
 LOCAL_WHEELS_FOLDER = Path.home() / ".connectlib"
 
-
 # TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
-FROM python:{python_version}
+FROM {docker_image}
+
 WORKDIR /sandbox
 ENV PYTHONPATH /sandbox
 
@@ -39,7 +47,7 @@ COPY . .
 # install dependencies
 RUN python{python_version} -m pip install -U pip
 
-# Install connectlib, substra and substratools
+# Install connectlib, substra (and substratools if editable mode)
 {cl_deps}
 
 # PyPi dependencies
@@ -107,7 +115,6 @@ def _local_lib_install_command(lib_modules: List, operation_dir: Path, python_ma
     install_cmds = []
     wheels_dir = operation_dir / CONNECTLIB_FOLDER / "dist"
     wheels_dir.mkdir(exist_ok=True, parents=True)
-
     for lib_module in lib_modules:
         wheel_name = f"{lib_module.__name__}-{lib_module.__version__}-py3-none-any.whl"
 
@@ -276,18 +283,20 @@ def _create_substra_algo_files(  # noqa: C901
     install_cmd = ""
 
     if install_libraries:
-        lib_modules = [substratools, substra, connectlib]  # owkin private dependencies
-
         # Install either from pypi wheel or repo in editable mode
         install_cmd = (
             _local_lib_install_command(
-                lib_modules=lib_modules,
+                lib_modules=[
+                    substratools,
+                    substra,
+                    connectlib,
+                ],  # We reinstall substratools in editable mode to overwrite the installed version
                 operation_dir=operation_dir,
                 python_major_minor=python_major_minor,
             )
             if dependencies.editable_mode
             else _pypi_lib_install_command(
-                lib_modules=lib_modules,
+                lib_modules=[substra, connectlib],
                 operation_dir=operation_dir,
                 python_major_minor=python_major_minor,
             )
@@ -346,10 +355,29 @@ def _create_substra_algo_files(  # noqa: C901
     description_path = connectlib_internal / "description.md"
     description_path.write_text("# ConnectLib Operation")
 
+    connect_tools_version = substratools.__version__
+
+    if version.parse(connect_tools_version) < version.parse(MINIMAL_DOCKER_CONNECT_TOOLS_VERSION):
+        if not dependencies.editable_mode:
+            warnings.warn(
+                f"Your environment uses connect-tools={connect_tools_version}. Version {MINIMAL_DOCKER_CONNECT_TOOLS_VERSION} will be \
+                used on Docker.",
+                ConnectToolsDeprecationWarning,
+            )
+        connect_tools_image_version = MINIMAL_DOCKER_CONNECT_TOOLS_VERSION
+    else:
+        connect_tools_image_version = connect_tools_version
+
+    connect_tools_image = _DEFAULT_CONNECT_TOOLS_IMAGE.format(
+        connect_tools_version=connect_tools_image_version,
+        python_version=python_major_minor,
+    )
+
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
     dockerfile_path.write_text(
         DOCKERFILE_TEMPLATE.format(
+            docker_image=connect_tools_image,
             python_version=python_major_minor,
             cl_deps=install_cmd,
             pypi_dependencies=pypi_dependencies_cmd,
