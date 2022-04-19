@@ -17,30 +17,25 @@ jobs:
         python: ['3.7', '3.8', '3.9']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           path: connectlib
           lfs: true
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Set up gcloud Cloud SDK environment
-        uses: google-github-actions/setup-gcloud@v0.2.0
+      - uses: actions/cache@v3.0.2
+        id: cache
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Configure docker for GCP
-        run: gcloud auth configure-docker
-        shell: bash
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Install lint checks
         run: |
           pip install --upgrade pip
-          pip install --no-cache-dir pytest black flake8
-          pip install --no-cache-dir pre-commit
+          pip install --upgrade pytest black flake8 pre-commit
 
       - name: Code conventions
         run: |
@@ -48,19 +43,20 @@ jobs:
           pre-commit run --all-files
 
       - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: owkin/connect-tools
           token: ${{ secrets.ACCESS_TOKEN }}
           path: substratools
 
       - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: owkin/substra
           token: ${{ secrets.ACCESS_TOKEN }}
           path: substra
 
+      # Some tests install the libraries from the PyPi
       - name: Login pypi
         run: |
              mkdir ~/.pip || touch ~/.pip/pip.conf
@@ -69,22 +65,17 @@ jobs:
 
       - name: Install package
         run: |
-             pip install --no-cache-dir -e substra
-             pip install --no-cache-dir -e substratools
-             pip install --no-cache-dir -e connectlib[dev]
+             pip install --upgrade -e substra
+             pip install --upgrade -e substratools
+             pip install --upgrade -e connectlib[dev]
 
-      - name: Install package for tests
-        run: |
-             cd connectlib/tests/dependency/installable_library
-             pip install --no-cache-dir -e .
-
-      - name: Run tests
+      - name: Run the fast local tests
         run: |
           cd connectlib
-          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-local
+          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-local-fast
 
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: connectlib/htmlcov
@@ -92,9 +83,9 @@ jobs:
   pr-validation-docs:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: 3.9
 
@@ -104,10 +95,16 @@ jobs:
              echo "[global]" >> ~/.pip/pip.conf
              echo "extra-index-url = https://connectors-service-account:${{ secrets.TWINE_PASSWORD }}@pypi.owkin.com/simple" >> ~/.pip/pip.conf
 
+      - uses: actions/cache@v3.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
+
       - name: Install Dependencies
         run: |
-          pip install --no-cache-dir .[dev]
-          pip install --no-cache-dir -r docs/requirements.txt
+          pip install --upgrade .[dev]
+          pip install --upgrade -r docs/requirements.txt
 
       - name: Test docs
         run: |
