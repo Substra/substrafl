@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/owkin/connectlib/releases/tag/0.10.0) - 2022-04-19
+
 ### Fixed
 
 - Fix the format of the asset ids: the right format is `str(uuid.uuid4())` and not `uuid.uuid4().hex` (#141)
 
-## [0.9.0](https://github.com/owkin/connectlib/releases/tag/0.9.0a2) - 2022-04-11
+## [0.9.0](https://github.com/owkin/connectlib/releases/tag/0.9.0) - 2022-04-11
 
 ## Changed
 
