@@ -1,0 +1,71 @@
+name: main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pr-validation:
+    name: test-py-${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        python: ['3.7', '3.8', '3.9']
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: connectlib
+          lfs: true
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Set up gcloud Cloud SDK environment
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure docker for GCP
+        run: gcloud auth configure-docker
+        shell: bash
+
+      - name: Checkout pyconfig from a private repos
+        uses: actions/checkout@v3
+        with:
+          repository: owkin/connect-tools
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substratools
+
+      - name: Checkout pyconfig from a private repos
+        uses: actions/checkout@v3
+        with:
+          repository: owkin/substra
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substra
+
+      - uses: actions/cache@v3.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install package
+        run: |
+             pip install --upgrade -e substratools
+             cd substra && pip install --upgrade -e . && cd ..
+             cd connectlib && pip install --upgrade -e '.[dev]' && cd ..
+
+      - name: Run the slow local tests
+        run: |
+          cd connectlib
+          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-local-slow
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: connectlib/htmlcov

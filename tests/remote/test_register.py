@@ -2,10 +2,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-import substra
 import substratools
 
-import connectlib
 from connectlib.remote import register
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -13,7 +11,7 @@ PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 def test_local_lib_install_command(session_dir):
     # Test that editable wheel are generated
-    libs = [connectlib, substra, substratools]
+    libs = [substratools]
     operation_dir = Path(tempfile.mkdtemp(dir=session_dir.as_posix()))
 
     _ = register._local_lib_install_command(
@@ -34,7 +32,7 @@ def test_local_lib_install_command(session_dir):
 
 def test_pypi_lib_install_command(session_dir):
     # Test that pypi wheel can be downloaded
-    libs = [connectlib, substra, substratools]
+    libs = [substratools]
     operation_dir = Path(tempfile.mkdtemp(dir=session_dir.as_posix()))
 
     # We check that we have access to the pypi repo not the specific packages version otherwise this test will fail
@@ -42,12 +40,6 @@ def test_pypi_lib_install_command(session_dir):
     # (0.x.0) won't have been released yet (it is not in owkin pypi).
 
     # save the current versions the libs to set them back later
-    connectlib_version = connectlib.__version__
-    connectlib.__version__ = "0.5.0"
-
-    substra_version = substra.__version__
-    substra.__version__ = "0.14.0"
-
     substratools_version = substratools.__version__
     substratools.__version__ = "0.9.1"
 
@@ -62,8 +54,6 @@ def test_pypi_lib_install_command(session_dir):
             (Path().home() / f".connectlib/{lib.__name__}-{lib.__version__}-py3-none-any.whl").exists()
         )
 
-    connectlib.__version__ = connectlib_version
-    substra.__version__ = substra_version
     substratools.__version__ = substratools_version
 
     assert all(wheels_created)
