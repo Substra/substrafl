@@ -36,7 +36,7 @@ def basic_fed_avg(  # noqa: C901
     deltas_sent = [None for _ in range(num_clients)]
     aggregated_delta_weights = None
     # Run the loop
-    for idx_round in tqdm.tqdm(range(num_rounds), desc="Rounds"):
+    for idx_round in tqdm.tqdm(range(num_rounds), desc="Rounds: "):
         # Simulating "in parallel local training"
         for idx_client in range(num_clients):
 

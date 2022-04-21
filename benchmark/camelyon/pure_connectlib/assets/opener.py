@@ -10,7 +10,11 @@ class Data:
         index_path = Path(path) / "index.csv"
         assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
         self.indexes = np.loadtxt(index_path, delimiter=",", dtype=str)
-        self.indexes = self.indexes[np.argsort(self.indexes[:, 0])]
+        self.indexes = (
+            self.indexes[np.argsort(self.indexes[:, 0])]
+            if len(self.indexes.shape) > 1
+            else np.array(self.indexes).reshape(1, self.indexes.shape[0])
+        )
         self.path = path
 
     def __len__(self):

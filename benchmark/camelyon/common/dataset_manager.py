@@ -4,8 +4,13 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import numpy as np
+
+from .utils import parse_params
 
 DEST_DIR = Path(__file__).parents[1]
 DATA_DIR = DEST_DIR / "data"
@@ -23,7 +28,18 @@ def fetch_camelyon():
     if not IMG_DIR.exists():
         print("Downloading the data (this could take several minutes).")
         try:
-            subprocess.check_call(["gsutil", "-m", "cp", "-r", "gs://camelyon_0_5/data/", DEST_DIR])
+            subprocess.check_call(
+                [
+                    "gsutil",
+                    "-o",
+                    "GSUtil:parallel_process_count=1",
+                    "-m",
+                    "cp",
+                    "-r",
+                    "gs://camelyon_0_5/data/",
+                    DEST_DIR,
+                ]
+            )
         except subprocess.CalledProcessError:
             print(
                 "Unable to download the data, please ensure that you have access to the following repo :\n"
@@ -32,32 +48,10 @@ def fetch_camelyon():
             raise
 
 
-def sub_sample_index(index_file: Path, sub_sampling: float, rng):
-    """Random subsample from original index file of the Camelyon dataset.
-
-    Args:
-        index_file (Path): Csv file containing filename and target columns.
-        sub_sampling (float): Ratio of sampling desired.
-        rng (RandomGenerator): Numpy random generator.
-
-    Returns:
-        np.ndarray: 2D array of file name and associated target.
-    """
-    indexes = np.loadtxt(index_file, delimiter=",", dtype=str, skiprows=1)
-    rng.shuffle(indexes)
-    indexes = rng.choice(
-        indexes,
-        size=math.ceil(len(indexes) * sub_sampling),
-        replace=False,
-    )
-
-    return indexes
-
-
 def reset_data_folder():
     """Reset data folder to it's original state i.e. all the data in the IMG_DIR folder."""
     # Deleting old experiment folders
-    old_folders = [x for x in os.listdir(DATA_DIR) if bool(re.search(r"(^train_\d$|^test$)", x))]
+    old_folders = [x for x in os.listdir(DATA_DIR) if bool(re.search(r"(^train_\d$|^test_\d$|^test$)", x))]
 
     for folder in old_folders:
         shutil.rmtree(DATA_DIR / folder)
@@ -76,44 +70,81 @@ def creates_data_folder(dest_folder, index):
 
     # Save our new index file
     index = index[np.argsort(index[:, 0])]
+
+    for k, f in enumerate(index):
+        file_name = f[0] + ".npy"
+        out_name = f"{k}_{file_name}"
+        os.link(IMG_DIR / file_name, dest_folder / out_name)
+        index[k, 0] = out_name
+
     np.savetxt(dest_folder / "index.csv", index, fmt="%s", delimiter=",")
 
-    for f in index:
-        file_name = f[0] + ".npy"
-        os.link(IMG_DIR / file_name, dest_folder / file_name)
 
-
-def split_dataset(n_centers, sub_sampling):
+def creates_data_folders(
+    n_centers: Optional[int],
+    sub_sampling: Optional[float],
+    data_samples_size: Optional[List[Dict[str, int]]],
+    batch_size: int,
+    kind: str = "train",
+):
     """Generates separated folders containing the indexes in a csv file (index.csv) and images
-    for train (n_centers) folders and one test folder. The size of the generated datasets is a
-    fraction of the whole dataset (sub_sampling). The data is hard linked from the original folder
-    (data/tiles_0.5mpp) to the generated folder.
-
-    Args:
-        n_centers (int): The number of training centers (i.e. the number of split for the training
-            data).
-        sub_sampling (float): the fraction of the data to use.
-
-    Returns:
-        List of train folders, test folder
-    """
-
+    for train (n_centers) folders and one test folder. The size of the generated datasets is either a
+    fraction of the whole dataset (sub_sampling) or of the exact size specified in data_samples_size.
+    The data is hard linked from the original folder
+    (data/tiles_0.5mpp) to the generated folder."""
+    index_file = TRAIN_INDEX_FILE if kind == "train" else TEST_INDEX_FILE
     rng = np.random.default_rng(42)
+    index = np.loadtxt(index_file, delimiter=",", dtype="<U64", skiprows=1)
+    rng.shuffle(index)
 
-    # Train
-    trains_indexes = np.array_split(
-        sub_sample_index(TRAIN_INDEX_FILE, sub_sampling, rng),
-        n_centers,
+    sizes = (
+        [sizes[kind] for sizes in data_samples_size]
+        if data_samples_size
+        else [math.ceil(len(index) * sub_sampling)] * n_centers
     )
-    trains_folders = [DATA_DIR / f"train_{k}" for k in range(n_centers)]
 
-    for folder, index in zip(trains_folders, trains_indexes):
+    indexes = [
+        rng.choice(
+            index,
+            size=size,
+            replace=True,
+        )
+        for size in sizes
+        if size > 0
+    ]
+
+    folders = [DATA_DIR / f"{kind}_{k}" for k in range(len(indexes))]
+
+    for folder, index in zip(folders, indexes):
         creates_data_folder(folder, index)
 
-    # Test data
-    test_indexes = sub_sample_index(TEST_INDEX_FILE, sub_sampling, rng)
-    test_folder = DATA_DIR / "test"
+    # Check on the number of samples
+    for folder in folders:
+        len_data = len((Path(folder) / "index.csv").read_text().splitlines())
+        if len_data < batch_size:
+            raise ValueError(
+                "The length of the dataset is smaller than the batch size, not allowed as it"
+                "skews the benchmark results (the batch size gets automatically adjusted in that case)."
+            )
 
-    creates_data_folder(test_folder, test_indexes)
+    return folders
 
-    return trains_folders, test_folder
+
+if __name__ == "__main__":
+    fetch_camelyon()
+    params = parse_params()
+    reset_data_folder()
+    train_folders = creates_data_folders(
+        n_centers=params.get("n_centers"),
+        sub_sampling=params.get("sub_sampling"),
+        data_samples_size=params.get("data_samples_size"),
+        batch_size=params.get("batch_size"),
+        kind="train",
+    )
+    test_folders = creates_data_folders(
+        n_centers=params.get("n_centers"),
+        sub_sampling=params.get("sub_sampling"),
+        data_samples_size=params.get("data_samples_size"),
+        batch_size=params.get("batch_size"),
+        kind="test",
+    )

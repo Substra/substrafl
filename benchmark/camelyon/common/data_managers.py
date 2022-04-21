@@ -14,7 +14,9 @@ class CamelyonDataset(Dataset):
     """Torch Dataset for the Camelyon data. Padding is done on the fly."""
 
     def __init__(self, data_indexes, img_path) -> None:
-        self.data_indexes = data_indexes
+        self.data_indexes = (
+            data_indexes if len(data_indexes.shape) > 1 else np.array(data_indexes).reshape(1, data_indexes.shape[0])
+        )
         self.img_path = Path(img_path)
 
     def __len__(self):
@@ -23,7 +25,7 @@ class CamelyonDataset(Dataset):
     def __getitem__(self, index):
         """Get the needed item from index and preprocess them on the fly."""
         sample_file_path, target = self.data_indexes[index]
-        x = torch.from_numpy(np.load(self.img_path / (sample_file_path + ".npy")).astype(np.float32)[:, 3:]).to(device)
+        x = torch.from_numpy(np.load(self.img_path / sample_file_path).astype(np.float32)[:, 3:]).to(device)
 
         y = torch.tensor(int(target == "Tumor")).type(torch.float32).to(device)
 
