@@ -2,3 +2,5 @@ pure_connectlib/assets/metric.tar.gz
 data/**
 results/**
 experiment_folder
+connect_conf/**
+!connect_conf/remote.yaml
