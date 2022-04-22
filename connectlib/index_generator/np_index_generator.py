@@ -3,20 +3,23 @@ from typing import Optional
 
 import numpy as np
 
+from connectlib import exceptions
 from connectlib.index_generator.base import BaseIndexGenerator
 
 logger = logging.getLogger(__name__)
 
 
 class NpIndexGenerator(BaseIndexGenerator):
-    """An index based batch generator. It will return an array of size ``batch_size`` indexes.
-    If ``batch_size`` is equal to zero, this will return an empty array.
+    """An index based batch generator. It returns an array of size ``batch_size`` indexes.
+    If ``batch_size`` is equal to zero, this returns an empty array.
 
-    Each batch is generated and returned via the method :func:`next`:
+    Each batch is generated and returned via the method
+    :py:func:`~connectlib.index_generator.np_index_generator.NpIndexGenerator.__next__`:
 
     .. code-block:: python
 
-        batch_generator = NpIndexGenerator(n_samples=10, batch_size=3)
+        batch_generator = NpIndexGenerator(batch_size=32, num_updates=100)
+        batch_generator.n_samples = 10
 
         batch_1 = next(batch_generator)
         batch_2 = next(batch_generator)
@@ -43,37 +46,33 @@ class NpIndexGenerator(BaseIndexGenerator):
         with open(indexer_path, "rb") as f:
             loaded_batch_generator = pickle.load(f)
             f.close()
-
-
-    Attributes:
-        n_samples (int): The number of samples in one epoch, i.e. the number of indexes you want to draw your batches
-            from.
-        batch_size (Optional[int]): The size of each batch. If set to None, the batch_size will be the number of
-            samples.
-        num_updates (int): The number of updates. After num_updates, the generator raises a StopIteration error.
-            To reset it for the next round, use the `reset` function.
-        shuffle (bool, Optional): Set to True to shuffle the indexes before each new epoch. Defaults to True.
-        drop_last (bool, Optional): Set to True to drop the last incomplete batch, if the dataset size is not divisible
-            by the batch size. If False and the size of dataset is not divisible by the batch size, then the last batch
-            will be smaller. Defaults to True.
-        seed (int, Optional): The seed to set the randomness of the generator and have reproducible results.
-            Defaults to 42.
     """
 
     def __init__(
         self,
-        n_samples: int,
         batch_size: Optional[int],
         num_updates: int,
         shuffle: bool = True,
-        drop_last: bool = True,
+        drop_last: bool = False,
         seed: int = 42,
     ):
-        """Initialization of the generator."""
+        """
+        Args:
+            batch_size (typing.Optional[int]): The size of each batch. If set to None, the batch_size is the
+                number of samples.
+            num_updates (int): The number of updates. After num_updates, the generator raises a StopIteration error.
+                To reset it for the next round, use the
+                :py:func:`~connectlib.index_generator.np_index_generator.NpIndexGenerator.reset_counter` function.
+            shuffle (bool, Optional): Set to True to shuffle the indexes before each new epoch. Defaults to True.
+            drop_last (bool, Optional): Set to True to drop the last incomplete batch, if the dataset size is not
+                divisible by the batch size. If False and the size of dataset is not divisible by the batch size, then
+                the last batch is smaller. Defaults to False.
+            seed (int, Optional): The seed to set the randomness of the generator and have reproducible results.
+                Defaults to 42.
+        """
 
         # Initialization
         super().__init__(
-            n_samples=n_samples,
             batch_size=batch_size,
             num_updates=num_updates,
             shuffle=shuffle,
@@ -81,40 +80,32 @@ class NpIndexGenerator(BaseIndexGenerator):
             seed=seed,
         )
 
-        # New properties
-        self._n_batch_per_epoch: int = (
-            (
-                int(np.floor(self._n_samples / self._batch_size))
-                if drop_last
-                else int(np.ceil(self._n_samples / self._batch_size))
-            )
-            if self._batch_size != 0
-            else 0
-        )
-        self._to_draw = np.arange(self._n_samples)
-        if self._shuffle:
-            self._to_draw = self._rng.permutation(self._to_draw)
-
     def __iter__(self):
-        """Required methods for generators."""
+        """Required methods for generators, returns ``self``."""
         return self
 
     def __next__(self):
-        """Generates the next batch and modifies the state of the class.
+        """Generates the next batch.
 
-        At each call, this function will update the ``self._to_draw`` argument as ``self._to_draw`` contains
-        the indexes that have not been already drawn during the current epoch. At the beginning of each epoch,
-        all indexes will be shuffled if needed but not the first time as it has already been done at
-        the initialization of the class.
-        Each calls updates the ``self._counter`` argument by one, and each time it goes through an epoch, raises
-        ``self._n_epoch_generated`` by one.
+        At the start of each iteration through the whole dataset, if ``shuffle`` is True then all the indices are
+        shuffled.
+        If there are less elements left in the dataset than ``batch_size``, then if ``drop_last`` is False, a batch
+        containing the remaining elements is returned, else the last batch is dropped and the batch is created from the
+        whole dataset.
+        Each calls updates the ``counter`` by one, and each time it goes through an epoch, increases
+        ``n_epoch_generated`` by one.
 
         Raises:
-            StopIteration: when this function has been called ``self._num_updates`` times.
+            StopIteration: when this function has been called ``num_updates`` times.
 
         Returns:
             numpy.ndarray: The batch indexes as a numpy array.
         """
+        if self._n_samples is None:
+            raise exceptions.IndexGeneratorSampleNoneError(
+                "Please set the number of samples using the" "n_samples function before iterating through the batches."
+            )
+
         if self._counter == self._num_updates:
             raise StopIteration
 
@@ -132,3 +123,25 @@ class NpIndexGenerator(BaseIndexGenerator):
 
         self._counter += 1
         return batch
+
+    @BaseIndexGenerator.n_samples.setter
+    def n_samples(self, _n_samples: int):
+        """Set the number of samples to draw from, then initialise
+        the indexes to draw from when generating the batches.
+
+        Args:
+            _n_samples (int): number of samples in the dataset.
+        """
+        super(NpIndexGenerator, self.__class__).n_samples.fset(self, _n_samples)
+        self._n_batch_per_epoch: int = (
+            (
+                int(np.floor(self._n_samples / self._batch_size))
+                if self._drop_last
+                else int(np.ceil(self._n_samples / self._batch_size))
+            )
+            if self._batch_size != 0
+            else 0
+        )
+        self._to_draw = np.arange(self._n_samples)
+        if self._shuffle:
+            self._to_draw = self._rng.permutation(self._to_draw)

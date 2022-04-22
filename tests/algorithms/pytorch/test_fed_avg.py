@@ -10,6 +10,7 @@ from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.index_generator import NpIndexGenerator
 from connectlib.strategies import FedAvg
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -35,6 +36,10 @@ def test_pytorch_fedavg_algo_weights(
     batch_size = 1
 
     perceptron = torch_linear_model()
+    nig = NpIndexGenerator(
+        batch_size=batch_size,
+        num_updates=num_updates,
+    )
 
     class MyAlgo(TorchFedAvgAlgo):
         def __init__(self):
@@ -42,8 +47,7 @@ def test_pytorch_fedavg_algo_weights(
                 model=perceptron,
                 criterion=torch.nn.MSELoss(),
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
-                num_updates=num_updates,
-                batch_size=batch_size,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -121,6 +125,10 @@ def test_pytorch_fedavg_algo_performance(
     seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
+    nig = NpIndexGenerator(
+        batch_size=32,
+        num_updates=num_updates,
+    )
 
     class MyAlgo(TorchFedAvgAlgo):
         def __init__(
@@ -130,8 +138,7 @@ def test_pytorch_fedavg_algo_performance(
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
                 criterion=torch.nn.MSELoss(),
                 model=perceptron,
-                num_updates=num_updates,
-                batch_size=32,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):

@@ -8,6 +8,7 @@ from connectlib import execute_experiment
 from connectlib.algorithms.pytorch import TorchOneNodeAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.index_generator import NpIndexGenerator
 from connectlib.strategies import OneNode
 from tests import utils
 
@@ -37,6 +38,10 @@ def test_one_node(network, torch_linear_model, train_linear_nodes, test_linear_n
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
     optimizer = torch.optim.SGD(perceptron.parameters(), lr=0.1)
+    nig = NpIndexGenerator(
+        batch_size=BATCH_SIZE,
+        num_updates=n_updates,
+    )
 
     class MyOneNodeAlgo(TorchOneNodeAlgo):
         def __init__(
@@ -46,8 +51,7 @@ def test_one_node(network, torch_linear_model, train_linear_nodes, test_linear_n
                 optimizer=optimizer,
                 criterion=torch.nn.MSELoss(),
                 model=perceptron,
-                num_updates=n_updates,
-                batch_size=BATCH_SIZE,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):

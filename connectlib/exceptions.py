@@ -20,3 +20,9 @@ class ConnectToolsDeprecationWarning(DeprecationWarning):
     """The connect-tools version used is deprecated."""
 
     pass
+
+
+class IndexGeneratorSampleNoneError(Exception):
+    """Try to use the index generator without setting the number of samples."""
+
+    pass

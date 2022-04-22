@@ -1,16 +1,13 @@
 import logging
 from typing import Any
 from typing import Optional
-from typing import Type
 
 import numpy as np
 import torch
 
 from connectlib.algorithms.pytorch import weight_manager
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
-from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.index_generator import BaseIndexGenerator
-from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
 from connectlib.schemas import FedAvgAveragedState
 from connectlib.schemas import FedAvgSharedState
@@ -48,7 +45,10 @@ class TorchFedAvgAlgo(TorchAlgo):
                         model=perceptron,
                         criterion=torch.nn.MSELoss(),
                         optimizer=optimizer,
-                        num_updates=100,
+                        index_generator=NpIndexGenerator(
+                            num_updates=100,
+                            batch_size=32,
+                        )
                     )
                 def _local_train(
                     self,
@@ -96,9 +96,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
-        num_updates: int,
-        batch_size: Optional[int],
-        get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
+        index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
     ):
@@ -117,11 +115,10 @@ class TorchFedAvgAlgo(TorchAlgo):
                 train function).
             batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
                 be used.
-            get_index_generator (typing.Type[BaseIndexGenerator], Optional): A class returning a stateful index
-                generator.
+            index_generator (BaseIndexGenerator): a stateful index generator.
                 Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
                 which is used for selecting each batch from the output of the _preprocess method during training in
-                this way: ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
+                this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
@@ -131,9 +128,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             model=model,
             criterion=criterion,
             optimizer=optimizer,
-            num_updates=num_updates,
-            batch_size=batch_size,
-            get_index_generator=get_index_generator,
+            index_generator=index_generator,
             scheduler=scheduler,
         )
         self._with_batch_norm_parameters = with_batch_norm_parameters
@@ -167,16 +162,10 @@ class TorchFedAvgAlgo(TorchAlgo):
         """
         if shared_state is None:
             # Instantiate the index_generator
-            assert self._index_generator is None
-            self._index_generator = self._get_index_generator(
-                n_samples=self._get_len_from_x(x),
-                batch_size=self._batch_size,
-                num_updates=self._num_updates,
-                shuffle=True,
-                drop_last=False,
-            )
+            assert self._index_generator.n_samples is None
+            self._index_generator.n_samples = self._get_len_from_x(x)
         else:
-            assert self._index_generator is not None
+            assert self._index_generator.n_samples is not None
             # The shared states is the average of the model parameter updates for all nodes
             # Hence we need to add it to the previous local state parameters
             weight_manager.increment_parameters(
@@ -200,12 +189,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             y=y,
         )
 
-        if self._index_generator.counter != self._num_updates:
-            raise IndexGeneratorUpdateError(
-                "The batch index generator has not been updated properly, it was called"
-                f" {self._index_generator.counter} times against {self._num_updates}"
-                " expected, please use self._index_generator to generate the batches."
-            )
+        self._index_generator.check_num_updates()
 
         self._model.eval()
 
