@@ -5,16 +5,13 @@ from pathlib import Path
 from typing import Any
 from typing import List
 from typing import Optional
-from typing import Type
 
 import torch
 
 from connectlib.algorithms.pytorch import weight_manager
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
-from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.exceptions import NumUpdatesValueError
 from connectlib.index_generator import BaseIndexGenerator
-from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
 from connectlib.schemas import ScaffoldAveragedStates
 from connectlib.schemas import ScaffoldSharedState
@@ -68,6 +65,10 @@ class TorchScaffoldAlgo(TorchAlgo):
                         criterion=torch.nn.MSELoss(),
                         optimizer=optimizer,
                         num_updates=100,
+                        index_generator=NpIndexGenerator(
+                            num_updates=10,
+                            batch_size=32,
+                        )
                     )
                 def _local_train(
                     self,
@@ -120,9 +121,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
-        num_updates: int,
-        batch_size: Optional[int],
-        get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
+        index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
         c_update_rule: CUpdateRule = CUpdateRule.FAST,
@@ -137,14 +136,10 @@ class TorchScaffoldAlgo(TorchAlgo):
             optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
             scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
                 batch. If None, no scheduler will be used. Defaults to None.
-            num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
-                train function).
-            batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
-                be used.
-            get_index_generator (Type[BaseIndexGenerator], Optional): A class returning a stateful index generator. Must
-                inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index) which
-                is used for selecting each batch from the output of the _preprocess method during training in this way :
-                ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
+            index_generator (BaseIndexGenerator): a stateful index generator.
+                Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
+                which is used for selecting each batch from the output of the _preprocess method during training in
+                this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
@@ -159,12 +154,10 @@ class TorchScaffoldAlgo(TorchAlgo):
             model=model,
             criterion=criterion,
             optimizer=optimizer,
-            num_updates=num_updates,
-            batch_size=batch_size,
-            get_index_generator=get_index_generator,
+            index_generator=index_generator,
             scheduler=scheduler,
         )
-        if self._num_updates <= 0:
+        if self._index_generator.num_updates <= 0:
             raise NumUpdatesValueError("Num_updates needs to be superior to 0 for TorchScaffoldAlgo.")
         self._with_batch_norm_parameters = with_batch_norm_parameters
         self._c_update_rule = CUpdateRule(c_update_rule)
@@ -317,14 +310,8 @@ class TorchScaffoldAlgo(TorchAlgo):
 
         if shared_state is None:  # first round
             # Instantiate the index_generator
-            assert self._index_generator is None
-            self._index_generator = self._get_index_generator(
-                n_samples=self._get_len_from_x(x),
-                batch_size=self._batch_size,
-                num_updates=self._num_updates,
-                shuffle=True,
-                drop_last=False,
-            )
+            assert self._index_generator.n_samples is None
+            self._index_generator.n_samples = self._get_len_from_x(x)
 
             # client_control_variate = zeros matrix with the shape of the model weights
             assert self._client_control_variate is None
@@ -338,6 +325,10 @@ class TorchScaffoldAlgo(TorchAlgo):
                 self.model, with_batch_norm_parameters=self._with_batch_norm_parameters
             )
         else:  # round>1
+            # These should have been loaded by the load() function
+            assert self._client_control_variate is not None
+            assert self._index_generator.n_samples is not None
+
             # The shared states is the average of the difference of the parameters_update for all nodes
             # Hence we need to add it to the previous local state parameters
             # Scaffold paper's Algo step 17: model = model + aggregation_lr * parameters_update
@@ -350,10 +341,6 @@ class TorchScaffoldAlgo(TorchAlgo):
             )
             # get the server_control_variate from the aggregator
             self._server_control_variate = [torch.from_numpy(t) for t in shared_state.server_control_variate]
-
-            # These should have been loaded by the load() function
-            assert self._client_control_variate is not None
-            assert self._index_generator is not None
 
         self._index_generator.reset_counter()
 
@@ -378,12 +365,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             y=y,
         )
 
-        if self._index_generator.counter != self._num_updates:
-            raise IndexGeneratorUpdateError(
-                "The batch index generator has not been updated properly, it was called"
-                f" {self._index_generator.counter} times against {self._num_updates}"
-                " expected, please use self._index_generator to generate the batches."
-            )
+        self._index_generator.check_num_updates()
 
         self._model.eval()
 
@@ -399,7 +381,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         if self._c_update_rule == CUpdateRule.FAST:
             # right_multiplier = -1 / (lr*num_updates)
             # TODO(sci-review): for now we take the lr from the latest optimizer.step(), be sure this is the right one
-            right_multiplier = -1.0 / (self._current_lr * self._num_updates)
+            right_multiplier = -1.0 / (self._current_lr * self._index_generator.num_updates)
             # Scaffold paper's Algo step 12+13.2: control_variate_update = -c - parameters_update / (lr*num_updates)
             control_variate_update = weight_manager.weighted_sum_parameters(
                 parameters_list=[self._server_control_variate, parameters_update],

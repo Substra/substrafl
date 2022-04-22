@@ -3,13 +3,11 @@ import logging
 from pathlib import Path
 from typing import Any
 from typing import Optional
-from typing import Type
 
 import torch
 
 from connectlib.algorithms.algo import Algo
 from connectlib.index_generator import BaseIndexGenerator
-from connectlib.index_generator import NpIndexGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +34,7 @@ class TorchAlgo(Algo):
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
-        num_updates: int,
-        batch_size: Optional[int],
-        get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
+        index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
     ):
         """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
@@ -50,15 +46,9 @@ class TorchAlgo(Algo):
         self._model = model
         self._criterion = criterion
         self._optimizer = optimizer
-        self._num_updates = num_updates
-        self._batch_size = batch_size
-        self._get_index_generator = get_index_generator
         self._scheduler = scheduler
 
-        self._index_generator: Optional[BaseIndexGenerator] = None
-
-        if batch_size is None:
-            logger.warning("Batch size is set to none, the whole dataset will be used for each update.")
+        self._index_generator: BaseIndexGenerator = index_generator
 
     @property
     def model(self) -> torch.nn.Module:
@@ -314,8 +304,6 @@ class TorchAlgo(Algo):
                     "parameters": self._optimizer.defaults,
                 },
                 "scheduler": None if self._scheduler is None else str(type(self._scheduler)),
-                "num_updates": self._num_updates,
-                "batch_size": self._batch_size,
             }
         )
         return summary

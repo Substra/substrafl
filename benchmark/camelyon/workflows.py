@@ -175,17 +175,17 @@ def torch_fed_avg(
         )
         for train_folder in train_folders
     ]
-    batch_samplers = [
-        NpIndexGenerator(
-            n_samples=len(train_dataset),
+    batch_samplers = list()
+    for train_dataset in train_datasets:
+        batch_sampler = NpIndexGenerator(
             batch_size=batch_size,
             num_updates=n_local_steps,
             shuffle=True,
             drop_last=True,
             seed=42,
         )
-        for train_dataset in train_datasets
-    ]
+        batch_sampler.n_samples = len(train_dataset)
+        batch_samplers.append(batch_sampler)
 
     multiprocessing_context = None
     if num_workers != 0:

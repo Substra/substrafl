@@ -2,15 +2,12 @@ import logging
 from typing import Any
 from typing import Dict
 from typing import Optional
-from typing import Type
 
 import numpy as np
 import torch
 
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
-from connectlib.exceptions import IndexGeneratorUpdateError
 from connectlib.index_generator import BaseIndexGenerator
-from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
 
 logger = logging.getLogger(__name__)
@@ -18,8 +15,19 @@ logger = logging.getLogger(__name__)
 
 class TorchOneNodeAlgo(TorchAlgo):
     """To be inherited. Wraps the necessary operation so a torch model can be trained in the One Node strategy.
-    The child class must at least define : ``model``, ``criterion``, ``optimizer``, ``num_updates`` as arguments of the
-    :func:``super().__init__`` function within the ``__init__`` method of the child class.
+
+    The ``train`` method:
+
+        - initialises or loads the index generator,
+        - calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_train` method to do the local
+          training
+
+    The ``predict`` method calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict` method to
+    generate the predictions.
+
+    The child class must implement the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_train` and
+    :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict` methods, and can override
+    other methods if necessary.
 
     Example:
 
@@ -33,71 +41,28 @@ class TorchOneNodeAlgo(TorchAlgo):
                         model=perceptron,
                         criterion=torch.nn.MSELoss(),
                         optimizer=optimizer,
-                        num_updates=100,
-                    )
-
-            my_algo = MyAlgo()
-            algo_deps = Dependency(pypi_dependencies=["torch", "numpy"])
-            strategy = OneNode()
-
-    It will inherit of the following default arguments : ``get_index_generator = NpIndexGenerator``,
-    ``scheduler = None``, ``batch_size = None`` and ``with_batch_norm_parameters = False``
-    which can be overwritten as arguments of the ``super().__init__`` function within the ``__init__`` method of
-    the child class.
-
-    Example:
-
-        .. code-block:: python
-
-            class MyAlgo(TorchOneNodeAlgo):
-                def __init__(
-                    self,
-                ):
-                    super().__init__(
-                        model=perceptron,
-                        criterion=torch.nn.MSELoss(),
-                        optimizer=optimizer,
-                        num_updates=100,
-                        batch_size = 128,
-                    )
-
-    It will inherit of the following default methods : ``train``, ``predict``, ``load``
-    and ``save`` which can be overwritten in the child class.
-    It must define the ``_local_train`` and ``_local_predict`` methods.
-
-    The ``train`` method initialises or loads the index generator, calls the ``_local_train`` method to do the local
-    training.
-    The ``predict`` method calls the ``_local_predict`` method to generate the predictions.
-
-    Example:
-
-        .. code-block:: python
-
-            class MyAlgo(TorchOneNodeAlgo):
-                def __init__(
-                    self,
-                ):
-                    super().__init__(
-                        model=perceptron,
-                        criterion=torch.nn.MSELoss(),
-                        optimizer=optimizer,
-                        num_updates=100,
+                        index_generator=NpIndexGenerator(
+                            num_updates=100,
+                            batch_size=32,
+                        )
                     )
                 def _local_train(
                     self,
                     x: Any,
                     y: Any,
                 ):
+                    # for each update
                     for batch_index in self._index_generator:
+                        # get minibatch
                         x_batch, y_batch = x[batch_index], y[batch_index]
-
                         # Forward pass
                         y_pred = self._model(x_batch)
-
                         # Compute Loss
                         loss = self._criterion(y_pred, y_batch)
                         self._optimizer.zero_grad()
+                        # backward pass: compute the gradients
                         loss.backward()
+                        # forward pass: update the weights.
                         self._optimizer.step()
 
                         if self._scheduler is not None:
@@ -110,20 +75,18 @@ class TorchOneNodeAlgo(TorchAlgo):
 
     The algo needs to get the number of samples in the dataset from the x sent by the opener.
     By default, it uses len(x). If that is not the proper way of getting the number of samples,
-    override the ``_get_len_from_x`` function:
+    override the ``_get_len_from_x`` function
 
     Example:
 
         .. code-block:: python
 
-            class MyAlgo(TorchOneNodeAlgo):
-                def _get_len_from_x(self, x):
-                    return len(x)
+            def _get_len_from_x(self, x):
+                return len(x)
 
     As development tools, the ``train`` and ``predict`` method comes with a default argument : ``_skip``.
-    If ``_skip`` is set to True, only the function will be executed and not all the code related to connect.
+    If ``_skip`` is set to ``True``, only the function will be executed and not all the code related to Connect.
     This allows to quickly debug code and use the defined algorithm as is.
-
     """
 
     def __init__(
@@ -131,9 +94,7 @@ class TorchOneNodeAlgo(TorchAlgo):
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
-        num_updates: int,
-        batch_size: Optional[int],
-        get_index_generator: Type[BaseIndexGenerator] = NpIndexGenerator,
+        index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
     ):
         """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
@@ -151,11 +112,10 @@ class TorchOneNodeAlgo(TorchAlgo):
                 train function).
             batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
                 be used.
-            get_index_generator (typing.Type[BaseIndexGenerator], Optional): A class returning a stateful index
-                generator.
+            index_generator (BaseIndexGenerator): a stateful index generator.
                 Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
                 which is used for selecting each batch from the output of the _preprocess method during training in
-                this way: ``x[batch_index], y[batch_index]``. Defaults to NpIndexGenerator.
+                this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
         """
@@ -163,9 +123,7 @@ class TorchOneNodeAlgo(TorchAlgo):
             model=model,
             criterion=criterion,
             optimizer=optimizer,
-            num_updates=num_updates,
-            batch_size=batch_size,
-            get_index_generator=get_index_generator,
+            index_generator=index_generator,
             scheduler=scheduler,
         )
 
@@ -190,14 +148,9 @@ class TorchOneNodeAlgo(TorchAlgo):
         """
 
         # Instantiate the index_generator
-        if self._index_generator is None:
-            self._index_generator = self._get_index_generator(
-                n_samples=self._get_len_from_x(x),
-                batch_size=self._batch_size,
-                num_updates=self._num_updates,
-                shuffle=True,
-                drop_last=False,
-            )
+        if self._index_generator.n_samples is None:
+            self._index_generator.n_samples = self._get_len_from_x(x)
+
         self._index_generator.reset_counter()
 
         # Train mode for torch model
@@ -209,12 +162,7 @@ class TorchOneNodeAlgo(TorchAlgo):
             y=y,
         )
 
-        if self._index_generator.counter != self._num_updates:
-            raise IndexGeneratorUpdateError(
-                "The batch index generator has not been updated properly, it was called"
-                f" {self._index_generator.counter} times against {self._num_updates}"
-                " expected, please use self._index_generator to generate the batches."
-            )
+        self._index_generator.check_num_updates()
 
         self._model.eval()
 

@@ -13,6 +13,7 @@ from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.exceptions import NumUpdatesValueError
+from connectlib.index_generator import NpIndexGenerator
 from connectlib.schemas import ScaffoldAveragedStates
 from connectlib.schemas import ScaffoldSharedState
 from connectlib.strategies import Scaffold
@@ -45,6 +46,12 @@ def test_pytorch_scaffold_algo_weights(
     seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
+    nig = NpIndexGenerator(
+        batch_size=batch_size,
+        num_updates=num_updates,
+        shuffle=True,
+        drop_last=False,
+    )
 
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(self):
@@ -52,8 +59,7 @@ def test_pytorch_scaffold_algo_weights(
                 model=perceptron,
                 criterion=torch.nn.MSELoss(),
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
-                num_updates=num_updates,
-                batch_size=batch_size,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -140,6 +146,12 @@ def test_pytorch_scaffold_algo_performance(
     seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
+    nig = NpIndexGenerator(
+        batch_size=32,
+        num_updates=num_updates,
+        shuffle=True,
+        drop_last=False,
+    )
 
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(
@@ -149,8 +161,7 @@ def test_pytorch_scaffold_algo_performance(
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
                 criterion=torch.nn.MSELoss(),
                 model=perceptron,
-                num_updates=num_updates,
-                batch_size=32,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -208,6 +219,12 @@ def test_train_skip(rtol):
             return out
 
     dummy_model = Perceptron()
+    nig = NpIndexGenerator(
+        batch_size=n_samples,
+        num_updates=2,
+        shuffle=True,
+        drop_last=False,
+    )
 
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(
@@ -217,8 +234,7 @@ def test_train_skip(rtol):
                 optimizer=torch.optim.SGD(dummy_model.parameters(), lr=0.5),
                 criterion=torch.nn.MSELoss(),
                 model=dummy_model,
-                num_updates=2,
-                batch_size=n_samples,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -272,6 +288,10 @@ def test_update_current_lr(rtol):
     dummy_model = DummyModel()
 
     optimizer = torch.optim.SGD(dummy_model.parameters(), lr=initial_lr)
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=1,
+    )
 
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(
@@ -281,8 +301,7 @@ def test_update_current_lr(rtol):
                 optimizer=optimizer,
                 criterion=torch.nn.MSELoss(),
                 model=dummy_model,
-                num_updates=1,
-                batch_size=1,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -299,6 +318,10 @@ def test_update_current_lr(rtol):
     # test with scheduler
     # this scheduler multiplies the lr by 0.1 at each _scheduler.step()
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=2,
+    )
 
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(
@@ -309,8 +332,7 @@ def test_update_current_lr(rtol):
                 scheduler=scheduler,
                 criterion=torch.nn.MSELoss(),
                 model=dummy_model,
-                num_updates=2,
-                batch_size=1,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -333,6 +355,10 @@ def test_update_current_lr(rtol):
 @pytest.mark.parametrize("num_updates", [-10, 0])
 def test_pytorch_num_updates_error(num_updates):
     """Check that num_updates <= 0 raise a ValueError."""
+    nig = NpIndexGenerator(
+        batch_size=32,
+        num_updates=num_updates,
+    )
 
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(
@@ -342,8 +368,7 @@ def test_pytorch_num_updates_error(num_updates):
                 optimizer=None,
                 criterion=None,
                 model=None,
-                num_updates=num_updates,
-                batch_size=32,
+                index_generator=nig,
             )
 
         def _local_train(self, x: Any, y: Any):

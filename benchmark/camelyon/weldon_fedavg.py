@@ -37,6 +37,14 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
     criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+    nig = NpIndexGenerator(
+        batch_size=batch_size,
+        num_updates=n_local_steps,
+        shuffle=True,
+        drop_last=True,
+        seed=42,
+    )
+
     # Connectlib formatted Algo
     class MyAlgo(TorchFedAvgAlgo):
         def __init__(
@@ -49,7 +57,7 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
                 optimizer=optimizer,
                 num_updates=n_local_steps,
                 batch_size=batch_size,
-                get_index_generator=NpIndexGenerator,
+                get_index_generator=nig,
             )
 
         def _local_train(self, x, y):
