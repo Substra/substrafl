@@ -234,6 +234,7 @@ def _create_substra_algo_files(  # noqa: C901
     remote_struct: RemoteStruct,
     install_libraries: bool,
     dependencies: Dependency,
+    operation_dir: Path,
 ) -> Tuple[Path, Path]:
     """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
         an archive (.tar.gz).
@@ -251,11 +252,11 @@ def _create_substra_algo_files(  # noqa: C901
         remote_struct (RemoteStruct): A representation of a substra algorithm.
         install_libraries (bool): whether we need to build the wheels and copy the files to install the libraries
         dependencies (Dependency): Algorithm dependencies.
+        operation_dir (pathlib.Path): path to the operation directory
 
         Returns:
-            Tuple[Path, Path]: The archive path and the description file path.
+            Tuple[pathlib.Path, pathlib.Path]: The archive path and the description file path.
     """
-    operation_dir = Path(tempfile.mkdtemp())
     connectlib_internal = operation_dir / CONNECTLIB_FOLDER
     connectlib_internal.mkdir()
 
@@ -417,24 +418,26 @@ def register_algo(
     Returns:
         str: Substra algorithm key.
     """
-    archive_path, description_path = _create_substra_algo_files(
-        remote_struct,
-        dependencies=dependencies,
-        install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
-    )
-    if is_composite:
-        category = substra.sdk.schemas.AlgoCategory.composite
-    else:
-        category = substra.sdk.schemas.AlgoCategory.aggregate
-
-    key = client.add_algo(
-        substra.sdk.schemas.AlgoSpec(
-            name=str(uuid.uuid4()),
-            description=description_path,
-            file=archive_path,
-            permissions=permissions,
-            metadata=dict(),
-            category=category,
+    with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix="connectlib_") as operation_dir:
+        archive_path, description_path = _create_substra_algo_files(
+            remote_struct,
+            dependencies=dependencies,
+            install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
+            operation_dir=Path(operation_dir),
         )
-    )
+        if is_composite:
+            category = substra.sdk.schemas.AlgoCategory.composite
+        else:
+            category = substra.sdk.schemas.AlgoCategory.aggregate
+
+        key = client.add_algo(
+            substra.sdk.schemas.AlgoSpec(
+                name=str(uuid.uuid4()),
+                description=description_path,
+                file=archive_path,
+                permissions=permissions,
+                metadata=dict(),
+                category=category,
+            )
+        )
     return key
