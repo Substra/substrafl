@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -50,13 +51,15 @@ def test_dependency_validators_no_setup_file():
 @pytest.mark.slow
 @pytest.mark.substra
 class TestLocalDependency:
-    def _register_algo(self, my_algo, algo_deps, client):
+    def _register_algo(self, my_algo, algo_deps, client, session_dir):
         """Register a composite algo"""
         data_op = my_algo.train(data_samples=list(), shared_state=None)
+        operation_dir = Path(tempfile.mkdtemp(dir=session_dir))
         archive_path, description_path = _create_substra_algo_files(
             data_op.remote_struct,
             dependencies=algo_deps,
             install_libraries=client.backend_mode != BackendType.LOCAL_SUBPROCESS,
+            operation_dir=operation_dir,
         )
         algo_query = AlgoSpec(
             name="algo_test_deps",
@@ -80,7 +83,7 @@ class TestLocalDependency:
         composite_traintuple = client.get_composite_traintuple(composite_key)
         return composite_traintuple
 
-    def test_pypi_dependency(self, network, numpy_datasets, constant_samples):
+    def test_pypi_dependency(self, network, numpy_datasets, constant_samples, session_dir):
         """Test that dependencies from PyPi are installed."""
 
         class MyAlgo(Algo):
@@ -115,12 +118,12 @@ class TestLocalDependency:
         client = network.clients[0]
         my_algo = MyAlgo()
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-        algo_key = self._register_algo(my_algo, algo_deps, client)
+        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_directory(self, network, numpy_datasets, constant_samples):
+    def test_local_dependencies_directory(self, network, numpy_datasets, constant_samples, session_dir):
         """Test that you can import a directory"""
 
         class MyAlgo(Algo):
@@ -163,12 +166,12 @@ class TestLocalDependency:
             local_code=[CURRENT_FILE.parent / "local_code_subfolder"],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client)
+        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_file_in_directory(self, network, numpy_datasets, constant_samples):
+    def test_local_dependencies_file_in_directory(self, network, numpy_datasets, constant_samples, session_dir):
         """Test that you can import a file that is in a subdirectory"""
 
         class MyAlgo(Algo):
@@ -211,12 +214,12 @@ class TestLocalDependency:
             local_code=[CURRENT_FILE.parent / "local_code_subfolder" / "local_code.py"],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client)
+        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_file(self, network, numpy_datasets, constant_samples):
+    def test_local_dependencies_file(self, network, numpy_datasets, constant_samples, session_dir):
         """Test that you can import a file"""
 
         class MyAlgo(Algo):
@@ -259,14 +262,16 @@ class TestLocalDependency:
             local_code=[CURRENT_FILE.parent / "local_code_file.py"],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client)
+        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
     @pytest.mark.docker_only
     @pytest.mark.parametrize("pkg_path", ["installable_library", "poetry_installable_library"])
-    def test_local_dependencies_installable_library(self, network, numpy_datasets, constant_samples, pkg_path):
+    def test_local_dependencies_installable_library(
+        self, network, numpy_datasets, constant_samples, pkg_path, session_dir
+    ):
         """Test that you can install a local library
         Automatically done in docker but need to be manually done if force in subprocess mode
         """
@@ -313,7 +318,7 @@ class TestLocalDependency:
             local_dependencies=[CURRENT_FILE.parent / pkg_path],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client)
+        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
