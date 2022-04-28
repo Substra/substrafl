@@ -57,7 +57,7 @@ class Algo(abc.ABC):
         function of the opener. The predictions are then loaded and used to calculate the metric.
 
         Args:
-            x (typing.Any): The output of the ``get_x`` method of the opener.
+            x (typing.Any): The output of the ``get_X`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous node of the computation graph.
 

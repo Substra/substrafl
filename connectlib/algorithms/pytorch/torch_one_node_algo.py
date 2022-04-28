@@ -18,7 +18,7 @@ class TorchOneNodeAlgo(TorchAlgo):
 
     The ``train`` method:
 
-        - initialises or loads the index generator,
+        - initializes or loads the index generator,
         - calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_train` method to do the local
           training
 
@@ -114,18 +114,14 @@ class TorchOneNodeAlgo(TorchAlgo):
             model (torch.nn.modules.module.Module): A torch model.
             criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
             optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-            scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
-                batch. If None, no scheduler will be used. Defaults to None.
-            num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
-                train function).
-            batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
-                be used.
             index_generator (BaseIndexGenerator): a stateful index generator.
                 Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
-                which is used for selecting each batch from the output of the _preprocess method during training in
-                this way: ``x[batch_index], y[batch_index]``.
+                which is used for selecting each batch from the output of the get_X and get_y methods of the opener
+                during training in this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
+            scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
+                batch. If None, no scheduler will be used. Defaults to None.
         """
         super().__init__(
             model=model,
@@ -196,7 +192,7 @@ class TorchOneNodeAlgo(TorchAlgo):
                 to the model parameters before computing the predictions.
 
         Returns:
-            typing.Any: Model prediction post precessed by the _postprocess class method.
+            typing.Any: Model prediction.
         """
         predictions = self._local_predict(x)
         return predictions

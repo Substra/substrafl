@@ -21,7 +21,7 @@ class TorchFedAvgAlgo(TorchAlgo):
     The ``train`` method:
 
         - updates the weights of the model with the aggregated weights,
-        - initialises or loads the index generator,
+        - initializes or loads the index generator,
         - calls the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_train` method to do the local
           training
         - then gets the weight updates from the models and sends them to the aggregator.
@@ -117,18 +117,14 @@ class TorchFedAvgAlgo(TorchAlgo):
             model (torch.nn.modules.module.Module): A torch model.
             criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
             optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
-            scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
-                batch. If None, no scheduler will be used. Defaults to None.
-            num_updates (int): The number of times the model will be trained at each step of the strategy (i.e. of the
-                train function).
-            batch_size (int, Optional): The number of samples used for each updates. If None, the whole input data will
-                be used.
             index_generator (BaseIndexGenerator): a stateful index generator.
                 Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
-                which is used for selecting each batch from the output of the _preprocess method during training in
-                this way: ``x[batch_index], y[batch_index]``.
+                which is used for selecting each batch from the output of the get_X and get_y methods of the opener
+                during training in this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
+            scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
+                batch. If None, no scheduler will be used. Defaults to None.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
                 strategy. Defaults to False.
         """
@@ -155,7 +151,6 @@ class TorchFedAvgAlgo(TorchAlgo):
         operations:
 
             * instantiates the provided (or default) batch indexer
-            * apply the provided (or default) _processing method to x and y
             * if a shared state is passed, set the parameters of the model to the provided shared state
             * train the model for n_updates
             * compute the weight update
@@ -241,7 +236,7 @@ class TorchFedAvgAlgo(TorchAlgo):
                 to the model parameters before computing the predictions.
 
         Returns:
-            typing.Any: Model prediction post precessed by the _postprocess class method.
+            typing.Any: Model prediction.
         """
         # Reduce memory consumption as we don't use the model gradients
         with torch.inference_mode():

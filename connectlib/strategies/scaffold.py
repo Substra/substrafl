@@ -48,7 +48,7 @@ class Scaffold(Strategy):
 
     def _check_shared_states(self, shared_states: List[ScaffoldSharedState]):
         """Check the Scaffold assumptions: server_control_variate, parameters_update and server_control_variate have the
-        same lenght for all the shared states, and all server_control_variate are equal.
+        same length for all the shared states, and all server_control_variate are equal.
 
         Args:
             shared_states (List[ScaffoldSharedState]): Shared state returned by the train method of the algorithm for

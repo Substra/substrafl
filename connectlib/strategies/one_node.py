@@ -19,7 +19,7 @@ class OneNode(Strategy):
     strategies. The training and prediction are performed on a single Node. However, the number of passes to
     that Node (num_rounds) is still defined to test the actual federated setting.
     In OneNode strategy a single client ``TrainDataNode`` and ``TestDataNode`` performs all the model
-    exectution.
+    execution.
     """
 
     def __init__(self):

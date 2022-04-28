@@ -167,7 +167,7 @@ def add_parameters(
         parameters_to_add (typing.List[torch.nn.parameter.Parameter]): A list of torch parameters.
 
     Returns:
-        typing.List[torch.nn.parameter.Parameter]: The addion of the given parameters.
+        typing.List[torch.nn.parameter.Parameter]: The addition of the given parameters.
     """
     return weighted_sum_parameters(
         parameters_list=[parameters, parameters_to_add],

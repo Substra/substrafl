@@ -23,7 +23,7 @@ class TorchAlgo(Algo):
           :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo.predict` functions: they must use the
           :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_train` and
           :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_predict` functions, which are
-          overriden by the user and must contain as little strategy-specific code as possible
+          overridden by the user and must contain as little strategy-specific code as possible
         - Reimplement the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._update_from_checkpoint`
           and :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._get_state_to_save` functions to add
           strategy-specific variables to the local state
@@ -234,7 +234,7 @@ class TorchAlgo(Algo):
         return self
 
     def _get_state_to_save(self) -> dict:
-        """Create the algo checkpoint: a dictionnary
+        """Create the algo checkpoint: a dictionary
         saved with ``torch.save``.
         In this algo, it contains the state to save for every strategy.
         Reimplement in the child class to add strategy-specific variables.
