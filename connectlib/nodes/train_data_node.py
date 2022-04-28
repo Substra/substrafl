@@ -11,9 +11,9 @@ from connectlib.nodes.node import Node
 from connectlib.nodes.node import OperationKey
 from connectlib.nodes.references.local_state import LocalStateRef
 from connectlib.nodes.references.shared_state import SharedStateRef
-from connectlib.remote.methods import DataOperation
-from connectlib.remote.methods import RemoteStruct
+from connectlib.remote.operations import DataOperation
 from connectlib.remote.register import register_algo
+from connectlib.remote.remote_struct import RemoteStruct
 
 
 class TrainDataNode(Node):
@@ -52,7 +52,7 @@ class TrainDataNode(Node):
 
         Args:
             operation (DataOperation): Automatically generated structure returned by
-                ``connectlib.remote.methods.remote_data`` decorator. This allows to register an
+                ``connectlib.remote.operations.remote_data`` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts by zero.
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.

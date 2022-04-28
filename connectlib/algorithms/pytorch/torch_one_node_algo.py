@@ -29,6 +29,10 @@ class TorchOneNodeAlgo(TorchAlgo):
     :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict` methods, and can override
     other methods if necessary.
 
+    To add a custom parameter to the ``__init__``of the class, also add it to the call to ``super().__init__```
+    as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported
+    for extra parameters.
+
     Example:
 
         .. code-block:: python
@@ -36,6 +40,7 @@ class TorchOneNodeAlgo(TorchAlgo):
             class MyAlgo(TorchOneNodeAlgo):
                 def __init__(
                     self,
+                    my_custom_extra_parameter,
                 ):
                     super().__init__(
                         model=perceptron,
@@ -44,7 +49,8 @@ class TorchOneNodeAlgo(TorchAlgo):
                         index_generator=NpIndexGenerator(
                             num_updates=100,
                             batch_size=32,
-                        )
+                        ),
+                        my_custom_extra_parameter=my_custom_extra_parameter,
                     )
                 def _local_train(
                     self,
@@ -96,6 +102,8 @@ class TorchOneNodeAlgo(TorchAlgo):
         optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        *args,
+        **kwargs,
     ):
         """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
         For round>=2, some attributes will then be overwritten by their previous states in the `load()` function,
@@ -125,6 +133,8 @@ class TorchOneNodeAlgo(TorchAlgo):
             optimizer=optimizer,
             index_generator=index_generator,
             scheduler=scheduler,
+            *args,
+            **kwargs,
         )
 
     @remote_data

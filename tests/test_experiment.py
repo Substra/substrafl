@@ -7,7 +7,7 @@ from connectlib import execute_experiment
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.remote.methods import remote_data
+from connectlib.remote.decorators import remote_data
 from connectlib.strategies import FedAvg
 
 

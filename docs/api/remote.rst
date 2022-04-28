@@ -7,18 +7,30 @@ decorators.
 This modules defines how the user code is wrapped, transformed and registered as
 Connect algorithms.
 
-Serializers
-^^^^^^^^^^^^
+Decorator
+^^^^^^^^^^
+.. automodule:: connectlib.remote.decorators
 
-.. automodule:: connectlib.remote.serializers
+Remote Struct
+^^^^^^^^^^^^^^
+.. autoclass:: connectlib.remote.remote_struct.RemoteStruct
 
+Operations
+^^^^^^^^^^^
+.. automodule:: connectlib.remote.operations
 
-Methods
-^^^^^^^^
-.. automodule:: connectlib.remote.methods
-
+Connect tools methods
+^^^^^^^^^^^^^^^^^^^^^^
+.. automodule:: connectlib.remote.connect_tools_methods
 
 Register
 ^^^^^^^^
 
-.. automodule:: connectlib.remote.register
+.. automodule:: connectlib.remote.register.register
+.. automodule:: connectlib.remote.register.generate_wheel
+
+
+Serializers
+^^^^^^^^^^^^
+
+.. automodule:: connectlib.remote.serializers
