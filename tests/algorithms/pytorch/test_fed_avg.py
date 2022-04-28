@@ -108,7 +108,6 @@ def test_pytorch_fedavg_algo_weights(
 @pytest.mark.e2e
 @pytest.mark.substra
 @pytest.mark.slow
-@pytest.mark.skip("e2e test fails - https://github.com/owkin/connect-ci/issues/17")
 def test_pytorch_fedavg_algo_performance(
     network,
     torch_linear_model,
