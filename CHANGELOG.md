@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Force the reinstallation of connect-tools in the Docker image, necessary for the editable mode (#156)
+
 ### Changed
 
 - BREAKING CHANGE: the default value of ``drop_last`` in the ``NpIndexGenerator`` is now False (#142)
@@ -30,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         )
     # ...
   ```
+
 ## [0.10.0](https://github.com/owkin/connectlib/releases/tag/0.10.0) - 2022-04-19
 
 ### Fixed
