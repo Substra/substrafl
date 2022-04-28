@@ -13,9 +13,7 @@ test: test-local
 test-remote: pyclean
 	pytest tests ${COV_OPTIONS}
 
-test-local: pyclean
-	test-local-fast
-	test-local-slow
+test-local: pyclean test-local-fast test-local-slow
 
 # Run the tests, except the tests marked as slow or docker only
 # The substra tests are run in local subprocess mode
