@@ -1,4 +1,4 @@
-from connectlib.remote.methods import remote
-from connectlib.remote.methods import remote_data
+from connectlib.remote.decorators import remote
+from connectlib.remote.decorators import remote_data
 
 __all__ = ["remote", "remote_data"]

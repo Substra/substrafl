@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
 - BREAKING CHANGE: the default value of ``drop_last`` in the ``NpIndexGenerator`` is now False (#142)
 - BREAKING CHANGE: the index generator is now required when implementing a strategy (#142)
 
@@ -34,6 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         )
     # ...
   ```
+- The user can now initialize his `TorchAlgo` function with custom parameters (only primitive types are supported) (#130):
+
+    ```python
+    class MyAlgo(TorchFedAvgAlgo):
+        def __init__(self, my_arg):
+            super.__init__(
+                model=model,
+                criterion=criterion
+                optimizer=optimizer,
+                index_generator=nig,
+                my_arg=my_arg,  # This is necessary
+            )
+            # ...
+    ```
 
 ## [0.10.0](https://github.com/owkin/connectlib/releases/tag/0.10.0) - 2022-04-19
 

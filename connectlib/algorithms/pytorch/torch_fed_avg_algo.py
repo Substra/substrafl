@@ -33,6 +33,10 @@ class TorchFedAvgAlgo(TorchAlgo):
     :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict` methods, and can override
     other methods if necessary.
 
+    To add a custom parameter to the ``__init__``of the class, also add it to the call to ``super().__init__```
+    as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported
+    for extra parameters.
+
     Example:
 
         .. code-block:: python
@@ -40,6 +44,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             class MyAlgo(TorchFedAvgAlgo):
                 def __init__(
                     self,
+                    my_custom_extra_parameter,
                 ):
                     super().__init__(
                         model=perceptron,
@@ -48,7 +53,8 @@ class TorchFedAvgAlgo(TorchAlgo):
                         index_generator=NpIndexGenerator(
                             num_updates=100,
                             batch_size=32,
-                        )
+                        ),
+                        my_custom_extra_parameter=my_custom_extra_parameter,
                     )
                 def _local_train(
                     self,
@@ -99,6 +105,8 @@ class TorchFedAvgAlgo(TorchAlgo):
         index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
+        *args,
+        **kwargs,
     ):
         """
         The ``__init__`` functions is called at each call of the `train()` or `predict()` function
@@ -130,6 +138,8 @@ class TorchFedAvgAlgo(TorchAlgo):
             optimizer=optimizer,
             index_generator=index_generator,
             scheduler=scheduler,
+            *args,
+            **kwargs,
         )
         self._with_batch_norm_parameters = with_batch_norm_parameters
 

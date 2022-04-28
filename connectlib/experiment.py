@@ -17,7 +17,7 @@ from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.node import OperationKey
 from connectlib.nodes.train_data_node import TrainDataNode
-from connectlib.remote.methods import RemoteStruct
+from connectlib.remote.remote_struct import RemoteStruct
 from connectlib.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
@@ -118,11 +118,7 @@ def _save_experiment_summary(
     experiment_summary["num_rounds"] = num_rounds
     experiment_summary["algo"] = algo.summary()
     experiment_summary["algo_keys"] = {
-        operation_cache[algo]: {
-            "type": str(algo.cls),
-            "method_name": str(algo.remote_cls_parameters["kwargs"]["method_name"]),
-        }
-        for algo in operation_cache
+        operation_cache[remote_struct]: remote_struct.summary() for remote_struct in operation_cache
     }
     experiment_summary["train_data_nodes"] = [train_data_node.summary() for train_data_node in train_data_nodes]
     experiment_summary["test_data_nodes"] = []

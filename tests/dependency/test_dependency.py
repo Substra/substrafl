@@ -16,7 +16,7 @@ from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.exceptions import InvalidPathError
 from connectlib.remote import remote_data
-from connectlib.remote.register import _create_substra_algo_files
+from connectlib.remote.register.register import _create_substra_algo_files
 
 CURRENT_FILE = Path(__file__)
 

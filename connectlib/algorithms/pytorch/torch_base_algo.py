@@ -36,12 +36,14 @@ class TorchAlgo(Algo):
         optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        *args,
+        **kwargs,
     ):
         """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
         For round>2, some attributes will then be overwritten by their previous states in the `load()` function,
         before the `train()` or `predict()` function is ran.
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
         self._model = model
         self._criterion = criterion

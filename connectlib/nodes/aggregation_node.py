@@ -8,9 +8,9 @@ from connectlib.dependency import Dependency
 from connectlib.nodes.node import Node
 from connectlib.nodes.node import OperationKey
 from connectlib.nodes.references.shared_state import SharedStateRef
-from connectlib.remote.methods import AggregateOperation
-from connectlib.remote.methods import RemoteStruct
+from connectlib.remote.operations import AggregateOperation
 from connectlib.remote.register import register_algo
+from connectlib.remote.remote_struct import RemoteStruct
 
 SharedState = TypeVar("SharedState")
 
@@ -28,7 +28,7 @@ class AggregationNode(Node):
 
         Args:
             operation (AggregateOperation): Automatically generated structure returned by
-                ``connectlib.remote.methods.remote`` decorator. This allows to register an
+                ``connectlib.remote.operations.remote`` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts by zero.
 

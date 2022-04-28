@@ -4,20 +4,22 @@ from pathlib import Path
 
 import substratools
 
-from connectlib.remote import register
+from connectlib.remote.register.generate_wheel import local_lib_wheels
+from connectlib.remote.register.generate_wheel import pypi_lib_wheels
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
-def test_local_lib_install_command(session_dir):
+def test_generate_local_lib_wheel(session_dir):
     # Test that editable wheel are generated
     libs = [substratools]
     operation_dir = Path(tempfile.mkdtemp(dir=session_dir.as_posix()))
 
-    _ = register._local_lib_install_command(
+    local_lib_wheels(
         lib_modules=libs,
         operation_dir=operation_dir,
         python_major_minor=PYTHON_VERSION,
+        dest_dir="connectlib_internal/dist",
     )
 
     wheels_created = []
@@ -30,7 +32,7 @@ def test_local_lib_install_command(session_dir):
     assert all(wheels_created)
 
 
-def test_pypi_lib_install_command(session_dir):
+def test_generate_pypi_lib_wheel(session_dir):
     # Test that pypi wheel can be downloaded
     libs = [substratools]
     operation_dir = Path(tempfile.mkdtemp(dir=session_dir.as_posix()))
@@ -43,8 +45,11 @@ def test_pypi_lib_install_command(session_dir):
     substratools_version = substratools.__version__
     substratools.__version__ = "0.9.1"
 
-    _ = register._pypi_lib_install_command(
-        lib_modules=libs, python_major_minor=PYTHON_VERSION, operation_dir=operation_dir
+    pypi_lib_wheels(
+        lib_modules=libs,
+        python_major_minor=PYTHON_VERSION,
+        operation_dir=operation_dir,
+        dest_dir="connectlib_internal/dist",
     )
 
     wheels_created = []
