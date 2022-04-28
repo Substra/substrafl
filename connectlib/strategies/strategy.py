@@ -33,7 +33,7 @@ class Strategy(ABC):
             algo (Algo): algo with the code to execute on the node
             train_data_nodes (typing.List[TrainDataNode]): list of the train nodes
             aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
-                centralised strategy, unused otherwise
+                centralized strategy, unused otherwise
             round_idx (int): index of the round
         """
         raise NotImplementedError

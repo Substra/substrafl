@@ -126,7 +126,7 @@ class NpIndexGenerator(BaseIndexGenerator):
 
     @BaseIndexGenerator.n_samples.setter
     def n_samples(self, _n_samples: int):
-        """Set the number of samples to draw from, then initialise
+        """Set the number of samples to draw from, then initialize
         the indexes to draw from when generating the batches.
 
         Args:

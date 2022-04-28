@@ -12,7 +12,7 @@ class Node:
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file
-        For heriting classes, override this function and add ``super.summary()``
+        For inherited classes, override this function and add ``super.summary()``
 
         Example:
 
