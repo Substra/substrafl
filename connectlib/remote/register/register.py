@@ -51,9 +51,6 @@ RUN python{python_version} -m pip install -U pip
 # PyPi dependencies
 {pypi_dependencies}
 
-# Copy local code
-{local_code}
-
 # Install local dependencies
 {local_dependencies}
 
@@ -211,7 +208,6 @@ def _create_substra_algo_files(
     )
 
     # The files to copy to the container must be in the same folder as the Dockerfile
-    local_code_cmd = ""
     local_dependencies_cmd = ""
     if dependencies is not None:
         algo_file_path = remote_struct.get_cls_file_path()
@@ -220,7 +216,7 @@ def _create_substra_algo_files(
 
         if install_libraries:
             local_dep_dir = connectlib_internal / "local_dependencies"
-            _copy_local_packages(
+            local_dependencies_cmd = _copy_local_packages(
                 path=local_dep_dir,
                 local_dependencies=dependencies.local_dependencies,
                 python_major_minor=python_major_minor,
@@ -253,7 +249,6 @@ def _create_substra_algo_files(
             cl_deps=install_cmd,
             pypi_dependencies=pypi_dependencies_cmd,
             local_dependencies=local_dependencies_cmd,
-            local_code=local_code_cmd,
         )
     )
 
