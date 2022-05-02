@@ -2,11 +2,13 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import numpy as np
+import pytest
 
 from connectlib import execute_experiment
 from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import LenMetadataError
 from connectlib.remote.decorators import remote_data
 from connectlib.strategies import FedAvg
 
@@ -76,3 +78,23 @@ def test_execute_experiment_has_no_side_effect(
     assert sum(len(node.tuples) for node in train_linear_nodes) == 0
     assert len(aggregation_node.tuples) == 0
     assert cp1 == cp2
+
+
+def test_too_long_additional_metadata(session_dir):
+    """Test if the LenMetadataError is raised when a too long Metadata
+    is given to the additional_metadata dictionary."""
+
+    additional_metadata = {"first_arg": "size_ok", "second_arg": "size_too_long" * 10}
+    with pytest.raises(LenMetadataError):
+        _ = execute_experiment(
+            client=None,
+            algo=None,
+            strategy=None,
+            train_data_nodes=[],
+            evaluation_strategy=None,
+            aggregation_node=None,
+            num_rounds=2,
+            dependencies=None,
+            experiment_folder=session_dir / "experiment_folder",
+            additional_metadata=additional_metadata,
+        )
