@@ -14,6 +14,7 @@ import substra
 from connectlib.algorithms.algo import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import LenMetadataError
 from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.node import OperationKey
 from connectlib.nodes.train_data_node import TrainDataNode
@@ -92,6 +93,7 @@ def _save_experiment_summary(
     aggregation_node: Optional[AggregationNode],
     evaluation_strategy: EvaluationStrategy,
     timestamp: str,
+    additional_metadata: Optional[Dict],
 ):
     """Saves the experiment summary in `experiment_folder`, with the name format `{timestamp}_{compute_plan.key}.json`
 
@@ -106,6 +108,7 @@ def _save_experiment_summary(
         aggregation_node (typing.Optional[AggregationNode]): aggregation_node
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
+        additional_metadata (dict, Optional): Optional dictionary of metadata to be shown on the Connect WebApp.
     """
     # create the experiment folder if it doesn't exist
     experiment_folder = Path(experiment_folder)
@@ -128,11 +131,34 @@ def _save_experiment_summary(
         ]
 
     experiment_summary["aggregation_node"] = aggregation_node.summary() if aggregation_node is not None else None
+    if additional_metadata is not None:
+        experiment_summary["additional_metadata"] = additional_metadata
 
     # Save the experiment summary
     summary_file = experiment_folder / f"{timestamp}_{compute_plan.key}.json"
     summary_file.write_text(json.dumps(experiment_summary, indent=4))
     logger.info(("Experiment summary saved to {0}").format(summary_file))
+
+
+def _check_evaluation_strategy(
+    evaluation_strategy: EvaluationStrategy,
+    num_rounds: int,
+):
+    if evaluation_strategy.num_rounds is None:
+        evaluation_strategy.num_rounds = num_rounds
+    elif evaluation_strategy.num_rounds != num_rounds:
+        raise ValueError(
+            "num_rounds set in evaluation_strategy does not match num_rounds set in the experiment: "
+            f"{evaluation_strategy.num_rounds} is not {num_rounds}"
+        )
+
+
+def _check_additional_metadata(additional_metadata: Dict):
+    for metadata_value in additional_metadata.values():
+        if len(str(metadata_value)) > 100:
+            raise LenMetadataError(
+                "The maximum length of a value in the additional_metadata dictionary is 100 characters."
+            )
 
 
 def execute_experiment(
@@ -147,6 +173,7 @@ def execute_experiment(
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
     tag: Optional[str] = None,
+    additional_metadata: Optional[Dict] = None,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
     your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
@@ -186,7 +213,7 @@ def execute_experiment(
             quickly so should be set to True unless needed. Defaults to True.
         tag (str, Optional): Optional tag chosen by the user to identify the compute plan. If None,
             the compute plan tag is set to the timestamp.
-
+        additional_metadata(dict, Optional): Optional dictionary of metadata to be passed to the Connect WebApp.
     Returns:
         ComputePlan: The generated compute plan
     """
@@ -203,15 +230,12 @@ def execute_experiment(
         raise ValueError("Training multiple algorithms on the same node is not supported right now.")
 
     if evaluation_strategy is not None:
-        if evaluation_strategy.num_rounds is None:
-            evaluation_strategy.num_rounds = num_rounds
-        elif evaluation_strategy.num_rounds != num_rounds:
-            raise ValueError(
-                "num_rounds set in evaluation_strategy does not match num_rounds set in the experiment: "
-                f"{evaluation_strategy.num_rounds} is not {num_rounds}"
-            )
+        _check_evaluation_strategy(evaluation_strategy, num_rounds)
         # Reset the evaluation strategy
         evaluation_strategy.restart_rounds()
+
+    if additional_metadata is not None:
+        _check_additional_metadata(additional_metadata)
 
     logger.info("Building the compute plan.")
 
@@ -253,6 +277,7 @@ def execute_experiment(
             testtuples=testtuples,
             tag=tag or timestamp,
             clean_models=clean_models,
+            metadata=additional_metadata,
         ),
         auto_batching=False,
     )
@@ -270,6 +295,7 @@ def execute_experiment(
         aggregation_node=aggregation_node,
         evaluation_strategy=evaluation_strategy,
         timestamp=timestamp,
+        additional_metadata=additional_metadata,
     )
 
     return compute_plan

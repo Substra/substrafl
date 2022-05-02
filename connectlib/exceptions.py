@@ -26,3 +26,9 @@ class IndexGeneratorSampleNoneError(Exception):
     """Try to use the index generator without setting the number of samples."""
 
     pass
+
+
+class LenMetadataError(Exception):
+    """Too long additional metadata passed to the execute_experiment function to be shown on the Connect WebApp."""
+
+    pass
