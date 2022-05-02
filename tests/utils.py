@@ -4,7 +4,7 @@ from substra.sdk.models import ComputePlanStatus
 from substra.sdk.models import ModelType
 from substra.sdk.models import Status
 
-FUTURE_TIMEOUT = 300
+FUTURE_TIMEOUT = 3600
 FUTURE_POLLING_PERIOD = 1
 
 
