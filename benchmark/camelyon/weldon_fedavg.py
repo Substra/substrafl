@@ -55,9 +55,7 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
                 model=model,
                 criterion=criterion,
                 optimizer=optimizer,
-                num_updates=n_local_steps,
-                batch_size=batch_size,
-                get_index_generator=nig,
+                index_generator=nig,
             )
 
         def _local_train(self, x, y):
