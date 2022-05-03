@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/owkin/connectlib/releases/tag/0.11.0) - 2022-05-03
+
+### Added
+
 - feat: add the possibility for the user to pass additional metadata to the compute plan metadata (#161)
 
 ### Fixed
@@ -15,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- BREAKING CHANGE: the default value of ``drop_last`` in the ``NpIndexGenerator`` is now False (#142)
+- BREAKING CHANGE: the default value of `drop_last` in the `NpIndexGenerator` is now False (#142)
+
 - BREAKING CHANGE: the index generator is now required when implementing a strategy (#142)
 
   ```python
@@ -39,18 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The user can now initialize his `TorchAlgo` function with custom parameters (only primitive types are supported) (#130):
 
-    ```python
-    class MyAlgo(TorchFedAvgAlgo):
-        def __init__(self, my_arg):
-            super.__init__(
-                model=model,
-                criterion=criterion
-                optimizer=optimizer,
-                index_generator=nig,
-                my_arg=my_arg,  # This is necessary
-            )
-            # ...
-    ```
+  ```python
+  class MyAlgo(TorchFedAvgAlgo):
+      def __init__(self, my_arg):
+          super.__init__(
+              model=model,
+              criterion=criterion
+              optimizer=optimizer,
+              index_generator=nig,
+              my_arg=my_arg,  # This is necessary
+          )
+          # ...
+  ```
 
 ## [0.10.0](https://github.com/owkin/connectlib/releases/tag/0.10.0) - 2022-04-19
 
@@ -73,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - API documentation: fix the docstrings and the display of the documentation for some functions (#122)
 - (BREAKING CHANGE) FedAvg strategy: the train function must return a FedAvgSharedState, the average function returns a FedAvgAveragedState.
-    No need to change your code if you use TorchFedAvgAlgo (#126)
+  No need to change your code if you use TorchFedAvgAlgo (#126)
 - benchmark:
   - Use the same batch sampler between the torch and Connectlib examples (#94)
   - Make it work with `num_workers` > 0 (#94)
@@ -168,4 +173,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0](https://github.com/owkin/connectlib/releases/tag/0.2.0) - 2021-11-08
 
-[Unreleased]: https://github.com/owkin/connectlib/compare/0.3.0...HEAD
+[unreleased]: https://github.com/owkin/connectlib/compare/0.3.0...HEAD
