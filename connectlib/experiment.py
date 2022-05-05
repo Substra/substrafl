@@ -2,6 +2,7 @@ import copy
 import datetime
 import json
 import logging
+import uuid
 from pathlib import Path
 from typing import Dict
 from typing import List
@@ -84,7 +85,7 @@ def _register_operations(
 
 def _save_experiment_summary(
     experiment_folder: Path,
-    compute_plan: substra.sdk.models.ComputePlan,
+    compute_plan_key: str,
     strategy: Strategy,
     num_rounds: int,
     algo: Algo,
@@ -99,7 +100,7 @@ def _save_experiment_summary(
 
     Args:
         experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
-        compute_plan (substra.sdk.models.ComputePlan): compute_plan
+        compute_plan_key (str): compute plan key
         strategy (connectlib.strategies.Strategy): strategy
         num_rounds (int): num_rounds
         algo (connectlib.algorithms.Algo): algo
@@ -116,7 +117,7 @@ def _save_experiment_summary(
     experiment_summary = dict()
 
     # add attributes of interest and summaries of the classes to the experiment summary
-    experiment_summary["compute_plan_key"] = str(compute_plan.key)
+    experiment_summary["compute_plan_key"] = compute_plan_key
     experiment_summary["strategy"] = type(strategy).__name__
     experiment_summary["num_rounds"] = num_rounds
     experiment_summary["algo"] = algo.summary()
@@ -135,7 +136,7 @@ def _save_experiment_summary(
         experiment_summary["additional_metadata"] = additional_metadata
 
     # Save the experiment summary
-    summary_file = experiment_folder / f"{timestamp}_{compute_plan.key}.json"
+    summary_file = experiment_folder / f"{timestamp}_{compute_plan_key}.json"
     summary_file.write_text(json.dumps(experiment_summary, indent=4))
     logger.info(("Experiment summary saved to {0}").format(summary_file))
 
@@ -270,23 +271,13 @@ def execute_experiment(
     logger.info("Submitting the compute plan to Connect.")
     timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
 
-    compute_plan = client.add_compute_plan(
-        substra.sdk.schemas.ComputePlanSpec(
-            composite_traintuples=composite_traintuples,
-            aggregatetuples=aggregation_tuples,
-            testtuples=testtuples,
-            tag=tag or timestamp,
-            clean_models=clean_models,
-            metadata=additional_metadata,
-        ),
-        auto_batching=False,
-    )
-    logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
+    # Generate the compute plan key.
+    compute_plan_key = str(uuid.uuid4())
 
     # save the experiment summary in experiment_folder
     _save_experiment_summary(
         experiment_folder=experiment_folder,
-        compute_plan=compute_plan,
+        compute_plan_key=compute_plan_key,
         strategy=strategy,
         num_rounds=num_rounds,
         algo=algo,
@@ -297,5 +288,19 @@ def execute_experiment(
         timestamp=timestamp,
         additional_metadata=additional_metadata,
     )
+
+    compute_plan = client.add_compute_plan(
+        substra.sdk.schemas.ComputePlanSpec(
+            key=compute_plan_key,
+            composite_traintuples=composite_traintuples,
+            aggregatetuples=aggregation_tuples,
+            testtuples=testtuples,
+            tag=tag or timestamp,
+            clean_models=clean_models,
+            metadata=additional_metadata,
+        ),
+        auto_batching=False,
+    )
+    logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
 
     return compute_plan

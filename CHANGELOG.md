@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat: the compute plan key of the experiment is saved in the experiment summary before submitting or executing it (#163)
+
 ## [0.11.0](https://github.com/owkin/connectlib/releases/tag/0.11.0) - 2022-05-03
 
 ### Added
