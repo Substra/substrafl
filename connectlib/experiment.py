@@ -173,7 +173,7 @@ def execute_experiment(
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
-    tag: Optional[str] = None,
+    name: Optional[str] = None,
     additional_metadata: Optional[Dict] = None,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
@@ -212,8 +212,8 @@ def execute_experiment(
         clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
             quickly so should be set to True unless needed. Defaults to True.
-        tag (str, Optional): Optional tag chosen by the user to identify the compute plan. If None,
-            the compute plan tag is set to the timestamp.
+        name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
+            the compute plan name is set to the timestamp.
         additional_metadata(dict, Optional): Optional dictionary of metadata to be passed to the Connect WebApp.
     Returns:
         ComputePlan: The generated compute plan
@@ -295,7 +295,7 @@ def execute_experiment(
             composite_traintuples=composite_traintuples,
             aggregatetuples=aggregation_tuples,
             testtuples=testtuples,
-            tag=tag or timestamp,
+            name=name or timestamp,
             clean_models=clean_models,
             metadata=additional_metadata,
         ),
