@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- BREAKING CHANGE: replace "tag" argument with "name" in execute_experiment (#176)
+
 ## [0.12.0](https://github.com/owkin/connectlib/releases/tag/0.12.0) - 2022-05-09
 
 - feat: the compute plan key of the experiment is saved in the experiment summary before submitting or executing it (#163)
