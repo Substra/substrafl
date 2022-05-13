@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 
 import numpy as np
@@ -9,6 +10,7 @@ import torch
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.remote import remote_data
+from connectlib.schemas import StrategyName
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +134,15 @@ class TorchOneNodeAlgo(TorchAlgo):
             *args,
             **kwargs,
         )
+
+    @property
+    def strategies(self) -> List[StrategyName]:
+        """List of compatible strategies
+
+        Returns:
+            typing.List: typing.List[StrategyName]
+        """
+        return [StrategyName.ONE_NODE]
 
     @remote_data
     def train(

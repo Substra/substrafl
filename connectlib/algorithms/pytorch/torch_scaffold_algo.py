@@ -15,6 +15,7 @@ from connectlib.index_generator import BaseIndexGenerator
 from connectlib.remote import remote_data
 from connectlib.schemas import ScaffoldAveragedStates
 from connectlib.schemas import ScaffoldSharedState
+from connectlib.schemas import StrategyName
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +180,15 @@ class TorchScaffoldAlgo(TorchAlgo):
         self._current_lr: float = None
         # the delta_variate used in _scaffold_parameters_update()
         self._delta_variate: List[torch.Tensor] = None
+
+    @property
+    def strategies(self) -> List[StrategyName]:
+        """List of compatible strategies
+
+        Returns:
+            typing.List: typing.List[StrategyName]
+        """
+        return [StrategyName.SCAFFOLD]
 
     def _update_current_lr(self):
         """method to get the current learning rate from the scheduler, or the optimizer if no scheduler.

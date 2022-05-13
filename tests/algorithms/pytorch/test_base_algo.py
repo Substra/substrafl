@@ -36,6 +36,10 @@ def dummy_algo_custom_init_arg(request):
         def _local_predict(self, x):
             return np.zeros(1)
 
+        @property
+        def strategies(self):
+            return list()
+
         @remote_data
         def predict(self, x, shared_state):
             return self._local_predict(x)

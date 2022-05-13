@@ -10,8 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - BREAKING CHANGE: replace "tag" argument with "name" in execute_experiment (#176)
+- `execute_experiment` checks that the algo and strategy are compatible. You can override the list of strategies the
+algo is compatible with using the `strategies` property (#):
+
+  ```python
+  from connectlib.algorithms.algo import Algo
+  from connectlib import StrategyName
+
+  class MyAlgo(Algo):
+      @property
+      def strategies(self):
+          return [StrategyName.FEDERATED_AVERAGING, StrategyName.SCAFFOLD]
+      # ...
+  ```
 
 ## [0.12.0](https://github.com/owkin/connectlib/releases/tag/0.12.0) - 2022-05-09
+
+### Added
 
 - feat: the compute plan key of the experiment is saved in the experiment summary before submitting or executing it (#163)
 

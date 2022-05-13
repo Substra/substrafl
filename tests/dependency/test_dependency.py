@@ -12,7 +12,6 @@ from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import CompositeTraintupleSpec
 from substra.sdk.schemas import Permissions
 
-from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.exceptions import InvalidPathError
 from connectlib.remote import remote_data
@@ -83,56 +82,34 @@ class TestLocalDependency:
         composite_traintuple = client.get_composite_traintuple(composite_key)
         return composite_traintuple
 
-    def test_pypi_dependency(self, network, numpy_datasets, constant_samples, session_dir):
+    def test_pypi_dependency(
+        self,
+        network,
+        numpy_datasets,
+        constant_samples,
+        session_dir,
+        dummy_algo_class,
+    ):
         """Test that dependencies from PyPi are installed."""
 
-        class MyAlgo(Algo):
-            # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
-            # pytest calls it)
-            @property
-            def model(self):
-                return None
-
-            @remote_data
-            def train(
-                self,
-                x: np.ndarray,
-                y: np.ndarray,
-                shared_state,
-            ):
-                x = [4]
-                return dict(test=np.array(x), n_samples=len(x))
-
-            @remote_data
-            def predict(self, x: np.array, shared_state):
-                return shared_state["test"]
-
-            def load(self, path: Path):
-                return self
-
-            def save(self, path: Path):
-                assert path.parent.exists()
-                with path.open("w") as f:
-                    f.write("test")
-
         client = network.clients[0]
-        my_algo = MyAlgo()
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
+        algo_key = self._register_algo(dummy_algo_class(), algo_deps, client, session_dir)
 
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_directory(self, network, numpy_datasets, constant_samples, session_dir):
+    def test_local_dependencies_directory(
+        self,
+        network,
+        numpy_datasets,
+        constant_samples,
+        session_dir,
+        dummy_algo_class,
+    ):
         """Test that you can import a directory"""
 
-        class MyAlgo(Algo):
-            # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
-            # pytest calls it)
-            @property
-            def model(self):
-                return None
-
+        class MyAlgo(dummy_algo_class):
             @remote_data
             def train(
                 self,
@@ -146,18 +123,6 @@ class TestLocalDependency:
                 assert some_strings == "FooBar"  # For flake8 purposes
 
                 return dict(test=np.array(x), n_samples=len(x))
-
-            @remote_data
-            def predict(self, x: np.array, shared_state):
-                return shared_state["test"]
-
-            def load(self, path: Path):
-                return self
-
-            def save(self, path: Path):
-                assert path.parent.exists()
-                with path.open("w") as f:
-                    f.write("test")
 
         client = network.clients[0]
         my_algo = MyAlgo()
@@ -171,16 +136,17 @@ class TestLocalDependency:
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_file_in_directory(self, network, numpy_datasets, constant_samples, session_dir):
+    def test_local_dependencies_file_in_directory(
+        self,
+        network,
+        numpy_datasets,
+        constant_samples,
+        session_dir,
+        dummy_algo_class,
+    ):
         """Test that you can import a file that is in a subdirectory"""
 
-        class MyAlgo(Algo):
-            # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
-            # pytest calls it)
-            @property
-            def model(self):
-                return None
-
+        class MyAlgo(dummy_algo_class):
             @remote_data
             def train(
                 self,
@@ -195,18 +161,6 @@ class TestLocalDependency:
 
                 return dict(test=np.array(x), n_samples=len(x))
 
-            @remote_data
-            def predict(self, x: np.array, shared_state):
-                return shared_state["test"]
-
-            def load(self, path: Path):
-                return self
-
-            def save(self, path: Path):
-                assert path.parent.exists()
-                with path.open("w") as f:
-                    f.write("test")
-
         client = network.clients[0]
         my_algo = MyAlgo()
         algo_deps = Dependency(
@@ -219,16 +173,17 @@ class TestLocalDependency:
         composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintuple)
 
-    def test_local_dependencies_file(self, network, numpy_datasets, constant_samples, session_dir):
+    def test_local_dependencies_file(
+        self,
+        network,
+        numpy_datasets,
+        constant_samples,
+        session_dir,
+        dummy_algo_class,
+    ):
         """Test that you can import a file"""
 
-        class MyAlgo(Algo):
-            # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
-            # pytest calls it)
-            @property
-            def model(self):
-                return None
-
+        class MyAlgo(dummy_algo_class):
             @remote_data
             def train(
                 self,
@@ -242,18 +197,6 @@ class TestLocalDependency:
                 assert some_strings == "FooBar"  # For flake8 purposes
 
                 return dict(test=np.array(x), n_samples=len(x))
-
-            @remote_data
-            def predict(self, x: np.array, shared_state):
-                return shared_state["test"]
-
-            def load(self, path: Path):
-                return self
-
-            def save(self, path: Path):
-                assert path.parent.exists()
-                with path.open("w") as f:
-                    f.write("test")
 
         client = network.clients[0]
         my_algo = MyAlgo()
@@ -270,19 +213,19 @@ class TestLocalDependency:
     @pytest.mark.docker_only
     @pytest.mark.parametrize("pkg_path", ["installable_library", "poetry_installable_library"])
     def test_local_dependencies_installable_library(
-        self, network, numpy_datasets, constant_samples, pkg_path, session_dir
+        self,
+        network,
+        numpy_datasets,
+        constant_samples,
+        pkg_path,
+        session_dir,
+        dummy_algo_class,
     ):
         """Test that you can install a local library
         Automatically done in docker but need to be manually done if force in subprocess mode
         """
 
-        class MyAlgo(Algo):
-            # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
-            # pytest calls it)
-            @property
-            def model(self):
-                return None
-
+        class MyAlgo(dummy_algo_class):
             @remote_data
             def train(
                 self,
@@ -298,18 +241,6 @@ class TestLocalDependency:
                 assert some_strings == "FooBar"  # For flake8 purposes
 
                 return dict(test=np.array(x), n_samples=len(x))
-
-            @remote_data
-            def predict(self, x: np.array, shared_state):
-                return shared_state["test"]
-
-            def load(self, path: Path):
-                return self
-
-            def save(self, path: Path):
-                assert path.parent.exists()
-                with path.open("w") as f:
-                    f.write("test")
 
         client = network.clients[0]
         my_algo = MyAlgo()

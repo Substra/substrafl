@@ -1,6 +1,9 @@
 import abc
 from pathlib import Path
 from typing import Any
+from typing import List
+
+from connectlib.schemas import StrategyName
 
 
 class Algo(abc.ABC):
@@ -17,6 +20,16 @@ class Algo(abc.ABC):
 
         Returns:
             typing.Any: model
+        """
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def strategies(self) -> List[StrategyName]:
+        """List of compatible strategies
+
+        Returns:
+            typing.List: typing.List[StrategyName]
         """
         raise NotImplementedError
 

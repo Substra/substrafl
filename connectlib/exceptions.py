@@ -32,3 +32,9 @@ class LenMetadataError(Exception):
     """Too long additional metadata passed to the execute_experiment function to be shown on the Connect WebApp."""
 
     pass
+
+
+class IncompatibleAlgoStrategyError(Exception):
+    """This algo is not compatible with this strategy."""
+
+    pass

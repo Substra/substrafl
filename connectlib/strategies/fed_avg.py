@@ -12,6 +12,7 @@ from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote
 from connectlib.schemas import FedAvgAveragedState
 from connectlib.schemas import FedAvgSharedState
+from connectlib.schemas import StrategyName
 from connectlib.strategies.strategy import Strategy
 
 
@@ -49,6 +50,15 @@ class FedAvg(Strategy):
         # States
         self.local_states: Optional[List[LocalStateRef]] = None
         self.avg_shared_state: Optional[SharedStateRef] = None
+
+    @property
+    def name(self) -> StrategyName:
+        """The name of the strategy
+
+        Returns:
+            StrategyName: Name of the strategy
+        """
+        return StrategyName.FEDERATED_AVERAGING
 
     @remote
     def avg_shared_states(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:

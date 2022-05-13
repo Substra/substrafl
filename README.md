@@ -119,6 +119,7 @@ A few points on the implementation itself:
   - the `__init__` function is called once on the user's computer and at the beginning of each round: avoid costly operations
   - the `load` and `save` functions manage the local state i.e. the parameters that must be passed from one round to the next
   - the `_local_train` and `_local_predict` functions must be overwritten by the user so they contain as little strategy-specific code as possible
+- Add the name of the strategy to the `connectlib.schemas.StrategyName` enum
 
 #### Tests
 

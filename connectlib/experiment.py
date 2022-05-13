@@ -12,6 +12,7 @@ from typing import Union
 
 import substra
 
+from connectlib import exceptions
 from connectlib.algorithms.algo import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
@@ -220,6 +221,14 @@ def execute_experiment(
     """
     if dependencies is None:
         dependencies = Dependency()
+
+    if strategy.name not in algo.strategies:
+        raise exceptions.IncompatibleAlgoStrategyError(
+            f"The algo {algo.__class__.__name__} is not compatible with the strategy {strategy.__class__.__name__},"
+            f"named {strategy.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
+            "strategies."
+        )
+
     train_data_nodes = copy.deepcopy(train_data_nodes)
     aggregation_node = copy.deepcopy(aggregation_node)
     strategy = copy.deepcopy(strategy)
