@@ -14,6 +14,8 @@
 import multiprocessing
 import shutil
 from pathlib import Path
+from typing import List
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -21,9 +23,13 @@ import torch
 import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
+from connectlib.algorithms.algo import Algo
 from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.test_data_node import TestDataNode
 from connectlib.nodes.train_data_node import TrainDataNode
+from connectlib.remote.decorators import remote_data
+from connectlib.schemas import StrategyName
+from connectlib.strategies.strategy import Strategy
 
 from . import assets_factory
 from . import settings
@@ -335,3 +341,62 @@ def rtol():
         float: rtol
     """
     return 10e-6
+
+
+@pytest.fixture
+def dummy_strategy_class():
+    class DummyStrategy(Strategy):
+        @property
+        def name(self) -> StrategyName:
+            return "dummy"
+
+        def perform_round(
+            self,
+            algo: Algo,
+            train_data_nodes: List[TrainDataNode],
+            aggregation_node: Optional[AggregationNode],
+            round_idx: int,
+        ):
+            pass
+
+        def predict(
+            self,
+            algo: Algo,
+            test_data_nodes: List[TestDataNode],
+            train_data_nodes: List[TrainDataNode],
+            round_idx: int,
+        ):
+            pass
+
+    return DummyStrategy
+
+
+@pytest.fixture
+def dummy_algo_class():
+    class DummyAlgo(Algo):
+        @property
+        def strategies(self) -> List[StrategyName]:
+            # compatible with all strategies and the dummy one
+            return list(StrategyName) + ["dummy"]
+
+        @property
+        def model(self):
+            return "model"
+
+        @remote_data
+        def train(self, x, y, shared_state):
+            return dict(test=np.array([4]), x=x, y=y, shared_state=shared_state)
+
+        @remote_data
+        def predict(self, x: np.array, shared_state):
+            return dict(x=x, shared_state=shared_state)
+
+        def load(self, path: Path):
+            return self
+
+        def save(self, path: Path):
+            assert path.parent.exists()
+            with path.open("w") as f:
+                f.write("test")
+
+    return DummyAlgo

@@ -1,11 +1,9 @@
 from logging import getLogger
-from pathlib import Path
 
 import numpy as np
 import pytest
 
 from connectlib import execute_experiment
-from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.nodes.aggregation_node import AggregationNode
@@ -73,20 +71,14 @@ def test_avg_shared_states_different_length():
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default_permissions):
+def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default_permissions, dummy_algo_class):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
     # predict() returns the data, score returned by AccuracyMetric (in the metric) is the mean of all the y_pred
     # passed to it. The tests asserts if the score is 0.5
     # This test only runs on two nodes.
 
-    class MyAlgo(Algo):
-        # this class must be within the test, otherwise the Docker will not find it correctly (ie because of the way
-        # pytest calls it)
-        @property
-        def model(self):
-            return None
-
+    class MyAlgo(dummy_algo_class):
         @remote_data
         def train(
             self,
@@ -99,14 +91,6 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
         @remote_data
         def predict(self, x: np.array, shared_state: FedAvgAveragedState):
             return shared_state.avg_parameters_update
-
-        def load(self, path: Path):
-            return self
-
-        def save(self, path: Path):
-            assert path.parent.exists()
-            with path.open("w") as f:
-                f.write("test")
 
     # Add 0s and 1s constant to check the averaging of the function
     # We predict the shared state, an array of 0.5

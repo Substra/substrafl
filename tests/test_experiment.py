@@ -1,57 +1,43 @@
 from unittest.mock import MagicMock
+from unittest.mock import Mock
 from unittest.mock import patch
 
 import numpy as np
 import pytest
+import substra
 
 from connectlib import execute_experiment
-from connectlib.algorithms import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import IncompatibleAlgoStrategyError
 from connectlib.exceptions import LenMetadataError
-from connectlib.remote.decorators import remote_data
 from connectlib.strategies import FedAvg
 
 
 # mocking the add_compute_plan as we don't want to test Substra, just the execute_experiment
 @patch("substra.Client.add_compute_plan", MagicMock(return_value=np.recarray(1, dtype=[("key", int)])))
 def test_execute_experiment_has_no_side_effect(
-    network, train_linear_nodes, test_linear_nodes, aggregation_node, session_dir
+    network,
+    train_linear_nodes,
+    test_linear_nodes,
+    aggregation_node,
+    session_dir,
+    dummy_algo_class,
 ):
     """Ensure that the execute_experiment run twice won't fail (which would be the case if the variables passed
     changed during the run). It mocks the add_compute_plan() of Substra so that substra code is never really
     executed"""
 
-    class MyAlgo(Algo):
-        # No need for full Algo as it is never really submitted to Substra for a run
-        @property
-        def model(self):
-            return None
-
-        @remote_data
-        def train(self, x, y, shared_state):
-            pass
-
-        @remote_data
-        def predict(self, x, shared_state):
-            pass
-
-        def load(self, path):
-            pass
-
-        def save(self, path):
-            pass
-
     num_rounds = 2
-    my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAvg()
     # test every two rounds
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, rounds=2)
+    dummy_algo_instance = dummy_algo_class()
 
     cp1 = execute_experiment(
         client=network.clients[0],
-        algo=my_algo0,
+        algo=dummy_algo_instance,
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
@@ -64,7 +50,7 @@ def test_execute_experiment_has_no_side_effect(
     # this second run fails if the variables changed in the first run
     cp2 = execute_experiment(
         client=network.clients[0],
-        algo=my_algo0,
+        algo=dummy_algo_instance,
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
@@ -80,16 +66,17 @@ def test_execute_experiment_has_no_side_effect(
     assert cp1 == cp2
 
 
-def test_too_long_additional_metadata(session_dir):
+def test_too_long_additional_metadata(session_dir, dummy_strategy_class, dummy_algo_class):
     """Test if the LenMetadataError is raised when a too long Metadata
     is given to the additional_metadata dictionary."""
 
+    client = Mock(spec=substra.Client)
     additional_metadata = {"first_arg": "size_ok", "second_arg": "size_too_long" * 10}
     with pytest.raises(LenMetadataError):
-        _ = execute_experiment(
-            client=None,
-            algo=None,
-            strategy=None,
+        execute_experiment(
+            client=client,
+            algo=dummy_algo_class(),
+            strategy=dummy_strategy_class(),
             train_data_nodes=[],
             evaluation_strategy=None,
             aggregation_node=None,
@@ -97,4 +84,26 @@ def test_too_long_additional_metadata(session_dir):
             dependencies=None,
             experiment_folder=session_dir / "experiment_folder",
             additional_metadata=additional_metadata,
+        )
+
+
+def test_match_algo_strategy(session_dir, dummy_strategy_class, dummy_algo_class):
+    client = Mock(spec=substra.Client)
+
+    class MyAlgo(dummy_algo_class):
+        @property
+        def strategies(self):
+            return ["not_the_dummy_strategy"]
+
+    with pytest.raises(IncompatibleAlgoStrategyError):
+        execute_experiment(
+            client=client,
+            algo=MyAlgo(),
+            strategy=dummy_strategy_class(),
+            train_data_nodes=[],
+            evaluation_strategy=None,
+            aggregation_node=None,
+            num_rounds=2,
+            dependencies=None,
+            experiment_folder=session_dir / "experiment_folder",
         )

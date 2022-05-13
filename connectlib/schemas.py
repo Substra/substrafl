@@ -1,9 +1,16 @@
 """Schemas used in the application.
 """
+from enum import Enum
 from typing import List
 
 import numpy as np
 import pydantic
+
+
+class StrategyName(str, Enum):
+    FEDERATED_AVERAGING = "Federated Averaging"
+    SCAFFOLD = "Scaffold"
+    ONE_NODE = "One node"
 
 
 class _Model(pydantic.BaseModel):

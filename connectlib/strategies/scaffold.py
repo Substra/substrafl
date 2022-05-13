@@ -12,6 +12,7 @@ from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote
 from connectlib.schemas import ScaffoldAveragedStates
 from connectlib.schemas import ScaffoldSharedState
+from connectlib.schemas import StrategyName
 from connectlib.strategies.strategy import Strategy
 
 
@@ -45,6 +46,15 @@ class Scaffold(Strategy):
         self._local_states: Optional[List[LocalStateRef]] = None
         # current shared state reference of the server / aggregate node
         self._avg_shared_state: Optional[SharedStateRef] = None
+
+    @property
+    def name(self) -> StrategyName:
+        """The name of the strategy
+
+        Returns:
+            StrategyName: Name of the strategy
+        """
+        return StrategyName.SCAFFOLD
 
     def _check_shared_states(self, shared_states: List[ScaffoldSharedState]):
         """Check the Scaffold assumptions: server_control_variate, parameters_update and server_control_variate have the

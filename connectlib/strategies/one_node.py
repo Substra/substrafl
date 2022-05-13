@@ -7,6 +7,7 @@ from connectlib.nodes import AggregationNode
 from connectlib.nodes import TestDataNode
 from connectlib.nodes import TrainDataNode
 from connectlib.nodes.references.local_state import LocalStateRef
+from connectlib.schemas import StrategyName
 from connectlib.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,15 @@ class OneNode(Strategy):
 
         # State
         self.local_state: Optional[LocalStateRef] = None
+
+    @property
+    def name(self) -> StrategyName:
+        """The name of the strategy
+
+        Returns:
+            StrategyName: Name of the strategy
+        """
+        return StrategyName.ONE_NODE
 
     def perform_round(
         self,

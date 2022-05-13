@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from typing import List
 from typing import Optional
 
 import numpy as np
@@ -11,6 +12,7 @@ from connectlib.index_generator import BaseIndexGenerator
 from connectlib.remote import remote_data
 from connectlib.schemas import FedAvgAveragedState
 from connectlib.schemas import FedAvgSharedState
+from connectlib.schemas import StrategyName
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +140,15 @@ class TorchFedAvgAlgo(TorchAlgo):
             **kwargs,
         )
         self._with_batch_norm_parameters = with_batch_norm_parameters
+
+    @property
+    def strategies(self) -> List[StrategyName]:
+        """List of compatible strategies
+
+        Returns:
+            typing.List: typing.List[StrategyName]
+        """
+        return [StrategyName.FEDERATED_AVERAGING]
 
     @remote_data
     def train(
