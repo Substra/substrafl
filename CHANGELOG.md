@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The wheels of the libraries installed with `editable=True` are now in `$HOME/.connectlib` instead of `$LIB_PATH/dist` (#177)
+- benchmark:
+  - `make benchmark` runs the default remote benchmark on the connect platform specified in the [config file](./benchmark/camelyon/connect_conf/ci.yaml)
+  - `make benchmark-local` runs the default local benchmark in subprocess mode
 
 ## [0.13.0](https://github.com/owkin/connectlib/releases/tag/0.13.0) - 2022-05-16
 

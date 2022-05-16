@@ -23,38 +23,62 @@ def parse_params() -> dict:
         "substratools_version": substratools.__version__,
     }
 
-    parser = argparse.ArgumentParser("Default parser.")
-    parser.add_argument("--n-centers", type=int, default=2)
-    parser.add_argument("--sub-sampling", type=float, default=1)
-    parser.add_argument("--n-rounds", type=int, default=11)
-    parser.add_argument("--n-local-steps", type=int, default=50)
-    parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--num-workers", type=int, default=0)
-    parser.add_argument("--mode", type=str, default="remote")
-    parser.add_argument("--train-0", type=int)
-    parser.add_argument("--test-0", type=int)
-    parser.add_argument("--train-1", type=int)
-    parser.add_argument("--test-1", type=int)
-    parser.add_argument("--credentials", type=str, default="remote.yaml")
-    parser.add_argument("--assets-keys", type=str, default="keys.json")
+    parser = argparse.ArgumentParser("Default parser.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        "--n-centers", type=int, default=2, help="Local only: number of center to execute the benchmark on"
+    )
+    parser.add_argument("--n-rounds", type=int, default=11, help="Number of rounds of the strategy to execute")
+    parser.add_argument(
+        "--n-local-steps", type=int, default=50, help="Number of batch to learn from at each step of the strategy"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=16, help="Number of sample to use learn from for each local step"
+    )
+    parser.add_argument("--num-workers", type=int, default=0, help="Number of torch worker to use for data loading")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="subprocess",
+        help="Benchmark mode, either `subprocess`, `docker` or `remote`",
+        choices=["subprocess", "docker", "remote"],
+    )
+    parser.add_argument(
+        "--credentials-path",
+        type=str,
+        default="remote.yaml",
+        help="Remote only: relative path from the connect_conf folder to connect credentials",
+    )
+    parser.add_argument(
+        "--asset-keys-path",
+        type=str,
+        default="keys.json",
+        help="""Remote only: relative path from the connect_conf folder to a
+file where to fill in the connect assets to be reused""",
+    )
+    parser.add_argument(
+        "--nb-train-data-samples",
+        type=int,
+        default=5,
+        help="Number of data sample of 400 Mb to use for each train task on each center",
+    )
+    parser.add_argument(
+        "--nb-test-data-samples",
+        type=int,
+        default=2,
+        help="Number of data sample of 400 Mb to use for each test task on each center",
+    )
 
     args = parser.parse_args()
     params["n_centers"] = args.n_centers
-    params["sub_sampling"] = args.sub_sampling
     params["n_rounds"] = args.n_rounds
     params["n_local_steps"] = args.n_local_steps
     params["batch_size"] = args.batch_size
     params["num_workers"] = args.num_workers
     params["mode"] = args.mode
-    params["credentials"] = args.credentials
-    params["assets_keys"] = args.assets_keys
-
-    # Pass the exact size of the needed samples
-    if args.train_0:
-        params["data_samples_size"] = [
-            {"train": args.train_0, "test": args.test_0},
-            {"train": args.train_1, "test": args.test_1},
-        ]
+    params["credentials"] = args.credentials_path
+    params["asset_keys"] = args.asset_keys_path
+    params["nb_train_data_samples"] = args.nb_train_data_samples
+    params["nb_test_data_samples"] = args.nb_test_data_samples
 
     return params
 

@@ -2,7 +2,6 @@
 set -euxo pipefail
 
 DEFAULT_NROUNDS=2
-DEFAULT_SAMPLING=1
 DEFAULT_STEPS=10
 DEFAULT_BATCH_SIZE=32
 DEFAULT_NUM_WORKERS=0
@@ -14,7 +13,6 @@ do
     --mode $MODE \
 	--n-local-steps $N_STEP \
 	--n-rounds $DEFAULT_NROUNDS \
-	--sub-sampling $DEFAULT_SAMPLING \
 	--batch-size $DEFAULT_BATCH_SIZE \
     --num-workers $DEFAULT_NUM_WORKERS
 done
@@ -25,7 +23,6 @@ do
     --mode $MODE \
 	--n-local-steps $DEFAULT_STEPS \
 	--n-rounds $N_ROUNDS \
-	--sub-sampling $DEFAULT_SAMPLING \
 	--batch-size $DEFAULT_BATCH_SIZE \
     --num-workers $DEFAULT_NUM_WORKERS
 done
@@ -38,7 +35,6 @@ do
         --mode $MODE \
         --n-local-steps $DEFAULT_STEPS \
         --n-rounds $DEFAULT_NROUNDS \
-        --sub-sampling $DEFAULT_SAMPLING \
         --batch-size $BATCH_SIZE \
         --num-workers $NUM_WORKERS
     done

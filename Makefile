@@ -28,3 +28,22 @@ test-local-slow: pyclean
 
 test-ci: pyclean
 	pytest tests --ci -m "e2e"
+
+benchmark: pyclean
+	python benchmark/camelyon/benchmarks.py \
+		--mode remote \
+		--credentials-path ci.yaml \
+		--nb-train-data-samples 5 \
+		--nb-test-data-samples 2 \
+		--batch-size 8 \
+		--n-local-steps 10 \
+		--n-rounds 7
+
+benchmark-local: pyclean
+	python benchmark/camelyon/benchmarks.py \
+		--mode subprocess \
+		--nb-train-data-samples 2 \
+		--nb-test-data-samples 2 \
+		--batch-size 8 \
+		--n-local-steps 1 \
+		--n-rounds 2

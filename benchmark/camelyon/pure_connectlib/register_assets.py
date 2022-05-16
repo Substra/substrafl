@@ -1,18 +1,19 @@
 import json
 import os
 import tarfile
+from copy import deepcopy
 from pathlib import Path
 from typing import List
 from typing import Optional
 
 import substra
 import yaml
-from substra import BackendType
 from substra.sdk import DEBUG_OWNER
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import MetricSpec
 from substra.sdk.schemas import Permissions
+from tqdm import tqdm
 
 from connectlib.nodes import AggregationNode
 from connectlib.nodes import TestDataNode
@@ -25,6 +26,15 @@ ASSETS_DIRECTORY = CURRENT_DIRECTORY / "assets"
 PUBLIC_PERMISSIONS = Permissions(public=True, authorized_ids=[])
 
 CONNECT_CONFIG_FOLDER = Path(__file__).parents[1].resolve() / "connect_conf"
+
+DEFAULT_DATASET = DatasetSpec(
+    name="Camelyon",
+    type="None",
+    data_opener=ASSETS_DIRECTORY / "opener.py",
+    description=ASSETS_DIRECTORY / "description.md",
+    permissions=PUBLIC_PERMISSIONS,
+    logs_permission=PUBLIC_PERMISSIONS,
+)
 
 
 def instantiate_clients(mode: str = "subprocess", n_centers: Optional[int] = 2, conf: Optional[dict] = None):
@@ -59,20 +69,107 @@ def get_clients(mode: str = "subprocess", credentials: os.PathLike = "remote.yam
     return clients
 
 
-def load_assets_keys(assets_keys_path, mode):
-    if mode == "remote" and (CONNECT_CONFIG_FOLDER / assets_keys_path).exists():
-        keys = json.loads((CONNECT_CONFIG_FOLDER / assets_keys_path).read_text())
+def load_asset_keys(asset_keys_path, mode):
+    if mode == "remote" and (CONNECT_CONFIG_FOLDER / asset_keys_path).exists():
+        keys = json.loads((CONNECT_CONFIG_FOLDER / asset_keys_path).read_text())
     else:
         keys = {}
     return keys
 
 
-def save_assets_keys(assets_keys_path, assets_keys):
-    (CONNECT_CONFIG_FOLDER / assets_keys_path).write_text(json.dumps(assets_keys, indent=4, sort_keys=True))
+def save_asset_keys(asset_keys_path, asset_keys):
+    (CONNECT_CONFIG_FOLDER / asset_keys_path).write_text(json.dumps(asset_keys, indent=4, sort_keys=True))
+
+
+def get_msp_id(client, default=""):
+    nodes = client.list_node()
+    if nodes:
+        msp_id = [c.id for c in nodes if c.is_current][0]
+    else:
+        msp_id = str(default)
+
+    return msp_id
+
+
+def add_duplicated_dataset(
+    client: substra.Client,
+    nb_data_sample: int,
+    data_sample_folder: os.PathLike,
+    asset_keys: dict,
+    msp_id: str,
+    kind: str = "train",
+) -> dict:
+    """Update asset_keys.msp_id.{kind}_data_sample_keys so there is exactly `nb_data_sample` keys
+    by adding the `data_sample_folder` as a data sample with the provided `client` as many times as it's need
+    or by selecting the first `nb_data_sample` of the given data samples keys.
+
+    Args:
+        client (substra.Client): Substra client to use to add the data samples
+        nb_data_sample (int): Number of data sample keys to be returned in the asset_keys dict.
+        data_sample_folder (os.PathLike): Folder where the data sample data are stored.
+        asset_keys (dict): already registered assets within connect. It needs to be formatted as followed:
+            .. code-block:: json
+
+                {
+                    <msp_id>: {
+                        "dataset_key": "b8d754f0-40a5-4976-ae16-8dd4eca35ffc",
+                        "test_data_sample_keys": ["1238452c-a1dd-47ef-84a8-410c0841693a"],
+                        "train_data_sample_keys": ["38071944-c974-4b3b-a671-aa4835a0ae62"]
+                    },
+                    <msp_id>: {
+                        "dataset_key": "fa8e9bf7-5084-4b59-b089-a459495a08be",
+                        "test_data_sample_keys": ["73715d69-9447-4270-9d3f-d0b17bb88a87"],
+                        "train_data_sample_keys": ["766d2029-f90b-440e-8b39-2389ab04041d"]
+                    },
+                    ...
+                    "metric_key": "e5a99be6-0138-461a-92fe-23f685cdc9e1"
+                }
+        msp_id (str): asset_keys key where to find the registered assets for the given client
+        kind (str, optional): Kind of data sample to add, either train or test.  Defaults to "train".
+
+    Returns:
+        dict: The updated asset_keys.
+    """
+
+    asset_keys.setdefault(msp_id, {})
+
+    dataset = deepcopy(DEFAULT_DATASET)
+
+    dataset.metadata = {DEBUG_OWNER: msp_id}
+
+    dataset_key = asset_keys.get(msp_id).get("dataset_key") or client.add_dataset(dataset)
+
+    data_sample = DataSampleSpec(
+        data_manager_keys=[dataset_key],
+        test_only=kind == "test",
+        path=data_sample_folder,
+    )
+
+    data_sample_keys = asset_keys.get(msp_id).get(f"{kind}_data_sample_keys") or []
+    nb_data_sample_to_add = nb_data_sample - len(data_sample_keys)
+
+    if nb_data_sample_to_add < 0:
+        data_sample_keys = data_sample_keys[:nb_data_sample]
+
+    for _ in tqdm(range(nb_data_sample_to_add), desc=f"Client {msp_id}: adding {kind} data samples"):
+        data_sample_key = client.add_data_sample(
+            data_sample,
+            local=True,
+        )
+        data_sample_keys.append(data_sample_key)
+
+    asset_keys[msp_id].update(
+        {
+            f"{kind}_data_sample_keys": data_sample_keys,
+            "dataset_key": dataset_key,
+        }
+    )
+
+    return asset_keys
 
 
 def get_train_data_nodes(
-    clients: List[substra.Client], train_folders: List[Path], assets_keys: dict
+    clients: List[substra.Client], train_folder: Path, asset_keys: dict, nb_data_sample: int
 ) -> List[TrainDataNode]:
     """Generate a connectlib train data nodes for each client.
     Each client will be associated to one node where the training data are the one in his index wise
@@ -80,62 +177,36 @@ def get_train_data_nodes(
 
     Args:
         clients (List[substra.Client]): List of substra clients.
-        train_folders (List[Path]): List of associated train data folders.
+        train_folder (Path): Unique train data sample to be replicated and used.
+        asset_keys (dict): Already registered asset to be reused. If an asset is defined in this dict,
+            it will be reused.
+        nb_data_sample (int): The number of time the train data folder will used as a datasample.
+            If train data sample keys are already present in the assets keys, the first nb_data_sample will
+            be reused and new ones will be added if needed so the number of datasamples used always is nb_data_sample
 
     Returns:
         List[TrainDataNode]: Registered train data nodes for connectlib.
     """
 
-    dataset = DatasetSpec(
-        name="CameLyon",
-        type="None",
-        data_opener=ASSETS_DIRECTORY / "opener.py",
-        description=ASSETS_DIRECTORY / "description.md",
-        permissions=PUBLIC_PERMISSIONS,
-        logs_permission=PUBLIC_PERMISSIONS,
-    )
-
     train_data_nodes = []
 
-    for k, train_folder in enumerate(train_folders):
-        client = clients[k]
-        nodes = client.list_node()
-        if nodes:
-            msp_id = [c.id for c in nodes if c.is_current][0]
-        else:
-            msp_id = str(k)
+    for k, client in enumerate(clients):
+        msp_id = get_msp_id(client=client, default=k)
 
-        assets_keys.setdefault(msp_id, {})
-
-        dataset.metadata = {DEBUG_OWNER: msp_id}
-
-        dataset_key = assets_keys.get(msp_id).get("dataset_key") or client.add_dataset(dataset)
-
-        data_sample = DataSampleSpec(
-            data_manager_keys=[dataset_key],
-            test_only=False,
-            path=train_folder
-            if client.backend_mode != BackendType.DEPLOYED
-            else Path("/var/substra/servermedias/train"),
-        )
-
-        data_sample_key = assets_keys.get(msp_id).get("train_data_sample_key") or client.add_data_sample(
-            data_sample,
-            local=client.backend_mode != BackendType.DEPLOYED,
-        )
-
-        assets_keys[msp_id].update(
-            {
-                "train_data_sample_key": data_sample_key,
-                "dataset_key": dataset_key,
-            }
+        asset_keys = add_duplicated_dataset(
+            client=client,
+            nb_data_sample=nb_data_sample,
+            data_sample_folder=train_folder,
+            asset_keys=asset_keys,
+            msp_id=msp_id,
+            kind="train",
         )
 
         train_data_nodes.append(
             TrainDataNode(
                 node_id=msp_id,
-                data_manager_key=dataset_key,
-                data_sample_keys=[data_sample_key],
+                data_manager_key=asset_keys.get(msp_id)["dataset_key"],
+                data_sample_keys=asset_keys.get(msp_id)["train_data_sample_keys"],
             )
         )
 
@@ -170,7 +241,9 @@ def register_metric(client: substra.Client) -> str:
     return metric_key
 
 
-def get_test_data_nodes(clients: List[substra.Client], test_folders: List[Path], assets_keys: dict) -> TestDataNode:
+def get_test_data_nodes(
+    clients: List[substra.Client], test_folder: Path, asset_keys: dict, nb_data_sample
+) -> TestDataNode:
     """Generate a test data node for the data within the passed folder with the client.
     The associated metric only returns the float(y_pred) where y_pred is the results of the
     predict method of the used algorithm.
@@ -178,66 +251,43 @@ def get_test_data_nodes(clients: List[substra.Client], test_folders: List[Path],
     Args:
         client (substra.Client): Substra client to register the asset with.
         test_folder (Path): Folder where the test data are stored.
+        nb_data_sample (int): The number of time the test data folder will be added as a datasample.
+            If a test data sample keys is present in the assets keys, new datasamples will be added so t
+            he length of the data sample keys list matches the nb_data_sample value.
 
     Returns:
         TestDataNode: Connectlib test data.
     """
     # only one metric is needed as permissions are public
-    metric_key = assets_keys.get("metric") or register_metric(clients[0])
-    assets_keys.update(
+    metric_key = asset_keys.get("metric_key") or register_metric(clients[0])
+    asset_keys.update(
         {
             "metric_key": metric_key,
         }
     )
 
-    dataset = DatasetSpec(
-        name="CameLyon",
-        type="None",
-        data_opener=ASSETS_DIRECTORY / "opener.py",
-        description=ASSETS_DIRECTORY / "description.md",
-        permissions=PUBLIC_PERMISSIONS,
-        logs_permission=PUBLIC_PERMISSIONS,
-    )
-
     test_data_nodes = []
 
-    for k, test_folder in enumerate(test_folders):
+    for k, client in enumerate(clients):
 
-        client = clients[k]
-        nodes = client.list_node()
-        if nodes:
-            msp_id = [c.id for c in nodes if c.is_current][0]
-        else:
-            msp_id = str(k)
-
-        dataset_key = assets_keys.get(msp_id).get("dataset_key") or client.add_dataset(dataset)
-
-        data_sample = DataSampleSpec(
-            data_manager_keys=[dataset_key],
-            test_only=True,
-            path=test_folder if client.backend_mode != BackendType.DEPLOYED else Path("/var/substra/servermedias/test"),
+        msp_id = get_msp_id(client=client, default=k)
+        asset_keys = add_duplicated_dataset(
+            client=client,
+            data_sample_folder=test_folder,
+            nb_data_sample=nb_data_sample,
+            kind="test",
+            msp_id=msp_id,
+            asset_keys=asset_keys,
         )
 
-        data_sample_key = assets_keys.get(msp_id).get("test_data_sample_key") or client.add_data_sample(
-            data_sample,
-            local=client.backend_mode != BackendType.DEPLOYED,
+        test_data_nodes.append(
+            TestDataNode(
+                node_id=msp_id,
+                data_manager_key=asset_keys.get(msp_id)["dataset_key"],
+                test_data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
+                metric_keys=[metric_key],
+            )
         )
-
-        test_data_node = TestDataNode(
-            node_id=msp_id,  # The one we want as everything is public
-            data_manager_key=dataset_key,
-            test_data_sample_keys=[data_sample_key],
-            metric_keys=[metric_key],
-        )
-
-        assets_keys[msp_id].update(
-            {
-                "test_data_sample_key": data_sample_key,
-                "dataset_key": dataset_key,
-            }
-        )
-
-        test_data_nodes.append(test_data_node)
 
     return test_data_nodes
 
