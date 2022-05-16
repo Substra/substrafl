@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The wheels of the libraries installed with `editable=True` are now in `$HOME/.connectlib` instead of `$LIB_PATH/dist` (#177)
+
 ## [0.13.0](https://github.com/owkin/connectlib/releases/tag/0.13.0) - 2022-05-16
 
 ### Changed
