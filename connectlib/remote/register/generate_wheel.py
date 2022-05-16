@@ -45,7 +45,7 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
         lib_path = Path(lib_module.__file__).parents[1]
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
-        wheel_path = lib_path / "dist" / wheel_name
+        wheel_path = LOCAL_WHEELS_FOLDER / wheel_name
         # Recreate the wheel only if it does not exist
         if wheel_path.exists():
             logger.warning(
@@ -73,14 +73,13 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
                     "wheel",
                     ".",
                     "-w",
-                    "dist",
+                    LOCAL_WHEELS_FOLDER,
                     "--no-deps",
                 ]
                 + extra_args,
                 cwd=str(lib_path),
             )
 
-        # Get wheel name based on current version
         shutil.copy(wheel_path, wheels_dir / wheel_name)
 
         # Necessary command to install the wheel in the docker image

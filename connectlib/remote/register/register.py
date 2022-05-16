@@ -31,7 +31,6 @@ _DEFAULT_CONNECT_TOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
 {connect_tools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
 
 CONNECTLIB_FOLDER = "connectlib_internal"
-LOCAL_WHEELS_FOLDER = Path.home() / ".connectlib"
 
 # TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
