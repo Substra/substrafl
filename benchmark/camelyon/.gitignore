@@ -1,5 +1,6 @@
 pure_connectlib/assets/metric.tar.gz
 data/**
+!data/index.csv
 results/**
 experiment_folder
 connect_conf/**

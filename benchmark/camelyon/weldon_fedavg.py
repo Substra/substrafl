@@ -1,5 +1,6 @@
+from copy import deepcopy
+
 import torch
-from classic_algos.nn import Weldon
 from common.data_managers import CamelyonDataset
 from torch.utils.data import DataLoader
 
@@ -7,15 +8,17 @@ from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.index_generator import NpIndexGenerator
 
 
-def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_steps: int, num_workers: int):
+def get_weldon_fedavg(
+    seed: int, learning_rate: float, num_workers: int, index_generator: NpIndexGenerator, model: torch.nn.Module
+):
     """Generates a connectlib compatible model for the fed avg strategy
 
     Args:
         seed (int): Seed to fix the random generators (for reproducibility reasons)
-        batch_size (int): Batch size to be used during the experiment
         learning_rate (float): learning rate of the optimizer
-        n_local_steps (int): number of updates to perform at each step of the strategy.
         num_workers (int): number of worker to be used per torch.
+        index_generator (NpIndexGenerator): index generator to be used by the algo.
+        model (nn.Module): model template to be used by the algo.
 
     Returns:
         TorchFedAvgAlgo: To be submit to a connectlib execute experiment function.
@@ -26,24 +29,10 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
     torch.manual_seed(seed)
 
     # Model definition
-    model = Weldon(
-        in_features=2048,
-        out_features=1,
-        n_extreme=10,
-        n_top=10,
-        n_bottom=10,
-    )
+    my_model = deepcopy(model)
 
     criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    nig = NpIndexGenerator(
-        batch_size=batch_size,
-        num_updates=n_local_steps,
-        shuffle=True,
-        drop_last=True,
-        seed=42,
-    )
 
     # Connectlib formatted Algo
     class MyAlgo(TorchFedAvgAlgo):
@@ -52,15 +41,15 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
         ):
             torch.manual_seed(seed)
             super().__init__(
-                model=model,
+                model=my_model,
                 criterion=criterion,
                 optimizer=optimizer,
-                index_generator=nig,
+                index_generator=index_generator,
             )
 
         def _local_train(self, x, y):
             # The opener only give all the paths in x and nothin in y
-            dataset = CamelyonDataset(data_indexes=x.indexes, img_path=x.path)
+            dataset = CamelyonDataset(data_indexes=x.indexes)
 
             multiprocessing_context = None
             if num_workers != 0:
@@ -89,7 +78,7 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
                     self._scheduler.step()
 
         def _local_predict(self, x):
-            dataset = CamelyonDataset(data_indexes=x.indexes, img_path=x.path)
+            dataset = CamelyonDataset(data_indexes=x.indexes)
 
             multiprocessing_context = None
             if num_workers != 0:
@@ -97,7 +86,7 @@ def get_weldon_fedavg(seed: int, batch_size: int, learning_rate: float, n_local_
 
             dataloader = DataLoader(
                 dataset,
-                batch_size=batch_size,
+                batch_size=self._index_generator._batch_size,
                 drop_last=False,
                 num_workers=num_workers,
                 multiprocessing_context=multiprocessing_context,
