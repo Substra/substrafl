@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/owkin/connectlib/releases/tag/0.13.0) - 2022-05-16
+
 ### Changed
 
 - BREAKING CHANGE: replace "tag" argument with "name" in execute_experiment (#176)
