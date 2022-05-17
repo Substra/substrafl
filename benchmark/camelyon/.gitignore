@@ -5,3 +5,4 @@ results/**
 experiment_folder
 connect_conf/**
 !connect_conf/remote.yaml
+!connect_conf/ci.yaml
