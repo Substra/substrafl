@@ -2,11 +2,13 @@
 Create the Connect algo assets and register them to the platform.
 """
 import logging
+import os
 import shutil
 import tarfile
 import tempfile
 import uuid
 import warnings
+from distutils import util
 from pathlib import Path
 from platform import python_version
 from typing import List
@@ -119,23 +121,23 @@ def _create_archive(archive_path: Path, src_path: Path):
 
 def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
     """Get the base Docker image for the Dockerfile"""
-    connect_tools_version = substratools.__version__
 
-    if version.parse(connect_tools_version) < version.parse(MINIMAL_DOCKER_CONNECT_TOOLS_VERSION):
+    connect_tools_image_version = substratools.__version__
+    if util.strtobool(os.environ.get("USE_LATEST_CONNECT_TOOLS", "False")):
+        connect_tools_image_version = "latest"
+    elif version.parse(connect_tools_image_version) < version.parse(MINIMAL_DOCKER_CONNECT_TOOLS_VERSION):
         if not editable_mode:
             warnings.warn(
-                f"Your environment uses connect-tools={connect_tools_version}. Version {MINIMAL_DOCKER_CONNECT_TOOLS_VERSION} will be \
-                used on Docker.",
+                f"Your environment uses connect-tools={connect_tools_image_version}. Version \
+                {MINIMAL_DOCKER_CONNECT_TOOLS_VERSION} will be used on Docker.",
                 ConnectToolsDeprecationWarning,
             )
         connect_tools_image_version = MINIMAL_DOCKER_CONNECT_TOOLS_VERSION
-    else:
-        connect_tools_image_version = connect_tools_version
-
     connect_tools_image = _DEFAULT_CONNECT_TOOLS_IMAGE.format(
         connect_tools_version=connect_tools_image_version,
         python_version=python_major_minor,
     )
+
     return connect_tools_image
 
 
