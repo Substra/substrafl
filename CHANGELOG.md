@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- chore: add latest connect-tools docker image selection (#173)
+
 ### Changed
 
 - The wheels of the libraries installed with `editable=True` are now in `$HOME/.connectlib` instead of `$LIB_PATH/dist` (#177)
