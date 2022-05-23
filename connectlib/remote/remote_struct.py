@@ -2,6 +2,7 @@ import inspect
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import Optional
 from typing import Type
 from typing import Union
 
@@ -22,6 +23,8 @@ class RemoteStruct:
         remote_cls (str): The name of the class used remotely
         remote_cls_parameters (str): The remote class parameters serialized into json string.
             E.g.: use ``json.dumps({"args": [], "kwargs": kwargs})``
+        algo_name(str, Optional): opportunity to set a custom algo name.
+            If None, set to "{method_name}_{class_name}"
     """
 
     def __init__(
@@ -32,6 +35,7 @@ class RemoteStruct:
         remote_cls: Union[Type[RemoteDataMethod], Type[RemoteMethod]],
         method_name: str,
         method_parameters: dict,
+        algo_name: Optional[str],
         fake_traintuple: bool = False,
     ):
         """
@@ -42,6 +46,8 @@ class RemoteStruct:
             remote_cls (Union[Type[RemoteDataMethod], Type[RemoteMethod]]): Remote class to create from the user code
             method_name (str): Name of the method from the local class to execute
             method_parameters (dict): Parameters to pass to the method
+            algo_name(str, Optional): opportunity to set a custom algo name.
+                If None, set to "{method_name}_{class_name}"
             fake_traintuple (bool, Optional): Specific use-case: create a train task that actually only prepares for
                 the test. Defaults to False.
         """
@@ -51,6 +57,7 @@ class RemoteStruct:
         self._remote_cls = remote_cls
         self._method_name = method_name
         self._method_parameters = method_parameters
+        self._algo_name = algo_name or (self._method_name + "_" + self._cls.__name__)
         self._fake_traintuple = fake_traintuple
 
     def __eq__(self, other: object) -> bool:
@@ -78,6 +85,10 @@ class RemoteStruct:
                 frozenset(self._method_parameters),
             )
         )
+
+    @property
+    def algo_name(self):
+        return self._algo_name
 
     @classmethod
     def load(cls, src: Path) -> "RemoteStruct":
