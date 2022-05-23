@@ -69,7 +69,6 @@ class OneNode(Strategy):
             algo.train(  # type: ignore
                 train_data_nodes[0].data_sample_keys,
                 shared_state=None,
-                _algo_name=f"Training with {algo.__class__.__name__}",
             ),
             local_state=self.local_state,
             round_idx=round_idx,

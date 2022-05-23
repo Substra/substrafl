@@ -151,7 +151,6 @@ class FedAvg(Strategy):
                 algo.train(  # type: ignore
                     node.data_sample_keys,
                     shared_state=self.avg_shared_state,
-                    _algo_name=f"Training with {algo.__class__.__name__}",
                 ),
                 local_state=previous_local_state,
                 round_idx=round_idx,
@@ -161,7 +160,7 @@ class FedAvg(Strategy):
             states_to_aggregate.append(next_shared_state)
 
         avg_shared_state = aggregation_node.update_states(
-            self.avg_shared_states(shared_states=states_to_aggregate, _algo_name="Aggregating"),  # type: ignore
+            self.avg_shared_states(shared_states=states_to_aggregate),  # type: ignore
             round_idx=round_idx,
         )
 
@@ -198,7 +197,6 @@ class FedAvg(Strategy):
                     data_samples=[train_node.data_sample_keys[0]],
                     shared_state=self.avg_shared_state,
                     fake_traintuple=True,
-                    _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
                 local_state=previous_local_state,
                 round_idx=round_idx,

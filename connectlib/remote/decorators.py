@@ -49,7 +49,6 @@ def remote_data(method: Callable):
         shared_state: Any = None,
         _skip: bool = False,
         fake_traintuple: bool = False,
-        _algo_name: Optional[str] = None,
         **method_parameters,
     ) -> DataOperation:
         """
@@ -60,8 +59,6 @@ def remote_data(method: Callable):
             _skip (bool, Optional): if True, calls the decorated function. Defaults to False.
             fake_traintuple (bool, Optional): if True, the decorated function won't be executed (see RemoteDataMethod).
                 Defaults to False.
-            _algo_name(str, Optional): opportunity to set a custom algo name.
-                Default to None.
 
         Returns:
             DataOperation: resulting DataOperation
@@ -81,7 +78,6 @@ def remote_data(method: Callable):
                 cls_kwargs=self.kwargs,
                 method_name=method.__name__,
                 method_parameters=method_parameters,
-                algo_name=_algo_name,
                 fake_traintuple=fake_traintuple,
                 remote_cls=RemoteDataMethod,
             ),
@@ -121,11 +117,7 @@ def remote(method: Callable):
 
     @wraps(method)
     def remote_method_inner(
-        self,
-        shared_states: Optional[List] = None,
-        _skip: bool = False,
-        _algo_name: Optional[str] = None,
-        **method_parameters,
+        self, shared_states: Optional[List] = None, _skip: bool = False, **method_parameters
     ) -> AggregateOperation:
         if _skip:
             return method(self=self, shared_states=shared_states, **method_parameters)
@@ -137,7 +129,6 @@ def remote(method: Callable):
                 cls_kwargs=self.kwargs,
                 method_name=method.__name__,
                 method_parameters=method_parameters,
-                algo_name=_algo_name,
                 remote_cls=RemoteMethod,
             ),
             shared_states,
