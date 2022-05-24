@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat: meaningful name for algo (#175). You can use the `_algo_name` parameter to set a custom algo name for the registration. By default, it is set to `method-name_class-name`.
+
+  ```py
+  algo.train(
+            node.data_sample_keys,
+            shared_state=self.avg_shared_state,
+            _algo_name=f"Training with {algo.__class__.__name__}",
+            )
+  ```
+
 ## [0.14.0](https://github.com/owkin/connectlib/releases/tag/0.14.0) - 2022-05-23
 
 ### Added
