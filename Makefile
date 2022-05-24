@@ -7,27 +7,27 @@ pyclean:
 # Run all the tests, all the substra tests locally in subprocess and docker mode
 # and all substra tests in remote mode
 test: test-local
-	pytest tests ${COV_OPTIONS} -m "substra"
+	pytest tests ${COV_OPTIONS} -m "substra and not gpu"
 
 # Run all the tests, the substra tests are run in remote mode
 test-remote: pyclean
-	pytest tests ${COV_OPTIONS}
+	pytest tests ${COV_OPTIONS} -m "not gpu"
 
 test-local: pyclean test-local-fast test-local-slow
 
 # Run the tests, except the tests marked as slow or docker only
 # The substra tests are run in local subprocess mode
 test-local-fast: pyclean
-	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local --nbmake -m "not slow and not docker_only"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local --nbmake -m "not slow and not docker_only and not gpu"
 
 # Run the slow tests in subprocess mode (those not marked docker only)
 # then run all the substra tests in local docker mode
 test-local-slow: pyclean
-	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "slow and not docker_only"
-	DEBUG_SPAWNER=docker pytest tests ${COV_OPTIONS} --local -m "substra"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "slow and not docker_only and not gpu"
+	DEBUG_SPAWNER=docker pytest tests ${COV_OPTIONS} --local -m "substra and not gpu"
 
 test-ci: pyclean
-	pytest tests --ci -m "e2e"
+	pytest tests --ci -m "e2e and not gpu"
 
 benchmark: pyclean
 	python benchmark/camelyon/benchmarks.py \

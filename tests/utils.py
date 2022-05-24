@@ -79,7 +79,6 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
             f"composite_traintuple:rank:{rank}",
         ]
     )
-
     local_models = list()
     for task in train_tasks:
         for model in task.composite.models:
@@ -91,5 +90,8 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
             client.download_model(model.key, session_dir)
             model_path = session_dir / f"model_{model.key}"
             if model.category == ModelType.head:
-                local_models.append(my_algo.load(model_path))
+                model = my_algo.load(model_path)
+                # Move the torch model to CPU
+                model.model.to("cpu")
+                local_models.append(model)
     return local_models

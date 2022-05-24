@@ -104,6 +104,7 @@ class TorchOneNodeAlgo(TorchAlgo):
         optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        use_gpu: bool = True,
         *args,
         **kwargs,
     ):
@@ -124,6 +125,7 @@ class TorchOneNodeAlgo(TorchAlgo):
                 than the one from which the ``execute_experiment`` function is called.
             scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
                 batch. If None, no scheduler will be used. Defaults to None.
+            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         super().__init__(
             model=model,
@@ -131,6 +133,7 @@ class TorchOneNodeAlgo(TorchAlgo):
             optimizer=optimizer,
             index_generator=index_generator,
             scheduler=scheduler,
+            use_gpu=use_gpu,
             *args,
             **kwargs,
         )

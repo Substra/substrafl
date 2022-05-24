@@ -16,6 +16,7 @@ markers = [
     "substra", # mark test as using substra.
     "docker_only", # mark test as only useful in remote and local mode with DEBUG_SPAWNER set to docker.
     "e2e", # test run in the end-to-end tests with Connect
+    "gpu", # gpu tests, to run manually
 ]
 filterwarnings = [
     "ignore:.*TestDataNode.*:pytest.PytestCollectionWarning",

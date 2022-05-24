@@ -132,6 +132,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
         c_update_rule: CUpdateRule = CUpdateRule.FAST,
+        use_gpu: bool = True,
         *args,
         **kwargs,
     ):
@@ -156,6 +157,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             c_update_rule (CUpdateRule): The rule used to update the
                 client control variate.
                 Defaults to CUpdateRule.FAST.
+            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         Raises:
             :ref:`~connectlib.exceptions.NumUpdatesValueError`: If `num_updates` is inferior or equal to zero.
         """
@@ -165,6 +167,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             optimizer=optimizer,
             index_generator=index_generator,
             scheduler=scheduler,
+            use_gpu=use_gpu,
             *args,
             **kwargs,
         )
@@ -336,13 +339,17 @@ class TorchScaffoldAlgo(TorchAlgo):
             # client_control_variate = zeros matrix with the shape of the model weights
             assert self._client_control_variate is None
             self._client_control_variate = weight_manager.zeros_like_parameters(
-                self.model, with_batch_norm_parameters=self._with_batch_norm_parameters
+                self.model,
+                with_batch_norm_parameters=self._with_batch_norm_parameters,
+                device=self._device,
             )
             # we initialize the server_control_variate (c in the paper) here so we don't have to do
             # an initialization round
             assert self._server_control_variate is None
             self._server_control_variate = weight_manager.zeros_like_parameters(
-                self.model, with_batch_norm_parameters=self._with_batch_norm_parameters
+                self.model,
+                with_batch_norm_parameters=self._with_batch_norm_parameters,
+                device=self._device,
             )
         else:  # round>1
             # These should have been loaded by the load() function
@@ -354,13 +361,16 @@ class TorchScaffoldAlgo(TorchAlgo):
             # Scaffold paper's Algo step 17: model = model + aggregation_lr * parameters_update
             # here shared_state.avg_parameters_update is already aggregation_lr * parameters_update,
             # cf strategies.scaffold.avg_shared_states
+            avg_parameters_update = [torch.from_numpy(x).to(self._device) for x in shared_state.avg_parameters_update]
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.avg_parameters_update,
+                updates=avg_parameters_update,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
             # get the server_control_variate from the aggregator
-            self._server_control_variate = [torch.from_numpy(t) for t in shared_state.server_control_variate]
+            self._server_control_variate = [
+                torch.from_numpy(t).to(self._device) for t in shared_state.server_control_variate
+            ]
 
         self._index_generator.reset_counter()
 
@@ -456,9 +466,12 @@ class TorchScaffoldAlgo(TorchAlgo):
         # Reduce memory consumption as we don't use the model parameters_update
         with torch.inference_mode():
             # Add the shared state to the model parameters
+            avg_parameters_update = [
+                torch.from_numpy(param).to(self._device) for param in shared_state.avg_parameters_update
+            ]
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.avg_parameters_update,
+                updates=avg_parameters_update,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
 
