@@ -104,6 +104,7 @@ def test_pytorch_scaffold_algo_weights(
     network.clients[0].download_model(model_key, session_dir)
     model_path = session_dir / f"model_{model_key}"
     aggregate_model = pickle.loads(model_path.read_bytes())
+    aggregate_update = [torch.from_numpy(x).to("cpu") for x in aggregate_model.avg_parameters_update]
 
     # Assert the model initialisation is the same for every model
     assert_model_parameters_equal(rank_0_local_models[0].model, rank_0_local_models[1].model)
@@ -117,7 +118,7 @@ def test_pytorch_scaffold_algo_weights(
 
     # Assert that the weights are well set
     for model_0, model_2 in zip(rank_0_local_models, rank_2_local_models):
-        increment_parameters(model_0.model, aggregate_model.avg_parameters_update, with_batch_norm_parameters=True)
+        increment_parameters(model_0.model, aggregate_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_0.model, model_2.model)
 
     # The local models and _client_control_variate are always the same on every node, as both nodes have the same data
@@ -360,15 +361,26 @@ def test_pytorch_num_updates_error(num_updates):
         num_updates=num_updates,
     )
 
+    class DummyModel(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear1 = torch.nn.Linear(1, 1, bias=False)
+
+        def forward(self, x):
+            out = self.linear1(x)
+            return out
+
+    dummy_model = DummyModel()
+
     class MyAlgo(TorchScaffoldAlgo):
         def __init__(
             self,
         ):
             super().__init__(
-                optimizer=None,
-                criterion=None,
-                model=None,
+                model=dummy_model,
                 index_generator=nig,
+                optimizer=torch.optim.SGD(dummy_model.parameters(), lr=0.1),
+                criterion=torch.nn.MSELoss(),
             )
 
         def _local_train(self, x: Any, y: Any):

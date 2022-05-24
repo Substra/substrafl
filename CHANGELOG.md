@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - chore: add latest connect-tools docker image selection (#173)
+- Torch algorithms now support GPUs, there is a parameter `use_gpu` in the `__init__` of the Torch algo classes.
+    If `use_gpu` is True and there is no GPU detected, the code runs on CPU. (#145)
 
 ### Changed
 

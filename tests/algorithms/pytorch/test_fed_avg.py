@@ -43,18 +43,24 @@ def test_pytorch_fedavg_algo_weights(
 
     class MyAlgo(TorchFedAvgAlgo):
         def __init__(self):
+            self._device = self._get_torch_device(use_gpu=False)
+            model = perceptron.to(self._device)
+            optimizer = torch.optim.SGD(perceptron.parameters(), lr=0.1)
             super().__init__(
-                model=perceptron,
+                model=model,
                 criterion=torch.nn.MSELoss(),
-                optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
+                optimizer=optimizer,
                 index_generator=nig,
+                use_gpu=False,
             )
 
         def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
+            super()._local_train(
+                torch.from_numpy(x).float().to(self._device), torch.from_numpy(y).float().to(self._device)
+            )
 
         def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
+            y_pred = super()._local_predict(torch.from_numpy(x).float()).to(self._device)
             return y_pred.detach().numpy()
 
     my_algo = MyAlgo()
@@ -92,13 +98,14 @@ def test_pytorch_fedavg_algo_weights(
     network.clients[0].download_model(model_key, session_dir)
     model_path = session_dir / f"model_{model_key}"
     aggregate_model = pickle.loads(model_path.read_bytes())
+    aggregate_update = [torch.from_numpy(x).to("cpu") for x in aggregate_model.avg_parameters_update]
 
     # Assert the model initialisation is the same for every model
     assert_model_parameters_equal(rank_0_local_models[0].model, rank_0_local_models[1].model)
 
     # Assert that the weights are well set
     for model_0, model_2 in zip(rank_0_local_models, rank_2_local_models):
-        increment_parameters(model_0.model, aggregate_model.avg_parameters_update, with_batch_norm_parameters=True)
+        increment_parameters(model_0.model, aggregate_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_0.model, model_2.model)
 
     # The local models are always the same on every node

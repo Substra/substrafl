@@ -35,7 +35,7 @@ class TorchFedAvgAlgo(TorchAlgo):
     :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict` methods, and can override
     other methods if necessary.
 
-    To add a custom parameter to the ``__init__``of the class, also add it to the call to ``super().__init__```
+    To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``
     as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported
     for extra parameters.
 
@@ -107,6 +107,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
+        use_gpu: bool = True,
         *args,
         **kwargs,
     ):
@@ -129,6 +130,7 @@ class TorchFedAvgAlgo(TorchAlgo):
                 batch. If None, no scheduler will be used. Defaults to None.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
                 strategy. Defaults to False.
+            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         super().__init__(
             model=model,
@@ -136,6 +138,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             optimizer=optimizer,
             index_generator=index_generator,
             scheduler=scheduler,
+            use_gpu=use_gpu,
             *args,
             **kwargs,
         )
@@ -184,9 +187,10 @@ class TorchFedAvgAlgo(TorchAlgo):
             assert self._index_generator.n_samples is not None
             # The shared states is the average of the model parameter updates for all nodes
             # Hence we need to add it to the previous local state parameters
+            parameter_updates = [torch.from_numpy(x).to(self._device) for x in shared_state.avg_parameters_update]
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.avg_parameters_update,
+                updates=parameter_updates,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
 
@@ -252,9 +256,12 @@ class TorchFedAvgAlgo(TorchAlgo):
         # Reduce memory consumption as we don't use the model gradients
         with torch.inference_mode():
             # Add the shared state to the model parameters
+            avg_parameters_update = [
+                torch.from_numpy(param).to(self._device) for param in shared_state.avg_parameters_update
+            ]
             weight_manager.increment_parameters(
                 model=self._model,
-                updates=shared_state.avg_parameters_update,
+                updates=avg_parameters_update,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
 

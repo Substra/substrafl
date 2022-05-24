@@ -26,6 +26,7 @@ from connectlib.remote.remote_struct import RemoteStruct
 
 logger = logging.getLogger(__name__)
 
+# Connect tools version for which the image naming scheme changed
 MINIMAL_DOCKER_CONNECT_TOOLS_VERSION = "0.10.0"
 
 _DEFAULT_CONNECT_TOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
@@ -33,12 +34,8 @@ _DEFAULT_CONNECT_TOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
 
 CONNECTLIB_FOLDER = "connectlib_internal"
 
-# TODO: need to have the GPU drivers in the Docker image
 DOCKERFILE_TEMPLATE = """
 FROM {docker_image}
-
-WORKDIR /sandbox
-ENV PYTHONPATH /sandbox
 
 COPY . .
 

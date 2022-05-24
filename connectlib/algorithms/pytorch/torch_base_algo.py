@@ -36,6 +36,7 @@ class TorchAlgo(Algo):
         optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        use_gpu: bool = True,
         *args,
         **kwargs,
     ):
@@ -45,9 +46,14 @@ class TorchAlgo(Algo):
         """
         super().__init__(*args, **kwargs)
 
-        self._model = model
-        self._criterion = criterion
+        self._device = self._get_torch_device(use_gpu=use_gpu)
+
+        self._model = model.to(self._device)
         self._optimizer = optimizer
+        # Move the optimizer to GPU if needed
+        # https://github.com/pytorch/pytorch/issues/8741#issuecomment-496907204
+        self._optimizer.load_state_dict(self._optimizer.state_dict())
+        self._criterion = criterion
         self._scheduler = scheduler
 
         self._index_generator: BaseIndexGenerator = index_generator
@@ -184,6 +190,21 @@ class TorchAlgo(Algo):
             y = self._model(x)
         return y
 
+    def _get_torch_device(self, use_gpu: bool) -> torch.device:
+        """Get the torch device, CPU or GPU, depending
+        on availability and user input.
+
+        Args:
+            use_gpu (bool): whether to use GPUs if available or not.
+
+        Returns:
+            torch.device: Torch device
+        """
+        device = torch.device("cpu")
+        if use_gpu and torch.cuda.is_available():
+            device = torch.device("cuda")
+        return device
+
     def _update_from_checkpoint(self, path: Path) -> dict:
         """Load the checkpoint and update the internal state
         from it.
@@ -206,8 +227,9 @@ class TorchAlgo(Algo):
                     return checkpoint
         """
         assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-        checkpoint = torch.load(path, map_location="cpu")
+        checkpoint = torch.load(path, map_location=self._device)
         self._model.load_state_dict(checkpoint.pop("model_state_dict"))
+
         self._optimizer.load_state_dict(checkpoint.pop("optimizer_state_dict"))
 
         if self._scheduler is not None:
@@ -215,7 +237,10 @@ class TorchAlgo(Algo):
 
         self._index_generator = checkpoint.pop("index_generator")
 
-        torch.set_rng_state(checkpoint.pop("rng_state"))
+        if self._device == torch.device("cpu"):
+            torch.set_rng_state(checkpoint.pop("rng_state").to(self._device))
+        else:
+            torch.cuda.set_rng_state(checkpoint.pop("rng_state").to(self._device))
 
         return checkpoint
 
@@ -257,10 +282,14 @@ class TorchAlgo(Algo):
             "model_state_dict": self._model.state_dict(),
             "optimizer_state_dict": self._optimizer.state_dict(),
             "index_generator": self._index_generator,
-            "rng_state": torch.get_rng_state(),
         }
         if self._scheduler is not None:
             checkpoint["scheduler_state_dict"] = self._scheduler.state_dict()
+
+        if self._device == torch.device("cpu"):
+            checkpoint["rng_state"] = torch.get_rng_state()
+        else:
+            checkpoint["rng_state"] = torch.cuda.get_rng_state()
 
         return checkpoint
 

@@ -1,8 +1,6 @@
 from typing import Generator
 from typing import List
-from typing import Union
 
-import numpy as np
 import torch
 
 
@@ -97,7 +95,7 @@ def get_parameters(
 
 def increment_parameters(
     model: torch.nn.Module,
-    updates: Union[List[torch.nn.parameter.Parameter], np.ndarray],
+    updates: List[torch.nn.parameter.Parameter],
     with_batch_norm_parameters: bool,
     updates_multiplier: float = 1.0,
 ):
@@ -107,7 +105,7 @@ def increment_parameters(
 
     Args:
         model (torch.nn.Module): The torch model to modify.
-        updates (typing.Union[typing.List[torch.nn.parameter.Parameter], numpy.ndarray]): A list of torch parameters
+        updates (typing.List[torch.nn.parameter.Parameter]): A list of torch parameters
             to add to the model, as ordered by the standard iterators. The trainable parameters should come first
             followed by the batch norm parameters if `with_batch_norm_parameters` is set to `True`.
             If the type is np.ndarray, it is converted in `torch.Tensor`.
@@ -124,8 +122,6 @@ def increment_parameters(
         assert n_parameters == len(updates), "Length of model parameters and updates are unequal."
 
         for weights, update in zip(iter_params(), updates):
-            if isinstance(update, np.ndarray):
-                update = torch.from_numpy(update)
             assert update.data.shape == weights.data.shape, (
                 f"The shape of the model weights ({weights.data.shape}) and of the update ({update.data.shape}) "
                 "passed in the updates argument are unequal."
@@ -237,6 +233,7 @@ def set_parameters(
 def zeros_like_parameters(
     model: torch.nn.Module,
     with_batch_norm_parameters: bool,
+    device: torch.device,
 ) -> List[torch.Tensor]:
     """Copy the model parameters from the provided torch model and sets values to zero.
     If with_batch_norm_parameters is set to True, the running mean and the running variance of the batch norm
@@ -247,6 +244,7 @@ def zeros_like_parameters(
         with_batch_norm_parameters (bool): If set to True, the running mean
             and the running variance of each batch norm layer will be added
             after the "classic" parameters.
+        device (torch.device): torch device on which to save the parameters
 
     Returns:
         typing.List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model
@@ -254,6 +252,6 @@ def zeros_like_parameters(
     """
     with torch.inference_mode():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
-        parameters = [torch.zeros_like(p) for p in iter_params()]
+        parameters = [torch.zeros_like(p).to(device) for p in iter_params()]
 
     return parameters

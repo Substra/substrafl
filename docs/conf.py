@@ -183,6 +183,7 @@ nitpick_ignore = [
     ("py:class", "torch.nn.modules.loss._Loss"),
     ("py:class", "torch.optim.optimizer.Optimizer"),
     ("py:class", "torch.optim.lr_scheduler._LRScheduler"),
+    ("py:class", "torch.device"),
     ("py:class", "substra.sdk.schemas.Permissions"),
     ("py:class", "substra.Client"),
     ("py:class", "substra.sdk.client.Client"),
