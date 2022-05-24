@@ -6,7 +6,6 @@ import os
 import shutil
 import tarfile
 import tempfile
-import uuid
 import warnings
 from distutils import util
 from pathlib import Path
@@ -293,7 +292,7 @@ def register_algo(
 
         key = client.add_algo(
             substra.sdk.schemas.AlgoSpec(
-                name=str(uuid.uuid4()),
+                name=remote_struct.algo_name,
                 description=description_path,
                 file=archive_path,
                 permissions=permissions,
