@@ -3,7 +3,6 @@ from typing import Any
 from typing import List
 from typing import Optional
 
-import numpy as np
 import torch
 
 from connectlib.algorithms.pytorch import weight_manager
@@ -236,7 +235,7 @@ class TorchFedAvgAlgo(TorchAlgo):
     @remote_data
     def predict(
         self,
-        x: np.ndarray,
+        x: Any,
         shared_state: FedAvgAveragedState,
     ):
         """Predict method of the federated averaging strategy. Executes the following operation:
