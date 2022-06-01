@@ -192,7 +192,7 @@ class TorchOneNodeAlgo(TorchAlgo):
     @remote_data
     def predict(
         self,
-        x: np.ndarray,
+        x: Any,
         shared_state: Dict[str, np.ndarray] = None,  # Is always None for this strategy
     ):
         """Predict method of the one node strategy. Executes the following operation:
