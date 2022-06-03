@@ -47,9 +47,9 @@ class FedAvg(Strategy):
     def __init__(self):
         super(FedAvg, self).__init__()
 
-        # States
-        self.local_states: Optional[List[LocalStateRef]] = None
-        self.avg_shared_state: Optional[SharedStateRef] = None
+        # current local and share states references of the client
+        self._local_states: Optional[List[LocalStateRef]] = None
+        self._shared_states: Optional[List[SharedStateRef]] = None
 
     @property
     def name(self) -> StrategyName:
@@ -115,6 +115,46 @@ class FedAvg(Strategy):
 
         return FedAvgAveragedState(avg_parameters_update=averaged_states)
 
+    def _perform_local_updates(
+        self,
+        algo: Algo,
+        train_data_nodes: List[TrainDataNode],
+        current_aggregation: Optional[SharedStateRef],
+        round_idx: int,
+    ):
+        """Perform a local update (train on n mini-batches) of the models
+        on each train data nodes.
+
+        Args:
+            algo (Algo): User defined algorithm: describes the model train and predict methods
+            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
+            current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to
+                be passed as input to each local training
+            round_idx (int): Round number, it starts by zero.
+        """
+
+        next_local_states = []
+        next_shared_states = []
+
+        for i, node in enumerate(train_data_nodes):
+            # define composite tuples (do not submit yet)
+            # for each composite tuple give description of Algo instead of a key for an algo
+            next_local_state, next_shared_state = node.update_states(
+                algo.train(  # type: ignore
+                    node.data_sample_keys,
+                    shared_state=current_aggregation,
+                    _algo_name=f"Training with {algo.__class__.__name__}",
+                ),
+                local_state=self._local_states[i] if self._local_states is not None else None,
+                round_idx=round_idx,
+            )
+            # keep the states in a list: one/node
+            next_local_states.append(next_local_state)
+            next_shared_states.append(next_shared_state)
+
+        self._local_states = next_local_states
+        self._shared_states = next_shared_states
+
     def perform_round(
         self,
         algo: Algo,
@@ -122,14 +162,15 @@ class FedAvg(Strategy):
         aggregation_node: AggregationNode,
         round_idx: int,
     ):
-        """One round of the Federated Averaging strategy:
-
-            - if they exist, set the model weights to the aggregated weights on each train data nodes
-            - perform a local update (train on n mini-batches) of the models on each train data nodes
+        """One round of the Federated Averaging strategy consists in:
+            - if ``round_ids==0``: initialize the strategy by performing a local update
+                (train on n mini-batches) of the models on each train data nodes
             - aggregate the model shared_states
+            - set the model weights to the aggregated weights on each train data nodes
+            - perform a local update (train on n mini-batches) of the models on each train data nodes
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict
+            algo (Algo): User defined algorithm: describes the model train and predict methods
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
             aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
                 of the models
@@ -138,39 +179,25 @@ class FedAvg(Strategy):
         if aggregation_node is None:
             raise ValueError("In FedAvg strategy aggregation node cannot be None")
 
-        next_local_states = []
-        states_to_aggregate = []
-        for i, node in enumerate(train_data_nodes):
-            previous_local_state = None
-            if self.local_states is not None:
-                previous_local_state = self.local_states[i]
-
-            # define composite tuples (do not submit yet)
-            # for each composite tuple give description of Algo instead of a key for an algo
-            next_local_state, next_shared_state = node.update_states(
-                algo.train(  # type: ignore
-                    node.data_sample_keys,
-                    shared_state=self.avg_shared_state,
-                    _algo_name=f"Training with {algo.__class__.__name__}",
-                ),
-                local_state=previous_local_state,
-                round_idx=round_idx,
+        if round_idx == 0:
+            # Initialization of the strategy by performing a local update on each train data node
+            assert self._local_states is None
+            assert self._shared_states is None
+            self._perform_local_updates(
+                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=-1
             )
-            # keep the states in a list: one/node
-            next_local_states.append(next_local_state)
-            states_to_aggregate.append(next_shared_state)
 
-        avg_shared_state = aggregation_node.update_states(
-            self.avg_shared_states(shared_states=states_to_aggregate, _algo_name="Aggregating"),  # type: ignore
+        current_aggregation = aggregation_node.update_states(
+            self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
             round_idx=round_idx,
         )
 
-        self.local_states = next_local_states
-        self.avg_shared_state = avg_shared_state
+        self._perform_local_updates(
+            algo=algo, train_data_nodes=train_data_nodes, current_aggregation=current_aggregation, round_idx=round_idx
+        )
 
     def predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -185,26 +212,10 @@ class FedAvg(Strategy):
 
             train_node = matching_train_nodes[0]
             node_index = train_data_nodes.index(train_node)
-            previous_local_state = self.local_states[node_index] if self.local_states is not None else None
-            assert previous_local_state is not None
-
-            # Since the training round ends on an aggregation on the aggregation node
-            # we need to get the aggregated gradients back to the test node
-            traintuple_id_ref, _ = train_node.update_states(
-                # here we could also use algo.train or whatever method marked as @remote_data
-                # in the algo because fake_traintuple is true so the method name and the method
-                # are not used
-                operation=algo.predict(
-                    data_samples=[train_node.data_sample_keys[0]],
-                    shared_state=self.avg_shared_state,
-                    fake_traintuple=True,
-                    _algo_name=f"Testing with {algo.__class__.__name__}",
-                ),
-                local_state=previous_local_state,
-                round_idx=round_idx,
-            )
+            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            local_state = self._local_states[node_index]
 
             test_node.update_states(
-                traintuple_id=traintuple_id_ref.key,
+                traintuple_id=local_state.key,
                 round_idx=round_idx,
             )  # Init state for testtuple

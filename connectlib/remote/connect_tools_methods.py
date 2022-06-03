@@ -21,7 +21,6 @@ class RemoteMethod(substratools.AggregateAlgo):
         instance,
         method_name: str,
         method_parameters: Dict,
-        fake_traintuple: bool = False,  # not used, necessary for the remote struct
         shared_state_serializer: Type[Serializer] = PickleSerializer,
     ):
         self.instance = instance
@@ -74,13 +73,11 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         instance,
         method_name: str,
         method_parameters: Dict,
-        fake_traintuple: bool = False,
         shared_state_serializer: Type[Serializer] = PickleSerializer,
     ):
         self.instance = instance
 
         self.method_name = method_name
-        self.fake_traintuple = fake_traintuple
         self.method_parameters = method_parameters
 
         self.shared_state_serializer = shared_state_serializer
@@ -105,19 +102,16 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         Returns:
             Tuple: output head_model, trunk_model
         """
-        if not self.fake_traintuple:
-            # head_model should be None only at initialization
-            if head_model is not None:
-                instance = head_model
-            else:
-                instance = self.instance
-
-            method_to_call = instance.train
-            next_shared_state = method_to_call(x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters)
-
-            return instance, next_shared_state
+        # head_model should be None only at initialization
+        if head_model is not None:
+            instance = head_model
         else:
-            return head_model, trunk_model
+            instance = self.instance
+
+        method_to_call = instance.train
+        next_shared_state = method_to_call(x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters)
+
+        return instance, next_shared_state
 
     def predict(self, X: Any, head_model: Any, trunk_model: Any) -> Any:
         """predict function

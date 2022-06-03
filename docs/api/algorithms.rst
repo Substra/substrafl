@@ -26,6 +26,7 @@ TorchOneNodeAlgo
     :private-members: _get_len_from_x, _local_train, _local_predict
     :inherited-members:
 
+
 Torch Base Class
 -----------------
 
@@ -33,10 +34,12 @@ Torch Base Class
     :private-members:
     :inherited-members:
 
+
 Torch functions
 ^^^^^^^^^^^^^^^^^^
 
 .. automodule:: connectlib.algorithms.pytorch.weight_manager
+
 
 Base Class
 ^^^^^^^^^^

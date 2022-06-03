@@ -34,6 +34,11 @@ class LenMetadataError(Exception):
     pass
 
 
+class KeyMetadataError(Exception):
+    """`connectlib_version`, `substra_version` and `substratools_version` keys can't be added
+    to the experiment metadata."""
+
+
 class IncompatibleAlgoStrategyError(Exception):
     """This algo is not compatible with this strategy."""
 

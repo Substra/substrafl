@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- BREAKING CHANGE: add initialization round to centralized strategies (#188):
+  - Each centralized strategy starts with an initialization round composed of one composite train tuple on each train data node
+  - One round of a centralized strategy is now: `Aggregation` -> `Training on composite`
+  - Composite train tuples before test tuples have been removed
+  - All torch algorithm have now a common `predict` method
+  - The `algo` argument has been removed from the `predict` method of all strategies
+  - The `fake_traintuple` attribute of the `RemoteStruct` class has been removed
+
+The full discussion regarding this feature can be found [here](https://github.com/owkin/tech-team/pull/128)
+
 ## [0.15.0](https://github.com/owkin/connectlib/releases/tag/0.15.0) - 2022-05-31
 
 ### Added

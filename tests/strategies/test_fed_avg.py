@@ -5,16 +5,12 @@ import pytest
 
 from connectlib import execute_experiment
 from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.test_data_node import TestDataNode
 from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote import remote_data
-from connectlib.schemas import FedAvgAveragedState
 from connectlib.schemas import FedAvgSharedState
 from connectlib.strategies import FedAvg
 
-from .. import assets_factory
 from .. import utils
 
 logger = getLogger("tests")
@@ -86,41 +82,16 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
             y: np.ndarray,
             shared_state,
         ):
+            if shared_state is not None:
+                # We predict the shared state, an array of 0.5
+                assert int((shared_state.avg_parameters_update == np.ones(1) * 0.5).all())
+
             return FedAvgSharedState(n_samples=len(x), parameters_update=[np.asarray(e) for e in x])
 
-        @remote_data
-        def predict(self, x: np.array, shared_state: FedAvgAveragedState):
-            return shared_state.avg_parameters_update
-
     # Add 0s and 1s constant to check the averaging of the function
-    # We predict the shared state, an array of 0.5
-
-    metric = assets_factory.add_python_metric(
-        client=network.clients[0],
-        tmp_folder=session_dir,
-        # Check that all shared states values are 0.5
-        python_formula="int((y_pred == np.ones(1)*0.5).all())",
-        name="Average",
-        permissions=default_permissions,
-    )
     train_data_nodes = [
         TrainDataNode(network.msp_ids[0], numpy_datasets[0], [constant_samples[0]]),
         TrainDataNode(network.msp_ids[1], numpy_datasets[1], [constant_samples[1]]),
-    ]
-
-    test_data_nodes = [
-        TestDataNode(
-            network.msp_ids[0],
-            numpy_datasets[0],
-            [constant_samples[0]],
-            metric_keys=[metric],
-        ),
-        TestDataNode(
-            network.msp_ids[1],
-            numpy_datasets[1],
-            [constant_samples[1]],
-            metric_keys=[metric],
-        ),
     ]
 
     num_rounds = 2
@@ -128,14 +99,11 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAvg()
-    # test every two rounds
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=2)
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo0,
         strategy=strategy,
         train_data_nodes=train_data_nodes,
-        evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
@@ -143,9 +111,3 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     )
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
-
-    # read the results from saved performances
-    testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
-    testtuple = testtuples[0]
-    # assert that the metrics returns int(True) i.e. 1
-    assert list(testtuple.test.perfs.values())[0] == 1

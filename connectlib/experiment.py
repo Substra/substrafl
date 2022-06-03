@@ -11,11 +11,14 @@ from typing import Tuple
 from typing import Union
 
 import substra
+import substratools
 
+import connectlib
 from connectlib import exceptions
 from connectlib.algorithms.algo import Algo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import KeyMetadataError
 from connectlib.exceptions import LenMetadataError
 from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.node import OperationKey
@@ -156,11 +159,34 @@ def _check_evaluation_strategy(
 
 
 def _check_additional_metadata(additional_metadata: Dict):
+    invalid_keys = set(additional_metadata.keys()).intersection(
+        set(("connectlib_version", "substra_version", "substratools_version"))
+    )
+    if len(invalid_keys) > 0:
+        raise KeyMetadataError(
+            "None of: `connectlib_version`, `substra_version`, `substratools_version` can be used as"
+            f" metadata key but `{' '.join(invalid_keys)}` were/was found"
+        )
+
     for metadata_value in additional_metadata.values():
         if len(str(metadata_value)) > 100:
             raise LenMetadataError(
                 "The maximum length of a value in the additional_metadata dictionary is 100 characters."
             )
+
+
+def _get_packages_versions() -> dict:
+    """Returns a dict containing connectlib, substra and substratools versions
+
+    Returns:
+        dict: connectlib, substra and substratools versions
+    """
+
+    return {
+        "connectlib_version": connectlib.__version__,
+        "substra_version": substra.__version__,
+        "substratools_version": substratools.__version__,
+    }
 
 
 def execute_experiment(
@@ -216,6 +242,7 @@ def execute_experiment(
         name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
             the compute plan name is set to the timestamp.
         additional_metadata(dict, Optional): Optional dictionary of metadata to be passed to the Connect WebApp.
+
     Returns:
         ComputePlan: The generated compute plan
     """
@@ -244,8 +271,13 @@ def execute_experiment(
         # Reset the evaluation strategy
         evaluation_strategy.restart_rounds()
 
+    cp_metadata = dict()
     if additional_metadata is not None:
         _check_additional_metadata(additional_metadata)
+        cp_metadata.update(additional_metadata)
+
+    # Adding connectlib, substratools and substra versions to the cp metadata
+    cp_metadata.update(_get_packages_versions())
 
     logger.info("Building the compute plan.")
 
@@ -260,7 +292,6 @@ def execute_experiment(
 
         if evaluation_strategy is not None and next(evaluation_strategy):
             strategy.predict(
-                algo=algo,
                 train_data_nodes=train_data_nodes,
                 test_data_nodes=evaluation_strategy.test_data_nodes,
                 round_idx=round_idx,
@@ -306,10 +337,9 @@ def execute_experiment(
             testtuples=testtuples,
             name=name or timestamp,
             clean_models=clean_models,
-            metadata=additional_metadata,
+            metadata=cp_metadata,
         ),
         auto_batching=False,
     )
     logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
-
     return compute_plan

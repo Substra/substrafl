@@ -8,6 +8,7 @@ import torch
 
 from connectlib.algorithms.algo import Algo
 from connectlib.index_generator import BaseIndexGenerator
+from connectlib.remote.decorators import remote_data
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +20,8 @@ class TorchAlgo(Algo):
     To implement a new strategy:
 
         - add the strategy specific parameters in the ``__init__``
-        - implement the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo.train` and
-          :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo.predict` functions: they must use the
+        - implement the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo.train`
+          function: it must use the
           :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_train` and
           :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_predict` functions, which are
           overridden by the user and must contain as little strategy-specific code as possible
@@ -93,14 +94,28 @@ class TorchAlgo(Algo):
         # Must be implemented in the child class
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @remote_data
     def predict(
         self,
         x: Any,
-        shared_state: Any = None,
-    ) -> Any:
-        # Must be implemented in the child class
-        raise NotImplementedError()
+        shared_state: Any,
+    ):
+        """Executes the following operations:
+
+            * Sets the model to `eval` mode
+            * Applies the `self._local_predict` function
+            * Returns the predictions
+
+        Args:
+            x (typing.Any): Input data
+            shared_state (Any): Latest train task shared state (output of the train method)
+
+        Returns:
+            typing.Any: Model prediction.
+        """
+        self._model.eval()
+        predictions = self._local_predict(x)
+        return predictions
 
     @abc.abstractmethod
     def _local_train(

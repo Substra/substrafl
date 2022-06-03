@@ -36,7 +36,6 @@ class RemoteStruct:
         method_name: str,
         method_parameters: dict,
         algo_name: Optional[str],
-        fake_traintuple: bool = False,
     ):
         """
         Args:
@@ -48,8 +47,6 @@ class RemoteStruct:
             method_parameters (dict): Parameters to pass to the method
             algo_name(str, Optional): opportunity to set a custom algo name.
                 If None, set to "{method_name}_{class_name}"
-            fake_traintuple (bool, Optional): Specific use-case: create a train task that actually only prepares for
-                the test. Defaults to False.
         """
         self._cls = cls
         self._cls_args = cls_args
@@ -58,7 +55,6 @@ class RemoteStruct:
         self._method_name = method_name
         self._method_parameters = method_parameters
         self._algo_name = algo_name or (self._method_name + "_" + self._cls.__name__)
-        self._fake_traintuple = fake_traintuple
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RemoteStruct):
@@ -70,7 +66,6 @@ class RemoteStruct:
             and self._remote_cls == other._remote_cls
             and self._method_name == other._method_name
             and self._method_parameters == other._method_parameters
-            and self._fake_traintuple == other._fake_traintuple
         )
 
     def __hash__(self):
@@ -81,7 +76,6 @@ class RemoteStruct:
                 frozenset(self._cls_kwargs),
                 self._remote_cls,
                 self._method_name,
-                self._fake_traintuple,
                 frozenset(self._method_parameters),
             )
         )
@@ -131,7 +125,6 @@ class RemoteStruct:
         return self._remote_cls(
             self.get_instance(),
             method_name=self._method_name,
-            fake_traintuple=self._fake_traintuple,
             method_parameters=self._method_parameters,
         )
 

@@ -443,43 +443,6 @@ class TorchScaffoldAlgo(TorchAlgo):
         )
         return return_dict
 
-    @remote_data
-    def predict(
-        self,
-        x: Any,
-        shared_state: ScaffoldAveragedStates,
-    ):
-        """Predict method of the scaffold strategy. Executes the following operation:
-
-            * If a shared state is given, add it to the model parameters
-            * Apply the :py:func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._local_predict`
-            * Return the predictions
-
-        Args:
-            x (typing.Any): Input data.
-            shared_state (ScaffoldAveragedStates): The shared state is added
-                to the model parameters before computing the predictions.
-
-        Returns:
-            typing.Any: Model prediction.
-        """
-        # Reduce memory consumption as we don't use the model parameters_update
-        with torch.inference_mode():
-            # Add the shared state to the model parameters
-            avg_parameters_update = [
-                torch.from_numpy(param).to(self._device) for param in shared_state.avg_parameters_update
-            ]
-            weight_manager.increment_parameters(
-                model=self._model,
-                updates=avg_parameters_update,
-                with_batch_norm_parameters=self._with_batch_norm_parameters,
-            )
-
-            self._model.eval()
-
-        predictions = self._local_predict(x)
-        return predictions
-
     def _get_state_to_save(self) -> dict:
         """Get the local state to save, the only strategy-specific variable
         to save is the ``client_control_variate``.
