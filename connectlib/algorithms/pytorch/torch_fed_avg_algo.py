@@ -232,43 +232,6 @@ class TorchFedAvgAlgo(TorchAlgo):
             parameters_update=[p.cpu().detach().numpy() for p in parameters_update],
         )
 
-    @remote_data
-    def predict(
-        self,
-        x: Any,
-        shared_state: FedAvgAveragedState,
-    ):
-        """Predict method of the federated averaging strategy. Executes the following operation:
-
-            * If a shared state is given, add it to the model parameters
-            * Apply the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict`
-            * Return the predictions
-
-        Args:
-            x (typing.Any): Input data.
-            shared_state (FedAvgAveragedState): The shared state is added
-                to the model parameters before computing the predictions.
-
-        Returns:
-            typing.Any: Model prediction.
-        """
-        # Reduce memory consumption as we don't use the model gradients
-        with torch.inference_mode():
-            # Add the shared state to the model parameters
-            avg_parameters_update = [
-                torch.from_numpy(param).to(self._device) for param in shared_state.avg_parameters_update
-            ]
-            weight_manager.increment_parameters(
-                model=self._model,
-                updates=avg_parameters_update,
-                with_batch_norm_parameters=self._with_batch_norm_parameters,
-            )
-
-            self._model.eval()
-
-        predictions = self._local_predict(x)
-        return predictions
-
     def summary(self):
         """Summary of the class to be exposed in the experiment summary file
 

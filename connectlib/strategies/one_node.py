@@ -80,7 +80,6 @@ class OneNode(Strategy):
 
     def predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,

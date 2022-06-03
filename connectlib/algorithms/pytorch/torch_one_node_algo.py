@@ -164,7 +164,7 @@ class TorchOneNodeAlgo(TorchAlgo):
 
         Returns:
             Dict[str, numpy.ndarray]: weight update which is an empty array. OneNode strategy is not using
-            shared state and this return is only for consistency
+            shared state and this return is only for consistency.
         """
 
         # Instantiate the index_generator
@@ -188,25 +188,3 @@ class TorchOneNodeAlgo(TorchAlgo):
 
         # Return empty shared state
         return {"None": np.array([])}
-
-    @remote_data
-    def predict(
-        self,
-        x: Any,
-        shared_state: Dict[str, np.ndarray] = None,  # Is always None for this strategy
-    ):
-        """Predict method of the one node strategy. Executes the following operation:
-
-            * Apply the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict`
-            * Return the predictions
-
-        Args:
-            x (typing.Any): Input data.
-            shared_state (typing.Dict[str, numpy.ndarray]): The shared state is added
-                to the model parameters before computing the predictions.
-
-        Returns:
-            typing.Any: Model prediction.
-        """
-        predictions = self._local_predict(x)
-        return predictions

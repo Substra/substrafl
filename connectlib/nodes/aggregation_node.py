@@ -28,7 +28,7 @@ class AggregationNode(Node):
 
         Args:
             operation (AggregateOperation): Automatically generated structure returned by
-                ``connectlib.remote.operations.remote`` decorator. This allows to register an
+                the :py:func:`~connectlib.remote.decorators.remote` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts by zero.
 

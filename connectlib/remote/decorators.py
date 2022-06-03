@@ -48,7 +48,6 @@ def remote_data(method: Callable):
         data_samples: Optional[List[str]] = None,
         shared_state: Any = None,
         _skip: bool = False,
-        fake_traintuple: bool = False,
         _algo_name: Optional[str] = None,
         **method_parameters,
     ) -> DataOperation:
@@ -58,8 +57,6 @@ def remote_data(method: Callable):
             shared_state (typing.Any): a shared state, could be a SharedStateRef object or anything else. Defaults to
                 None.
             _skip (bool, Optional): if True, calls the decorated function. Defaults to False.
-            fake_traintuple (bool, Optional): if True, the decorated function won't be executed (see RemoteDataMethod).
-                Defaults to False.
             _algo_name(str, Optional): opportunity to set a custom algo name.
                 Default to None.
 
@@ -82,7 +79,6 @@ def remote_data(method: Callable):
                 method_name=method.__name__,
                 method_parameters=method_parameters,
                 algo_name=_algo_name,
-                fake_traintuple=fake_traintuple,
                 remote_cls=RemoteDataMethod,
             ),
             data_samples,

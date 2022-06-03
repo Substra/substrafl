@@ -183,4 +183,5 @@ def test_pytorch_fedavg_algo_performance(
 
     testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
+
     assert list(testtuple.test.perfs.values())[0] == pytest.approx(expected_performance, rel=rtol)

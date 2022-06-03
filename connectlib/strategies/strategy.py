@@ -52,7 +52,6 @@ class Strategy(ABC):
     @abstractmethod
     def predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -62,7 +61,6 @@ class Strategy(ABC):
         test nodes.
 
         Args:
-            algo (Algo): algo with the code to execute on the node
             test_data_nodes (typing.List[TestDataNode]): list of nodes on which to evaluate
             train_data_nodes (typing.List[TrainDataNode]): list of nodes on which the model has been trained
             round_idx (int): index of the round
