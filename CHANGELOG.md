@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0](https://github.com/owkin/connectlib/releases/tag/0.16.0) - 2022-06-07
+
 ### Changed
 
 - BREAKING CHANGE: add initialization round to centralized strategies (#188):
