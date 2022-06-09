@@ -60,6 +60,71 @@ class FedAvg(Strategy):
         """
         return StrategyName.FEDERATED_AVERAGING
 
+    def perform_round(
+        self,
+        algo: Algo,
+        train_data_nodes: List[TrainDataNode],
+        aggregation_node: AggregationNode,
+        round_idx: int,
+    ):
+        """One round of the Federated Averaging strategy consists in:
+            - if ``round_ids==0``: initialize the strategy by performing a local update
+                (train on n mini-batches) of the models on each train data nodes
+            - aggregate the model shared_states
+            - set the model weights to the aggregated weights on each train data nodes
+            - perform a local update (train on n mini-batches) of the models on each train data nodes
+
+        Args:
+            algo (Algo): User defined algorithm: describes the model train and predict methods
+            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
+            aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
+                of the models
+            round_idx (int): Round number, it starts by zero.
+        """
+        if aggregation_node is None:
+            raise ValueError("In FedAvg strategy aggregation node cannot be None")
+
+        if round_idx == 0:
+            # Initialization of the strategy by performing a local update on each train data node
+            assert self._local_states is None
+            assert self._shared_states is None
+            self._perform_local_updates(
+                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=-1
+            )
+
+        current_aggregation = aggregation_node.update_states(
+            self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
+            round_idx=round_idx,
+        )
+
+        self._perform_local_updates(
+            algo=algo, train_data_nodes=train_data_nodes, current_aggregation=current_aggregation, round_idx=round_idx
+        )
+
+    def predict(
+        self,
+        test_data_nodes: List[TestDataNode],
+        train_data_nodes: List[TrainDataNode],
+        round_idx: int,
+    ):
+
+        for test_node in test_data_nodes:
+            matching_train_nodes = [
+                train_node for train_node in train_data_nodes if train_node.node_id == test_node.node_id
+            ]
+            if len(matching_train_nodes) == 0:
+                raise NotImplementedError("Cannot test on a node we did not train on for now.")
+
+            train_node = matching_train_nodes[0]
+            node_index = train_data_nodes.index(train_node)
+            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            local_state = self._local_states[node_index]
+
+            test_node.update_states(
+                traintuple_id=local_state.key,
+                round_idx=round_idx,
+            )  # Init state for testtuple
+
     @remote
     def avg_shared_states(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
         """Compute the weighted average of all elements returned by the train
@@ -154,68 +219,3 @@ class FedAvg(Strategy):
 
         self._local_states = next_local_states
         self._shared_states = next_shared_states
-
-    def perform_round(
-        self,
-        algo: Algo,
-        train_data_nodes: List[TrainDataNode],
-        aggregation_node: AggregationNode,
-        round_idx: int,
-    ):
-        """One round of the Federated Averaging strategy consists in:
-            - if ``round_ids==0``: initialize the strategy by performing a local update
-                (train on n mini-batches) of the models on each train data nodes
-            - aggregate the model shared_states
-            - set the model weights to the aggregated weights on each train data nodes
-            - perform a local update (train on n mini-batches) of the models on each train data nodes
-
-        Args:
-            algo (Algo): User defined algorithm: describes the model train and predict methods
-            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
-            aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
-                of the models
-            round_idx (int): Round number, it starts by zero.
-        """
-        if aggregation_node is None:
-            raise ValueError("In FedAvg strategy aggregation node cannot be None")
-
-        if round_idx == 0:
-            # Initialization of the strategy by performing a local update on each train data node
-            assert self._local_states is None
-            assert self._shared_states is None
-            self._perform_local_updates(
-                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=-1
-            )
-
-        current_aggregation = aggregation_node.update_states(
-            self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
-            round_idx=round_idx,
-        )
-
-        self._perform_local_updates(
-            algo=algo, train_data_nodes=train_data_nodes, current_aggregation=current_aggregation, round_idx=round_idx
-        )
-
-    def predict(
-        self,
-        test_data_nodes: List[TestDataNode],
-        train_data_nodes: List[TrainDataNode],
-        round_idx: int,
-    ):
-
-        for test_node in test_data_nodes:
-            matching_train_nodes = [
-                train_node for train_node in train_data_nodes if train_node.node_id == test_node.node_id
-            ]
-            if len(matching_train_nodes) == 0:
-                raise NotImplementedError("Cannot test on a node we did not train on for now.")
-
-            train_node = matching_train_nodes[0]
-            node_index = train_data_nodes.index(train_node)
-            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
-            local_state = self._local_states[node_index]
-
-            test_node.update_states(
-                traintuple_id=local_state.key,
-                round_idx=round_idx,
-            )  # Init state for testtuple
