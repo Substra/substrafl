@@ -54,8 +54,8 @@ class TrainDataNode(Node):
             operation (DataOperation): Automatically generated structure returned by
                 the :py:func:`~connectlib.remote.decorators.remote_data` decorator. This allows to register an
                 operation and execute it later on.
-            round_idx (int): Round number, it starts by zero. In case of a centralized strategy,
-                it is preceded by an initialization round tagged: -1.
+            round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
+                it is preceded by an initialization round tagged: 0.
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.
 
         Raises:

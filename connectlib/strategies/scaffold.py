@@ -63,7 +63,7 @@ class Scaffold(Strategy):
         round_idx: int,
     ):
         """One round of the Scaffold strategy consists in:
-            - if ``round_ids==0``: initialize the strategy by performing a local update
+            - if ``round_idx==1``: initialize the strategy by performing a local update
                 (train on n mini-batches) of the models on each train data nodes
             - aggregate the model shared_states
             - set the model weights to the aggregated weights on each train data nodes
@@ -74,17 +74,17 @@ class Scaffold(Strategy):
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
             aggregation_node (AggregationNode): Node without data, used to perform operations on the shared states
                 of the models
-            round_idx (int): Round number, it starts by zero.
+            round_idx (int): Round number, it starts at 1.
         """
         if aggregation_node is None:
             raise ValueError("In Scaffold strategy aggregation node cannot be None")
 
-        if round_idx == 0:
+        if round_idx == 1:
             # Initialization of the strategy by performing a local update on each train data node
             assert self._local_states is None
             assert self._shared_states is None
             self._perform_local_updates(
-                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=-1
+                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=0
             )
 
         current_aggregation = aggregation_node.update_states(
@@ -307,7 +307,7 @@ class Scaffold(Strategy):
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform local updates
             current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to be passed as input
                 to each local training
-            round_idx (int): Round number, it starts by zero.
+            round_idx (int): Round number, it starts at 1.
         """
 
         next_local_states = []
