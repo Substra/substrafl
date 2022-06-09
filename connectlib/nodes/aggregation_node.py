@@ -30,7 +30,7 @@ class AggregationNode(Node):
             operation (AggregateOperation): Automatically generated structure returned by
                 the :py:func:`~connectlib.remote.decorators.remote` decorator. This allows to register an
                 operation and execute it later on.
-            round_idx (int): Round number, it starts by zero.
+            round_idx (int): Round number, it starts at 1.
 
         Raises:
             TypeError: operation must be an AggregateOperation, make sure to decorate your (user defined) aggregate

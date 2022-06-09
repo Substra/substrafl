@@ -36,6 +36,8 @@ class TestDataNode(Node):
 
         Args:
             traintuple_id (str): The substra parent id
+            round_idx: (int): Round number of the strategy starting at 1.
+
         """
         self.tuples.append(
             {

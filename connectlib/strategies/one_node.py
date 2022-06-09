@@ -52,7 +52,7 @@ class OneNode(Strategy):
             algo (Algo): User defined algorithm: describes the model train and predict
             train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local updates
             aggregation_node (AggregationNode): Should be None otherwise it will be ignored
-            round_idx (int): Round number, it starts by zero.
+            round_idx (int): Round number, it starts at 1.
         """
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
