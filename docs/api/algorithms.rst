@@ -15,7 +15,7 @@ TorchScaffoldAlgo
 -----------------
 
 .. automodule:: connectlib.algorithms.pytorch.torch_scaffold_algo
-    :private-members: _get_len_from_x, _local_train, _local_predict
+    :private-members: _get_len_from_x, _local_train, _local_predict, _scaffold_parameters_update
     :inherited-members:
 
 

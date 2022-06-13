@@ -13,6 +13,7 @@ from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.exceptions import NumUpdatesValueError
+from connectlib.exceptions import TorchScaffoldAlgoParametersUpdateError
 from connectlib.index_generator import NpIndexGenerator
 from connectlib.schemas import ScaffoldAveragedStates
 from connectlib.schemas import ScaffoldSharedState
@@ -397,3 +398,138 @@ def test_pytorch_num_updates_error(num_updates):
 
     with pytest.raises(NumUpdatesValueError):
         MyAlgo()
+
+
+@pytest.mark.parametrize("optimizer", [torch.optim.Adagrad, torch.optim.Adam])
+def test_pytorch_optimizer_error(optimizer, torch_linear_model, caplog):
+    "Only SGD is recommended as an optimizer for TorchScaffoldAlgo."
+    perceptron = torch_linear_model()
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=2,
+    )
+
+    class MyAlgo(TorchScaffoldAlgo):
+        def __init__(
+            self,
+        ):
+            super().__init__(
+                model=perceptron,
+                index_generator=nig,
+                optimizer=optimizer(perceptron.parameters(), lr=0.1),
+                criterion=torch.nn.MSELoss(),
+            )
+
+        def _local_train(self, x: Any, y: Any):
+            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
+
+        def _local_predict(self, x: Any) -> Any:
+            y_pred = super()._local_predict(torch.from_numpy(x).float())
+            return y_pred.detach().numpy()
+
+    caplog.clear()
+    MyAlgo()
+    warnings = [
+        record
+        for record in caplog.records
+        if (record.levelname == "WARNING") and (record.msg.startswith("The only optimizer theoretically guaranteed"))
+    ]
+    assert len(warnings) == 1
+
+
+@pytest.mark.parametrize(
+    "lr1, lr2, expected_lr, nb_warnings", [(0.2, 0.1, 0.1, 1), (0.4, 0, 0.4, 0), (0.5, 0.5, 0.5, 0)]
+)
+def test_pytorch_multiple_lr(lr1, lr2, expected_lr, nb_warnings, caplog):
+    "Check that the smallest (but 0) learning rate is used for the aggregation when multiple learning rate are used."
+
+    class MLP(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear1 = torch.nn.Linear(2, 2)
+            self.linear2 = torch.nn.Linear(2, 1)
+
+        def forward(self, x):
+            l1 = self.linear1(x)
+            out = self.linear2(l1)
+            return out
+
+    model = MLP()
+
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=2,
+    )
+
+    class MyAlgo(TorchScaffoldAlgo):
+        def __init__(
+            self,
+        ):
+            super().__init__(
+                model=model,
+                index_generator=nig,
+                optimizer=torch.optim.SGD(
+                    [
+                        {"params": model.linear1.parameters(), "lr": lr1},
+                        {"params": model.linear2.parameters()},
+                    ],
+                    lr=lr2,
+                ),
+                criterion=torch.nn.MSELoss(),
+            )
+
+        def _local_train(self, x: Any, y: Any):
+            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
+
+        def _local_predict(self, x: Any) -> Any:
+            y_pred = super()._local_predict(torch.from_numpy(x).float())
+            return y_pred.detach().numpy()
+
+    my_algo = MyAlgo()
+
+    caplog.clear()
+    my_algo._update_current_lr()
+    warnings = [record for record in caplog.records if (record.levelname == "WARNING")]
+    assert my_algo._current_lr == expected_lr
+    assert len(warnings) == nb_warnings
+
+
+@pytest.mark.parametrize("nb_update_params_call, num_updates", ([0, 1], [1, 2], [3, 5]))
+def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_updates):
+    "Check that _scaffold_parameters_update needs to be called at each update"
+
+    model = torch_linear_model()
+
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=num_updates,
+    )
+
+    class MyAlgo(TorchScaffoldAlgo):
+        def __init__(
+            self,
+        ):
+            super().__init__(
+                model=model,
+                index_generator=nig,
+                optimizer=torch.optim.SGD(model.parameters(), lr=0.1),
+                criterion=torch.nn.MSELoss(),
+            )
+
+        def _local_train(self, x: Any, y: Any):
+            for _ in self._index_generator:
+                continue
+            for _ in range(nb_update_params_call):
+                self._scaffold_parameters_update()
+
+        def _local_predict(self, x: Any) -> Any:
+            y_pred = super()._local_predict(torch.from_numpy(x).float())
+
+            return y_pred.detach().numpy()
+
+    my_algo = MyAlgo()
+
+    with pytest.raises(TorchScaffoldAlgoParametersUpdateError):
+        my_algo.train(x=np.random.random(10), y=np.random.random(10), _skip=True)
+
+    assert my_algo._scaffold_parameters_update_num_call == nb_update_params_call

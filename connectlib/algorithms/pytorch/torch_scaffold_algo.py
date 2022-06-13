@@ -11,6 +11,8 @@ import torch
 from connectlib.algorithms.pytorch import weight_manager
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.exceptions import NumUpdatesValueError
+from connectlib.exceptions import ScaffoldLearningRateError
+from connectlib.exceptions import TorchScaffoldAlgoParametersUpdateError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.remote import remote_data
 from connectlib.schemas import ScaffoldAveragedStates
@@ -96,11 +98,14 @@ class TorchScaffoldAlgo(TorchAlgo):
                         # forward pass: update the weights.
                         self._optimizer.step()
 
-                        # scaffold specific: to keep between _optimizer.step() and _scheduler.step()
+                        # Scaffold specific: to keep between _optimizer.step() and _scheduler.step()
+                        # _scheduler and Scaffold strategies are not scientifically validated, it is not
+                        # recommended to use one. If one is used, _scheduler.step() must be called after
+                        # _scaffold_parameters_update()
                         self._scaffold_parameters_update()
-
                         if self._scheduler is not None:
                             self._scheduler.step()
+
 
                 def _local_predict(self, x: Any) -> Any:
                     with torch.inference_mode():
@@ -171,8 +176,15 @@ class TorchScaffoldAlgo(TorchAlgo):
             *args,
             **kwargs,
         )
+
         if self._index_generator.num_updates <= 0:
             raise NumUpdatesValueError("Num_updates needs to be superior to 0 for TorchScaffoldAlgo.")
+
+        if not isinstance(self._optimizer, torch.optim.SGD):
+            logger.warning("The only optimizer theoretically guaranteed to work with the Scaffold strategy is SGD.")
+
+        self._lr_warnings()
+
         self._with_batch_norm_parameters = with_batch_norm_parameters
         self._c_update_rule = CUpdateRule(c_update_rule)
         # ci in the paper
@@ -183,6 +195,9 @@ class TorchScaffoldAlgo(TorchAlgo):
         self._current_lr: float = None
         # the delta_variate used in _scaffold_parameters_update()
         self._delta_variate: List[torch.Tensor] = None
+        # Private attributes to monitor the use of _scaffold_parameters_update()
+        # Must be set to 0 at the beginning of each task execution
+        self._scaffold_parameters_update_num_call = 0
 
     @property
     def strategies(self) -> List[StrategyName]:
@@ -193,34 +208,64 @@ class TorchScaffoldAlgo(TorchAlgo):
         """
         return [StrategyName.SCAFFOLD]
 
-    def _update_current_lr(self):
-        """method to get the current learning rate from the scheduler, or the optimizer if no scheduler.
-        If the optimizer has no learning rate, default value is 1.0 (the lr has no effect)
-        Different use cases: https://discuss.pytorch.org/t/get-current-lr-of-optimizer-with-adaptive-lr/24851/6
+    def _lr_warnings(self, learning_rates=None):
+        """Scientific warnings about the use of different learning rates during training."""
+        # Retrieve all lr defined per layer
+        if learning_rates is None:
+            learning_rates = set([param_group.get("lr") for param_group in self._optimizer.param_groups])
+            learning_rates.discard(0)
 
-        Returns:
-            float: current learning rate
-        """
-        if self._scheduler and self._scheduler.get_last_lr():
-            self._current_lr = self._scheduler.get_last_lr()[0]
-        elif self._optimizer.param_groups[0]["lr"]:
-            # TODO(sci-review): check if we need to implement the use case where there is different lr per param_group
-            self._current_lr = float(self._optimizer.param_groups[0]["lr"])
-        elif self._optimizer.defaults["lr"]:
-            logger.warning("Could not get the current optimizer learning rate. `optimizer.defaults['lr']` will be used")
-            self._current_lr = float(self._optimizer.defaults["lr"])
-        else:
+        if self._scheduler:
             logger.warning(
-                "Could not get the optimizer learning rate. The default value of 1.0 will be used when"
-                "computing the Scaffold parameters_update"
+                """Scaffold strategies and the use of a scheduler has not been scientifically validated."""
+                """\nIf used, self._scheduler.step() must be called after self._scaffold_parameters_update()."""
             )
-            self._current_lr = 1.0
+
+        if len(learning_rates) == 0:
+            # Torch needs a learning rates for each layer to set the optimizer so this case should never happen.
+            # Keeping it for consistency
+            raise ScaffoldLearningRateError(
+                "When using the  Torch Scaffold algo layer, a learning rate must "
+                "be passed to for all group of layers in the optimizer and one of them shall be "
+                "strictly positive."
+            )
+
+        elif len(learning_rates) > 1:
+            logger.warning(
+                "Different learning rates where found from the optimizer: %s. "
+                "The aggregation operation of the Scaffold strategy, requires a unique learning rate. "
+                "Hence the smallest one will be used.",
+                str(learning_rates),
+            )
+
+    def _update_current_lr(self):
+        """Update the `self._current_lr` attributes from the optimizer. It will be updated from the scheduler if
+        one is used even if this is not recommended as the use of a scheduler with the Scaffold strategy has not
+        been scientifically validated.
+        Different use cases: https://discuss.pytorch.org/t/get-current-lr-of-optimizer-with-adaptive-lr/24851/6
+        """
+
+        if self._scheduler and self._scheduler.get_last_lr():
+            learning_rates = set(self._scheduler.get_last_lr())
+        else:
+            # Retrieve all lr defined per layer
+            learning_rates = set([param_group.get("lr") for param_group in self._optimizer.param_groups])
+
+        # If 0 is set as a learning rate for some layers, the weights and biases won't be impacted by the training
+        # This behavior is accepted
+        learning_rates.discard(0)
+
+        self._lr_warnings(learning_rates=learning_rates)
+
+        self._current_lr = float(min(learning_rates))
 
     def _scaffold_parameters_update(self):
+        """Must be called for each update after the optimizer.step() operation."""
         # Adding control variates on weights times learning rate
         # Scaffold paper's Algo step 10.2 :  yi = last_yi - lr * ( - ci + c) = last_yi + lr * ( ci - c)
         # <=> model = last_model + lr * delta_variate
         self._update_current_lr()
+        self._scaffold_parameters_update_num_call += 1
         weight_manager.increment_parameters(
             model=self._model,
             updates=self._delta_variate,
@@ -250,11 +295,6 @@ class TorchScaffoldAlgo(TorchAlgo):
             to ensure that you are using the batches are correct between 2 rounds
             of the federated learning strategy.
 
-        Important:
-
-            Call the function ``self._scaffold_parameters_update()`` between the
-            optimizer and scheduler update, see the example.
-
         Example:
 
             .. code-block:: python
@@ -273,8 +313,7 @@ class TorchScaffoldAlgo(TorchAlgo):
                     loss.backward()
                     self._optimizer.step()
 
-                    # SCAFFOLD specific function, to call between the
-                    # optimizer and scheduler update
+                    # Scaffold specific function to call between self._optimizer.step() and self._scheduler.step()
                     self._scaffold_parameters_update()
 
                     if self._scheduler is not None:
@@ -292,12 +331,11 @@ class TorchScaffoldAlgo(TorchAlgo):
             # backward pass: compute the gradients
             loss.backward()
             # forward pass: update the weights.
-            # TODO(sci-review): check that we execute Scaffold paper's Algo step 10.1:
             # if optimizer=SGD, yi = last_yi - lr * grads,
             # with the same lr as _get_current_lr() (used in step 10.2)
             self._optimizer.step()
 
-            # scaffold specific: to keep between _optimizer.step() and _scheduler.step()
+            # Scaffold specific: to call between self._optimizer.step() and self._scheduler.step()
             self._scaffold_parameters_update()
 
             if self._scheduler is not None:
@@ -397,6 +435,14 @@ class TorchScaffoldAlgo(TorchAlgo):
 
         self._index_generator.check_num_updates()
 
+        if self._scaffold_parameters_update_num_call != self._index_generator._num_updates:
+            raise TorchScaffoldAlgoParametersUpdateError(
+                f"`_scaffold_parameters_update` method has been called {self._scaffold_parameters_update_num_call} "
+                f"time(s) but num_updates is set to {self._index_generator._num_updates}. Please check within your "
+                "`_local_train` function that `_scaffold_parameters_update` is called at each update (each time "
+                "self._model(data) is called) after the `self.optimizer.step()` call."
+            )
+
         self._model.eval()
 
         # Scaffold paper's Algo step 12+13.1: compute parameters_update = (yi-x)
@@ -410,7 +456,6 @@ class TorchScaffoldAlgo(TorchAlgo):
 
         if self._c_update_rule == CUpdateRule.FAST:
             # right_multiplier = -1 / (lr*num_updates)
-            # TODO(sci-review): for now we take the lr from the latest optimizer.step(), be sure this is the right one
             right_multiplier = -1.0 / (self._current_lr * self._index_generator.num_updates)
             # Scaffold paper's Algo step 12+13.2: control_variate_update = -c - parameters_update / (lr*num_updates)
             control_variate_update = weight_manager.weighted_sum_parameters(
@@ -418,7 +463,6 @@ class TorchScaffoldAlgo(TorchAlgo):
                 coefficient_list=[-1.0, right_multiplier],
             )
         else:
-            # TODO(sci-review): implement rule 1 ? and add tests
             raise NotImplementedError("rule 1 not implemented")
 
         # Scaffold paper's Algo step 14: ci = ci + control_variate_update
