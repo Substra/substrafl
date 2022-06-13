@@ -39,7 +39,7 @@ class Algo(abc.ABC):
     # @remote_data
     @abc.abstractmethod
     def train(self, x: Any, y: Any, shared_state: Any) -> Any:
-        """Is executed for each TrainDataNodes.
+        """Is executed for each TrainDataOrganizations.
         This functions takes the x, y from the opener, plus the shared state from the aggregator if there is one,
         and returns a shared state (state to send to the aggregator). Any variable that needs to be saved and updated
         from one round to another should be an attribute of ``self`` (e.g. ``self._my_local_state_variable``), and be
@@ -50,13 +50,13 @@ class Algo(abc.ABC):
             x (typing.Any): The output of the ``get_x`` method of the opener.
             y (typing.Any): The output of the ``get_y`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
-                then the returned object from the previous node of the computation graph.
+                then the returned object from the previous organization of the computation graph.
 
         Raises:
             NotImplementedError
 
         Returns:
-            typing.Any: The object passed to the next node of the computation graph.
+            typing.Any: The object passed to the next organization of the computation graph.
         """
         raise NotImplementedError
 
@@ -66,13 +66,13 @@ class Algo(abc.ABC):
     # @remote_data
     @abc.abstractmethod
     def predict(self, x: Any, shared_state: Any) -> Any:
-        """Is executed for each TestDataNodes. The returned object will be passed to the ``save_predictions``
+        """Is executed for each TestDataOrganizations. The returned object will be passed to the ``save_predictions``
         function of the opener. The predictions are then loaded and used to calculate the metric.
 
         Args:
             x (typing.Any): The output of the ``get_X`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
-                then the returned object from the previous node of the computation graph.
+                then the returned object from the previous organization of the computation graph.
 
         Raises:
             NotImplementedError

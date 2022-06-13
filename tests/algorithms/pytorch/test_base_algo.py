@@ -7,7 +7,7 @@ import torch
 from connectlib import execute_experiment
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
-from connectlib.algorithms.pytorch.torch_one_node_algo import TorchOneNodeAlgo
+from connectlib.algorithms.pytorch.torch_one_organization_algo import TorchOneOrganizationAlgo
 from connectlib.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
@@ -16,12 +16,12 @@ from connectlib.remote.decorators import remote_data
 from connectlib.remote.remote_struct import RemoteStruct
 from connectlib.schemas import StrategyName
 from connectlib.strategies import FedAvg
-from connectlib.strategies import OneNode
+from connectlib.strategies import OneOrganization
 from connectlib.strategies import Scaffold
 from tests import utils
 
 
-@pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchOneNodeAlgo, TorchScaffoldAlgo])
+@pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchOneOrganizationAlgo, TorchScaffoldAlgo])
 def dummy_algo_custom_init_arg(request):
     lin = torch.nn.Linear(3, 2)
     nig = NpIndexGenerator(
@@ -67,7 +67,9 @@ def use_gpu(request):
     return request.param
 
 
-@pytest.fixture(params=[(TorchFedAvgAlgo, FedAvg), (TorchOneNodeAlgo, OneNode), (TorchScaffoldAlgo, Scaffold)])
+@pytest.fixture(
+    params=[(TorchFedAvgAlgo, FedAvg), (TorchOneOrganizationAlgo, OneOrganization), (TorchScaffoldAlgo, Scaffold)]
+)
 def dummy_gpu(request, torch_linear_model, use_gpu):
     nig = NpIndexGenerator(
         batch_size=1,
@@ -142,9 +144,9 @@ def test_gpu(
     dummy_gpu,
     session_dir,
     network,
-    train_linear_nodes,
-    test_linear_nodes,
-    aggregation_node,
+    train_linear_organizations,
+    test_linear_organizations,
+    aggregation_organization,
 ):
     num_rounds = 2
     algo_class, strategy_class, use_gpu = dummy_gpu
@@ -154,21 +156,25 @@ def test_gpu(
         editable_mode=True,
     )
 
-    train_data_nodes = [train_linear_nodes[0]] if strategy_class == OneNode else train_linear_nodes
-    test_data_nodes = [test_linear_nodes[0]] if strategy_class == OneNode else test_linear_nodes
+    train_data_organizations = (
+        [train_linear_organizations[0]] if strategy_class == OneOrganization else train_linear_organizations
+    )
+    test_data_organizations = (
+        [test_linear_organizations[0]] if strategy_class == OneOrganization else test_linear_organizations
+    )
 
     strategy = strategy_class()
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_data_nodes, rounds=[num_rounds]  # test only at the last round
+        test_data_organizations=test_data_organizations, rounds=[num_rounds]  # test only at the last round
     )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_data_nodes,
+        train_data_organizations=train_data_organizations,
         evaluation_strategy=my_eval_strategy,
-        aggregation_node=aggregation_node,
+        aggregation_organization=aggregation_organization,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",

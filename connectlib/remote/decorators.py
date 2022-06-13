@@ -1,6 +1,6 @@
 """
 Decorators to wrap functions
-so that they are executed on the remote nodes.
+so that they are executed on the remote organizations.
 """
 from functools import wraps
 from typing import Any

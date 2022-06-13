@@ -165,13 +165,13 @@ def add_numpy_samples(
     process. All the samples will be added with the argument `test_only=False`
 
     Args:
-        contents (List[np.ndarray]): Numpy contents to add to each node.
+        contents (List[np.ndarray]): Numpy contents to add to each organization.
         dataset_keys (str): Substra dataset_keys accessible per each client.
-        clients (List[Client]):  Substra clients used to add each content to the node.
+        clients (List[Client]):  Substra clients used to add each content to the organization.
         tmp_folder (Path): The folder where the numpy data will be stored to be added to substra.
 
     Asserts:
-        The number of clients, the number of nodes and the number of dataset keys must be the same.
+        The number of clients, the number of organizations and the number of dataset keys must be the same.
 
     Returns:
         List[str]: A list of data_samples keys.

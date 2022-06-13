@@ -15,9 +15,9 @@ from substra.sdk.schemas import MetricSpec
 from substra.sdk.schemas import Permissions
 from tqdm import tqdm
 
-from connectlib.nodes import AggregationNode
-from connectlib.nodes import TestDataNode
-from connectlib.nodes import TrainDataNode
+from connectlib.organizations import AggregationOrganization
+from connectlib.organizations import TestDataOrganization
+from connectlib.organizations import TrainDataOrganization
 
 CURRENT_DIRECTORY = Path(__file__).parent
 
@@ -50,9 +50,9 @@ def instantiate_clients(mode: str = "subprocess", n_centers: Optional[int] = 2, 
     """
     if mode == "remote":
         clients = []
-        for node in conf:
-            client = substra.Client(debug=False, url=node.get("url"))
-            client.login(username=node.get("username"), password=node.get("password"))
+        for organization in conf:
+            client = substra.Client(debug=False, url=organization.get("url"))
+            client.login(username=organization.get("username"), password=organization.get("password"))
             clients.append(client)
 
     else:
@@ -82,9 +82,9 @@ def save_asset_keys(asset_keys_path, asset_keys):
 
 
 def get_msp_id(client, default=""):
-    nodes = client.list_node()
-    if nodes:
-        msp_id = [c.id for c in nodes if c.is_current][0]
+    organizations = client.list_organization()
+    if organizations:
+        msp_id = [c.id for c in organizations if c.is_current][0]
     else:
         msp_id = str(default)
 
@@ -168,11 +168,11 @@ def add_duplicated_dataset(
     return asset_keys
 
 
-def get_train_data_nodes(
+def get_train_data_organizations(
     clients: List[substra.Client], train_folder: Path, asset_keys: dict, nb_data_sample: int
-) -> List[TrainDataNode]:
-    """Generate a connectlib train data nodes for each client.
-    Each client will be associated to one node where the training data are the one in his index wise
+) -> List[TrainDataOrganization]:
+    """Generate a connectlib train data organizations for each client.
+    Each client will be associated to one organization where the training data are the one in his index wise
     associates train_folder.
 
     Args:
@@ -185,10 +185,10 @@ def get_train_data_nodes(
             be reused and new ones will be added if needed so the number of datasamples used always is nb_data_sample
 
     Returns:
-        List[TrainDataNode]: Registered train data nodes for connectlib.
+        List[TrainDataOrganization]: Registered train data organizations for connectlib.
     """
 
-    train_data_nodes = []
+    train_data_organizations = []
 
     for k, client in enumerate(clients):
         msp_id = get_msp_id(client=client, default=k)
@@ -202,15 +202,15 @@ def get_train_data_nodes(
             kind="train",
         )
 
-        train_data_nodes.append(
-            TrainDataNode(
-                node_id=msp_id,
+        train_data_organizations.append(
+            TrainDataOrganization(
+                organization_id=msp_id,
                 data_manager_key=asset_keys.get(msp_id)["dataset_key"],
                 data_sample_keys=asset_keys.get(msp_id)["train_data_sample_keys"],
             )
         )
 
-    return train_data_nodes
+    return train_data_organizations
 
 
 def register_metric(client: substra.Client) -> str:
@@ -241,10 +241,10 @@ def register_metric(client: substra.Client) -> str:
     return metric_key
 
 
-def get_test_data_nodes(
+def get_test_data_organizations(
     clients: List[substra.Client], test_folder: Path, asset_keys: dict, nb_data_sample
-) -> TestDataNode:
-    """Generate a test data node for the data within the passed folder with the client.
+) -> TestDataOrganization:
+    """Generate a test data organization for the data within the passed folder with the client.
     The associated metric only returns the float(y_pred) where y_pred is the results of the
     predict method of the used algorithm.
 
@@ -256,7 +256,7 @@ def get_test_data_nodes(
             he length of the data sample keys list matches the nb_data_sample value.
 
     Returns:
-        TestDataNode: Connectlib test data.
+        TestDataOrganization: Connectlib test data.
     """
     # only one metric is needed as permissions are public
     metric_key = asset_keys.get("metric_key") or register_metric(clients[0])
@@ -266,7 +266,7 @@ def get_test_data_nodes(
         }
     )
 
-    test_data_nodes = []
+    test_data_organizations = []
 
     for k, client in enumerate(clients):
 
@@ -280,27 +280,27 @@ def get_test_data_nodes(
             asset_keys=asset_keys,
         )
 
-        test_data_nodes.append(
-            TestDataNode(
-                node_id=msp_id,
+        test_data_organizations.append(
+            TestDataOrganization(
+                organization_id=msp_id,
                 data_manager_key=asset_keys.get(msp_id)["dataset_key"],
                 test_data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
                 metric_keys=[metric_key],
             )
         )
 
-    return test_data_nodes
+    return test_data_organizations
 
 
-def get_aggregation_node(client) -> AggregationNode:
-    """Returns a connectlib aggregation node.
+def get_aggregation_organization(client) -> AggregationOrganization:
+    """Returns a connectlib aggregation organization.
 
     Returns:
-        AggregationNode: Connectlib aggregation node.
+        AggregationOrganization: Connectlib aggregation organization.
     """
-    nodes = client.list_node()
-    if nodes:
-        msp_id = [c.id for c in nodes if c.is_current][0]
+    organizations = client.list_organization()
+    if organizations:
+        msp_id = [c.id for c in organizations if c.is_current][0]
     else:
         msp_id = "0"
-    return AggregationNode(msp_id)
+    return AggregationOrganization(msp_id)

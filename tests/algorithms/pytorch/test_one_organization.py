@@ -5,11 +5,11 @@ import pytest
 import torch
 
 from connectlib import execute_experiment
-from connectlib.algorithms.pytorch import TorchOneNodeAlgo
+from connectlib.algorithms.pytorch import TorchOneOrganizationAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.index_generator import NpIndexGenerator
-from connectlib.strategies import OneNode
+from connectlib.strategies import OneOrganization
 from tests import utils
 
 logger = logging.getLogger(__name__)
@@ -18,8 +18,10 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize("n_updates, n_rounds", [(1, 2), (2, 1)])  # slow test so checking only two possibilities
 @pytest.mark.substra
 @pytest.mark.slow
-def test_one_node(network, torch_linear_model, train_linear_nodes, test_linear_nodes, session_dir, n_updates, n_rounds):
-    """End to end test for torch one node algorithm. Checking that the perf are the same for :
+def test_one_organization(
+    network, torch_linear_model, train_linear_organizations, test_linear_organizations, session_dir, n_updates, n_rounds
+):
+    """End to end test for torch one organization algorithm. Checking that the perf are the same for :
     different combinations of n_updates and n_rounds
      The expected result was calculated to be the same for the local mode and for the in pure Substra. For the
      details of the implementation of the latter ones please go to PR #109
@@ -33,7 +35,7 @@ def test_one_node(network, torch_linear_model, train_linear_nodes, test_linear_n
     )
     BATCH_SIZE = 32
 
-    strategy = OneNode()
+    strategy = OneOrganization()
 
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
@@ -43,7 +45,7 @@ def test_one_node(network, torch_linear_model, train_linear_nodes, test_linear_n
         num_updates=n_updates,
     )
 
-    class MyOneNodeAlgo(TorchOneNodeAlgo):
+    class MyOneOrganizationAlgo(TorchOneOrganizationAlgo):
         def __init__(
             self,
         ):
@@ -61,14 +63,16 @@ def test_one_node(network, torch_linear_model, train_linear_nodes, test_linear_n
             y_pred = super()._local_predict(torch.from_numpy(x).float())
             return y_pred.detach().numpy()
 
-    my_algo = MyOneNodeAlgo()
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes[:1], rounds=1)  # test every round
+    my_algo = MyOneOrganizationAlgo()
+    my_eval_strategy = EvaluationStrategy(
+        test_data_organizations=test_linear_organizations[:1], rounds=1
+    )  # test every round
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_linear_nodes[:1],
+        train_data_organizations=train_linear_organizations[:1],
         evaluation_strategy=my_eval_strategy,
         num_rounds=n_rounds,
         dependencies=algo_deps,

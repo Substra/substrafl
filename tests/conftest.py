@@ -24,9 +24,9 @@ import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
 from connectlib.algorithms.algo import Algo
-from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.test_data_node import TestDataNode
-from connectlib.nodes.train_data_node import TrainDataNode
+from connectlib.organizations.aggregation_organization import AggregationOrganization
+from connectlib.organizations.test_data_organization import TestDataOrganization
+from connectlib.organizations.train_data_organization import TrainDataOrganization
 from connectlib.remote.decorators import remote_data
 from connectlib.schemas import StrategyName
 from connectlib.strategies.strategy import Strategy
@@ -118,7 +118,7 @@ def mae(network, default_permissions, session_dir):
 
 @pytest.fixture(scope="session")
 def numpy_datasets(network, session_dir, default_permissions):
-    """Create and add to the first node of the network an opener that will
+    """Create and add to the first organization of the network an opener that will
     load and save data, load and save numpy predictions.
 
     Args:
@@ -132,7 +132,7 @@ def numpy_datasets(network, session_dir, default_permissions):
     """
 
     dataset_key = assets_factory.add_numpy_datasets(
-        datasets_permissions=[default_permissions] * network.n_nodes,
+        datasets_permissions=[default_permissions] * network.n_organizations,
         clients=network.clients,
         msp_ids=network.msp_ids,
         tmp_folder=session_dir,
@@ -147,7 +147,7 @@ def constant_samples(network, numpy_datasets, session_dir):
 
     Args:
         network (Network): Substra network from the configuration file.
-        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each node.
+        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
         session_dir (Path): A temp file created for the pytest session.
     """
 
@@ -170,7 +170,7 @@ def train_linear_data_samples(network):
         network (Network): Substra network from the configuration file.
 
     Returns:
-        List[np.ndarray]: A list of linear data for each node of the network.
+        List[np.ndarray]: A list of linear data for each organization of the network.
     """
     return [
         assets_factory.linear_data(
@@ -179,40 +179,40 @@ def train_linear_data_samples(network):
             weights_seed=42,
             noise_seed=i,
         )
-        for i in range(network.n_nodes)
+        for i in range(network.n_organizations)
     ]
 
 
 @pytest.fixture(scope="session")
-def train_linear_nodes(network, numpy_datasets, train_linear_data_samples, session_dir):
+def train_linear_organizations(network, numpy_datasets, train_linear_data_samples, session_dir):
     """Linear linked data samples.
 
     Args:
         network (Network): Substra network from the configuration file.
-        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each node.
+        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
         train_linear_data_samples (List[np.ndarray]): A List of linear linked data.
         session_dir (Path): A temp file created for the pytest session.
     """
 
     linear_samples = assets_factory.add_numpy_samples(
         # We set the weights seeds to ensure that all contents are linearly linked with the same weights but
-        # the noise is random so the data is not identical on every node.
+        # the noise is random so the data is not identical on every organization.
         contents=train_linear_data_samples,
         dataset_keys=numpy_datasets,
         clients=network.clients,
         tmp_folder=session_dir,
     )
 
-    train_data_nodes = [
-        TrainDataNode(
+    train_data_organizations = [
+        TrainDataOrganization(
             network.msp_ids[k],
             numpy_datasets[k],
             [linear_samples[k]],
         )
-        for k in range(network.n_nodes)
+        for k in range(network.n_organizations)
     ]
 
-    return train_data_nodes
+    return train_data_organizations
 
 
 @pytest.fixture(scope="session")
@@ -234,7 +234,7 @@ def test_linear_data_samples():
 
 
 @pytest.fixture(scope="session")
-def test_linear_nodes(
+def test_linear_organizations(
     network,
     numpy_datasets,
     mae,
@@ -245,45 +245,48 @@ def test_linear_nodes(
 
     Args:
         network (Network): Substra network from the configuration file.
-        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each node.
-        mae (str): Mean absolute error metric for the TestDataNode
+        numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
+        mae (str): Mean absolute error metric for the TestDataOrganization
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:
-        List[TestDataNode]: A one element list containing a connectlib TestDataNode for linear data with a mae metric.
+        List[TestDataOrganization]: A one element list containing a connectlib TestDataOrganization for linear data with
+        a mae metric.
     """
 
     linear_samples = assets_factory.add_numpy_samples(
         # We set the weights seeds to ensure that all contents are linearly linked with the same weights but
-        # the noise is random so the data is not identical on every node.
+        # the noise is random so the data is not identical on every organization.
         contents=test_linear_data_samples,
         dataset_keys=[numpy_datasets[0]],
         clients=[network.clients[0]],
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae])]
+    test_data_organizations = [
+        TestDataOrganization(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae])
+    ]
 
-    return test_data_nodes
+    return test_data_organizations
 
 
 @pytest.fixture(scope="session")
-def aggregation_node(network):
-    """The central node to use.
+def aggregation_organization(network):
+    """The central organization to use.
 
     Args:
         network (Network): Substra network from the configuration file.
 
     Returns:
-        AggregationNode: Connectlib aggregation Node.
+        AggregationOrganization: Connectlib aggregation Organization.
     """
-    return AggregationNode(network.msp_ids[0])
+    return AggregationOrganization(network.msp_ids[0])
 
 
 @pytest.fixture(scope="session")
 def torch_linear_model():
     """Generates a basic torch model (Perceptron). This model can be trained on the linear data fixtures
-    as its number of input nodes is set per the LINEAR_N_COL variable which is also used to generates the linear
+    as its number of input organizations is set per the LINEAR_N_COL variable which is also used to generates the linear
     train and test data samples.
 
     Returns:
@@ -353,8 +356,8 @@ def dummy_strategy_class():
         def perform_round(
             self,
             algo: Algo,
-            train_data_nodes: List[TrainDataNode],
-            aggregation_node: Optional[AggregationNode],
+            train_data_organizations: List[TrainDataOrganization],
+            aggregation_organization: Optional[AggregationOrganization],
             round_idx: int,
         ):
             pass
@@ -362,8 +365,8 @@ def dummy_strategy_class():
         def predict(
             self,
             algo: Algo,
-            test_data_nodes: List[TestDataNode],
-            train_data_nodes: List[TrainDataNode],
+            test_data_organizations: List[TestDataOrganization],
+            train_data_organizations: List[TrainDataOrganization],
             round_idx: int,
         ):
             pass

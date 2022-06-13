@@ -5,9 +5,9 @@ from typing import NewType
 OperationKey = NewType("OperationKey", str)
 
 
-class Node:
-    def __init__(self, node_id: str):
-        self.node_id = node_id
+class Organization:
+    def __init__(self, organization_id: str):
+        self.organization_id = organization_id
         self.tuples: List[Dict] = []
 
     def summary(self) -> dict:
@@ -33,5 +33,5 @@ class Node:
             dict: a json-serializable dict with the attributes the user wants to store
         """
         return {
-            "node_id": self.node_id,
+            "organization_id": self.organization_id,
         }

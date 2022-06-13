@@ -11,7 +11,7 @@ API reference
    evaluation_strategy
    exceptions
    index_generator
-   nodes
+   organizations
    remote
    schemas
    strategies
