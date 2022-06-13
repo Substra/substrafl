@@ -64,8 +64,8 @@ spec:
           env:
             - name: DOCKER_TLS_CERTDIR
               value: /root/.docker
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
+      {{- with .Values.organizationSelector }}
+      organizationSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:

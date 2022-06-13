@@ -184,7 +184,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             self._index_generator.n_samples = self._get_len_from_x(x)
         else:
             assert self._index_generator.n_samples is not None
-            # The shared states is the average of the model parameter updates for all nodes
+            # The shared states is the average of the model parameter updates for all organizations
             # Hence we need to add it to the previous local state parameters
             parameter_updates = [torch.from_numpy(x).to(self._device) for x in shared_state.avg_parameters_update]
             weight_manager.increment_parameters(

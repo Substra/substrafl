@@ -2,27 +2,27 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.organizations.test_data_organization import TestDataOrganization
 
 
 class EvaluationStrategy:
     def __init__(
         self,
-        test_data_nodes: List[TestDataNode],
+        test_data_organizations: List[TestDataOrganization],
         rounds: Union[int, List[int]],
     ) -> None:
         """Creates an iterator which returns True or False depending on the defined strategy.
 
         Args:
-            test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested.
+            test_data_organizations (List[TestDataOrganization]): organizations on which the model is to be tested.
             rounds (Union[int, List[int]]): on which round the model is to be tested. If rounds is an int the model
                 will be tested every ``rounds`` rounds starting from the first round. It will also be tested on the last
                 round. If rounds is a list the model will be tested on the index of a round given in the rounds list.
                 Note that the first round starts at 1.
 
         Raises:
-            ValueError: test_data_nodes cannot be an empty list
-            TypeError: test_data_nodes must be filled with instances of TestDataNode
+            ValueError: test_data_organizations cannot be an empty list
+            TypeError: test_data_organizations must be filled with instances of TestDataOrganization
             TypeError: rounds must be a list or an int
             ValueError: if rounds is an int it must be strictly positive
             ValueError: if rounds is a list it cannot be empty
@@ -36,7 +36,7 @@ class EvaluationStrategy:
             .. code-block:: python
 
                 my_evaluation_strategy = EvaluationStrategy(
-                        test_data_nodes = list_of_test_data_nodes,
+                        test_data_organizations = list_of_test_data_organizations,
                         rounds = 2,
                     )
 
@@ -57,7 +57,7 @@ class EvaluationStrategy:
             .. code-block:: python
 
                 my_evaluation_strategy = EvaluationStrategy(
-                        test_data_nodes = list_of_test_data_nodes,
+                        test_data_organizations = list_of_test_data_organizations,
                         rounds = [1, 2],
                     )
 
@@ -73,15 +73,15 @@ class EvaluationStrategy:
                 StopIteration Error
         """
         self._current_round = 0
-        self.test_data_nodes = test_data_nodes
+        self.test_data_organizations = test_data_organizations
         self._rounds = rounds
         self._num_rounds = None
 
-        if not test_data_nodes:
-            raise ValueError("test_data_nodes lists cannot be empty")
+        if not test_data_organizations:
+            raise ValueError("test_data_organizations lists cannot be empty")
 
-        if not all(isinstance(node, TestDataNode) for node in test_data_nodes):
-            raise TypeError("test_data_nodes must include objects of TestDataNode type")
+        if not all(isinstance(organization, TestDataOrganization) for organization in test_data_organizations):
+            raise TypeError("test_data_organizations must include objects of TestDataOrganization type")
 
         if not isinstance(rounds, (list, int)):
             raise TypeError(f"rounds must be of type list of ints or an int, {type(rounds)} found")

@@ -18,9 +18,9 @@ from connectlib.strategies import FedAvg
 @patch("substra.Client.add_compute_plan", MagicMock(return_value=np.recarray(1, dtype=[("key", int)])))
 def test_execute_experiment_has_no_side_effect(
     network,
-    train_linear_nodes,
-    test_linear_nodes,
-    aggregation_node,
+    train_linear_organizations,
+    test_linear_organizations,
+    aggregation_organization,
     session_dir,
     dummy_algo_class,
 ):
@@ -32,16 +32,16 @@ def test_execute_experiment_has_no_side_effect(
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAvg()
     # test every two rounds
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, rounds=2)
+    my_eval_strategy = EvaluationStrategy(test_data_organizations=test_linear_organizations, rounds=2)
     dummy_algo_instance = dummy_algo_class()
 
     cp1 = execute_experiment(
         client=network.clients[0],
         algo=dummy_algo_instance,
         strategy=strategy,
-        train_data_nodes=train_linear_nodes,
+        train_data_organizations=train_linear_organizations,
         evaluation_strategy=my_eval_strategy,
-        aggregation_node=aggregation_node,
+        aggregation_organization=aggregation_organization,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
@@ -52,17 +52,17 @@ def test_execute_experiment_has_no_side_effect(
         client=network.clients[0],
         algo=dummy_algo_instance,
         strategy=strategy,
-        train_data_nodes=train_linear_nodes,
+        train_data_organizations=train_linear_organizations,
         evaluation_strategy=my_eval_strategy,
-        aggregation_node=aggregation_node,
+        aggregation_organization=aggregation_organization,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
     )
 
-    assert sum(len(node.tuples) for node in test_linear_nodes) == 0
-    assert sum(len(node.tuples) for node in train_linear_nodes) == 0
-    assert len(aggregation_node.tuples) == 0
+    assert sum(len(organization.tuples) for organization in test_linear_organizations) == 0
+    assert sum(len(organization.tuples) for organization in train_linear_organizations) == 0
+    assert len(aggregation_organization.tuples) == 0
     assert cp1 == cp2
 
 
@@ -77,9 +77,9 @@ def test_too_long_additional_metadata(session_dir, dummy_strategy_class, dummy_a
             client=client,
             algo=dummy_algo_class(),
             strategy=dummy_strategy_class(),
-            train_data_nodes=[],
+            train_data_organizations=[],
             evaluation_strategy=None,
-            aggregation_node=None,
+            aggregation_organization=None,
             num_rounds=2,
             dependencies=None,
             experiment_folder=session_dir / "experiment_folder",
@@ -100,9 +100,9 @@ def test_match_algo_strategy(session_dir, dummy_strategy_class, dummy_algo_class
             client=client,
             algo=MyAlgo(),
             strategy=dummy_strategy_class(),
-            train_data_nodes=[],
+            train_data_organizations=[],
             evaluation_strategy=None,
-            aggregation_node=None,
+            aggregation_organization=None,
             num_rounds=2,
             dependencies=None,
             experiment_folder=session_dir / "experiment_folder",

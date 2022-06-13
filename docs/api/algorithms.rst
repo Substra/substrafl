@@ -19,10 +19,10 @@ TorchScaffoldAlgo
     :inherited-members:
 
 
-TorchOneNodeAlgo
------------------
+TorchOneOrganizationAlgo
+------------------------
 
-.. autoclass:: connectlib.algorithms.pytorch.TorchOneNodeAlgo
+.. autoclass:: connectlib.algorithms.pytorch.TorchOneOrganizationAlgo
     :private-members: _get_len_from_x, _local_train, _local_predict
     :inherited-members:
 

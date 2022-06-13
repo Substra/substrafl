@@ -5,9 +5,9 @@ from typing import TypeVar
 import substra
 
 from connectlib.dependency import Dependency
-from connectlib.nodes.node import Node
-from connectlib.nodes.node import OperationKey
-from connectlib.nodes.references.shared_state import SharedStateRef
+from connectlib.organizations.organization import OperationKey
+from connectlib.organizations.organization import Organization
+from connectlib.organizations.references.shared_state import SharedStateRef
 from connectlib.remote.operations import AggregateOperation
 from connectlib.remote.register import register_algo
 from connectlib.remote.remote_struct import RemoteStruct
@@ -15,13 +15,14 @@ from connectlib.remote.remote_struct import RemoteStruct
 SharedState = TypeVar("SharedState")
 
 
-class AggregationNode(Node):
-    """The node which applies operations to the shared states which are received from ``TrainDataNode`` data operations.
-    The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.
+class AggregationOrganization(Organization):
+    """The organization which applies operations to the shared states which are received from ``TrainDataOrganization``
+    data operations.
+    The result is sent to the ``TrainDataOrganization`` and/or ``TestDataOrganization`` data operations.
     """
 
     def update_states(self, operation: AggregateOperation, round_idx: int) -> SharedStateRef:
-        """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
+        """Adding an aggregated tuple to the list of operations to be executed by the organization during the compute plan.
         This is done in a static way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (connectlib local reference of the algorithm)
         and not a substra algo_key as nothing has been submitted yet.
@@ -50,7 +51,7 @@ class AggregationNode(Node):
 
         aggregate_tuple = {
             "remote_operation": operation.remote_struct,
-            "worker": self.node_id,
+            "worker": self.organization_id,
             "in_models_ids": [ref.key for ref in operation.shared_states]
             if operation.shared_states is not None
             else None,

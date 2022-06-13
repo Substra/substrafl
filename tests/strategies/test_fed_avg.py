@@ -5,8 +5,8 @@ import pytest
 
 from connectlib import execute_experiment
 from connectlib.dependency import Dependency
-from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.train_data_node import TrainDataNode
+from connectlib.organizations.aggregation_organization import AggregationOrganization
+from connectlib.organizations.train_data_organization import TrainDataOrganization
 from connectlib.remote import remote_data
 from connectlib.schemas import FedAvgSharedState
 from connectlib.strategies import FedAvg
@@ -72,7 +72,7 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
     # predict() returns the data, score returned by AccuracyMetric (in the metric) is the mean of all the y_pred
     # passed to it. The tests asserts if the score is 0.5
-    # This test only runs on two nodes.
+    # This test only runs on two organizations.
 
     class MyAlgo(dummy_algo_class):
         @remote_data
@@ -89,13 +89,13 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
             return FedAvgSharedState(n_samples=len(x), parameters_update=[np.asarray(e) for e in x])
 
     # Add 0s and 1s constant to check the averaging of the function
-    train_data_nodes = [
-        TrainDataNode(network.msp_ids[0], numpy_datasets[0], [constant_samples[0]]),
-        TrainDataNode(network.msp_ids[1], numpy_datasets[1], [constant_samples[1]]),
+    train_data_organizations = [
+        TrainDataOrganization(network.msp_ids[0], numpy_datasets[0], [constant_samples[0]]),
+        TrainDataOrganization(network.msp_ids[1], numpy_datasets[1], [constant_samples[1]]),
     ]
 
     num_rounds = 2
-    aggregation_node = AggregationNode(network.msp_ids[0])
+    aggregation_organization = AggregationOrganization(network.msp_ids[0])
     my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAvg()
@@ -103,8 +103,8 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
         client=network.clients[0],
         algo=my_algo0,
         strategy=strategy,
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
+        train_data_organizations=train_data_organizations,
+        aggregation_organization=aggregation_organization,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",

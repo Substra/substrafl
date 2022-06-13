@@ -19,7 +19,7 @@ markers = [
     "gpu", # gpu tests, to run manually
 ]
 filterwarnings = [
-    "ignore:.*TestDataNode.*:pytest.PytestCollectionWarning",
+    "ignore:.*TestDataOrganization.*:pytest.PytestCollectionWarning",
     # ignore substra tools deprecation warning
     "ignore:.*imp module.*:DeprecationWarning",
 ]

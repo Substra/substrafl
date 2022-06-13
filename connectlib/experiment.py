@@ -20,9 +20,9 @@ from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.exceptions import KeyMetadataError
 from connectlib.exceptions import LenMetadataError
-from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.node import OperationKey
-from connectlib.nodes.train_data_node import TrainDataNode
+from connectlib.organizations.aggregation_organization import AggregationOrganization
+from connectlib.organizations.organization import OperationKey
+from connectlib.organizations.train_data_organization import TrainDataOrganization
 from connectlib.remote.remote_struct import RemoteStruct
 from connectlib.strategies.strategy import Strategy
 
@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 
 def _register_operations(
     client: substra.Client,
-    train_data_nodes: List[TrainDataNode],
-    aggregation_node: Optional[AggregationNode],
+    train_data_organizations: List[TrainDataOrganization],
+    aggregation_organization: Optional[AggregationOrganization],
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
 ) -> Tuple[List[dict], List[dict], List[dict], Dict[RemoteStruct, OperationKey]]:
@@ -40,49 +40,51 @@ def _register_operations(
 
     Args:
         client (substra.Client): substra client
-        train_data_nodes (typing.List[TrainDataNode]): list of train data nodes
-        aggregation_node (typing.Optional[AggregationNode]): the aggregation node for centralized strategies
-        evaluation_strategy (typing.Optional[EvaluationStrategy]): the evaluation strategy if there is one
-        dependencies (Dependency): dependencies of the train algo
+        train_data_organizations (typing.List[TrainDataOrganization]): list of train data organizations
+        aggregation_organization (typing.Optional[AggregationOrganization]): the aggregation organization for
+        centralized strategies evaluation_strategy (typing.Optional[EvaluationStrategy]): the evaluation strategy
+        if there is one dependencies (Dependency): dependencies of the train algo
 
     Returns:
         typing.Tuple[typing.List[dict], typing.List[dict], typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
         composite_traintuples, aggregation_tuples, testtuples specifications, operation_cache
     """
-    # `register_operations` methods from the different nodes store the id of the already registered
+    # `register_operations` methods from the different organizations store the id of the already registered
     # algorithm so we don't add them twice
     operation_cache = dict()
-    train_data_nodes_id = {node.node_id for node in train_data_nodes}
-    aggregation_node_id = {aggregation_node.node_id} if aggregation_node is not None else set()
+    train_data_organizations_id = {organization.organization_id for organization in train_data_organizations}
+    aggregation_organization_id = (
+        {aggregation_organization.organization_id} if aggregation_organization is not None else set()
+    )
 
-    authorized_ids = list(train_data_nodes_id | aggregation_node_id)
+    authorized_ids = list(train_data_organizations_id | aggregation_organization_id)
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
     composite_traintuples = []
-    for train_node in train_data_nodes:
-        operation_cache = train_node.register_operations(
+    for train_organization in train_data_organizations:
+        operation_cache = train_organization.register_operations(
             client, permissions, cache=operation_cache, dependencies=dependencies
         )
-        composite_traintuples += train_node.tuples
+        composite_traintuples += train_organization.tuples
 
     testtuples = []
     if evaluation_strategy is not None:
-        for test_node in evaluation_strategy.test_data_nodes:
-            # The test nodes do not have any operation to register: no algo on the testtuple
-            testtuples += test_node.tuples
+        for test_organization in evaluation_strategy.test_data_organizations:
+            # The test organizations do not have any operation to register: no algo on the testtuple
+            testtuples += test_organization.tuples
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
     # We still need to pass the information of the editable mode.
     aggregation_tuples = []
-    if aggregation_node is not None:
-        operation_cache = aggregation_node.register_operations(
+    if aggregation_organization is not None:
+        operation_cache = aggregation_organization.register_operations(
             client,
             permissions,
             cache=operation_cache,
             dependencies=Dependency(editable_mode=dependencies.editable_mode),
         )
-        aggregation_tuples = aggregation_node.tuples
+        aggregation_tuples = aggregation_organization.tuples
 
     return composite_traintuples, aggregation_tuples, testtuples, operation_cache
 
@@ -94,8 +96,8 @@ def _save_experiment_summary(
     num_rounds: int,
     algo: Algo,
     operation_cache: Dict[RemoteStruct, OperationKey],
-    train_data_nodes: TrainDataNode,
-    aggregation_node: Optional[AggregationNode],
+    train_data_organizations: TrainDataOrganization,
+    aggregation_organization: Optional[AggregationOrganization],
     evaluation_strategy: EvaluationStrategy,
     timestamp: str,
     additional_metadata: Optional[Dict],
@@ -109,8 +111,8 @@ def _save_experiment_summary(
         num_rounds (int): num_rounds
         algo (connectlib.algorithms.Algo): algo
         operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
-        train_data_nodes (TrainDataNode): train_data_nodes
-        aggregation_node (typing.Optional[AggregationNode]): aggregation_node
+        train_data_organizations (TrainDataOrganization): train_data_organizations
+        aggregation_organization (typing.Optional[AggregationOrganization]): aggregation_organization
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
         additional_metadata (dict, Optional): Optional dictionary of metadata to be shown on the Connect WebApp.
@@ -128,14 +130,18 @@ def _save_experiment_summary(
     experiment_summary["algo_keys"] = {
         operation_cache[remote_struct]: remote_struct.summary() for remote_struct in operation_cache
     }
-    experiment_summary["train_data_nodes"] = [train_data_node.summary() for train_data_node in train_data_nodes]
-    experiment_summary["test_data_nodes"] = []
+    experiment_summary["train_data_organizations"] = [
+        train_data_organization.summary() for train_data_organization in train_data_organizations
+    ]
+    experiment_summary["test_data_organizations"] = []
     if evaluation_strategy is not None:
-        experiment_summary["test_data_nodes"] = [
-            test_data_node.summary() for test_data_node in evaluation_strategy.test_data_nodes
+        experiment_summary["test_data_organizations"] = [
+            test_data_organization.summary() for test_data_organization in evaluation_strategy.test_data_organizations
         ]
 
-    experiment_summary["aggregation_node"] = aggregation_node.summary() if aggregation_node is not None else None
+    experiment_summary["aggregation_organization"] = (
+        aggregation_organization.summary() if aggregation_organization is not None else None
+    )
     if additional_metadata is not None:
         experiment_summary["additional_metadata"] = additional_metadata
 
@@ -193,19 +199,19 @@ def execute_experiment(
     client: substra.Client,
     algo: Algo,
     strategy: Strategy,
-    train_data_nodes: List[TrainDataNode],
+    train_data_organizations: List[TrainDataOrganization],
     num_rounds: int,
     experiment_folder: Union[str, Path],
-    aggregation_node: Optional[AggregationNode] = None,
+    aggregation_organization: Optional[AggregationOrganization] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
     name: Optional[str] = None,
     additional_metadata: Optional[Dict] = None,
 ) -> substra.sdk.models.ComputePlan:
-    """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the `test_data_nodes`)
-    your `algo` with the specified `strategy` `n_rounds` times and return the compute plan object from the connect
-    platform.
+    """Run a complete experiment. This will train (on the `train_data_organizations`) and test (on the
+    `test_data_organizations`) your `algo` with the specified `strategy` `n_rounds` times and return the
+    compute plan object from the connect platform.
 
     In connectlib, operations are linked to each other statically before being submitted to substra.
 
@@ -225,13 +231,13 @@ def execute_experiment(
 
     Args:
         client (substra.Client): A substra client to interact with the connect platform
-        algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+        algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified organizations)
         strategy (Strategy): The strategy by which your algorithm will be executed
-        train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data occurs
-        evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
+        train_data_organizations (typing.List[TrainDataOrganization]): List of the organizations where training on data
+            occurs evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
-        aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation node,
-            where all the shared tasks occurs else None.
+        aggregation_organization (typing.Optional[AggregationOrganization]): For centralized strategy, the aggregation
+            organization, where all the shared tasks occurs else None.
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the connectlib Dependency class. Defaults None.
@@ -256,15 +262,17 @@ def execute_experiment(
             "strategies."
         )
 
-    train_data_nodes = copy.deepcopy(train_data_nodes)
-    aggregation_node = copy.deepcopy(aggregation_node)
+    train_data_organizations = copy.deepcopy(train_data_organizations)
+    aggregation_organization = copy.deepcopy(aggregation_organization)
     strategy = copy.deepcopy(strategy)
     evaluation_strategy = copy.deepcopy(evaluation_strategy)
 
-    train_node_ids = [train_data_node.node_id for train_data_node in train_data_nodes]
+    train_organization_ids = [
+        train_data_organization.organization_id for train_data_organization in train_data_organizations
+    ]
 
-    if len(train_node_ids) != len(set(train_node_ids)):
-        raise ValueError("Training multiple algorithms on the same node is not supported right now.")
+    if len(train_organization_ids) != len(set(train_organization_ids)):
+        raise ValueError("Training multiple algorithms on the same organization is not supported right now.")
 
     if evaluation_strategy is not None:
         _check_evaluation_strategy(evaluation_strategy, num_rounds)
@@ -285,15 +293,15 @@ def execute_experiment(
     for round_idx in range(1, num_rounds + 1):
         strategy.perform_round(
             algo=algo,
-            train_data_nodes=train_data_nodes,
-            aggregation_node=aggregation_node,
+            train_data_organizations=train_data_organizations,
+            aggregation_organization=aggregation_organization,
             round_idx=round_idx,
         )
 
         if evaluation_strategy is not None and next(evaluation_strategy):
             strategy.predict(
-                train_data_nodes=train_data_nodes,
-                test_data_nodes=evaluation_strategy.test_data_nodes,
+                train_data_organizations=train_data_organizations,
+                test_data_organizations=evaluation_strategy.test_data_organizations,
                 round_idx=round_idx,
             )
 
@@ -301,8 +309,8 @@ def execute_experiment(
     logger.info("Submitting the algorithm to Connect.")
     composite_traintuples, aggregation_tuples, testtuples, operation_cache = _register_operations(
         client=client,
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
+        train_data_organizations=train_data_organizations,
+        aggregation_organization=aggregation_organization,
         evaluation_strategy=evaluation_strategy,
         dependencies=dependencies,
     )
@@ -322,8 +330,8 @@ def execute_experiment(
         num_rounds=num_rounds,
         algo=algo,
         operation_cache=operation_cache,
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
+        train_data_organizations=train_data_organizations,
+        aggregation_organization=aggregation_organization,
         evaluation_strategy=evaluation_strategy,
         timestamp=timestamp,
         additional_metadata=additional_metadata,

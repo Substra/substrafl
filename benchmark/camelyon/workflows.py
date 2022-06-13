@@ -69,14 +69,14 @@ def connectlib_fed_avg(
     asset_keys = load_asset_keys(asset_keys_path, mode)
 
     # Connectlib asset registration
-    train_data_nodes = register_assets.get_train_data_nodes(
+    train_data_organizations = register_assets.get_train_data_organizations(
         clients=clients, train_folder=train_folder, asset_keys=asset_keys, nb_data_sample=nb_train_data_samples
     )
-    test_data_nodes = register_assets.get_test_data_nodes(
+    test_data_organizations = register_assets.get_test_data_organizations(
         clients=clients, test_folder=test_folder, asset_keys=asset_keys, nb_data_sample=nb_test_data_samples
     )
 
-    aggregation_node = register_assets.get_aggregation_node(client=clients[0])
+    aggregation_organization = register_assets.get_aggregation_organization(client=clients[0])
 
     if mode == "remote":
         save_asset_keys(asset_keys_path, asset_keys)
@@ -100,16 +100,16 @@ def connectlib_fed_avg(
     strategy = FedAvg()
 
     # Evaluation strategy
-    evaluation = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=[n_rounds])
+    evaluation = EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=[n_rounds])
 
     # Launch experiment
     compute_plan = execute_experiment(
         client=clients[1],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_data_nodes,
+        train_data_organizations=train_data_organizations,
         evaluation_strategy=evaluation,
-        aggregation_node=aggregation_node,
+        aggregation_organization=aggregation_organization,
         num_rounds=n_rounds,
         dependencies=algo_deps,
         experiment_folder=Path(__file__).resolve().parent / "experiment_folder",

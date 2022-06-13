@@ -1,6 +1,6 @@
-- username: 'node-1'
+- username: 'org-1'
   url: 'http://backend-org-1-substra-backend-server.org-1.svc.cluster.local:8000'
   password: 'p@sswr0d44'
-- username: 'node-2'
+- username: 'org-2'
   url: 'http://backend-org-2-substra-backend-server.org-2.svc.cluster.local:8000'
   password: 'p@sswr0d45'

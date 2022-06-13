@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 and the initialization round was `-1` (#200)
 For each composite train tuple, aggregate tuple and test tuple the meta data `round_idx` has changed
 accordingly to the rule stated above.
+- BREAKING CHANGE: rename node to organization (#201)
 
 ## [0.16.0](https://github.com/owkin/connectlib/releases/tag/0.16.0) - 2022-06-07
 

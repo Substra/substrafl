@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 def test_pytorch_fedavg_algo_weights(
     network,
     torch_linear_model,
-    train_linear_nodes,
-    aggregation_node,
+    train_linear_organizations,
+    aggregation_organization,
     session_dir,
 ):
     """Check the weight initialisation, aggregation and set weights.
@@ -75,9 +75,9 @@ def test_pytorch_fedavg_algo_weights(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_linear_nodes,
+        train_data_organizations=train_linear_organizations,
         evaluation_strategy=my_eval_strategy,
-        aggregation_node=aggregation_node,
+        aggregation_organization=aggregation_organization,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
@@ -108,7 +108,7 @@ def test_pytorch_fedavg_algo_weights(
         increment_parameters(model_0.model, aggregate_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_0.model, model_2.model)
 
-    # The local models are always the same on every node
+    # The local models are always the same on every organization
     assert_model_parameters_equal(rank_2_local_models[0].model, rank_2_local_models[1].model)
 
 
@@ -118,9 +118,9 @@ def test_pytorch_fedavg_algo_weights(
 def test_pytorch_fedavg_algo_performance(
     network,
     torch_linear_model,
-    train_linear_nodes,
-    test_linear_nodes,
-    aggregation_node,
+    train_linear_organizations,
+    test_linear_organizations,
+    aggregation_organization,
     session_dir,
     rtol,
 ):
@@ -163,16 +163,16 @@ def test_pytorch_fedavg_algo_performance(
 
     strategy = FedAvg()
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
+        test_data_organizations=test_linear_organizations, rounds=[num_rounds]  # test only at the last round
     )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_linear_nodes,
+        train_data_organizations=train_linear_organizations,
         evaluation_strategy=my_eval_strategy,
-        aggregation_node=aggregation_node,
+        aggregation_organization=aggregation_organization,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",

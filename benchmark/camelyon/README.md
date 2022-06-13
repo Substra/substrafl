@@ -72,7 +72,7 @@ python benchmarks.py --mode subprocess --n-rounds 2 --n-local-steps 1 --nb-train
 
 For this example, we use 400 mb of the Camelyon dataset already processed by the Owkin R&D team. The dataset is automatically downloaded from owkin GCP, please ensure you have access to [this folder](https://console.cloud.google.com/storage/browser/camelyon_0_5?project=connectors-preview)
 
-Those 400 mb of data are saved as one data sample. It is duplicated to create other data samples and form a large dataset (eg 400Gb per node).
+Those 400 mb of data are saved as one data sample. It is duplicated to create other data samples and form a large dataset (eg 400Gb per organization).
 
 **IMPORTANT NOTE:** those folder are populated with `symlinks` hence no useless space will be used on your device.
 

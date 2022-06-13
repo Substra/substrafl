@@ -15,20 +15,20 @@ from connectlib.schemas import StrategyName
 logger = logging.getLogger(__name__)
 
 
-class TorchOneNodeAlgo(TorchAlgo):
-    """To be inherited. Wraps the necessary operation so a torch model can be trained in the One Node strategy.
+class TorchOneOrganizationAlgo(TorchAlgo):
+    """To be inherited. Wraps the necessary operation so a torch model can be trained in the One Organization strategy.
 
     The ``train`` method:
 
         - initializes or loads the index generator,
-        - calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_train` method to do the local
-          training
+        - calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneOrganizationAlgo._local_train` method to do the
+          local training
 
-    The ``predict`` method calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict` method to
-    generate the predictions.
+    The ``predict`` method calls the :py:func:`~connectlib.algorithms.pytorch.TorchOneOrganizationAlgo._local_predict`
+    method to generate the predictions.
 
-    The child class must implement the :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_train` and
-    :py:func:`~connectlib.algorithms.pytorch.TorchOneNodeAlgo._local_predict` methods, and can override
+    The child class must implement the :py:func:`~connectlib.algorithms.pytorch.TorchOneOrganizationAlgo._local_train`
+    and :py:func:`~connectlib.algorithms.pytorch.TorchOneOrganizationAlgo._local_predict` methods, and can override
     other methods if necessary.
 
     To add a custom parameter to the ``__init__``of the class, also add it to the call to ``super().__init__```
@@ -39,7 +39,7 @@ class TorchOneNodeAlgo(TorchAlgo):
 
         .. code-block:: python
 
-            class MyAlgo(TorchOneNodeAlgo):
+            class MyAlgo(TorchOneOrganizationAlgo):
                 def __init__(
                     self,
                     my_custom_extra_parameter,
@@ -145,7 +145,7 @@ class TorchOneNodeAlgo(TorchAlgo):
         Returns:
             typing.List: typing.List[StrategyName]
         """
-        return [StrategyName.ONE_NODE]
+        return [StrategyName.ONE_ORGANIZATION]
 
     @remote_data
     def train(
@@ -154,7 +154,7 @@ class TorchOneNodeAlgo(TorchAlgo):
         y: Any,
         shared_state=None,  # Is always None for this strategy
     ) -> Dict[str, np.ndarray]:
-        """Train method of the OneNode strategy implemented with torch.
+        """Train method of the OneOrganization strategy implemented with torch.
 
         Args:
             x (typing.Any): Input data.
@@ -163,7 +163,7 @@ class TorchOneNodeAlgo(TorchAlgo):
                 won't have any effect. Defaults to None.
 
         Returns:
-            Dict[str, numpy.ndarray]: weight update which is an empty array. OneNode strategy is not using
+            Dict[str, numpy.ndarray]: weight update which is an empty array. OneOrganization strategy is not using
             shared state and this return is only for consistency.
         """
 

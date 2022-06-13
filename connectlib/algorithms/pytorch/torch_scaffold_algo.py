@@ -322,7 +322,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         Args:
             x (typing.Any): Input data.
             y (typing.Any): Input target.
-            shared_state (typing.Optional[ScaffoldAveragedStates]): Shared state sent by the aggregate_node
+            shared_state (typing.Optional[ScaffoldAveragedStates]): Shared state sent by the aggregate_organization
                 (returned by the func strategies.scaffold.avg_shared_states)
                 Defaults to None.
 
@@ -356,7 +356,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             assert self._client_control_variate is not None
             assert self._index_generator.n_samples is not None
 
-            # The shared states is the average of the difference of the parameters_update for all nodes
+            # The shared states is the average of the difference of the parameters_update for all organizations
             # Hence we need to add it to the previous local state parameters
             # Scaffold paper's Algo step 17: model = model + aggregation_lr * parameters_update
             # here shared_state.avg_parameters_update is already aggregation_lr * parameters_update,
