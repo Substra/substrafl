@@ -15,6 +15,15 @@ For each composite train tuple, aggregate tuple and test tuple the meta data `ro
 accordingly to the rule stated above.
 - BREAKING CHANGE: rename node to organization (#201)
 
+### Added
+
+- when using the `TorchScaffoldAlgo`: (#199)
+  - The number of time the `_scaffold_parameters_update` method  must be called within the `_local_train` method is now checked
+  - A warning is thrown if an other optimizer than `SGD`
+  - If multiple learning rates are set for the optimizer, a warning is thrown and the smallest learning rate is used for
+  the shared state aggregation operation. `0` is not considered as a learning rate for this choice as it could be used to
+  deactivate the learning process of certain layers from the model.
+
 ## [0.16.0](https://github.com/owkin/connectlib/releases/tag/0.16.0) - 2022-06-07
 
 ### Changed

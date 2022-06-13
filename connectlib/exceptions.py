@@ -43,3 +43,18 @@ class IncompatibleAlgoStrategyError(Exception):
     """This algo is not compatible with this strategy."""
 
     pass
+
+
+class ScaffoldLearningRateError(Exception):
+    """When using the :class:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo`,
+    a learning rate must be passed to the optimizer."""
+
+    pass
+
+
+class TorchScaffoldAlgoParametersUpdateError(Exception):
+    """When using  :class:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo`,
+    :func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._scaffold_parameters_update` method
+    must be called once for each update within the
+    :func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._local_train` method.
+    """
