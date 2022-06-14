@@ -13,18 +13,18 @@ from connectlib.strategies.strategy import Strategy
 logger = logging.getLogger(__name__)
 
 
-class OneOrganization(Strategy):
-    """One Node strategy.
+class SingleOrganization(Strategy):
+    """Single organization strategy.
 
-    One Node is not a real federated strategy and it is rather used for testing as it is faster than other
+    Single organization is not a real federated strategy and it is rather used for testing as it is faster than other
     'real' strategies. The training and prediction are performed on a single Node. However, the number of
     passes to that Node (num_rounds) is still defined to test the actual federated setting.
-    In OneOrganization strategy a single client ``TrainDataNode`` and ``TestDataNode`` performs
+    In SingleOrganization strategy a single client ``TrainDataNode`` and ``TestDataNode`` performs
     all the model execution.
     """
 
     def __init__(self):
-        super(OneOrganization, self).__init__()
+        super(SingleOrganization, self).__init__()
 
         # State
         self.local_state: Optional[LocalStateRef] = None
@@ -45,23 +45,24 @@ class OneOrganization(Strategy):
         round_idx: int,
         aggregation_node: Optional[AggregationNode] = None,
     ):
-        """One round of the OneOrganization strategy: perform a local update (train on n mini-batches) of the models on a given
-        data organization
+        """One round of the SingleOrganization strategy: perform a local update (train on n mini-batches) of the models
+        on a given data node
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
-            train_data_nodes (List[TrainDataNode]): List of the organizations on which to perform local
-                updates aggregation_node (AggregationNode): Should be None otherwise it will be ignored
+            train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local
+                updates, there should be exactly one item in the list.
+            aggregation_node (AggregationNode): Should be None otherwise it will be ignored
             round_idx (int): Round number, it starts at 1.
         """
         if aggregation_node is not None:
-            logger.info("Aggregation organizations are ignored for decentralized strategies.")
+            logger.info("Aggregation nodes are ignored for decentralized strategies.")
 
-        n_train_data_organizations = len(train_data_nodes)
-        if n_train_data_organizations != 1:
+        n_train_data_nodes = len(train_data_nodes)
+        if n_train_data_nodes != 1:
             raise ValueError(
-                "One organization strategy can only be used with one train_data_organization"
-                f" but {n_train_data_organizations} were passed."
+                "One organization strategy can only be used with one train_data_node"
+                f" but {n_train_data_nodes} were passed."
             )
 
         # define composite tuples (do not submit yet)
@@ -87,13 +88,13 @@ class OneOrganization(Strategy):
     ):
         if len(train_data_nodes) != 1:
             raise ValueError(
-                "One organization strategy can only be used with one train_data_organization but"
+                "Single organization strategy can only be used with one train_data_node but"
                 f" {len(train_data_nodes)} were passed."
             )
 
-        for test_data_node in test_data_nodes:
+        for test_node in test_data_nodes:
 
-            if train_data_nodes[0].organization_id != test_data_node.organization_id:
+            if train_data_nodes[0].organization_id != test_node.organization_id:
                 raise NotImplementedError("Cannot test on a organization we did not train on for now.")
             # Init state for testtuple
-            test_data_node.update_states(traintuple_id=self.local_state.key, round_idx=round_idx)
+            test_node.update_states(traintuple_id=self.local_state.key, round_idx=round_idx)

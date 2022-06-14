@@ -12,10 +12,10 @@ Scaffold
 
 .. autoclass:: connectlib.strategies.Scaffold
 
-OneOrganization
-^^^^^^^^^^^^^^^
+Single Organization
+^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: connectlib.strategies.OneOrganization
+.. autoclass:: connectlib.strategies.SingleOrganization
 
 Strategies Base Class
 ^^^^^^^^^^^^^^^^^^^^^

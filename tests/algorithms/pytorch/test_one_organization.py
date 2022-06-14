@@ -5,11 +5,11 @@ import pytest
 import torch
 
 from connectlib import execute_experiment
-from connectlib.algorithms.pytorch import TorchOneOrganizationAlgo
+from connectlib.algorithms.pytorch import TorchSingleOrganizationAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.index_generator import NpIndexGenerator
-from connectlib.strategies import OneOrganization
+from connectlib.strategies import SingleOrganization
 from tests import utils
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def test_one_organization(
     )
     BATCH_SIZE = 32
 
-    strategy = OneOrganization()
+    strategy = SingleOrganization()
 
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
@@ -45,7 +45,7 @@ def test_one_organization(
         num_updates=n_updates,
     )
 
-    class MyOneOrganizationAlgo(TorchOneOrganizationAlgo):
+    class MyOneOrganizationAlgo(TorchSingleOrganizationAlgo):
         def __init__(
             self,
         ):

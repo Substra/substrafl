@@ -1,6 +1,6 @@
 from connectlib.strategies.fed_avg import FedAvg
-from connectlib.strategies.one_organization import OneOrganization
 from connectlib.strategies.scaffold import Scaffold
+from connectlib.strategies.single_organization import SingleOrganization
 from connectlib.strategies.strategy import Strategy
 
-__all__ = ["Strategy", "FedAvg", "OneOrganization", "Scaffold"]
+__all__ = ["Strategy", "FedAvg", "SingleOrganization", "Scaffold"]

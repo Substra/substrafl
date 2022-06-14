@@ -7,8 +7,8 @@ import torch
 from connectlib import execute_experiment
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
 from connectlib.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
-from connectlib.algorithms.pytorch.torch_one_organization_algo import TorchOneOrganizationAlgo
 from connectlib.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
+from connectlib.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.index_generator import NpIndexGenerator
@@ -16,12 +16,12 @@ from connectlib.remote.decorators import remote_data
 from connectlib.remote.remote_struct import RemoteStruct
 from connectlib.schemas import StrategyName
 from connectlib.strategies import FedAvg
-from connectlib.strategies import OneOrganization
 from connectlib.strategies import Scaffold
+from connectlib.strategies import SingleOrganization
 from tests import utils
 
 
-@pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchOneOrganizationAlgo, TorchScaffoldAlgo])
+@pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchSingleOrganizationAlgo, TorchScaffoldAlgo])
 def dummy_algo_custom_init_arg(request):
     lin = torch.nn.Linear(3, 2)
     nig = NpIndexGenerator(
@@ -68,7 +68,7 @@ def use_gpu(request):
 
 
 @pytest.fixture(
-    params=[(TorchFedAvgAlgo, FedAvg), (TorchOneOrganizationAlgo, OneOrganization), (TorchScaffoldAlgo, Scaffold)]
+    params=[(TorchFedAvgAlgo, FedAvg), (TorchSingleOrganizationAlgo, SingleOrganization), (TorchScaffoldAlgo, Scaffold)]
 )
 def dummy_gpu(request, torch_linear_model, use_gpu):
     nig = NpIndexGenerator(
@@ -157,9 +157,11 @@ def test_gpu(
     )
 
     train_data_nodes = (
-        [train_linear_organizations[0]] if strategy_class == OneOrganization else train_linear_organizations
+        [train_linear_organizations[0]] if strategy_class == SingleOrganization else train_linear_organizations
     )
-    test_data_nodes = [test_linear_organizations[0]] if strategy_class == OneOrganization else test_linear_organizations
+    test_data_nodes = (
+        [test_linear_organizations[0]] if strategy_class == SingleOrganization else test_linear_organizations
+    )
 
     strategy = strategy_class()
     my_eval_strategy = EvaluationStrategy(
