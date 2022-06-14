@@ -64,15 +64,13 @@ def test_one_organization(
             return y_pred.detach().numpy()
 
     my_algo = MyOneOrganizationAlgo()
-    my_eval_strategy = EvaluationStrategy(
-        test_data_organizations=test_linear_organizations[:1], rounds=1
-    )  # test every round
+    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_organizations[:1], rounds=1)  # test every round
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_organizations=train_linear_organizations[:1],
+        train_data_nodes=train_linear_organizations[:1],
         evaluation_strategy=my_eval_strategy,
         num_rounds=n_rounds,
         dependencies=algo_deps,

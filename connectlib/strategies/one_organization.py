@@ -3,10 +3,10 @@ from typing import List
 from typing import Optional
 
 from connectlib.algorithms import Algo
-from connectlib.organizations import AggregationOrganization
-from connectlib.organizations import TestDataOrganization
-from connectlib.organizations import TrainDataOrganization
-from connectlib.organizations.references.local_state import LocalStateRef
+from connectlib.nodes import AggregationNode
+from connectlib.nodes import TestDataNode
+from connectlib.nodes import TrainDataNode
+from connectlib.nodes.references.local_state import LocalStateRef
 from connectlib.schemas import StrategyName
 from connectlib.strategies.strategy import Strategy
 
@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class OneOrganization(Strategy):
-    """One Organization strategy.
+    """One Node strategy.
 
-    One Organization is not a real federated strategy and it is rather used for testing as it is faster than other
-    'real' strategies. The training and prediction are performed on a single Organization. However, the number of
-    passes to that Organization (num_rounds) is still defined to test the actual federated setting.
-    In OneOrganization strategy a single client ``TrainDataOrganization`` and ``TestDataOrganization`` performs
+    One Node is not a real federated strategy and it is rather used for testing as it is faster than other
+    'real' strategies. The training and prediction are performed on a single Node. However, the number of
+    passes to that Node (num_rounds) is still defined to test the actual federated setting.
+    In OneOrganization strategy a single client ``TrainDataNode`` and ``TestDataNode`` performs
     all the model execution.
     """
 
@@ -41,23 +41,23 @@ class OneOrganization(Strategy):
     def perform_round(
         self,
         algo: Algo,
-        train_data_organizations: List[TrainDataOrganization],
+        train_data_nodes: List[TrainDataNode],
         round_idx: int,
-        aggregation_organization: Optional[AggregationOrganization] = None,
+        aggregation_node: Optional[AggregationNode] = None,
     ):
         """One round of the OneOrganization strategy: perform a local update (train on n mini-batches) of the models on a given
         data organization
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict
-            train_data_organizations (List[TrainDataOrganization]): List of the organizations on which to perform local
-                updates aggregation_organization (AggregationOrganization): Should be None otherwise it will be ignored
+            train_data_nodes (List[TrainDataNode]): List of the organizations on which to perform local
+                updates aggregation_node (AggregationNode): Should be None otherwise it will be ignored
             round_idx (int): Round number, it starts at 1.
         """
-        if aggregation_organization is not None:
+        if aggregation_node is not None:
             logger.info("Aggregation organizations are ignored for decentralized strategies.")
 
-        n_train_data_organizations = len(train_data_organizations)
+        n_train_data_organizations = len(train_data_nodes)
         if n_train_data_organizations != 1:
             raise ValueError(
                 "One organization strategy can only be used with one train_data_organization"
@@ -66,9 +66,9 @@ class OneOrganization(Strategy):
 
         # define composite tuples (do not submit yet)
         # for each composite tuple give description of Algo instead of a key for an algo
-        next_local_state, _ = train_data_organizations[0].update_states(
+        next_local_state, _ = train_data_nodes[0].update_states(
             algo.train(  # type: ignore
-                train_data_organizations[0].data_sample_keys,
+                train_data_nodes[0].data_sample_keys,
                 shared_state=None,
                 _algo_name=f"Training with {algo.__class__.__name__}",
             ),
@@ -81,19 +81,19 @@ class OneOrganization(Strategy):
 
     def predict(
         self,
-        test_data_organizations: List[TestDataOrganization],
-        train_data_organizations: List[TrainDataOrganization],
+        test_data_nodes: List[TestDataNode],
+        train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        if len(train_data_organizations) != 1:
+        if len(train_data_nodes) != 1:
             raise ValueError(
                 "One organization strategy can only be used with one train_data_organization but"
-                f" {len(train_data_organizations)} were passed."
+                f" {len(train_data_nodes)} were passed."
             )
 
-        for test_organization in test_data_organizations:
+        for test_data_node in test_data_nodes:
 
-            if train_data_organizations[0].organization_id != test_organization.organization_id:
+            if train_data_nodes[0].organization_id != test_data_node.organization_id:
                 raise NotImplementedError("Cannot test on a organization we did not train on for now.")
             # Init state for testtuple
-            test_organization.update_states(traintuple_id=self.local_state.key, round_idx=round_idx)
+            test_data_node.update_states(traintuple_id=self.local_state.key, round_idx=round_idx)
