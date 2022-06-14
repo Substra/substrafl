@@ -24,9 +24,9 @@ import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
 from connectlib.algorithms.algo import Algo
-from connectlib.organizations.aggregation_organization import AggregationOrganization
-from connectlib.organizations.test_data_organization import TestDataOrganization
-from connectlib.organizations.train_data_organization import TrainDataOrganization
+from connectlib.nodes.aggregation_node import AggregationNode
+from connectlib.nodes.test_data_node import TestDataNode
+from connectlib.nodes.train_data_node import TrainDataNode
 from connectlib.remote.decorators import remote_data
 from connectlib.schemas import StrategyName
 from connectlib.strategies.strategy import Strategy
@@ -203,8 +203,8 @@ def train_linear_organizations(network, numpy_datasets, train_linear_data_sample
         tmp_folder=session_dir,
     )
 
-    train_data_organizations = [
-        TrainDataOrganization(
+    train_data_nodes = [
+        TrainDataNode(
             network.msp_ids[k],
             numpy_datasets[k],
             [linear_samples[k]],
@@ -212,7 +212,7 @@ def train_linear_organizations(network, numpy_datasets, train_linear_data_sample
         for k in range(network.n_organizations)
     ]
 
-    return train_data_organizations
+    return train_data_nodes
 
 
 @pytest.fixture(scope="session")
@@ -246,11 +246,11 @@ def test_linear_organizations(
     Args:
         network (Network): Substra network from the configuration file.
         numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
-        mae (str): Mean absolute error metric for the TestDataOrganization
+        mae (str): Mean absolute error metric for the TestDataNode
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:
-        List[TestDataOrganization]: A one element list containing a connectlib TestDataOrganization for linear data with
+        List[TestDataNode]: A one element list containing a connectlib TestDataNode for linear data with
         a mae metric.
     """
 
@@ -263,24 +263,22 @@ def test_linear_organizations(
         tmp_folder=session_dir,
     )
 
-    test_data_organizations = [
-        TestDataOrganization(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae])
-    ]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae])]
 
-    return test_data_organizations
+    return test_data_nodes
 
 
 @pytest.fixture(scope="session")
-def aggregation_organization(network):
+def aggregation_node(network):
     """The central organization to use.
 
     Args:
         network (Network): Substra network from the configuration file.
 
     Returns:
-        AggregationOrganization: Connectlib aggregation Organization.
+        AggregationNode: Connectlib aggregation Node.
     """
-    return AggregationOrganization(network.msp_ids[0])
+    return AggregationNode(network.msp_ids[0])
 
 
 @pytest.fixture(scope="session")
@@ -356,8 +354,8 @@ def dummy_strategy_class():
         def perform_round(
             self,
             algo: Algo,
-            train_data_organizations: List[TrainDataOrganization],
-            aggregation_organization: Optional[AggregationOrganization],
+            train_data_nodes: List[TrainDataNode],
+            aggregation_node: Optional[AggregationNode],
             round_idx: int,
         ):
             pass
@@ -365,8 +363,8 @@ def dummy_strategy_class():
         def predict(
             self,
             algo: Algo,
-            test_data_organizations: List[TestDataOrganization],
-            train_data_organizations: List[TrainDataOrganization],
+            test_data_nodes: List[TestDataNode],
+            train_data_nodes: List[TrainDataNode],
             round_idx: int,
         ):
             pass

@@ -5,7 +5,7 @@ from typing import NewType
 OperationKey = NewType("OperationKey", str)
 
 
-class Organization:
+class Node:
     def __init__(self, organization_id: str):
         self.organization_id = organization_id
         self.tuples: List[Dict] = []

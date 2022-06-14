@@ -146,7 +146,7 @@ def test_gpu(
     network,
     train_linear_organizations,
     test_linear_organizations,
-    aggregation_organization,
+    aggregation_node,
 ):
     num_rounds = 2
     algo_class, strategy_class, use_gpu = dummy_gpu
@@ -156,25 +156,23 @@ def test_gpu(
         editable_mode=True,
     )
 
-    train_data_organizations = (
+    train_data_nodes = (
         [train_linear_organizations[0]] if strategy_class == OneOrganization else train_linear_organizations
     )
-    test_data_organizations = (
-        [test_linear_organizations[0]] if strategy_class == OneOrganization else test_linear_organizations
-    )
+    test_data_nodes = [test_linear_organizations[0]] if strategy_class == OneOrganization else test_linear_organizations
 
     strategy = strategy_class()
     my_eval_strategy = EvaluationStrategy(
-        test_data_organizations=test_data_organizations, rounds=[num_rounds]  # test only at the last round
+        test_data_nodes=test_data_nodes, rounds=[num_rounds]  # test only at the last round
     )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_organizations=train_data_organizations,
+        train_data_nodes=train_data_nodes,
         evaluation_strategy=my_eval_strategy,
-        aggregation_organization=aggregation_organization,
+        aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",

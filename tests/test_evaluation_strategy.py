@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.organizations.test_data_organization import TestDataOrganization
+from connectlib.nodes.test_data_node import TestDataNode
 
 
 @pytest.mark.parametrize("rounds", [1, 2, 4, 10, [1], [1, 4], [5, 1, 7, 3]])
@@ -14,10 +14,10 @@ def test_rounds(rounds):
     num_rounds = 10
     # test rounds as frequencies give expected result
     # mock the test organizations
-    test_data_organization = Mock(spec=TestDataOrganization)
-    test_data_organizations = [test_data_organization] * n_organizations
+    test_data_organization = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_organization] * n_organizations
 
-    evaluation_strategy = EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=rounds)
+    evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds
 
     for i in range(num_rounds):
@@ -52,12 +52,12 @@ def test_rounds_edges(rounds, e):
     # is not correct
     n_organizations = 3
 
-    # mock the test data organizations
-    test_data_organization = Mock(spec=TestDataOrganization)
-    test_data_organizations = [test_data_organization] * n_organizations
+    # mock the test data nodes
+    test_data_organization = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_organization] * n_organizations
 
     with pytest.raises(e):
-        EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=rounds)
+        EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
 
 
 @pytest.mark.parametrize(
@@ -76,11 +76,11 @@ def test_rounds_inconsitancy(rounds, num_rounds, e):
     # checked for and if inconsistency is found error is raised
     n_organizations = 3
 
-    # mock the test data organizations
-    test_data_organization = Mock(spec=TestDataOrganization)
-    test_data_organizations = [test_data_organization] * n_organizations
+    # mock the test data nodes
+    test_data_organization = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_organization] * n_organizations
 
-    evaluation_strategy = EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=rounds)
+    evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
 
     if e is None:
         evaluation_strategy.num_rounds = num_rounds
@@ -90,19 +90,19 @@ def test_rounds_inconsitancy(rounds, num_rounds, e):
 
 
 @pytest.mark.parametrize(
-    "test_data_organizations, e",
+    "test_data_nodes, e",
     [
-        [[Mock(spec=TestDataOrganization)], None],
+        [[Mock(spec=TestDataNode)], None],
         [[1], TypeError],
     ],
 )
-def test_error_on_wrong_organization_instance(test_data_organizations, e):
-    # test that only list of TestDataOrganizations are accepted as test_data_organizations
+def test_error_on_wrong_organization_instance(test_data_nodes, e):
+    # test that only list of TestDataOrganizations are accepted as test_data_nodes
     if e is not None:
         with pytest.raises(e):
-            EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=3)
+            EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=3)
     else:
-        EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=3)
+        EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=3)
 
 
 @pytest.mark.parametrize(
@@ -112,10 +112,10 @@ def test_error_on_wrong_organization_instance(test_data_organizations, e):
 def test_docstring_examples(rounds, num_rounds, result):
     """tests that the examples given in the docstring of EvaluationStrategy indeed give the correct result"""
     n_organizations = 3
-    data_organization = Mock(spec=TestDataOrganization)
+    data_organization = Mock(spec=TestDataNode)
     data_organizations = [data_organization] * n_organizations
 
-    evaluation_strategy = EvaluationStrategy(test_data_organizations=data_organizations, rounds=rounds)
+    evaluation_strategy = EvaluationStrategy(test_data_nodes=data_organizations, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds
 
     for answer in result:
@@ -135,10 +135,10 @@ def test_restart_rounds(rounds):
     num_rounds = 10
 
     # mock the test organizations
-    test_data_organization = Mock(spec=TestDataOrganization)
-    test_data_organizations = [test_data_organization] * n_organizations
+    test_data_organization = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_organization] * n_organizations
 
-    evaluation_strategy = EvaluationStrategy(test_data_organizations=test_data_organizations, rounds=rounds)
+    evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds
 
     res1 = [next(evaluation_strategy) for i in range(num_rounds)]

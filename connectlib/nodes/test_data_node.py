@@ -1,16 +1,16 @@
 from typing import List
 
-from connectlib.organizations.organization import Organization
+from connectlib.nodes.node import Node
 
 
-class TestDataOrganization(Organization):
-    """A organization on which you will test your algorithm.
-    A TestDataOrganization must also be a train data organization for now.
+class TestDataNode(Node):
+    """A node on which you will test your algorithm.
+    A TestDataNode must also be a train data node for now.
 
     Args:
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
-        test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this organization
+        test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
         metric_keys (List[str]):  Substra metric keys to the metrics, use substra.Client().add_metric()
     """
 
@@ -25,14 +25,14 @@ class TestDataOrganization(Organization):
         self.test_data_sample_keys = test_data_sample_keys
         self.metric_keys = metric_keys
 
-        super(TestDataOrganization, self).__init__(organization_id)
+        super(TestDataNode, self).__init__(organization_id)
 
     def update_states(
         self,
         traintuple_id: str,
         round_idx: int,
     ):
-        """Creating a test tuple based on the organization characteristic.
+        """Creating a test tuple based on the node characteristic.
 
         Args:
             traintuple_id (str): The substra parent id

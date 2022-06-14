@@ -46,7 +46,7 @@ class ScaffoldSharedState(_Model):
         control_variate_update (typing.List[numpy.ndarray]): the control_variate update of the client
         n_samples (int): the number of samples of the client
         server_control_variate (typing.List[numpy.ndarray]): the server control variate (``c`` in the Scaffold paper's
-            Algo). It is sent by every client as the aggregation organization doesn't have a persistent state, and
+            Algo). It is sent by every client as the aggregation node doesn't have a persistent state, and
             should be the same for each client as it should not be modified in the client Algo
     """
 

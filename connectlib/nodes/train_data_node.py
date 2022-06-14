@@ -7,24 +7,24 @@ from typing import Tuple
 import substra
 
 from connectlib.dependency import Dependency
-from connectlib.organizations.organization import OperationKey
-from connectlib.organizations.organization import Organization
-from connectlib.organizations.references.local_state import LocalStateRef
-from connectlib.organizations.references.shared_state import SharedStateRef
+from connectlib.nodes.node import Node
+from connectlib.nodes.node import OperationKey
+from connectlib.nodes.references.local_state import LocalStateRef
+from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote.operations import DataOperation
 from connectlib.remote.register import register_algo
 from connectlib.remote.remote_struct import RemoteStruct
 
 
-class TrainDataOrganization(Organization):
+class TrainDataNode(Node):
     """
     A predefined structure that allows you to register operations
-    on your train organization in a static way before submitting them to substra.
+    on your train node in a static way before submitting them to substra.
 
     Args:
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
-        data_sample_keys (typing.List[str]): Substra data_sample_keys used for the training on this organization
+        data_sample_keys (typing.List[str]): Substra data_sample_keys used for the training on this node
     """
 
     def __init__(
@@ -36,7 +36,7 @@ class TrainDataOrganization(Organization):
         self.data_manager_key = data_manager_key
         self.data_sample_keys = data_sample_keys
 
-        super(TrainDataOrganization, self).__init__(organization_id)
+        super(TrainDataNode, self).__init__(organization_id)
 
     def update_states(
         self,
@@ -45,7 +45,7 @@ class TrainDataOrganization(Organization):
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
         """Adding a composite train tuple to the list of operations to
-        be executed by the organization during the compute plan. This is done in a static
+        be executed by the node during the compute plan. This is done in a static
         way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (connectlib local reference of the algorithm)
         and not a substra algo_key as nothing has been submitted yet.
@@ -81,7 +81,7 @@ class TrainDataOrganization(Organization):
             "in_head_model_id": local_state.key if local_state is not None else None,
             "in_trunk_model_id": operation.shared_state.key
             if operation.shared_state is not None
-            else None,  # user-defined id (last aggregation organization task id)
+            else None,  # user-defined id (last aggregation node task id)
             "tag": "train",
             "composite_traintuple_id": op_id,
             "metadata": {

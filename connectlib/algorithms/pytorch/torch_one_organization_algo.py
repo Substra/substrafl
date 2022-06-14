@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class TorchOneOrganizationAlgo(TorchAlgo):
-    """To be inherited. Wraps the necessary operation so a torch model can be trained in the One Organization strategy.
+    """To be inherited. Wraps the necessary operation so a torch model can be trained in the One Node strategy.
 
     The ``train`` method:
 
