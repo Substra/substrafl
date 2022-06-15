@@ -144,8 +144,8 @@ def test_gpu(
     dummy_gpu,
     session_dir,
     network,
-    train_linear_organizations,
-    test_linear_organizations,
+    train_linear_nodes,
+    test_linear_nodes,
     aggregation_node,
 ):
     num_rounds = 2
@@ -156,12 +156,8 @@ def test_gpu(
         editable_mode=True,
     )
 
-    train_data_nodes = (
-        [train_linear_organizations[0]] if strategy_class == SingleOrganization else train_linear_organizations
-    )
-    test_data_nodes = (
-        [test_linear_organizations[0]] if strategy_class == SingleOrganization else test_linear_organizations
-    )
+    train_data_nodes = [train_linear_nodes[0]] if strategy_class == SingleOrganization else train_linear_nodes
+    test_data_nodes = [test_linear_nodes[0]] if strategy_class == SingleOrganization else test_linear_nodes
 
     strategy = strategy_class()
     my_eval_strategy = EvaluationStrategy(
