@@ -27,40 +27,29 @@ logger = logging.getLogger(__name__)
 current_folder = Path(__file__).parent
 
 
-@pytest.mark.substra
-@pytest.mark.slow
-def test_pytorch_scaffold_algo_weights(
-    network,
-    torch_linear_model,
-    train_linear_nodes,
-    aggregation_node,
-    session_dir,
-):
-    """Check the weight initialisation, aggregation and set weights.
-    The aggregation itself is tested at the strategy level, here we test
-    the pytorch layer.
-    """
-    num_updates = 2
-    num_rounds = 2
-    batch_size = 1
-
+def _torch_algo(torch_linear_model, lr=0.1, use_scheduler=False):
+    num_updates = 100
     seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
     nig = NpIndexGenerator(
-        batch_size=batch_size,
+        batch_size=32,
         num_updates=num_updates,
-        shuffle=True,
-        drop_last=False,
     )
+    optimizer = torch.optim.SGD(perceptron.parameters(), lr=lr)
+
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1) if use_scheduler else None
 
     class MyAlgo(TorchScaffoldAlgo):
-        def __init__(self):
+        def __init__(
+            self,
+        ):
             super().__init__(
-                model=perceptron,
+                optimizer=optimizer,
                 criterion=torch.nn.MSELoss(),
-                optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
+                model=perceptron,
                 index_generator=nig,
+                scheduler=scheduler,
             )
 
         def _local_train(self, x: Any, y: Any):
@@ -70,17 +59,37 @@ def test_pytorch_scaffold_algo_weights(
             y_pred = super()._local_predict(torch.from_numpy(x).float())
             return y_pred.detach().numpy()
 
-    my_algo = MyAlgo()
+    return MyAlgo
+
+
+@pytest.fixture(scope="module")
+def torch_algo(torch_linear_model):
+    """This closure allows to parametrize the torch algo fixture"""
+
+    def inner_torch_algo(lr=0.1, use_scheduler=False):
+        return _torch_algo(torch_linear_model=torch_linear_model, lr=lr, use_scheduler=use_scheduler)()
+
+    return inner_torch_algo
+
+
+@pytest.fixture(scope="module")
+def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
+
+    num_rounds = 3
+
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
     )
-    strategy = Scaffold(aggregation_lr=1)
-    my_eval_strategy = None
+
+    strategy = Scaffold()
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
+    )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
-        algo=my_algo,
+        algo=torch_algo(),
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
@@ -93,6 +102,24 @@ def test_pytorch_scaffold_algo_weights(
 
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
+
+    return compute_plan
+
+
+@pytest.mark.substra
+@pytest.mark.slow
+def test_pytorch_scaffold_algo_weights(
+    network,
+    compute_plan,
+    torch_algo,
+    session_dir,
+):
+    """Check the weight initialisation, aggregation and set weights.
+    The aggregation itself is tested at the strategy level, here we test
+    the pytorch layer.
+    """
+
+    my_algo = torch_algo()
 
     rank_0_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=0)
     rank_2_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=2)
@@ -134,71 +161,12 @@ def test_pytorch_scaffold_algo_weights(
 @pytest.mark.slow
 def test_pytorch_scaffold_algo_performance(
     network,
-    torch_linear_model,
-    train_linear_nodes,
-    test_linear_nodes,
-    aggregation_node,
-    session_dir,
+    compute_plan,
     rtol,
 ):
     """End to end test for torch fed avg algorithm."""
-    num_updates = 100
-    num_rounds = 3
+
     expected_performance = 0.0127768706
-
-    seed = 42
-    torch.manual_seed(seed)
-    perceptron = torch_linear_model()
-    nig = NpIndexGenerator(
-        batch_size=32,
-        num_updates=num_updates,
-        shuffle=True,
-        drop_last=False,
-    )
-
-    class MyAlgo(TorchScaffoldAlgo):
-        def __init__(
-            self,
-        ):
-            super().__init__(
-                optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
-                criterion=torch.nn.MSELoss(),
-                model=perceptron,
-                index_generator=nig,
-            )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
-
-    my_algo = MyAlgo()
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
-
-    strategy = Scaffold(aggregation_lr=1)
-    my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
-    )
-
-    compute_plan = execute_experiment(
-        client=network.clients[0],
-        algo=my_algo,
-        strategy=strategy,
-        train_data_nodes=train_linear_nodes,
-        evaluation_strategy=my_eval_strategy,
-        aggregation_node=aggregation_node,
-        num_rounds=num_rounds,
-        dependencies=algo_deps,
-        experiment_folder=session_dir / "experiment_folder",
-    )
-
-    # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
 
     testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
     testtuple = testtuples[0]
@@ -278,85 +246,20 @@ def test_train_skip(rtol):
     assert np.allclose(y, predictions, rtol=rtol)
 
 
-def test_update_current_lr(rtol):
+@pytest.mark.parametrize("use_scheduler", [True, False])
+def test_update_current_lr(rtol, torch_algo, use_scheduler):
     # test the update_current_lr() fct with optimizer only and optimizer+scheduler
     torch.manual_seed(42)
     initial_lr = 0.5
+    my_algo = torch_algo(lr=initial_lr, use_scheduler=use_scheduler)
 
-    class DummyModel(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(1, 1, bias=False)
-
-        def forward(self, x):
-            out = self.linear1(x)
-            return out
-
-    dummy_model = DummyModel()
-
-    optimizer = torch.optim.SGD(dummy_model.parameters(), lr=initial_lr)
-    nig = NpIndexGenerator(
-        batch_size=1,
-        num_updates=1,
-    )
-
-    class MyAlgo(TorchScaffoldAlgo):
-        def __init__(
-            self,
-        ):
-            super().__init__(
-                optimizer=optimizer,
-                criterion=torch.nn.MSELoss(),
-                model=dummy_model,
-                index_generator=nig,
-            )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
-
-    my_algo = MyAlgo()
     my_algo._update_current_lr()
     assert pytest.approx(my_algo._current_lr, rel=rtol) == initial_lr
 
-    # test with scheduler
-    # this scheduler multiplies the lr by 0.1 at each _scheduler.step()
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.1)
-    nig = NpIndexGenerator(
-        batch_size=1,
-        num_updates=2,
-    )
-
-    class MyAlgo(TorchScaffoldAlgo):
-        def __init__(
-            self,
-        ):
-            super().__init__(
-                optimizer=optimizer,
-                scheduler=scheduler,
-                criterion=torch.nn.MSELoss(),
-                model=dummy_model,
-                index_generator=nig,
-            )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
-
-    my_algo = MyAlgo()
-    # init : the lr is initial_lr
-    my_algo._update_current_lr()
-    assert pytest.approx(my_algo._current_lr, rel=rtol) == initial_lr
-    # after one _scheduler.step(), lr should be initial_lr * 0.1
-    my_algo._scheduler.step()
-    my_algo._update_current_lr()
-    assert pytest.approx(my_algo._current_lr, rel=rtol) == initial_lr * 0.1
+    if use_scheduler:
+        my_algo._scheduler.step()
+        my_algo._update_current_lr()
+        assert pytest.approx(my_algo._current_lr, rel=rtol) == initial_lr * my_algo._scheduler.gamma
 
 
 @pytest.mark.parametrize("num_updates", [-10, 0])
