@@ -18,8 +18,8 @@ from connectlib.strategies import FedAvg
 @patch("substra.Client.add_compute_plan", MagicMock(return_value=np.recarray(1, dtype=[("key", int)])))
 def test_execute_experiment_has_no_side_effect(
     network,
-    train_linear_organizations,
-    test_linear_organizations,
+    train_linear_nodes,
+    test_linear_nodes,
     aggregation_node,
     session_dir,
     dummy_algo_class,
@@ -32,14 +32,14 @@ def test_execute_experiment_has_no_side_effect(
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAvg()
     # test every two rounds
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_organizations, rounds=2)
+    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, rounds=2)
     dummy_algo_instance = dummy_algo_class()
 
     cp1 = execute_experiment(
         client=network.clients[0],
         algo=dummy_algo_instance,
         strategy=strategy,
-        train_data_nodes=train_linear_organizations,
+        train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
@@ -52,7 +52,7 @@ def test_execute_experiment_has_no_side_effect(
         client=network.clients[0],
         algo=dummy_algo_instance,
         strategy=strategy,
-        train_data_nodes=train_linear_organizations,
+        train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
@@ -60,8 +60,8 @@ def test_execute_experiment_has_no_side_effect(
         experiment_folder=session_dir / "experiment_folder",
     )
 
-    assert sum(len(organization.tuples) for organization in test_linear_organizations) == 0
-    assert sum(len(organization.tuples) for organization in train_linear_organizations) == 0
+    assert sum(len(node.tuples) for node in test_linear_nodes) == 0
+    assert sum(len(node.tuples) for node in train_linear_nodes) == 0
     assert len(aggregation_node.tuples) == 0
     assert cp1 == cp2
 

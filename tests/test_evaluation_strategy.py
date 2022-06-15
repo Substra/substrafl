@@ -10,12 +10,12 @@ from connectlib.nodes.test_data_node import TestDataNode
 def test_rounds(rounds):
     # tests that each next() returns expected True or False
     # tests that next called > num_rounds raises StopIteration
-    n_organizations = 3
+    n_nodes = 3
     num_rounds = 10
     # test rounds as frequencies give expected result
-    # mock the test organizations
-    test_data_organization = Mock(spec=TestDataNode)
-    test_data_nodes = [test_data_organization] * n_organizations
+    # mock the test nodes
+    test_data_node = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds
@@ -50,11 +50,11 @@ def test_rounds(rounds):
 def test_rounds_edges(rounds, e):
     # tests that EvaluationStrategy raises appropriate error if the rounds
     # is not correct
-    n_organizations = 3
+    n_nodes = 3
 
     # mock the test data nodes
-    test_data_organization = Mock(spec=TestDataNode)
-    test_data_nodes = [test_data_organization] * n_organizations
+    test_data_node = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_node] * n_nodes
 
     with pytest.raises(e):
         EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
@@ -74,11 +74,11 @@ def test_rounds_edges(rounds, e):
 def test_rounds_inconsitancy(rounds, num_rounds, e):
     # tests that consistency between rounds and num_rounds is
     # checked for and if inconsistency is found error is raised
-    n_organizations = 3
+    n_nodes = 3
 
     # mock the test data nodes
-    test_data_organization = Mock(spec=TestDataNode)
-    test_data_nodes = [test_data_organization] * n_organizations
+    test_data_node = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
 
@@ -96,8 +96,8 @@ def test_rounds_inconsitancy(rounds, num_rounds, e):
         [[1], TypeError],
     ],
 )
-def test_error_on_wrong_organization_instance(test_data_nodes, e):
-    # test that only list of TestDataOrganizations are accepted as test_data_nodes
+def test_error_on_wrong_node_instance(test_data_nodes, e):
+    # test that only list of TestDataNodes are accepted as test_data_nodes
     if e is not None:
         with pytest.raises(e):
             EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=3)
@@ -111,11 +111,11 @@ def test_error_on_wrong_organization_instance(test_data_nodes, e):
 )
 def test_docstring_examples(rounds, num_rounds, result):
     """tests that the examples given in the docstring of EvaluationStrategy indeed give the correct result"""
-    n_organizations = 3
-    data_organization = Mock(spec=TestDataNode)
-    data_organizations = [data_organization] * n_organizations
+    n_nodes = 3
+    data_node = Mock(spec=TestDataNode)
+    data_nodes = [data_node] * n_nodes
 
-    evaluation_strategy = EvaluationStrategy(test_data_nodes=data_organizations, rounds=rounds)
+    evaluation_strategy = EvaluationStrategy(test_data_nodes=data_nodes, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds
 
     for answer in result:
@@ -131,12 +131,12 @@ def test_restart_rounds(rounds):
     # tests running a second time an evaluation strategy after calling restart_rounds
     # give the same results
 
-    n_organizations = 3
+    n_nodes = 3
     num_rounds = 10
 
-    # mock the test organizations
-    test_data_organization = Mock(spec=TestDataNode)
-    test_data_nodes = [test_data_organization] * n_organizations
+    # mock the test nodes
+    test_data_node = Mock(spec=TestDataNode)
+    test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds

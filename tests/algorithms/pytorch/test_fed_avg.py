@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def test_pytorch_fedavg_algo_weights(
     network,
     torch_linear_model,
-    train_linear_organizations,
+    train_linear_nodes,
     aggregation_node,
     session_dir,
 ):
@@ -75,7 +75,7 @@ def test_pytorch_fedavg_algo_weights(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_linear_organizations,
+        train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
@@ -118,8 +118,8 @@ def test_pytorch_fedavg_algo_weights(
 def test_pytorch_fedavg_algo_performance(
     network,
     torch_linear_model,
-    train_linear_organizations,
-    test_linear_organizations,
+    train_linear_nodes,
+    test_linear_nodes,
     aggregation_node,
     session_dir,
     rtol,
@@ -163,14 +163,14 @@ def test_pytorch_fedavg_algo_performance(
 
     strategy = FedAvg()
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_linear_organizations, rounds=[num_rounds]  # test only at the last round
+        test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
     )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
         algo=my_algo,
         strategy=strategy,
-        train_data_nodes=train_linear_organizations,
+        train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,

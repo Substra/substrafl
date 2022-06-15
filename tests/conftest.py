@@ -184,7 +184,7 @@ def train_linear_data_samples(network):
 
 
 @pytest.fixture(scope="session")
-def train_linear_organizations(network, numpy_datasets, train_linear_data_samples, session_dir):
+def train_linear_nodes(network, numpy_datasets, train_linear_data_samples, session_dir):
     """Linear linked data samples.
 
     Args:
@@ -234,7 +234,7 @@ def test_linear_data_samples():
 
 
 @pytest.fixture(scope="session")
-def test_linear_organizations(
+def test_linear_nodes(
     network,
     numpy_datasets,
     mae,
