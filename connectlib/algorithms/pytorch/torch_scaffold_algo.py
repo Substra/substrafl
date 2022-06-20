@@ -279,7 +279,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         x: Any,
         y: Any,
     ):
-        """Local train method, the user must override it, this function
+        """Local train method, the user must overwrite it, this function
         contains the local training loop with the data pre-processing.
 
         Train the model on ``num_updates`` minibatches, using

@@ -7,6 +7,7 @@ from typing import Optional
 import torch
 
 from connectlib.algorithms.algo import Algo
+from connectlib.exceptions import OptimizerValueError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.remote.decorators import remote_data
 
@@ -34,8 +35,8 @@ class TorchAlgo(Algo):
         self,
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
-        optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
+        optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         use_gpu: bool = True,
         *args,
@@ -53,7 +54,8 @@ class TorchAlgo(Algo):
         self._optimizer = optimizer
         # Move the optimizer to GPU if needed
         # https://github.com/pytorch/pytorch/issues/8741#issuecomment-496907204
-        self._optimizer.load_state_dict(self._optimizer.state_dict())
+        if self._optimizer is not None:
+            self._optimizer.load_state_dict(self._optimizer.state_dict())
         self._criterion = criterion
         self._scheduler = scheduler
 
@@ -69,11 +71,9 @@ class TorchAlgo(Algo):
         return self._model
 
     def _get_len_from_x(self, x: Any) -> int:
-        """Get the length of the dataset from
-        x as returned by the opener.
+        """Get the length of the dataset from x as returned by the opener.
 
-        Default: returns len(x). Override
-        if needed.
+        Default: returns ``len(x)``. Overwrite if needed.
 
         Args:
             x (typing.Any): x returned by the opener
@@ -160,6 +160,12 @@ class TorchAlgo(Algo):
                     if self._scheduler is not None:
                         self._scheduler.step()
         """
+        if self._optimizer is None:
+            raise OptimizerValueError(
+                "No optimizer found. Either give one or overwrite the _local_train method from the used torch"
+                "algorithm."
+            )
+
         for batch_index in self._index_generator:
             x_batch, y_batch = x[batch_index], y[batch_index]
 
@@ -245,7 +251,8 @@ class TorchAlgo(Algo):
         checkpoint = torch.load(path, map_location=self._device)
         self._model.load_state_dict(checkpoint.pop("model_state_dict"))
 
-        self._optimizer.load_state_dict(checkpoint.pop("optimizer_state_dict"))
+        if self._optimizer is not None:
+            self._optimizer.load_state_dict(checkpoint.pop("optimizer_state_dict"))
 
         if self._scheduler is not None:
             self._scheduler.load_state_dict(checkpoint.pop("scheduler_state_dict"))
@@ -295,9 +302,11 @@ class TorchAlgo(Algo):
         """
         checkpoint = {
             "model_state_dict": self._model.state_dict(),
-            "optimizer_state_dict": self._optimizer.state_dict(),
             "index_generator": self._index_generator,
         }
+        if self._optimizer is not None:
+            checkpoint["optimizer_state_dict"] = self._optimizer.state_dict()
+
         if self._scheduler is not None:
             checkpoint["scheduler_state_dict"] = self._scheduler.state_dict()
 
@@ -345,7 +354,9 @@ class TorchAlgo(Algo):
             {
                 "model": str(type(self._model)),
                 "criterion": str(type(self._criterion)),
-                "optimizer": {
+                "optimizer": None
+                if self._optimizer is None
+                else {
                     "type": str(type(self._optimizer)),
                     "parameters": self._optimizer.defaults,
                 },

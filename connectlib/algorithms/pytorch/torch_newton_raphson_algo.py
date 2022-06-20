@@ -1,0 +1,387 @@
+import abc
+import math
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+import numpy as np
+import torch
+
+from connectlib.algorithms.pytorch import weight_manager
+from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
+from connectlib.exceptions import NegativeHessianMatrixError
+from connectlib.index_generator import NpIndexGenerator
+from connectlib.remote import remote_data
+from connectlib.schemas import NewtonRaphsonAveragedStates
+from connectlib.schemas import NewtonRaphsonSharedState
+from connectlib.schemas import StrategyName
+
+
+class TorchNewtonRaphsonAlgo(TorchAlgo):
+    """To be inherited. Wraps the necessary operation so a torch model can be trained in the Newton-Raphson strategy.
+
+    The ``train`` method:
+
+        - updates the weights of the model with the calculated weight updates
+        - creates and initializes the index generator with the given batch size
+        - calls the
+          :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_train`
+          method to compute the local gradients and Hessian and sends them to the aggregator.
+        - a L2 regularization can be applied to the loss by settings ``l2_coeff`` different to zero (default value). L2
+          regularization adds numerical stability when inverting the hessian.
+
+    The child class must implement
+    :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_train`
+    and :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_predict`
+    and can overwrite other methods if necessary.
+
+    To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``.
+
+    The algo needs to get the number of samples in the dataset from the x sent by the opener.
+    By default, it uses ``len(x)``. If that is not the proper way of getting the number of samples,
+    override the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._get_len_from_x` function
+
+    Example:
+
+        .. code-block:: python
+
+            def _get_len_from_x(self, x):
+                return len(x)
+
+    As development tools, the ``train``  and ``predict`` method comes with a default argument : ``_skip``.
+
+    If ``_skip`` is set to ``True``, only the function will be executed and not all the code related to Connect.
+    This allows to quickly debug code and use the defined algorithm as is.
+    """
+
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        criterion: torch.nn.modules.loss._Loss,
+        batch_size: Optional[int],
+        l2_coeff: float = 0,
+        with_batch_norm_parameters: bool = False,
+        use_gpu: bool = True,
+        *args,
+        **kwargs,
+    ):
+        """The ``__init__`` function is called at each call of the ``train`` or ``predict`` function.
+
+        For ``round>=2``, some attributes will then be overwritten by their previous states in the
+        :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo.load` function, before the
+        ``train`` or ``predict`` function is ran.
+
+        ``TorchNewtonRaphsonAlgo`` computes its :py:class:`~connectlib.schemas.NewtonRaphsonSharedState`
+        (gradients and Hessian matrix) on all the samples of the dataset. Data might be split into mini-batches to
+        prevent loading too much data at once.
+
+        Args:
+            model (torch.nn.modules.module.Module): A torch model.
+            criterion (torch.nn.modules.loss._Loss): A torch criterion (loss).
+            batch_size (int): The size of the batch. If set to None it will be set to the number of samples in the
+                dataset. Note that dividing the data to batches is done only to avoid the memory issues. The weights
+                are updated only at the end of the epoch.
+            l2_coeff (float): L2 regularization coefficient. The larger l2_coeff is, the better the stability of the
+                hessian matrix will be, however the convergence might be slower. Defaults to 0.
+            with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the Newton-Raphson
+                strategy. Defaults to False.
+            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
+        """
+        assert "optimizer" not in kwargs, "Newton Raphson strategy does not uses optimizers"
+
+        super().__init__(
+            model=model,
+            criterion=criterion,
+            optimizer=None,
+            index_generator=None,
+            use_gpu=use_gpu,
+            *args,
+            **kwargs,
+        )
+        self._with_batch_norm_parameters = with_batch_norm_parameters
+        self._l2_coeff = l2_coeff
+        self._batch_size = batch_size
+
+        # initialized and used only in the train method
+        self._final_gradients = None
+        self._final_hessian = None
+        self._n_samples_done = None
+
+    @property
+    def strategies(self) -> List[StrategyName]:
+        """List of compatible strategies
+
+        Returns:
+            typing.List: typing.List[StrategyName]
+        """
+        return [StrategyName.NEWTON_RAPHSON]
+
+    def _l2_reg(self) -> torch.Tensor:
+        """Compute the l2 regularization regarding the model parameters.
+
+        Returns:
+            torch.Tensor: the updated loss with the l2 regularization included.
+        """
+        # L2 regularization
+        l2_reg = 0
+        for param in self.model.parameters():
+            l2_reg += self._l2_coeff * torch.sum(param**2) / 2
+        return l2_reg
+
+    def _initialize_gradients_and_hessian(self):
+        """Initializes the gradients and hessian matrices"""
+        number_of_trainable_params = sum(p.numel() for p in self._model.parameters() if p.requires_grad)
+
+        n_samples_done = 0
+
+        final_gradients = [torch.zeros_like(p).numpy() for p in self._model.parameters()]
+        final_hessian = np.zeros([number_of_trainable_params, number_of_trainable_params])
+
+        return final_gradients, final_hessian, n_samples_done
+
+    def _update_gradients_and_hessian(self, loss: torch.Tensor, current_batch_size: int):
+        """Updates the gradients and hessian matrices.
+
+        Args:
+            loss (torch.Tensor): the loss to compute the gradients and hessian from.
+            current_batch_size (int): The length of the batch used to compute the given loss.
+        """
+
+        gradients, hessian = self._compute_gradients_and_hessian(loss)
+
+        self._n_samples_done += current_batch_size
+
+        batch_coefficient = current_batch_size / self._index_generator.n_samples
+
+        self._final_hessian += hessian.cpu().detach().numpy() * batch_coefficient
+        self._final_gradients = [
+            sum(final_grad, grad.cpu().detach().numpy() * batch_coefficient)
+            for final_grad, grad in zip(self._final_gradients, gradients)
+        ]
+
+    def _instantiate_index_generator(self, n_samples):
+        if self._batch_size is None:
+            # If batch_size is None, it is set to the number of samples in the dataset by the index generator
+            num_updates = 1
+        else:
+            num_updates = math.ceil(float(n_samples) / self._batch_size)
+
+        index_generator = NpIndexGenerator(batch_size=self._batch_size, num_updates=num_updates, drop_last=False)
+        index_generator.n_samples = n_samples
+        return index_generator
+
+    @abc.abstractmethod
+    def _local_train(
+        self,
+        x: Any,
+        y: Any,
+    ):
+        """Local train method, the user must overwrite it, this function
+        contains the local training loop with the data pre-processing.
+
+        Train the model on all minibatches, using
+        ``self._index_generator`` to generate the batches.
+
+        Args:
+            x (typing.Any): x as returned by the opener
+            y (typing.Any): y as returned by the opener
+
+        Important:
+
+            You must use ``next(self._index_generator)`` at each minibatch,
+            to ensure that you are using the batches are correct between 2 rounds
+            of the Newton Raphson strategy.
+
+        Important:
+
+            Call the function ``self._update_gradients_and_hessian(loss, current_batch_size)`` after computing the loss
+            and the current_batch_size.
+
+        Example:
+
+            .. code-block:: python
+
+                for batch_index in self._index_generator:
+
+                    # Do the pre-processing here
+
+                    x_batch, y_batch = x[batch_index], y[batch_index]
+
+                    # Forward pass
+                    y_pred = self._model(x_batch)
+
+                    # Compute Loss
+                    loss = self._criterion(y_pred, y_batch)
+
+                    # L2 regularization
+                    loss += self._l2_reg()
+
+                    current_batch_size = len(x_batch)
+
+                    # NEWTON RAPHSON specific function, to call after computing the loss and the current_batch_size.
+
+                    self._update_gradients_and_hessian(loss, current_batch_size)
+        """
+        for batch_index in self._index_generator:
+
+            x_batch, y_batch = x[batch_index], y[batch_index]
+
+            # Forward pass
+            y_pred = self._model(x_batch)
+
+            # Compute Loss
+            loss = self._criterion(y_pred, y_batch)
+
+            # L2 regularization
+            loss += self._l2_reg()
+
+            current_batch_size = len(x_batch)
+
+            self._update_gradients_and_hessian(loss, current_batch_size)
+
+    @remote_data
+    def train(
+        self,
+        x: Any,
+        y: Any,
+        # Set shared_state to None per default for clarity reason as
+        # the decorator will do it if the arg shared_state is not passed.
+        shared_state: Optional[NewtonRaphsonAveragedStates] = None,
+    ) -> NewtonRaphsonSharedState:
+        """Train method of the Newton Raphson strategy implemented with torch. This method will execute the following
+        operations:
+
+            * creates and initializes the index generator
+            * if a shared state is passed, set the weights of the model to the provided shared state weights
+            * initializes hessians and gradient
+            * calls the
+                :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_train`
+                method to compute the local gradients and Hessian and sends them to the aggregator.
+            * a L2 regularization can be applied to the loss by settings `l2_coeff` different to zero (default value)
+
+        Args:
+            x (typing.Any): Input data.
+            y (typing.Any): Input target.
+            shared_state (NewtonRaphsonAveragedStates, Optional): Dict containing torch parameters that
+                will be set to the model. Defaults to None.
+
+        Returns:
+            NewtonRaphsonSharedState: local gradients, local Hessian and the number of samples they were computed from.
+
+        Raises:
+            NegativeHessianMatrixError: Hessian matrix must be positive semi-definite to correspond to a convex problem.
+        """
+        if shared_state is None:
+            # Instantiate the index_generator
+            n_samples = self._get_len_from_x(x)
+
+            self._index_generator = self._instantiate_index_generator(n_samples)
+
+        else:
+            assert self._index_generator.n_samples is not None
+
+            # The shared states are the model parameter updates.
+            # Hence we need to add it to the previous local state parameters.
+            # unflatten_parameters_update = self._unflatten_tensor(
+            #     shared_state.parameters_update, [p for p in self.model.parameters()]
+            # )
+            parameter_updates = [torch.from_numpy(x).to(self._device) for x in shared_state.parameters_update]
+            weight_manager.increment_parameters(
+                model=self._model,
+                updates=parameter_updates,
+                with_batch_norm_parameters=self._with_batch_norm_parameters,
+            )
+        self._index_generator.reset_counter()
+
+        # Train mode for torch model
+        self._model.train()
+
+        self._final_gradients, self._final_hessian, self._n_samples_done = self._initialize_gradients_and_hessian()
+
+        self._local_train(x, y)
+
+        # Newton Raphson strategy must go through all the samples before each next update.
+        assert self._index_generator.n_samples == self._n_samples_done
+
+        eigenvalues = np.linalg.eig(self._final_hessian)[0].real
+        if not (eigenvalues >= self._l2_coeff).all():
+            raise NegativeHessianMatrixError(
+                "Hessian matrix is not positive semi-definite, either the problem is not convex or due to numerical"
+                "instability. It is advised to try to increase the l2_coeff."
+                f"Calculated eigenvalues are {eigenvalues.tolist()} and considered l2_coeff is {self._l2_coeff}"
+            )
+        self._index_generator.check_num_updates()
+
+        return NewtonRaphsonSharedState(
+            n_samples=self._index_generator.n_samples,
+            hessian=self._final_hessian,
+            gradients=self._final_gradients,
+        )
+
+    def _jacobian(self, tensor_y: torch.Tensor, create_graph: bool = False) -> torch.Tensor:
+        """Compute the Jacobian for each  the given tensor_y regarding the model parameters.
+
+        Args:
+            tensor_y (torch.Tensor): _description_
+            create_graph (bool, optional): Create the graph to compute higher order derivative. Defaults to False.
+
+        Returns:
+            torch.Tensor: Jacobian.
+        """
+        jacobian = []
+        flat_y = torch.cat([t.reshape(-1) for t in tensor_y])
+        for y in flat_y:
+            for param in self._model.parameters():
+                if param.requires_grad:
+                    (gradient,) = torch.autograd.grad(y, param, retain_graph=True, create_graph=create_graph)
+                    jacobian.append(gradient)
+
+        return jacobian
+
+    def _hessian_shape(self, second_order_derivative: List[torch.Tensor]) -> torch.Tensor:
+        """Reshape from the second order derivative to obtain the Hessian matrix.
+
+        Args:
+            second_order_derivative (List[torch.Tensor]): second order derivative of a tensor regarding the
+            registered parameters
+
+        Returns:
+            torch.Tensor: Hessian matrix
+        """
+        hessian = torch.cat([t.reshape(-1) for t in second_order_derivative])
+        return hessian.reshape(self._final_hessian.shape)
+
+    def _compute_gradients_and_hessian(self, loss: torch.Tensor) -> Tuple[torch.Tensor]:
+        """The compute_gradients_and_hessian function compute the gradients and the Hessian matrix of the parameters
+        regarding the given loss, and outputs them.
+
+        Args:
+            loss (torch.Tensor): the loss to compute the gradients and Hessian on.
+
+        Returns:
+            torch.Tensor: the computed gradients of the parameters regarding the loss, flattened into a 1d torch
+            Tensor.
+            torch.Tensor: the computed Hessian matrix of the parameters regarding the loss.
+        """
+
+        gradients = self._jacobian(loss[None], create_graph=True)
+        second_order_derivative = self._jacobian(gradients)
+
+        hessian = self._hessian_shape(second_order_derivative)
+
+        return gradients, hessian
+
+    def summary(self):
+        """Summary of the class to be exposed in the experiment summary file
+
+        Returns:
+            dict: a json-serializable dict with the attributes the user wants to store
+        """
+        summary = super().summary()
+        summary.update(
+            {
+                "with_batch_norm_parameters": str(self._with_batch_norm_parameters),
+            }
+        )
+        return summary

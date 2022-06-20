@@ -11,6 +11,7 @@ class StrategyName(str, Enum):
     FEDERATED_AVERAGING = "Federated Averaging"
     SCAFFOLD = "Scaffold"
     ONE_ORGANIZATION = "One organization"
+    NEWTON_RAPHSON = "Newton Raphson"
 
 
 class _Model(pydantic.BaseModel):
@@ -67,3 +68,29 @@ class ScaffoldAveragedStates(_Model):
 
     server_control_variate: List[np.ndarray]  # the new server_control_variate sent to the clients
     avg_parameters_update: List[np.ndarray]  # the weighted average of the parameters_update from each client
+
+
+class NewtonRaphsonAveragedStates(_Model):
+    """Shared state sent by the aggregate_organization in the Newton Raphson
+    strategy.
+
+    Args:
+        parameters_update (numpy.ndarray): the new parameters_update sent to the clients
+    """
+
+    parameters_update: List[np.ndarray]
+
+
+class NewtonRaphsonSharedState(_Model):
+    """Shared state returned by the train method of the algorithm for each client,
+    received by the aggregate function in the Newton Raphson strategy.
+
+    Args:
+        n_samples (int): number of samples of the client dataset.
+        gradients (numpy.ndarray): gradients of the model parameters :math:`\\theta`.
+        hessian (numpy.ndarray): second derivative of the loss function regarding the model parameters :math:`\\theta`.
+    """
+
+    n_samples: int
+    gradients: List[np.ndarray]
+    hessian: np.ndarray

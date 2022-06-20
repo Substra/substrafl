@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat: Newton Raphson strategy (#187)
+
 ## [0.18.0](https://github.com/owkin/connectlib/releases/tag/0.18.0) - 2022-06-20
 
 ### Fixed
@@ -23,7 +25,6 @@ For each composite train tuple, aggregate tuple and test tuple the meta data `ro
 accordingly to the rule stated above.
 - BREAKING CHANGE: rename node to organization in Connect (#201)
 - Rename the ``OneNode`` strategy to ``SingleOrganization`` (#206)
-
 
 ### Added
 
