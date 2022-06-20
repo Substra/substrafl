@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0](https://github.com/owkin/connectlib/releases/tag/0.18.0) - 2022-06-20
+
 ### Fixed
 
 - added [packaging](https://github.com/pypa/packaging) to the install requirements (#209)
