@@ -18,6 +18,12 @@ TorchScaffoldAlgo
     :private-members: _get_len_from_x, _local_train, _local_predict, _scaffold_parameters_update
     :inherited-members:
 
+TorchNewtonRaphsonAlgo
+----------------------
+
+.. automodule:: connectlib.algorithms.pytorch.torch_newton_raphson_algo
+    :private-members: _get_len_from_x, _local_train, _local_predict, _update_gradients_and_hessian
+    :inherited-members:
 
 TorchSingleOrganizationAlgo
 ----------------------------

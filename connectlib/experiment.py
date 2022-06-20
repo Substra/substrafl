@@ -330,7 +330,6 @@ def execute_experiment(
         timestamp=timestamp,
         additional_metadata=additional_metadata,
     )
-
     compute_plan = client.add_compute_plan(
         substra.sdk.schemas.ComputePlanSpec(
             key=compute_plan_key,

@@ -4,6 +4,7 @@ from typing import Optional
 import numpy as np
 
 from connectlib.algorithms.algo import Algo
+from connectlib.exceptions import EmptySharedStatesError
 from connectlib.nodes.aggregation_node import AggregationNode
 from connectlib.nodes.references.local_state import LocalStateRef
 from connectlib.nodes.references.shared_state import SharedStateRef
@@ -152,7 +153,7 @@ class FedAvg(Strategy):
                 shared_state returned by the train method of the algorithm for each organization.
 
         Raises:
-            TypeError: The train method of your algorithm must return a shared_state
+            EmptySharedStatesError: The train method of your algorithm must return a shared_state
             TypeError: Each shared_state must contains the key **n_samples**
             TypeError: Each shared_state must contains at least one element to average
             TypeError: All the elements of shared_states must be similar (same keys)
@@ -163,7 +164,7 @@ class FedAvg(Strategy):
             without the passed key "n_samples".
         """
         if len(shared_states) == 0:
-            raise TypeError(
+            raise EmptySharedStatesError(
                 "Your shared_states is empty. Please ensure that "
                 "the train method of your algorithm returns a FedAvgSharedState object."
             )

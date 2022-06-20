@@ -12,6 +12,12 @@ Scaffold
 
 .. autoclass:: connectlib.strategies.Scaffold
 
+
+Newton Raphson
+^^^^^^^^^^^^^^
+
+.. autoclass:: connectlib.strategies.NewtonRaphson
+
 Single Organization
 ^^^^^^^^^^^^^^^^^^^
 
