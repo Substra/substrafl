@@ -118,7 +118,7 @@ metric_key = client.add_metric(metric_spec)
 # ***************************************
 # In this section, you will register an algorithm and its dependencies,
 # and specify the federated learning strategy
-# as well as the nodes on wich to train and to test.
+# as well as the nodes on which to train and to test.
 
 # %%
 # CNN definition
