@@ -1,5 +1,4 @@
 import logging
-import pickle
 from pathlib import Path
 from typing import Any
 
@@ -125,13 +124,7 @@ def test_pytorch_scaffold_algo_weights(
     rank_2_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=2)
 
     # Download the aggregate output
-    aggregate_task = network.clients[0].list_aggregatetuple(
-        filters=[f"aggregatetuple:compute_plan_key:{compute_plan.key}", f"aggregatetuple:rank:{1}"]
-    )[0]
-    model_key = aggregate_task.aggregate.models[0].key
-    network.clients[0].download_model(model_key, session_dir)
-    model_path = session_dir / f"model_{model_key}"
-    aggregate_model = pickle.loads(model_path.read_bytes())
+    aggregate_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=1)
     aggregate_update = [torch.from_numpy(x).to("cpu") for x in aggregate_model.avg_parameters_update]
 
     # Assert the model initialisation is the same for every model
@@ -168,7 +161,7 @@ def test_pytorch_scaffold_algo_performance(
 
     expected_performance = 0.0127768706
 
-    testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
+    testtuples = network.clients[0].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
     testtuple = testtuples[0]
     assert list(testtuple.test.perfs.values())[0] == pytest.approx(expected_performance, rel=rtol)
 

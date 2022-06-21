@@ -129,7 +129,7 @@ def connectlib_fed_avg(
         else:
             time.sleep(1)
 
-    testtuples = clients[1].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
+    testtuples = clients[1].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
 
     # Resetting the clients
     # BUG: if we don't reset clients, substra tries to find an algo that do not exist

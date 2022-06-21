@@ -1,3 +1,4 @@
+import pickle
 import time
 
 from substra.sdk.models import ComputePlanStatus
@@ -74,10 +75,10 @@ def wait(client, asset, timeout=FUTURE_TIMEOUT, raises=True):
 def download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
     # Retrieve composite train tuple key
     train_tasks = network.clients[0].list_composite_traintuple(
-        filters=[
-            f"composite_traintuple:compute_plan_key:{compute_plan.key}",
-            f"composite_traintuple:rank:{rank}",
-        ]
+        filters={
+            "compute_plan_key": [compute_plan.key],
+            "rank": [rank],
+        }
     )
     local_models = list()
     for task in train_tasks:
@@ -95,3 +96,16 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
                 model.model.to("cpu")
                 local_models.append(model)
     return local_models
+
+
+def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: int):
+
+    aggregate_task = network.clients[0].list_aggregatetuple(
+        filters={"compute_plan_key": [compute_plan.key], "rank": [rank]}
+    )[0]
+    model_key = aggregate_task.aggregate.models[0].key
+    network.clients[0].download_model(model_key, session_dir)
+    model_path = session_dir / f"model_{model_key}"
+    aggregate_model = pickle.loads(model_path.read_bytes())
+
+    return aggregate_model

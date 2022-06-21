@@ -80,7 +80,7 @@ def test_one_organization(
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
 
-    testtuples = network.clients[0].list_testtuple(filters=[f"testtuple:compute_plan_key:{compute_plan.key}"])
+    testtuples = network.clients[0].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
     testtuples = sorted(testtuples, key=lambda x: x.rank)
 
     # ensure that final result is correct up to 6 decimal points
