@@ -13,9 +13,11 @@ With pip >= 21.2.0:
 extra-index-url = https://<username>:<password>@pypi.owkin.com/simple
 ```
 
+If you want to use deployed or local docker modes, you will need to [setup access to the private Owkin docker registry](#how-to-setup-access-to-the-private-owkin-docker-registry)
+
 ## Contribute
 
-ConnectLib is open to contributions. Please have a look at the [Contribution Guidelines](https://owkin-connectlib.readthedocs-hosted.com/en/latest/contribute/contribution_process.html).
+ConnectLib is open to contributions. Please have a look at the [Contribution Guidelines](https://github.com/owkin/FLow-meetings/blob/master/FLow_information.md).
 
 ## Release
 
@@ -24,6 +26,8 @@ See the release process on the tech-team [releasing guide](https://github.com/ow
 ## Documentation
 
 Documentation of the api is generated from the connectlib repository thanks to the auto doc module.
+It is automatically built by https://github.com/owkin/connect-documentation and available [here](https://connect-docs.owkin.com/).
+You can build it locally to check the technical documentation and see the changes made by your PR.
 
 ### Requirements
 
@@ -139,3 +143,33 @@ The **referent** has two weeks to go over the PR once it is merged. The review b
 
 The **referent** should be as clear as possible to avoid going back and forth between **referent** and **developer**.
 If necessary, the **referent** can propose a call with the **developer**.
+
+## How to setup access to the private Owkin docker registry
+
+In deployed mode and local docker mode, users have to login to GCR. (Full doc [here](https://cloud.google.com/container-registry/docs/advanced-authentication))
+
+### Using docker cli
+
+```bash
+cat keyfile.json | docker login -u _json_key --password-stdin https://gcr.io
+```
+
+where the keyfile in stored in Dashlane.
+
+### Using gcloud cli
+
+```bash
+  gcloud auth login
+  gcloud auth configure-docker
+```
+
+If you have some errors:
+
+- check that you have access to https://console.cloud.google.com/gcr/images/connect-314908/global/connect-tools
+
+- You may also have to do:
+
+```bash
+    gcloud components install docker-credential-gcr
+    ln -s ~/Downloads/google-cloud-sdk/bin/docker-credential-gcr /usr/local/bin/docker-credential-gcloud
+```
