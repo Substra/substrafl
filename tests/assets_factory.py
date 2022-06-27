@@ -7,9 +7,10 @@ from typing import List
 import numpy as np
 from substra import Client
 from substra.sdk import DEBUG_OWNER
+from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
-from substra.sdk.schemas import MetricSpec
 from substra.sdk.schemas import Permissions
 
 DEFAULT_SUBSTRATOOLS_VERSION = (
@@ -280,13 +281,14 @@ def add_python_metric(
         dockerfile_path=dockerfile_file,
         tmp_folder=metric_folder,
     )
-    metric_spec = MetricSpec(
+    metric_spec = AlgoSpec(
+        category=AlgoCategory.metric,
         name=name,
         description=description,
         file=archive,
         permissions=permissions,
     )
-    key = client.add_metric(metric_spec)
+    key = client.add_algo(metric_spec)
     return key
 
 
