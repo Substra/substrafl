@@ -9,9 +9,10 @@ from typing import Optional
 import substra
 import yaml
 from substra.sdk import DEBUG_OWNER
+from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
-from substra.sdk.schemas import MetricSpec
 from substra.sdk.schemas import Permissions
 from tqdm import tqdm
 
@@ -229,14 +230,15 @@ def register_metric(client: substra.Client) -> str:
         tar.add(ASSETS_DIRECTORY / "Dockerfile", arcname="Dockerfile")
         tar.add(ASSETS_DIRECTORY / "metric.py", arcname="metrics.py")
 
-    metric_spec = MetricSpec(
+    metric_spec = AlgoSpec(
+        category=AlgoCategory.metric,
         name="ROC",
         description=ASSETS_DIRECTORY / "description.md",
         file=metric_archive_path,
         permissions=PUBLIC_PERMISSIONS,
     )
 
-    metric_key = client.add_metric(metric_spec)
+    metric_key = client.add_algo(metric_spec)
 
     return metric_key
 

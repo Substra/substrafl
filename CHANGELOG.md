@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - added [packaging](https://github.com/pypa/packaging) to the install requirements (#209)
 
+## Changed
+
+- Stop using metrics APIs, use algo APIs instead (#210)
+
 ## [0.17.0](https://github.com/owkin/connectlib/releases/tag/0.17.0) - 2022-06-14
 
 ### Changed
