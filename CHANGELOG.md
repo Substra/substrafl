@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0](https://github.com/owkin/connectlib/releases/tag/0.19.0) - 2022-06-27
+
+### Added
+
 - feat: Newton Raphson strategy (#187)
 
 ## [0.18.0](https://github.com/owkin/connectlib/releases/tag/0.18.0) - 2022-06-20
