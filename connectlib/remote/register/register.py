@@ -16,9 +16,11 @@ from typing import Tuple
 import substra
 import substratools
 from packaging import version
+from substra.sdk.schemas import AlgoCategory
 
 import connectlib
 from connectlib.dependency import Dependency
+from connectlib.exceptions import AlgoCategoryError
 from connectlib.exceptions import ConnectToolsDeprecationWarning
 from connectlib.remote.register.generate_wheel import local_lib_wheels
 from connectlib.remote.register.generate_wheel import pypi_lib_wheels
@@ -259,7 +261,7 @@ def _create_substra_algo_files(
 def register_algo(
     client: substra.Client,
     remote_struct: RemoteStruct,
-    is_composite: bool,
+    category: substra.sdk.schemas.AlgoCategory,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
 ) -> str:
@@ -268,12 +270,17 @@ def register_algo(
     Args:
         client (substra.Client): The substra client.
         remote_struct (RemoteStruct): The substra submittable algorithm representation.
-        is_composite (bool): Either to register a composite or an aggregate algorithm.
+        category (substra.sdk.schemas.AlgoCategory): Register the algorithm to the platform for the composite, predict
+            or aggregate categories.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
         dependencies (Dependency): Algorithm dependencies.
 
     Returns:
         str: Substra algorithm key.
+
+    Raises:
+        AlgoCategoryError: The given algo category does not match any allowed substra AlgoCategory.
+
     """
     with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix="connectlib_") as operation_dir:
         archive_path, description_path = _create_substra_algo_files(
@@ -282,10 +289,8 @@ def register_algo(
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=Path(operation_dir),
         )
-        if is_composite:
-            category = substra.sdk.schemas.AlgoCategory.composite
-        else:
-            category = substra.sdk.schemas.AlgoCategory.aggregate
+        if category not in [AlgoCategory.composite, AlgoCategory.aggregate, AlgoCategory.predict]:
+            raise AlgoCategoryError(f"Algo category {category} is not allowed.")
 
         key = client.add_algo(
             substra.sdk.schemas.AlgoSpec(

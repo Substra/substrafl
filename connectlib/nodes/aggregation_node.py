@@ -3,6 +3,7 @@ from typing import Dict
 from typing import TypeVar
 
 import substra
+from substra.sdk.schemas import AlgoCategory
 
 from connectlib.dependency import Dependency
 from connectlib.nodes.node import Node
@@ -98,7 +99,7 @@ class AggregationNode(Node):
                 if remote_struct not in cache:
                     algo_key = register_algo(
                         client=client,
-                        is_composite=False,
+                        category=AlgoCategory.aggregate,
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,

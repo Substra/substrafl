@@ -151,4 +151,5 @@ def test_newton_raphson_predict():
         round_idx=0,
     )
 
-    assert all([len(test_data_node.tuples) == 1 for test_data_node in test_data_nodes])
+    assert all([len(test_data_node.testtuples) == 1 for test_data_node in test_data_nodes])
+    assert all([len(test_data_node.predicttuples) == 1 for test_data_node in test_data_nodes])
