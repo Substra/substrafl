@@ -54,6 +54,8 @@ def _register_operations(
     # `register_operations` methods from the different organizations store the id of the already registered
     # algorithm so we don't add them twice
     operation_cache = dict()
+    predict_algo_cache = dict()
+
     train_data_organizations_id = {train_data_node.organization_id for train_data_node in train_data_nodes}
     aggregation_organization_id = {aggregation_node.organization_id} if aggregation_node is not None else set()
 
@@ -63,15 +65,28 @@ def _register_operations(
     composite_traintuples = []
     for train_data_node in train_data_nodes:
         operation_cache = train_data_node.register_operations(
-            client, permissions, cache=operation_cache, dependencies=dependencies
+            client,
+            permissions,
+            cache=operation_cache,
+            dependencies=dependencies,
         )
+
         composite_traintuples += train_data_node.tuples
 
+    predicttuples = []
     testtuples = []
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
-            # The test nodes do not have any operation to register: no algo on the testtuple
-            testtuples += test_data_node.tuples
+            predict_algo_cache = test_data_node.register_predict_operations(
+                client,
+                permissions,
+                traintuples=composite_traintuples,
+                cache=predict_algo_cache,
+                dependencies=dependencies,
+            )
+
+            predicttuples += test_data_node.predicttuples
+            testtuples += test_data_node.testtuples
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
@@ -84,9 +99,10 @@ def _register_operations(
             cache=operation_cache,
             dependencies=Dependency(editable_mode=dependencies.editable_mode),
         )
+
         aggregation_tuples = aggregation_node.tuples
 
-    return composite_traintuples, aggregation_tuples, testtuples, operation_cache
+    return composite_traintuples, aggregation_tuples, predicttuples, testtuples, operation_cache
 
 
 def _save_experiment_summary(
@@ -301,7 +317,7 @@ def execute_experiment(
 
     # Computation graph is created
     logger.info("Submitting the algorithm to Connect.")
-    composite_traintuples, aggregation_tuples, testtuples, operation_cache = _register_operations(
+    composite_traintuples, aggregation_tuples, predicttuples, testtuples, operation_cache = _register_operations(
         client=client,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
@@ -335,6 +351,7 @@ def execute_experiment(
             key=compute_plan_key,
             composite_traintuples=composite_traintuples,
             aggregatetuples=aggregation_tuples,
+            predicttuples=predicttuples,
             testtuples=testtuples,
             name=name or timestamp,
             clean_models=clean_models,

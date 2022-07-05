@@ -5,6 +5,7 @@ from typing import Optional
 from typing import Tuple
 
 import substra
+from substra.sdk.schemas import AlgoCategory
 
 from connectlib.dependency import Dependency
 from connectlib.nodes.node import Node
@@ -104,7 +105,7 @@ class TrainDataNode(Node):
 
         Go through every operation in the computation graph, check what algorithm they use (identified by their
         RemoteStruct id), submit it to substra and save `RemoteStruct : algo_key` into the `cache` (where algo_key
-        is the returned algo key per substra.)
+        is the returned algo key by substra.)
         If two tuples depend on the same algorithm, the algorithm won't be added twice to substra as this method check
         if an algo has already been submitted to substra before adding it.
 
@@ -129,7 +130,7 @@ class TrainDataNode(Node):
                 if remote_struct not in cache:
                     algo_key = register_algo(
                         client=client,
-                        is_composite=True,
+                        category=AlgoCategory.composite,
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,
@@ -138,7 +139,6 @@ class TrainDataNode(Node):
                 else:
                     algo_key = cache[remote_struct]
 
-                del tuple["remote_operation"]
                 tuple["algo_key"] = algo_key
 
         return cache

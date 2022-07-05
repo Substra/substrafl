@@ -60,7 +60,8 @@ def test_execute_experiment_has_no_side_effect(
         experiment_folder=session_dir / "experiment_folder",
     )
 
-    assert sum(len(node.tuples) for node in test_linear_nodes) == 0
+    assert sum(len(node.testtuples) for node in test_linear_nodes) == 0
+    assert sum(len(node.predicttuples) for node in test_linear_nodes) == 0
     assert sum(len(node.tuples) for node in train_linear_nodes) == 0
     assert len(aggregation_node.tuples) == 0
     assert cp1 == cp2

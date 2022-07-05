@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import substra
+from substra.sdk.schemas import AlgoCategory
 
 from connectlib.dependency import Dependency
 from connectlib.remote.decorators import remote_data
@@ -44,7 +45,7 @@ def test_latest_connecttools_image_selection(use_latest, monkeypatch, default_pe
     algo_key = register_algo(
         client=client,
         remote_struct=remote_struct,
-        is_composite=False,
+        category=AlgoCategory.aggregate,
         permissions=default_permissions,
         dependencies=algo_deps,
     )
@@ -98,7 +99,7 @@ def test_register_algo_name(algo_name, result, default_permissions):
     _ = register_algo(
         client=client,
         remote_struct=remote_struct,
-        is_composite=False,
+        category=AlgoCategory.aggregate,
         permissions=default_permissions,
         dependencies=algo_deps,
     )
