@@ -19,10 +19,10 @@ class Data:
             index_path = Path(path) / "index.csv"
             assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
             ds_indexes = np.loadtxt(index_path, delimiter=",", dtype=object)
-            ds_indexes[:, 0] = np.array(list(map(lambda x: str(os.path.join(path, x)), ds_indexes[:, 0])))
+            ds_indexes[:, 0] = np.array(list(map(lambda x: str(os.path.join(path, x)), ds_indexes[:, 0])))  # noqa B023
 
             def to_connectlib_path(x):
-                return str(os.path.join(path, x))
+                return str(os.path.join(path, x))  # noqa B023
 
             ds_indexes[:, 0] = np.vectorize(to_connectlib_path)(ds_indexes[:, 0])
 
