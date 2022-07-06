@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- chore: Newton Raphson scientific review (#212)
 - BREAKING CHANGE: convert (test task) to (predict task + test task) (#217)
 
 ## [0.20.0](https://github.com/owkin/connectlib/releases/tag/0.20.0) - 2022-07-05

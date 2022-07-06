@@ -8,6 +8,7 @@ from connectlib import execute_experiment
 from connectlib.algorithms.pytorch import TorchNewtonRaphsonAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import CriterionReductionError
 from connectlib.exceptions import NegativeHessianMatrixError
 from connectlib.nodes.test_data_node import TestDataNode
 from connectlib.nodes.train_data_node import TrainDataNode
@@ -130,6 +131,20 @@ def test_l2_coeff(torch_algo, l2_coeff):
     assert np.allclose(
         np.linalg.eig(shared_states_l2.hessian)[0].real, np.linalg.eig(shared_states.hessian)[0].real + l2_coeff
     )
+
+
+@pytest.mark.parametrize(
+    "reduction,raise_error",
+    [("mean", False), ("sum", True)],
+)
+def test_wrong_reduction_criterion_value(torch_algo, reduction, raise_error):
+    criterion = torch.nn.MSELoss(reduction=reduction)
+
+    if raise_error:
+        with pytest.raises(CriterionReductionError):
+            torch_algo(criterion=criterion)
+    else:
+        torch_algo(criterion=criterion)
 
 
 @pytest.mark.parametrize(

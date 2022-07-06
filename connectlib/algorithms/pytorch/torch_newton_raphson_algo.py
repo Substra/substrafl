@@ -10,6 +10,7 @@ import torch
 
 from connectlib.algorithms.pytorch import weight_manager
 from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
+from connectlib.exceptions import CriterionReductionError
 from connectlib.exceptions import NegativeHessianMatrixError
 from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote import remote_data
@@ -102,6 +103,11 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         self._with_batch_norm_parameters = with_batch_norm_parameters
         self._l2_coeff = l2_coeff
         self._batch_size = batch_size
+
+        if self._criterion.reduction != "mean":
+            raise CriterionReductionError(
+                "The criterion reduction must be set to 'mean' to use the Newton-Raphson strategy"
+            )
 
         # initialized and used only in the train method
         self._final_gradients = None
@@ -202,6 +208,10 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
             .. code-block:: python
 
+                # As the parameters of the model don't change during the loop, the l2 regularization is constant and
+                # can be calculated only once for all the batches.
+                l2_reg = self._l2_reg()
+
                 for batch_index in self._index_generator:
 
                     # Do the pre-processing here
@@ -215,7 +225,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
                     loss = self._criterion(y_pred, y_batch)
 
                     # L2 regularization
-                    loss += self._l2_reg()
+                    loss += l2_reg
 
                     current_batch_size = len(x_batch)
 
@@ -223,6 +233,11 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
                     self._update_gradients_and_hessian(loss, current_batch_size)
         """
+
+        # As the parameters of the model don't change during the loop, the l2 regularization is constant and can be
+        # calculated only once for all the batches.
+        l2_reg = self._l2_reg()
+
         for batch_index in self._index_generator:
 
             x_batch, y_batch = x[batch_index], y[batch_index]
@@ -234,7 +249,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             loss = self._criterion(y_pred, y_batch)
 
             # L2 regularization
-            loss += self._l2_reg()
+            loss += l2_reg
 
             current_batch_size = len(x_batch)
 
@@ -305,10 +320,10 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         assert self._index_generator.n_samples == self._n_samples_done
 
         eigenvalues = np.linalg.eig(self._final_hessian)[0].real
-        if not (eigenvalues >= self._l2_coeff).all():
+        if not (eigenvalues >= 0).all():
             raise NegativeHessianMatrixError(
                 "Hessian matrix is not positive semi-definite, either the problem is not convex or due to numerical"
-                "instability. It is advised to try to increase the l2_coeff."
+                " instability. It is advised to try to increase the l2_coeff. "
                 f"Calculated eigenvalues are {eigenvalues.tolist()} and considered l2_coeff is {self._l2_coeff}"
             )
         self._index_generator.check_num_updates()
