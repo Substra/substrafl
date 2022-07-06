@@ -44,8 +44,8 @@ class NewtonRaphson(Strategy):
         """
         Args:
             damping_factor (float): Must be between 0 and 1. Multiplicative coefficient of the parameters update.
-                Smaller value for :math:`\\eta` will increase the stability but decrease the performance of the gradient
-                descent. Recommended value: ``damping_factor=0.8``.
+                Smaller value for :math:`\\eta` will increase the stability but decrease the speed of convergence of
+                the gradient descent. Recommended value: ``damping_factor=0.8``.
         """
         super(NewtonRaphson, self).__init__(damping_factor=damping_factor)
 
@@ -190,16 +190,16 @@ class NewtonRaphson(Strategy):
         array_one_d: np.ndarray,
         list_of_array: List[np.ndarray],
     ) -> List[np.ndarray]:
-        """Turns a 1-d array into a list of arrays with the same shapes as list_of_arrays
+        """Turns a 1-d array into a list of arrays with the same shapes as list_of_array
 
         Args:
             array_one_d (numpy.ndarray): 1-d array to be unflattened.
-            list_of_arrays (List[numpy.ndarray]): list of arrays with the same shapes as
+            list_of_array (List[numpy.ndarray]): list of arrays with the same shapes as
                 the intended new list.
 
         Returns:
             List[numpy.ndarray]
-                The initial array_one_d unflatten with the same shape of list_of_arrays
+                The initial array_one_d unflatten with the same shape of list_of_array
         """
         assert len(array_one_d.shape) == 1  # The array to unflatten have to be a 1 dimensional array
 

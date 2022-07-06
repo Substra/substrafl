@@ -9,6 +9,10 @@ class ConnectToolsDeprecationWarning(DeprecationWarning):
     """The connect-tools version used is deprecated."""
 
 
+class CriterionReductionError(Exception):
+    """The criterion reduction must be set to 'mean' to use the Newton-Raphson strategy."""
+
+
 class DampingFactorValueError(Exception):
     """The damping factor must be greater than 0 and less than or equal to 1"""
 
