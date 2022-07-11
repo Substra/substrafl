@@ -39,7 +39,7 @@ class InvalidPathError(Exception):
 
 
 class KeyMetadataError(Exception):
-    """`connectlib_version`, `substra_version` and `substratools_version` keys can't be added
+    """``connectlib_version``, ``substra_version`` and ``substratools_version`` keys can't be added
     to the experiment metadata."""
 
 
@@ -74,3 +74,37 @@ class TorchScaffoldAlgoParametersUpdateError(Exception):
     must be called once for each update within the
     :func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._local_train` method.
     """
+
+
+class TrainTaskNotFoundError(Exception):
+    """When using the :func:`~connectlib.model_loading.download_algo_files` function. The provided compute plan must
+    contain a composite train tuple:
+
+        - hosted by the worker associated to the given client
+        - tagged with the given round_idx
+    """
+
+
+class MultipleTrainTaskError(Exception):
+    """When using the :func:`~connectlib.model_loading.download_algo_files` function in remote mode. The experiment to
+    get the algo files from can't have multiple TrainDataNodes hosted on the same organization."""
+
+
+class UnfinishedTrainTaskError(Exception):
+    """When using the :func:`~connectlib.model_loading.download_algo_files` function. The task to get the algo files
+    from shall be in status ``STATUS_DONE``."""
+
+
+class LoadAlgoMetadataError(Exception):
+    """When using the :func:`~connectlib.model_loading.load_algo`, the metadata.json file within the folder given as
+    input must contain a ``local_state_file``"""
+
+
+class LoadAlgoFileNotFoundError(Exception):
+    """When using the :func:`~connectlib.model_loading.load_algo`, the given folder must contains the following files:
+    algo.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
+
+
+class LoadAlgoLocalDependencyError(Exception):
+    """When using the :func:`~connectlib.model_loading.load_algo`, all dependencies from the local input folder should be
+    install by the user."""
