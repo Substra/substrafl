@@ -435,7 +435,7 @@ def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_u
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae):
+def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
     download_algo_files(
         client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
     )
@@ -445,4 +445,4 @@ def test_download_load_algo(network, compute_plan, session_dir, test_linear_data
     y_true = test_linear_data_samples[0][:, -1:].reshape(-1)
     performance = mae.compute(y_pred, y_true)
 
-    assert performance == pytest.approx(EXPECTED_PERFORMANCE)
+    assert performance == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
