@@ -279,7 +279,7 @@ def _create_algo_files(input_folder, algo, metadata):
     _create_substra_algo_files(
         remote_struct=data_operation.remote_struct,
         install_libraries=True,
-        dependencies=Dependency(local_dependencies=[str(FILE_PATH / "installable_library")]),
+        dependencies=Dependency(local_dependencies=[str(FILE_PATH / "installable_library")], editable_mode=True),
         operation_dir=input_folder,
     )
 
