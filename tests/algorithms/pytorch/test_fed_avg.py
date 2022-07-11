@@ -10,11 +10,16 @@ from connectlib.algorithms.pytorch.weight_manager import increment_parameters
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.index_generator import NpIndexGenerator
+from connectlib.model_loading import download_algo_files
+from connectlib.model_loading import load_algo
 from connectlib.strategies import FedAvg
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
 
 logger = logging.getLogger(__name__)
+
+
+EXPECTED_PERFORMANCE = 0.0127768361
 
 
 @pytest.fixture(scope="module")
@@ -122,9 +127,25 @@ def test_pytorch_fedavg_algo_performance(
 ):
     """End to end test for torch fed avg algorithm."""
 
-    expected_performance = 0.0127768361
-
     testtuples = network.clients[0].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
     testtuple = testtuples[0]
+    assert list(testtuple.test.perfs.values())[0] == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
 
-    assert list(testtuple.test.perfs.values())[0] == pytest.approx(expected_performance, rel=rtol)
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.substra
+def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae):
+    download_algo_files(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        round_idx=None,
+        dest_folder=session_dir,
+    )
+    model = load_algo(input_folder=session_dir)._model
+
+    y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
+    y_true = test_linear_data_samples[0][:, -1:].reshape(-1)
+    performance = mae.compute(y_pred, y_true)
+
+    assert performance == pytest.approx(EXPECTED_PERFORMANCE)

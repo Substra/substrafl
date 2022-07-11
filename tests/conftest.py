@@ -105,15 +105,29 @@ def default_permissions() -> Permissions:
 
 @pytest.fixture(scope="session")
 def mae(network, default_permissions, session_dir):
-    key = assets_factory.add_python_metric(
-        python_formula="abs(y_pred-y_true).mean()",
-        name="MAE",
-        permissions=default_permissions,
-        client=network.clients[0],
-        tmp_folder=session_dir,
-    )
+    class CustomMetric:
+        def __init__(self, python_formula, name) -> None:
+            self.name = name
+            self.python_formula = python_formula
+            self.key = None
 
-    return key
+        def compute(self, y_true, y_pred):
+            return eval(self.python_formula)
+
+        def add_to_substra(self, permissions, client, tmp_folder):
+            key = assets_factory.add_python_metric(
+                python_formula=self.python_formula,
+                name=self.name,
+                permissions=permissions,
+                client=client,
+                tmp_folder=tmp_folder,
+            )
+            self.key = key
+
+    mae = CustomMetric(python_formula="abs(y_pred-y_true).mean()", name="MAE")
+    mae.add_to_substra(permissions=default_permissions, client=network.clients[0], tmp_folder=session_dir)
+
+    return mae
 
 
 @pytest.fixture(scope="session")
@@ -263,7 +277,7 @@ def test_linear_nodes(
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae])]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae.key])]
 
     return test_data_nodes
 

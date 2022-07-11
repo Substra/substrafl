@@ -4,6 +4,7 @@ import json
 import logging
 import uuid
 from pathlib import Path
+from platform import python_version
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -177,12 +178,14 @@ def _check_evaluation_strategy(
 
 
 def _check_additional_metadata(additional_metadata: Dict):
-    invalid_keys = set(additional_metadata.keys()).intersection(
-        set(("connectlib_version", "substra_version", "substratools_version"))
+    unauthorized_keys = set(
+        ("connectlib_version", "substra_version", "substratools_version", "python_version", "num_rounds")
     )
+    invalid_keys = set(additional_metadata.keys()).intersection(unauthorized_keys)
+
     if len(invalid_keys) > 0:
         raise KeyMetadataError(
-            "None of: `connectlib_version`, `substra_version`, `substratools_version` can be used as"
+            f"None of: `{'`, `'.join(unauthorized_keys)}` can be used as"
             f" metadata key but `{' '.join(invalid_keys)}` were/was found"
         )
 
@@ -204,6 +207,7 @@ def _get_packages_versions() -> dict:
         "connectlib_version": connectlib.__version__,
         "substra_version": substra.__version__,
         "substratools_version": substratools.__version__,
+        "python_version": python_version(),
     }
 
 
@@ -296,6 +300,9 @@ def execute_experiment(
 
     # Adding connectlib, substratools and substra versions to the cp metadata
     cp_metadata.update(_get_packages_versions())
+
+    # Adding rounds metadata to cp_meta_data
+    cp_metadata["num_rounds"] = num_rounds
 
     logger.info("Building the compute plan.")
 

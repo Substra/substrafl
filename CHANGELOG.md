@@ -12,7 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: Newton Raphson scientific review (#212)
 - BREAKING CHANGE: convert (test task) to (predict task + test task) (#217)
 
+### Added
+
+- Added functions to download the model of a strategy (#208):
+
+  - The function `connectlib.model_loading.download_algo_files` downloads the files needed to load the output model of a strategy
+    according to the given round. These files are downloaded to the given folder.
+
+  - The `connectlib.model_loading.load_algo` function to load the output model of a strategy from the files previously downloaded via the
+    the function `connectlib.model_loading.download_algo_files` .
+
+  Those two functions works together:
+
+  ```python
+  download_algo_files(client=substra_client, compute_plan_key=key, round_idx=None, dest_folder=session_dir)
+  model = load_algo(input_folder=session_dir)
+  ```
+
 ## [0.20.0](https://github.com/owkin/connectlib/releases/tag/0.20.0) - 2022-07-05
+
+### Added
 
 - compatibility with substra 0.28.0
 

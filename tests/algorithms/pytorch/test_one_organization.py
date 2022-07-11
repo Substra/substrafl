@@ -9,17 +9,29 @@ from connectlib.algorithms.pytorch import TorchSingleOrganizationAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
 from connectlib.index_generator import NpIndexGenerator
+from connectlib.model_loading import download_algo_files
+from connectlib.model_loading import load_algo
 from connectlib.strategies import SingleOrganization
 from tests import utils
 
 logger = logging.getLogger(__name__)
+
+EXPECTED_PERFORMANCE = 0.2774176577698596
 
 
 @pytest.mark.parametrize("n_updates, n_rounds", [(1, 2), (2, 1)])  # slow test so checking only two possibilities
 @pytest.mark.substra
 @pytest.mark.slow
 def test_one_organization(
-    network, torch_linear_model, train_linear_nodes, test_linear_nodes, session_dir, n_updates, n_rounds
+    network,
+    torch_linear_model,
+    train_linear_nodes,
+    test_linear_nodes,
+    session_dir,
+    n_updates,
+    n_rounds,
+    test_linear_data_samples,
+    mae,
 ):
     """End to end test for torch one organization algorithm. Checking that the perf are the same for :
     different combinations of n_updates and n_rounds
@@ -27,7 +39,6 @@ def test_one_organization(
      details of the implementation of the latter ones please go to PR #109
     """
     # Common definition
-    expected_performance = 0.2774176577698596
     seed = 42
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
@@ -84,4 +95,21 @@ def test_one_organization(
     testtuples = sorted(testtuples, key=lambda x: x.rank)
 
     # ensure that final result is correct up to 6 decimal points
-    assert list(testtuples[-1].test.perfs.values())[0] == pytest.approx(expected_performance, rel=10e-6)
+    assert list(testtuples[-1].test.perfs.values())[0] == pytest.approx(EXPECTED_PERFORMANCE, rel=10e-6)
+
+    assert local_model_perf(network, compute_plan, session_dir, test_linear_data_samples, mae) == pytest.approx(
+        EXPECTED_PERFORMANCE
+    )
+
+
+def local_model_perf(network, compute_plan, session_dir, test_linear_data_samples, mae):
+    download_algo_files(
+        client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
+    )
+    model = load_algo(input_folder=session_dir)._model
+
+    y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
+    y_true = test_linear_data_samples[0][:, -1:].reshape(-1)
+    performance = mae.compute(y_pred, y_true)
+
+    return performance
