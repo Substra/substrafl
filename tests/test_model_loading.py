@@ -1,6 +1,7 @@
 import enum
 import json
 import os
+import shutil
 import subprocess
 import sys
 import uuid
@@ -9,6 +10,7 @@ from platform import python_version
 from unittest.mock import MagicMock
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 import substra
 import substratools
@@ -19,6 +21,7 @@ from substra.sdk.models import OutModel
 from substra.sdk.models import Status
 from substra.sdk.models import _Composite
 
+<<<<<<< HEAD
 import substrafl
 from substrafl.dependency import Dependency
 from substrafl.exceptions import LoadAlgoFileNotFoundError
@@ -34,6 +37,27 @@ from substrafl.model_loading import REQUIRED_KEYS
 from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
 from substrafl.remote.register.register import _create_substra_algo_files
+=======
+import connectlib
+from connectlib.dependency import Dependency
+from connectlib.exceptions import LoadAlgoFileNotFoundError
+from connectlib.exceptions import LoadAlgoLocalDependencyError
+from connectlib.exceptions import LoadAlgoMetadataError
+from connectlib.exceptions import MultipleTrainTaskError
+from connectlib.exceptions import TrainTaskNotFoundError
+from connectlib.exceptions import UnfinishedTrainTaskError
+from connectlib.experiment import execute_experiment
+from connectlib.model_loading import ALGO_FILE
+from connectlib.model_loading import LOCAL_STATE_KEY
+from connectlib.model_loading import METADATA_FILE
+from connectlib.model_loading import REQUIRED_KEYS
+from connectlib.model_loading import download_algo_files
+from connectlib.model_loading import load_algo
+from connectlib.remote.decorators import remote_data
+from connectlib.remote.register.register import _create_substra_algo_files
+>>>>>>> c1fe4347 (tests: add independent e2e test for download model.)
+
+from . import utils
 
 FILE_PATH = Path(__file__).resolve().parent
 
@@ -329,3 +353,129 @@ def test_unfinished_task_error(fake_client, fake_compute_plan, fake_composite_tr
     with pytest.raises(UnfinishedTrainTaskError):
         fake_composite_traintuple.status = status
         download_algo_files(fake_client, fake_compute_plan.key, session_dir, round_idx=None)
+
+
+@pytest.fixture
+def cyclic_strategy(dummy_strategy_class):
+    class Cyclic(dummy_strategy_class):
+        def __init__(self) -> None:
+            super().__init__()
+            self._previous_shared_state = None
+            self._previous_local_states = {}
+
+        def perform_round(
+            self,
+            algo,
+            train_data_nodes,
+            aggregation_node,
+            round_idx,
+        ):
+
+            for k, organization in enumerate(train_data_nodes):
+
+                # Local updates from the latest aggregation
+
+                if round_idx == 1 and self._previous_shared_state is not None:
+                    useless_local, _ = organization.update_states(
+                        algo.train(  # type: ignore
+                            organization.data_sample_keys,
+                            shared_state=None,
+                            _algo_name=f"Training with {algo.__class__.__name__}",
+                        ),
+                        round_idx=0,
+                    )
+
+                    self._previous_local_states[k] = useless_local
+
+                local_state, shared_state = organization.update_states(
+                    algo.train(  # type: ignore
+                        organization.data_sample_keys,
+                        shared_state=self._previous_shared_state,
+                        _algo_name=f"Training with {algo.__class__.__name__}",
+                    ),
+                    local_state=self._previous_local_states.get(k),
+                    round_idx=round_idx,
+                )
+                self._previous_local_states[k] = local_state
+                self._previous_shared_state = shared_state
+
+    return Cyclic
+
+
+@pytest.fixture
+def incremental_algo(dummy_algo_class):
+    class Incrementalizer(dummy_algo_class):
+        def __init__(self) -> None:
+            super().__init__()
+            self._counter = 0
+
+        @remote_data
+        def train(self, x, y, shared_state):
+
+            if shared_state is None:
+                shared_state = {"shared": 0}
+
+            self._counter = shared_state["shared"] + 1
+
+            return {"shared": self._counter}
+
+        def load(self, path):
+            self._counter = int(np.load(path))
+            return self
+
+        def save(self, path):
+            np.save(path, self._counter)
+            shutil.move(str(path) + ".npy", path)
+
+    return Incrementalizer
+
+
+@pytest.fixture
+def compute_plan(network, cyclic_strategy, incremental_algo, train_linear_nodes, session_dir):
+    """For a cyclic like strategy, we use an algo that increment the the `_counter` argument each time it's used
+    In deploy mode, for each output algo, this counter is supposed to be:
+        number of nodes used * (num rounds - 1) plus the index of the client within the network.clients list
+        as the train nodes and the clients are index wised associated
+    In local mode, as there is no notion of organization, for a round, the algo with the highest rank is used. Hence
+    counter arg will be number of nodes used * num rounds
+    """
+
+    num_rounds = 3
+
+    compute_plan = execute_experiment(
+        client=network.clients[0],
+        algo=incremental_algo(),
+        strategy=cyclic_strategy(),
+        dependencies=Dependency(editable_mode=True),
+        train_data_nodes=train_linear_nodes,
+        experiment_folder=session_dir,
+        num_rounds=num_rounds,
+        clean_models=False,
+    )
+
+    return compute_plan
+
+
+@pytest.mark.slow
+@pytest.mark.e2e
+@pytest.mark.substra
+def test_download_load_model(network, compute_plan, train_linear_nodes, session_dir):
+    """Checks that expected local state of downloaded algos."""
+
+    utils.wait(network.clients[0], compute_plan)
+
+    for round in range(1, int(compute_plan.metadata["num_rounds"]) + 1):
+
+        for k, client in enumerate(network.clients):
+            model_folder = session_dir / f"model_client_{k}_round_{round}"
+
+            download_algo_files(client, compute_plan.key, model_folder, round_idx=round)
+            algo = load_algo(model_folder)
+
+            if client.backend_mode == substra.BackendType.DEPLOYED:
+                # We check that we always get the right model based on its _counter arg
+                assert algo._counter == len(train_linear_nodes) * (round - 1) + k
+
+            else:
+                # in local it should always be the model with the highest rank
+                assert algo._counter == len(train_linear_nodes) * round
