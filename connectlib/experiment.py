@@ -323,7 +323,7 @@ def execute_experiment(
             )
 
     # Computation graph is created
-    logger.info("Submitting the algorithm to Connect.")
+    logger.info("Registering the algorithm to Connect.")
     composite_traintuples, aggregation_tuples, predicttuples, testtuples, operation_cache = _register_operations(
         client=client,
         train_data_nodes=train_data_nodes,
@@ -333,7 +333,7 @@ def execute_experiment(
     )
 
     # Execute the compute plan
-    logger.info("Submitting the compute plan to Connect.")
+    logger.info("Registering the compute plan to Connect.")
     timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
 
     # Generate the compute plan key.
@@ -366,5 +366,5 @@ def execute_experiment(
         ),
         auto_batching=False,
     )
-    logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
+    logger.info(("The compute plan has been registered to Connect, its key is {0}.").format(compute_plan.key))
     return compute_plan
