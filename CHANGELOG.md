@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- feat: the compute plan tasks are uploaded to Connect using the auto-batching feature (it should solve gRPC message errors for large compute plans) (#220)
+
 ## [0.21.0](https://github.com/owkin/connectlib/releases/tag/0.21.0) - 2022-07-11
 
 ### Changed
