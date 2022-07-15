@@ -1,5 +1,4 @@
 import logging
-from typing import Any
 
 import pytest
 import torch
@@ -32,6 +31,7 @@ def test_one_organization(
     n_rounds,
     test_linear_data_samples,
     mae,
+    numpy_torch_dataset,
 ):
     """End to end test for torch one organization algorithm. Checking that the perf are the same for :
     different combinations of n_updates and n_rounds
@@ -65,14 +65,8 @@ def test_one_organization(
                 criterion=torch.nn.MSELoss(),
                 model=perceptron,
                 index_generator=nig,
+                dataset=numpy_torch_dataset,
             )
-
-        def _local_train(self, x: Any, y: Any):
-            return super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
 
     my_algo = MyOneOrganizationAlgo()
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes[:1], rounds=1)  # test every round

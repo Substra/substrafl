@@ -169,6 +169,22 @@ index_generator = NpIndexGenerator(
 )
 
 
+class TorchDataset(torch.utils.data.Dataset):
+    def __init__(self, x: Any, y: Any, is_inference: bool):
+        self.x = x
+        self.y = y
+        self.is_inference = is_inference
+
+    def __getitem__(self, idx):
+        if not self.is_inference:
+            return self.x[idx], self.y[idx]
+        else:
+            return self.x[idx]
+
+    def __len__(self):
+        return len(self.x)
+
+
 class MyAlgo(TorchFedAvgAlgo):
     def __init__(self):
         super().__init__(
@@ -176,15 +192,8 @@ class MyAlgo(TorchFedAvgAlgo):
             criterion=torch.nn.CrossEntropyLoss(),
             optimizer=optimizer,
             index_generator=index_generator,
+            dataset=TorchDataset,
         )
-
-    def _local_train(self, x: Any, y: Any):
-        # Mandatory function
-        ...
-
-    def _local_predict(self, x: Any) -> Any:
-        # Mandatory function
-        ...
 
 
 # %%

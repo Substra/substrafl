@@ -1,4 +1,3 @@
-import abc
 import logging
 from enum import IntEnum
 from pathlib import Path
@@ -46,14 +45,12 @@ class TorchScaffoldAlgo(TorchAlgo):
           to do the local training
         - then gets the weight updates from the models and sends them to the aggregator.
 
-    The ``predict`` method calls the
-    :py:func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._local_predict` method to generate
-    the predictions.
+    The ``predict`` method generates the predictions.
 
-    The child class must implement the
+    The child class can override the
     :py:func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._local_train` and
-    :py:func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo._local_predict` methods,
-    and can override other methods if necessary.
+    :py:func:`~connectlib.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo.predict` methods,
+    or other methods if necessary.
 
     To add a custom parameter to the ``__init__``of the class, also add it to the call to ``super().__init__```
     as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported
@@ -77,17 +74,20 @@ class TorchScaffoldAlgo(TorchAlgo):
                             num_updates=10,
                             batch_size=32,
                         ),
+                        dataset=MyDataset,
                         my_custom_extra_parameter=my_custom_extra_parameter,
                     )
                 def _local_train(
                     self,
-                    x: Any,
-                    y: Any,
+                    train_dataset: torch.utils.data.Dataset,
                 ):
-                    # for each update
-                    for batch_index in self._index_generator:
-                        # get minibatch
-                        x_batch, y_batch = x[batch_index], y[batch_index]
+                    # Create torch dataloader
+                    # ``train_dataset = self._dataset(x=x, y=y, is_inference=False)`` is executed prior the execution
+                    # of this function
+                    train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
+
+                    for x_batch, y_batch in train_data_loader:
+
                         # Forward pass
                         y_pred = self._model(x_batch)
                         # Compute Loss
@@ -106,23 +106,6 @@ class TorchScaffoldAlgo(TorchAlgo):
                         if self._scheduler is not None:
                             self._scheduler.step()
 
-
-                def _local_predict(self, x: Any) -> Any:
-                    with torch.inference_mode():
-                        y = self._model(x)
-                    return y
-
-    The algo needs to get the number of samples in the dataset from the x sent by the opener.
-    By default, it uses len(x). If that is not the proper way of getting the number of samples,
-    override the ``_get_len_from_x`` function
-
-    Example:
-
-        .. code-block:: python
-
-            def _get_len_from_x(self, x):
-                return len(x)
-
     As development tools, the ``train`` and ``predict`` method comes with a default argument : ``_skip``.
     If ``_skip`` is set to ``True``, only the function will be executed and not all the code related to Connect.
     This allows to quickly debug code and use the defined algorithm as is.
@@ -134,6 +117,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
+        dataset: torch.utils.data.Dataset,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
         c_update_rule: CUpdateRule = CUpdateRule.FAST,
@@ -155,6 +139,15 @@ class TorchScaffoldAlgo(TorchAlgo):
                 during training in this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
+                This generator is used as stateful ``batch_sampler`` of the data loader created from the given
+                ``dataset``
+            dataset (torch.utils.data.Dataset): an instantiable dataset class whose ``__init__`` arguments are
+                ``x``, ``y`` and ``is_inference``. The torch datasets used for both training and inference will be
+                instantiate from it prior to the ``_local_train`` execution and within the ``predict`` method.
+                The ``__getitem__`` methods of those generated datasets must return both ``x`` (training data) and y
+                (target values) when ``is_inference`` is set to ``False`` and only ``x`` (testing data) when
+                ``is_inference`` is set to True.
+                This behavior can be changed by re-writing the `_local_train` or `predict` methods.
             scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
                 batch. If None, no scheduler will be used. Defaults to None.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
@@ -171,6 +164,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             criterion=criterion,
             optimizer=optimizer,
             index_generator=index_generator,
+            dataset=dataset,
             scheduler=scheduler,
             use_gpu=use_gpu,
             *args,
@@ -273,21 +267,17 @@ class TorchScaffoldAlgo(TorchAlgo):
             updates_multiplier=self._current_lr,
         )
 
-    @abc.abstractmethod
     def _local_train(
         self,
-        x: Any,
-        y: Any,
+        train_dataset: torch.utils.data.Dataset,
     ):
-        """Local train method, the user must overwrite it, this function
-        contains the local training loop with the data pre-processing.
+        """Local train method. Contains the local training loop.
 
-        Train the model on ``num_updates`` minibatches, using
-        ``self._index_generator`` to generate the batches.
+        Train the model on ``num_updates`` minibatches, using the ``self._index_generator generator`` as batch sampler
+        for the torch dataset.
 
         Args:
-            x (typing.Any): x as returned by the opener
-            y (typing.Any): y as returned by the opener
+            train_dataset (torch.utils.data.Dataset): train_dataset build from the x and y returned by the opener.
 
         Important:
 
@@ -299,10 +289,10 @@ class TorchScaffoldAlgo(TorchAlgo):
 
             .. code-block:: python
 
-                for batch_index in self._index_generator:
-                    x_batch, y_batch = x[batch_index], y[batch_index]
+                # Create torch dataloader
+                train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
-                    # Do the pre-processing here
+                for x_batch, y_batch in train_data_loader:
 
                     # Forward pass
                     y_pred = self._model(x_batch)
@@ -319,10 +309,12 @@ class TorchScaffoldAlgo(TorchAlgo):
                     if self._scheduler is not None:
                         self._scheduler.step()
         """
-        # for each update
-        for batch_index in self._index_generator:
-            # get minibatch
-            x_batch, y_batch = x[batch_index], y[batch_index]
+
+        # Create torch dataloader
+        train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
+
+        for x_batch, y_batch in train_data_loader:
+
             # Forward pass
             y_pred = self._model(x_batch)
             # Compute Loss
@@ -369,10 +361,13 @@ class TorchScaffoldAlgo(TorchAlgo):
             ScaffoldSharedState: the shared states of the Algo
         """
 
+        # Create torch dataset
+        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+
         if shared_state is None:  # first round
             # Instantiate the index_generator
             assert self._index_generator.n_samples is None
-            self._index_generator.n_samples = self._get_len_from_x(x)
+            self._index_generator.n_samples = len(train_dataset)
 
             # client_control_variate = zeros matrix with the shape of the model weights
             assert self._client_control_variate is None
@@ -428,10 +423,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         self._model.train()
 
         # Train the model
-        self._local_train(
-            x=x,
-            y=y,
-        )
+        self._local_train(train_dataset)
 
         self._index_generator.check_num_updates()
 
@@ -483,7 +475,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             parameters_update=[w.cpu().detach().numpy() for w in parameters_update],
             control_variate_update=[c.cpu().detach().numpy() for c in control_variate_update],
             server_control_variate=[s.cpu().detach().numpy() for s in self._server_control_variate],
-            n_samples=self._get_len_from_x(x),
+            n_samples=len(train_dataset),
         )
         return return_dict
 

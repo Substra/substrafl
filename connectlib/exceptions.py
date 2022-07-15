@@ -17,6 +17,14 @@ class DampingFactorValueError(Exception):
     """The damping factor must be greater than 0 and less than or equal to 1"""
 
 
+class DatasetSignatureError(Exception):
+    """The __init__() function on the given torch Dataset must have x, y and is_inference as parameters."""
+
+
+class DatasetTypeError(Exception):
+    """The given torch Dataset should be a torch.utils.data.Dataset object and not an instance of it."""
+
+
 class EmptySharedStatesError(Exception):
     """The shared_states is empty. Ensure that the train method of the algorithm returns a
     StrategySharedState object."""

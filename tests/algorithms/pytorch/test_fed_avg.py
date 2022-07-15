@@ -1,5 +1,4 @@
 import logging
-from typing import Any
 
 import pytest
 import torch
@@ -23,7 +22,7 @@ EXPECTED_PERFORMANCE = 0.0127768361
 
 
 @pytest.fixture(scope="module")
-def torch_algo(torch_linear_model):
+def torch_algo(torch_linear_model, numpy_torch_dataset):
     num_updates = 100
     seed = 42
     torch.manual_seed(seed)
@@ -42,14 +41,8 @@ def torch_algo(torch_linear_model):
                 criterion=torch.nn.MSELoss(),
                 model=perceptron,
                 index_generator=nig,
+                dataset=numpy_torch_dataset,
             )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
 
     return MyAlgo
 

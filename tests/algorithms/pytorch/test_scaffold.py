@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pytest
@@ -30,7 +29,7 @@ current_folder = Path(__file__).parent
 EXPECTED_PERFORMANCE = 0.0127768706
 
 
-def _torch_algo(torch_linear_model, lr=0.1, use_scheduler=False):
+def _torch_algo(torch_linear_model, numpy_torch_dataset, lr=0.1, use_scheduler=False):
     num_updates = 100
     seed = 42
     torch.manual_seed(seed)
@@ -52,25 +51,24 @@ def _torch_algo(torch_linear_model, lr=0.1, use_scheduler=False):
                 criterion=torch.nn.MSELoss(),
                 model=perceptron,
                 index_generator=nig,
+                dataset=numpy_torch_dataset,
                 scheduler=scheduler,
             )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
 
     return MyAlgo
 
 
 @pytest.fixture(scope="module")
-def torch_algo(torch_linear_model):
+def torch_algo(torch_linear_model, numpy_torch_dataset):
     """This closure allows to parametrize the torch algo fixture"""
 
     def inner_torch_algo(lr=0.1, use_scheduler=False):
-        return _torch_algo(torch_linear_model=torch_linear_model, lr=lr, use_scheduler=use_scheduler)()
+        return _torch_algo(
+            torch_linear_model=torch_linear_model,
+            numpy_torch_dataset=numpy_torch_dataset,
+            lr=lr,
+            use_scheduler=use_scheduler,
+        )()
 
     return inner_torch_algo
 
@@ -131,7 +129,7 @@ def test_pytorch_scaffold_algo_weights(
     aggregate_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=1)
     aggregate_update = [torch.from_numpy(x).to("cpu") for x in aggregate_model.avg_parameters_update]
 
-    # Assert the model initialisation is the same for every model
+    # Assert the model initialization is the same for every model
     assert_model_parameters_equal(rank_0_local_models[0].model, rank_0_local_models[1].model)
     assert_tensor_list_equal(
         rank_0_local_models[0]._client_control_variate, rank_0_local_models[1]._client_control_variate
@@ -205,13 +203,6 @@ def test_train_skip(rtol):
                 index_generator=nig,
             )
 
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
-
     my_algo = MyAlgo()
 
     # we generate linear data x=ay+b with a = 2, b = 0
@@ -258,7 +249,7 @@ def test_update_current_lr(rtol, torch_algo, use_scheduler):
 
 
 @pytest.mark.parametrize("num_updates", [-10, 0])
-def test_pytorch_num_updates_error(num_updates):
+def test_pytorch_num_updates_error(num_updates, numpy_torch_dataset):
     """Check that num_updates <= 0 raise a ValueError."""
     nig = NpIndexGenerator(
         batch_size=32,
@@ -285,21 +276,15 @@ def test_pytorch_num_updates_error(num_updates):
                 index_generator=nig,
                 optimizer=torch.optim.SGD(dummy_model.parameters(), lr=0.1),
                 criterion=torch.nn.MSELoss(),
+                dataset=numpy_torch_dataset,
             )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
 
     with pytest.raises(NumUpdatesValueError):
         MyAlgo()
 
 
 @pytest.mark.parametrize("optimizer", [torch.optim.Adagrad, torch.optim.Adam])
-def test_pytorch_optimizer_error(optimizer, torch_linear_model, caplog):
+def test_pytorch_optimizer_error(optimizer, torch_linear_model, caplog, numpy_torch_dataset):
     "Only SGD is recommended as an optimizer for TorchScaffoldAlgo."
     perceptron = torch_linear_model()
     nig = NpIndexGenerator(
@@ -316,14 +301,8 @@ def test_pytorch_optimizer_error(optimizer, torch_linear_model, caplog):
                 index_generator=nig,
                 optimizer=optimizer(perceptron.parameters(), lr=0.1),
                 criterion=torch.nn.MSELoss(),
+                dataset=numpy_torch_dataset,
             )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
 
     caplog.clear()
     MyAlgo()
@@ -338,7 +317,7 @@ def test_pytorch_optimizer_error(optimizer, torch_linear_model, caplog):
 @pytest.mark.parametrize(
     "lr1, lr2, expected_lr, nb_warnings", [(0.2, 0.1, 0.1, 1), (0.4, 0, 0.4, 0), (0.5, 0.5, 0.5, 0)]
 )
-def test_pytorch_multiple_lr(lr1, lr2, expected_lr, nb_warnings, caplog):
+def test_pytorch_multiple_lr(lr1, lr2, expected_lr, nb_warnings, caplog, numpy_torch_dataset):
     "Check that the smallest (but 0) learning rate is used for the aggregation when multiple learning rate are used."
 
     class MLP(torch.nn.Module):
@@ -374,14 +353,8 @@ def test_pytorch_multiple_lr(lr1, lr2, expected_lr, nb_warnings, caplog):
                     lr=lr2,
                 ),
                 criterion=torch.nn.MSELoss(),
+                dataset=numpy_torch_dataset,
             )
-
-        def _local_train(self, x: Any, y: Any):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-            return y_pred.detach().numpy()
 
     my_algo = MyAlgo()
 
@@ -393,7 +366,7 @@ def test_pytorch_multiple_lr(lr1, lr2, expected_lr, nb_warnings, caplog):
 
 
 @pytest.mark.parametrize("nb_update_params_call, num_updates", ([0, 1], [1, 2], [3, 5]))
-def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_updates):
+def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_updates, numpy_torch_dataset):
     "Check that _scaffold_parameters_update needs to be called at each update"
 
     model = torch_linear_model()
@@ -412,18 +385,14 @@ def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_u
                 index_generator=nig,
                 optimizer=torch.optim.SGD(model.parameters(), lr=0.1),
                 criterion=torch.nn.MSELoss(),
+                dataset=numpy_torch_dataset,
             )
 
-        def _local_train(self, x: Any, y: Any):
+        def _local_train(self, train_dataset):
             for _ in self._index_generator:
                 continue
             for _ in range(nb_update_params_call):
                 self._scaffold_parameters_update()
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-
-            return y_pred.detach().numpy()
 
     my_algo = MyAlgo()
 

@@ -27,12 +27,10 @@ class TorchFedAvgAlgo(TorchAlgo):
           training
         - then gets the weight updates from the models and sends them to the aggregator.
 
-    The ``predict`` method calls the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict` method to
-    generate the predictions.
+    The ``predict`` method generates the predictions.
 
-    The child class must implement the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_train` and
-    :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_predict` methods, and can override
-    other methods if necessary.
+    The child class can override the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._local_train` and
+    :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo.predict` methods, or other methods if necessary.
 
     To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``
     as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported
@@ -55,15 +53,20 @@ class TorchFedAvgAlgo(TorchAlgo):
                             num_updates=100,
                             batch_size=32,
                         ),
+                        dataset=MyDataset,
                         my_custom_extra_parameter=my_custom_extra_parameter,
                     )
                 def _local_train(
                     self,
-                    x: Any,
-                    y: Any,
+                    train_dataset: torch.utils.data.Dataset,
                 ):
-                    for batch_index in self._index_generator:
-                        x_batch, y_batch = x[batch_index], y[batch_index]
+
+                    # Create torch dataloader from the automatically instantiated dataset
+                    # ``train_dataset = self._dataset(x=x, y=y, is_inference=False)`` is executed prior the execution
+                    # of this function
+                    train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
+
+                    for x_batch, y_batch in train_data_loader:
 
                         # Forward pass
                         y_pred = self._model(x_batch)
@@ -77,22 +80,6 @@ class TorchFedAvgAlgo(TorchAlgo):
                         if self._scheduler is not None:
                             self._scheduler.step()
 
-                def _local_predict(self, x: Any) -> Any:
-                    with torch.inference_mode():
-                        y = self._model(x)
-                    return y
-
-    The algo needs to get the number of samples in the dataset from the x sent by the opener.
-    By default, it uses len(x). If that is not the proper way of getting the number of samples,
-    override the :py:func:`~connectlib.algorithms.pytorch.TorchFedAvgAlgo._get_len_from_x` function
-
-    Example:
-
-        .. code-block:: python
-
-            def _get_len_from_x(self, x):
-                return len(x)
-
     As development tools, the ``train`` and ``predict`` method comes with a default argument : ``_skip``.
     If ``_skip`` is set to ``True``, only the function will be executed and not all the code related to Connect.
     This allows to quickly debug code and use the defined algorithm as is.
@@ -104,6 +91,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         criterion: torch.nn.modules.loss._Loss,
         optimizer: torch.optim.Optimizer,
         index_generator: BaseIndexGenerator,
+        dataset: torch.utils.data.Dataset,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
         use_gpu: bool = True,
@@ -125,6 +113,15 @@ class TorchFedAvgAlgo(TorchAlgo):
                 during training in this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
+                This generator is used as stateful ``batch_sampler`` of the data loader created from the given
+                ``dataset``
+            dataset (torch.utils.data.Dataset): an instantiable dataset class whose ``__init__`` arguments are
+                ``x``, ``y`` and ``is_inference``. The torch datasets used for both training and inference will be
+                instantiate from it prior to the ``_local_train`` execution and within the ``predict`` method.
+                The ``__getitem__`` methods of those generated datasets must return both ``x`` (training data) and y
+                (target values) when ``is_inference`` is set to ``False`` and only ``x`` (testing data) when
+                ``is_inference`` is set to True.
+                This behavior can be changed by re-writing the `_local_train` or `predict` methods.
             scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
                 batch. If None, no scheduler will be used. Defaults to None.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
@@ -136,6 +133,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             criterion=criterion,
             optimizer=optimizer,
             index_generator=index_generator,
+            dataset=dataset,
             scheduler=scheduler,
             use_gpu=use_gpu,
             *args,
@@ -178,10 +176,14 @@ class TorchFedAvgAlgo(TorchAlgo):
             FedAvgSharedState: weight update (delta between fine-tuned
             weights and previous weights)
         """
+
+        # Create torch dataset
+        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+
         if shared_state is None:
             # Instantiate the index_generator
             assert self._index_generator.n_samples is None
-            self._index_generator.n_samples = self._get_len_from_x(x)
+            self._index_generator.n_samples = len(train_dataset)
         else:
             assert self._index_generator.n_samples is not None
             # The shared states is the average of the model parameter updates for all organizations
@@ -203,10 +205,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         self._model.train()
 
         # Train the model
-        self._local_train(
-            x=x,
-            y=y,
-        )
+        self._local_train(train_dataset)
 
         self._index_generator.check_num_updates()
 
@@ -228,7 +227,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         )
 
         return FedAvgSharedState(
-            n_samples=self._get_len_from_x(x),
+            n_samples=len(train_dataset),
             parameters_update=[p.cpu().detach().numpy() for p in parameters_update],
         )
 

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- BREAKING CHANGE: add the torch Dataset as argument of TorchAlgo to preprocess the data (#224)
+The `_init_` function of the dataset must contain (self, x, y, is_inference).
+The `__getitem__` function is expected to return x, y if is_inference is False, else x.
+This behavior can be changed by re-writing the `_local_train` or `predict` methods.
+`_local_train` is no longer mandatory to overwrite any more. Its signature passed from `(x, y)` to `(train_dataset)`
+`_local_predict` has been deleted.
+`_get_len_from_x` has been deleted.
+
 ### Changed
 
 - feat: the compute plan tasks are uploaded to Connect using the auto-batching feature (it should solve gRPC message errors for large compute plans) (#220)
