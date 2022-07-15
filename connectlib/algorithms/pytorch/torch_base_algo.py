@@ -1,4 +1,5 @@
 import abc
+import inspect
 import logging
 from pathlib import Path
 from typing import Any
@@ -7,6 +8,8 @@ from typing import Optional
 import torch
 
 from connectlib.algorithms.algo import Algo
+from connectlib.exceptions import DatasetSignatureError
+from connectlib.exceptions import DatasetTypeError
 from connectlib.exceptions import OptimizerValueError
 from connectlib.index_generator import BaseIndexGenerator
 from connectlib.remote.decorators import remote_data
@@ -23,8 +26,7 @@ class TorchAlgo(Algo):
         - add the strategy specific parameters in the ``__init__``
         - implement the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo.train`
           function: it must use the
-          :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_train` and
-          :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_predict` functions, which are
+          :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._local_train` function, which can be
           overridden by the user and must contain as little strategy-specific code as possible
         - Reimplement the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._update_from_checkpoint`
           and :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._get_state_to_save` functions to add
@@ -36,6 +38,7 @@ class TorchAlgo(Algo):
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
         index_generator: BaseIndexGenerator,
+        dataset: torch.utils.data.Dataset,
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         use_gpu: bool = True,
@@ -60,6 +63,8 @@ class TorchAlgo(Algo):
         self._scheduler = scheduler
 
         self._index_generator: BaseIndexGenerator = index_generator
+        self._dataset: torch.utils.data.Dataset = dataset
+        self._check_torch_dataset()
 
     @property
     def model(self) -> torch.nn.Module:
@@ -69,20 +74,6 @@ class TorchAlgo(Algo):
             torch.nn.Module: model
         """
         return self._model
-
-    def _get_len_from_x(self, x: Any) -> int:
-        """Get the length of the dataset from x as returned by the opener.
-
-        Default: returns ``len(x)``. Overwrite if needed.
-
-        Args:
-            x (typing.Any): x returned by the opener
-                get_X function
-
-        Returns:
-            int: Number of samples in the dataset
-        """
-        return len(x)
 
     @abc.abstractmethod
     def train(
@@ -103,7 +94,6 @@ class TorchAlgo(Algo):
         """Executes the following operations:
 
             * Sets the model to `eval` mode
-            * Applies the `self._local_predict` function
             * Returns the predictions
 
         Args:
@@ -113,29 +103,35 @@ class TorchAlgo(Algo):
         Returns:
             typing.Any: Model prediction.
         """
+        # Create torch dataset
+        predict_dataset = self._dataset(x=x, y=None, is_inference=True)
+
+        predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=len(predict_dataset))
+
         self._model.eval()
-        predictions = self._local_predict(x)
+
+        predictions = torch.Tensor([])
+        with torch.inference_mode():
+            for x in predict_loader:
+                predictions = torch.cat((predictions, self._model(x)), 0)
+
         return predictions
 
-    @abc.abstractmethod
     def _local_train(
         self,
-        x: Any,
-        y: Any,
+        train_dataset: torch.utils.data.Dataset,
     ):
-        """Local train method, the user must override it, this function
-        contains the local training loop with the data pre-processing.
+        """Local train method. Contains the local training loop.
 
-        Train the model on ``num_updates`` minibatches, using the
-        ``self._index_generator generator`` to generate the batches.
+        Train the model on ``num_updates`` minibatches, using the ``self._index_generator generator`` as batch sampler
+        for the torch dataset.
 
         Args:
-            x (typing.Any): x as returned by the opener
-            y (typing.Any): y as returned by the opener
+            train_dataset (torch.utils.data.Dataset): train_dataset build from the x and y returned by the opener.
 
         Important:
 
-            You must use ``next(self._index_generator)`` at each minibatch,
+            You must use ``next(self._index_generator)`` as batch sampler,
             to ensure that the batches you are using are correct between 2 rounds
             of the federated learning strategy.
 
@@ -143,10 +139,10 @@ class TorchAlgo(Algo):
 
             .. code-block:: python
 
-                for batch_index in self._index_generator:
-                    x_batch, y_batch = x[batch_index], y[batch_index]
+                # Create torch dataloader
+                train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
-                    # Do the pre-processing here
+                for x_batch, y_batch in train_data_loader:
 
                     # Forward pass
                     y_pred = self._model(x_batch)
@@ -166,8 +162,10 @@ class TorchAlgo(Algo):
                 "algorithm."
             )
 
-        for batch_index in self._index_generator:
-            x_batch, y_batch = x[batch_index], y[batch_index]
+        # Create torch dataloader
+        train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
+
+        for x_batch, y_batch in train_data_loader:
 
             # Forward pass
             y_pred = self._model(x_batch)
@@ -180,36 +178,6 @@ class TorchAlgo(Algo):
 
             if self._scheduler is not None:
                 self._scheduler.step()
-
-    @abc.abstractmethod
-    def _local_predict(
-        self,
-        x: Any,
-    ) -> Any:
-        """Local predict method, the user must override it. This function
-        contains the local predict with the data pre-processing and
-        post-processing.
-
-        Args:
-            x (typing.Any): x as returned by the opener
-
-        Returns:
-            typing.Any: predictions in the format saved then loaded by the opener
-            to calculate the metric
-
-        Example:
-
-            .. code-block:: python
-
-                with torch.inference_mode():
-                    # Do the pre-processing here
-                    y = self._model(x)
-                    # Do the post-processing here
-                return y
-        """
-        with torch.inference_mode():
-            y = self._model(x)
-        return y
 
     def _get_torch_device(self, use_gpu: bool) -> torch.device:
         """Get the torch device, CPU or GPU, depending
@@ -316,6 +284,31 @@ class TorchAlgo(Algo):
             checkpoint["rng_state"] = torch.cuda.get_rng_state()
 
         return checkpoint
+
+    def _check_torch_dataset(self):
+        # Check that the given Dataset is not an instance
+        try:
+            issubclass(self._dataset, torch.utils.data.Dataset)
+        except TypeError:
+            raise DatasetTypeError(
+                "``dataset`` should be non-instantiate torch.utils.data.Dataset class. "
+                "This means that calling ``dataset(x, y, is_inference=False)`` must "
+                "returns a torch dataset object. "
+                "You might have provided an instantiate dataset or an object of the wrong type."
+            )
+
+        # Check the signature of the __init__() function of the torch dataset class
+        signature = inspect.signature(self._dataset.__init__)
+        init_parameters = signature.parameters
+
+        if "x" not in init_parameters:
+            raise DatasetSignatureError("The __init__() function of the torch Dataset must contain x as parameter.")
+        elif "y" not in init_parameters:
+            raise DatasetSignatureError("The __init__() function of the torch Dataset must contain y as parameter.")
+        elif "is_inference" not in init_parameters:
+            raise DatasetSignatureError(
+                "The __init__() function of the torch Dataset must contain is_inference as parameter."
+            )
 
     def save(self, path: Path):
         """Saves all the stateful elements of the class to the specified path.

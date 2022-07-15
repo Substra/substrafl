@@ -26,7 +26,7 @@ See the release process on the tech-team [releasing guide](https://github.com/ow
 ## Documentation
 
 Documentation of the api is generated from the connectlib repository thanks to the auto doc module.
-It is automatically built by https://github.com/owkin/connect-documentation and available [here](https://connect-docs.owkin.com/).
+It is automatically built by <https://github.com/owkin/connect-documentation> and available [here](https://connect-docs.owkin.com/).
 You can build it locally to check the technical documentation and see the changes made by your PR.
 
 ### Requirements
@@ -86,6 +86,7 @@ with the **referent** what is necessary for the end user a.k.a the data scientis
 The **developer** discusses the design with the **primary reviewer**, the **primary reviewer** designs the tests.
 
 The output of the design phase is:
+
 - a description of the FL strategy in [connect-documentation](https://github.com/owkin/connect-documentation/blob/main/docs/source/connectlib/index.rst)
 - an open PR on the [connectlib](https://github.com/owkin/connectlib) repository, with in the description:
   - the list of changes to do to implement the strategy, with special emphasis on sensitive points
@@ -122,7 +123,7 @@ A few points on the implementation itself:
 - torch algo layer:
   - the `__init__` function is called once on the user's computer and at the beginning of each round: avoid costly operations
   - the `load` and `save` functions manage the local state i.e. the parameters that must be passed from one round to the next
-  - the `_local_train` and `_local_predict` functions must be overwritten by the user so they contain as little strategy-specific code as possible
+  - the `_local_train` and `predict` functions can be overwritten by the user so they contain as little strategy-specific code as possible
 - Add the name of the strategy to the `connectlib.schemas.StrategyName` enum
 
 #### Tests
@@ -165,7 +166,7 @@ where the keyfile in stored in Dashlane.
 
 If you have some errors:
 
-- check that you have access to https://console.cloud.google.com/gcr/images/connect-314908/global/connect-tools
+- check that you have access to <https://console.cloud.google.com/gcr/images/connect-314908/global/connect-tools>
 
 - You may also have to do:
 

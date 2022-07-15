@@ -415,3 +415,25 @@ def dummy_algo_class():
                 f.write("test")
 
     return DummyAlgo
+
+
+@pytest.fixture(scope="session")
+def numpy_torch_dataset():
+    class TorchDataset(torch.utils.data.Dataset):
+        def __init__(self, x, y, is_inference=False):
+            self.x = x
+            self.y = y
+            self.is_inference = is_inference
+
+        def __getitem__(self, index):
+            x = torch.from_numpy(self.x[index]).float()
+            if not self.is_inference:
+                y = torch.from_numpy(self.y[index]).float()
+                return x, y
+            else:
+                return x
+
+        def __len__(self):
+            return len(self.x)
+
+    return TorchDataset

@@ -11,6 +11,8 @@ from connectlib.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
 from connectlib.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import DatasetSignatureError
+from connectlib.exceptions import DatasetTypeError
 from connectlib.index_generator import NpIndexGenerator
 from connectlib.remote.decorators import remote_data
 from connectlib.remote.remote_struct import RemoteStruct
@@ -22,7 +24,7 @@ from tests import utils
 
 
 @pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchSingleOrganizationAlgo, TorchScaffoldAlgo])
-def dummy_algo_custom_init_arg(request):
+def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
     lin = torch.nn.Linear(3, 2)
     nig = NpIndexGenerator(
         batch_size=1,
@@ -36,23 +38,14 @@ def dummy_algo_custom_init_arg(request):
                 criterion=torch.nn.MSELoss(),
                 optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
                 index_generator=nig,
+                dataset=numpy_torch_dataset,
                 dummy_test_param=dummy_test_param,
             )
             self.dummy_test_param = dummy_test_param
 
-        def _local_train(self, x, y):
-            pass
-
-        def _local_predict(self, x):
-            return np.zeros(1)
-
         @property
         def strategies(self):
             return list()
-
-        @remote_data
-        def predict(self, x, shared_state):
-            return self._local_predict(x)
 
         @remote_data
         def train(self, x, y, shared_state):
@@ -70,7 +63,7 @@ def use_gpu(request):
 @pytest.fixture(
     params=[(TorchFedAvgAlgo, FedAvg), (TorchSingleOrganizationAlgo, SingleOrganization), (TorchScaffoldAlgo, Scaffold)]
 )
-def dummy_gpu(request, torch_linear_model, use_gpu):
+def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
     nig = NpIndexGenerator(
         batch_size=1,
         num_updates=1,
@@ -83,6 +76,7 @@ def dummy_gpu(request, torch_linear_model, use_gpu):
                 model=perceptron,
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
                 criterion=torch.nn.MSELoss(),
+                dataset=numpy_torch_dataset,
                 index_generator=nig,
                 use_gpu=use_gpu,
             )
@@ -96,12 +90,12 @@ def dummy_gpu(request, torch_linear_model, use_gpu):
                 torch.from_numpy(x).float().to(self._device), torch.from_numpy(y).float().to(self._device)
             )
 
-        def _local_predict(self, x: Any) -> Any:
+        def predict(self, x: Any) -> Any:
             if use_gpu:
                 assert self._device == torch.device("cuda")
             else:
                 assert self._device == torch.device("cpu")
-            y_pred = super()._local_predict(torch.from_numpy(x).float().to(self._device))
+            y_pred = super().predict(torch.from_numpy(x).float().to(self._device))
             return y_pred.cpu().detach().numpy()
 
         @property
@@ -136,6 +130,118 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
     _, result = remote_struct.train(X=None, y=None, head_model=None, trunk_model=None, rank=0)
 
     assert result == arg_value
+
+
+@pytest.mark.parametrize("n_samples", [1, 2])
+def test_check_predict_shapes(n_samples, test_linear_data_samples, numpy_torch_dataset, torch_linear_model):
+    """Checks that one liner and multiple liners input can be used for inference (corner case of last batch
+    shape is (1, n_cols)"""
+
+    num_updates = 100
+    seed = 42
+    torch.manual_seed(seed)
+    perceptron = torch_linear_model()
+    nig = NpIndexGenerator(batch_size=n_samples, num_updates=num_updates, drop_last=False)
+
+    class MyAlgo(TorchAlgo):
+        def __init__(
+            self,
+        ):
+            super().__init__(
+                optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
+                criterion=torch.nn.MSELoss(),
+                model=perceptron,
+                index_generator=nig,
+                dataset=numpy_torch_dataset,
+            )
+
+        def train():
+            pass
+
+        @property
+        def strategies(self):
+            return []
+
+    my_algo = MyAlgo()
+
+    res = my_algo.predict(x=test_linear_data_samples[0][:n_samples, :-1], _skip=True)
+    assert res.shape == (n_samples, 1)
+
+
+@pytest.mark.parametrize(
+    "init_function, is_valid",
+    [
+        ((lambda self, x, y, is_inference: None), True),
+        ((lambda self, not_x, y, is_inference: None), False),
+    ],
+)
+def test_signature_error_torch_dataset(init_function, is_valid):
+    lin = torch.nn.Linear(3, 2)
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=1,
+    )
+
+    class TorchDataset(torch.utils.data.Dataset):
+        __init__ = init_function
+
+    class MyAlgo(TorchAlgo):
+        def __init__(self):
+            super().__init__(
+                model=lin,
+                criterion=torch.nn.MSELoss(),
+                optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
+                index_generator=nig,
+                dataset=TorchDataset,
+            )
+
+        @property
+        def strategies(self):
+            return list()
+
+        def predict(self, x, shared_state):
+            pass
+
+        def train(self, x, y, shared_state):
+            pass
+
+    if is_valid:
+        MyAlgo()
+    else:
+        with pytest.raises(DatasetSignatureError):
+            MyAlgo()
+
+
+def test_instance_error_torch_dataset():
+    lin = torch.nn.Linear(3, 2)
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=1,
+    )
+
+    class TorchDataset(torch.utils.data.Dataset):
+        def __init__(self, x, y, is_inference):
+            pass
+
+    class MyAlgo(TorchAlgo):
+        def __init__(self):
+            super().__init__(
+                model=lin,
+                criterion=torch.nn.MSELoss(),
+                optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
+                index_generator=nig,
+                dataset=TorchDataset(0, 1, False),
+            )
+
+        @property
+        def strategies(self):
+            return list()
+
+        def train(self, x, y, shared_state):
+            pass
+
+    with pytest.raises(DatasetTypeError):
+        MyAlgo()
 
 
 @pytest.mark.gpu

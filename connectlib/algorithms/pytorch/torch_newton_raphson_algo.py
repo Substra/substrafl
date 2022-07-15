@@ -1,4 +1,3 @@
-import abc
 import math
 from typing import Any
 from typing import List
@@ -32,23 +31,12 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         - a L2 regularization can be applied to the loss by settings ``l2_coeff`` different to zero (default value). L2
           regularization adds numerical stability when inverting the hessian.
 
-    The child class must implement
+    The child class can overwrite
     :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_train`
-    and :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_predict`
-    and can overwrite other methods if necessary.
+    and :py:func:`~connectlib.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo.predict`,
+    or other methods if necessary.
 
     To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``.
-
-    The algo needs to get the number of samples in the dataset from the x sent by the opener.
-    By default, it uses ``len(x)``. If that is not the proper way of getting the number of samples,
-    override the :py:func:`~connectlib.algorithms.pytorch.torch_base_algo.TorchAlgo._get_len_from_x` function
-
-    Example:
-
-        .. code-block:: python
-
-            def _get_len_from_x(self, x):
-                return len(x)
 
     As development tools, the ``train``  and ``predict`` method comes with a default argument : ``_skip``.
 
@@ -61,6 +49,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
         batch_size: Optional[int],
+        dataset: torch.utils.data.Dataset,
         l2_coeff: float = 0,
         with_batch_norm_parameters: bool = False,
         use_gpu: bool = True,
@@ -83,6 +72,13 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             batch_size (int): The size of the batch. If set to None it will be set to the number of samples in the
                 dataset. Note that dividing the data to batches is done only to avoid the memory issues. The weights
                 are updated only at the end of the epoch.
+            dataset (torch.utils.data.Dataset): an instantiable dataset class whose ``__init__`` arguments are
+                ``x``, ``y`` and ``is_inference``. The torch datasets used for both training and inference will be
+                instantiate from it prior to the ``_local_train`` execution and within the ``predict`` method.
+                The ``__getitem__`` methods of those generated datasets must return both ``x`` (training data) and y
+                (target values) when ``is_inference`` is set to ``False`` and only ``x`` (testing data) when
+                ``is_inference`` is set to True.
+                This behavior can be changed by re-writing the `_local_train` or `predict` methods.
             l2_coeff (float): L2 regularization coefficient. The larger l2_coeff is, the better the stability of the
                 hessian matrix will be, however the convergence might be slower. Defaults to 0.
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the Newton-Raphson
@@ -96,6 +92,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             criterion=criterion,
             optimizer=None,
             index_generator=None,
+            dataset=dataset,
             use_gpu=use_gpu,
             *args,
             **kwargs,
@@ -177,21 +174,17 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         index_generator.n_samples = n_samples
         return index_generator
 
-    @abc.abstractmethod
     def _local_train(
         self,
-        x: Any,
-        y: Any,
+        train_dataset: torch.utils.data.Dataset,
     ):
-        """Local train method, the user must overwrite it, this function
-        contains the local training loop with the data pre-processing.
+        """Local train method. Contains the local training loop.
 
-        Train the model on all minibatches, using
-        ``self._index_generator`` to generate the batches.
+        Train the model on ``num_updates`` minibatches, using the ``self._index_generator generator`` as batch sampler
+        for the torch dataset.
 
         Args:
-            x (typing.Any): x as returned by the opener
-            y (typing.Any): y as returned by the opener
+            train_dataset (torch.utils.data.Dataset): train_dataset build from the x and y returned by the opener.
 
         Important:
 
@@ -212,11 +205,10 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
                 # can be calculated only once for all the batches.
                 l2_reg = self._l2_reg()
 
-                for batch_index in self._index_generator:
+                # Create torch dataloader
+                train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
-                    # Do the pre-processing here
-
-                    x_batch, y_batch = x[batch_index], y[batch_index]
+                for x_batch, y_batch in train_data_loader:
 
                     # Forward pass
                     y_pred = self._model(x_batch)
@@ -238,9 +230,10 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         # calculated only once for all the batches.
         l2_reg = self._l2_reg()
 
-        for batch_index in self._index_generator:
+        # Create torch dataloader
+        train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
-            x_batch, y_batch = x[batch_index], y[batch_index]
+        for x_batch, y_batch in train_data_loader:
 
             # Forward pass
             y_pred = self._model(x_batch)
@@ -287,9 +280,13 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         Raises:
             NegativeHessianMatrixError: Hessian matrix must be positive semi-definite to correspond to a convex problem.
         """
+
+        # Create torch dataset
+        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+
         if shared_state is None:
             # Instantiate the index_generator
-            n_samples = self._get_len_from_x(x)
+            n_samples = len(train_dataset)
 
             self._index_generator = self._instantiate_index_generator(n_samples)
 
@@ -314,7 +311,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         self._final_gradients, self._final_hessian, self._n_samples_done = self._initialize_gradients_and_hessian()
 
-        self._local_train(x, y)
+        self._local_train(train_dataset)
 
         # Newton Raphson strategy must go through all the samples before each next update.
         assert self._index_generator.n_samples == self._n_samples_done

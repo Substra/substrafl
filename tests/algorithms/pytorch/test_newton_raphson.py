@@ -1,5 +1,3 @@
-from typing import Any
-
 import numpy as np
 import pytest
 import torch
@@ -49,21 +47,16 @@ def perceptron():
 
 
 @pytest.fixture(scope="module")
-def torch_algo(perceptron):
+def torch_algo(perceptron, numpy_torch_dataset):
     class MyAlgo(TorchNewtonRaphsonAlgo):
         def __init__(self, model=None, criterion=None, batch_size=1, l2_coeff=0):
             super().__init__(
                 model=model or perceptron(),
                 criterion=criterion or torch.nn.MSELoss(),
                 batch_size=batch_size,
+                dataset=numpy_torch_dataset,
                 l2_coeff=l2_coeff,
             )
-
-        def _local_train(self, x, y):
-            super()._local_train(x, y)
-
-        def _local_predict(self, x):
-            return super()._local_predict(x)
 
     return MyAlgo
 
@@ -77,8 +70,8 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
     Also test the behavior for batch_size set to None (batch_size set to num_samples by the index generator and
     num_update set to 1 for Newton Raphson."""
 
-    x_train = torch.zeros([n_samples, 1])
-    y_train = torch.zeros([n_samples, 1])
+    x_train = np.zeros([n_samples, 1])
+    y_train = np.zeros([n_samples, 1])
 
     my_algo = torch_algo(batch_size=batch_size)
 
@@ -101,8 +94,8 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
 def test_train_newton_raphson_shared_states_results(torch_algo, perceptron, x, y, expected_hessian, expected_gradient):
     """Test the theoretical value of the gradients and Hessian for a MSE loss and f(x) = a * x + b with
     a = 1 and b = 0."""
-    x_train = torch.Tensor(x)
-    y_train = torch.Tensor(y)
+    x_train = np.array(x)[..., None]
+    y_train = np.array(y)[..., None]
 
     model = perceptron(constant_weight_init=1, constant_bias_init=0)
     my_algo = torch_algo(model)
@@ -125,8 +118,8 @@ def test_l2_coeff(torch_algo, l2_coeff):
 
     n_samples = 2
 
-    x_train = torch.zeros([n_samples, 1])
-    y_train = torch.ones([n_samples, 1])
+    x_train = np.zeros([n_samples, 1])
+    y_train = np.ones([n_samples, 1])
 
     my_algo_l2 = torch_algo(l2_coeff=l2_coeff)
     my_algo_no_l2 = torch_algo(l2_coeff=0)
@@ -165,8 +158,8 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, perceptron, x_shap
     """Test the shape of the gradients and the Hessian matrix are coherent with the linear model shape."""
     n_samples = 10
 
-    x_train = torch.zeros([n_samples, x_shape])
-    y_train = torch.ones([n_samples, y_shape])
+    x_train = np.zeros([n_samples, x_shape])
+    y_train = np.ones([n_samples, y_shape])
 
     model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
     my_algo = torch_algo(model, batch_size=10)
@@ -184,10 +177,10 @@ def test_train_newton_raphson_non_convex_cnn(torch_algo):
     non-convex problem."""
 
     seed = 42
-    torch.manual_seed(seed)
+    np.random.seed(seed)
 
-    x_train = torch.randn((1, 3, 9, 9))
-    y_train = torch.randn((1, 1))
+    x_train = np.random.randn(1, 3, 9, 9)
+    y_train = np.random.randn(1, 1)
 
     class CNN(torch.nn.Module):
         def __init__(
@@ -228,6 +221,7 @@ def compute_plan(
     aggregation_node,
     mae,
     session_dir,
+    numpy_torch_dataset,
 ):
     """Compute plan for e2e test"""
 
@@ -281,16 +275,9 @@ def compute_plan(
                 model=model,
                 criterion=criterion,
                 batch_size=batch_size,
+                dataset=numpy_torch_dataset,
                 l2_coeff=0,
             )
-
-        def _local_train(self, x, y):
-            super()._local_train(torch.from_numpy(x).float(), torch.from_numpy(y).float())
-
-        def _local_predict(self, x: Any) -> Any:
-            y_pred = super()._local_predict(torch.from_numpy(x).float())
-
-            return y_pred.detach().numpy()
 
     my_algo = MyAlgo()
     algo_deps = Dependency(
