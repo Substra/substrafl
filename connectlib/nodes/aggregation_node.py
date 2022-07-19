@@ -1,9 +1,12 @@
 import uuid
 from typing import Dict
+from typing import List
 from typing import TypeVar
 
 import substra
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
 from connectlib.nodes.node import Node
@@ -22,7 +25,7 @@ class AggregationNode(Node):
     The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.
     """
 
-    def update_states(self, operation: AggregateOperation, round_idx: int) -> SharedStateRef:
+    def update_states(self, operation: AggregateOperation, round_idx: int, authorized_ids: List[str]) -> SharedStateRef:
         """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
         This is done in a static way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (connectlib local reference of the algorithm)
@@ -33,6 +36,7 @@ class AggregationNode(Node):
                 the :py:func:`~connectlib.remote.decorators.remote` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1.
+            authorized_ids (List[str]): Authorized org to access the output model.
 
         Raises:
             TypeError: operation must be an AggregateOperation, make sure to decorate your (user defined) aggregate
@@ -60,6 +64,9 @@ class AggregationNode(Node):
             "aggregatetuple_id": op_id,
             "metadata": {
                 "round_idx": round_idx,
+            },
+            "outputs": {
+                "model": ComputeTaskOutput(permissions=Permissions(public=False, authorized_ids=authorized_ids))
             },
         }
         self.tuples.append(aggregate_tuple)

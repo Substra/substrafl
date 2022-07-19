@@ -98,7 +98,11 @@ class NewtonRaphson(Strategy):
             assert self._local_states is None
             assert self._shared_states is None
             self._perform_local_updates(
-                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=0
+                algo=algo,
+                train_data_nodes=train_data_nodes,
+                current_aggregation=None,
+                round_idx=0,
+                aggregation_id=aggregation_node.organization_id,
             )
 
         current_aggregation = aggregation_node.update_states(
@@ -107,6 +111,7 @@ class NewtonRaphson(Strategy):
                 _algo_name="Aggregating",
             ),  # type: ignore
             round_idx=round_idx,
+            authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
         )
 
         self._perform_local_updates(
@@ -114,6 +119,7 @@ class NewtonRaphson(Strategy):
             train_data_nodes=train_data_nodes,
             current_aggregation=current_aggregation,
             round_idx=round_idx,
+            aggregation_id=aggregation_node.organization_id,
         )
 
     @remote
@@ -219,6 +225,7 @@ class NewtonRaphson(Strategy):
         train_data_nodes: List[TrainDataNode],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
+        aggregation_id: str,
     ):
         """Perform a local update of the model on each train data nodes.
 
@@ -229,6 +236,7 @@ class NewtonRaphson(Strategy):
             current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to
                 be passed as input to each local training
             round_idx (int): Round number, it starts at 1.
+            aggregation_id (str): Id of the aggregation node the shared state is given to.
         """
 
         next_local_states = []
@@ -245,6 +253,7 @@ class NewtonRaphson(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
+                authorized_ids=list(set([node.organization_id, aggregation_id])),
             )
             # keep the states in a list: one/node
             next_local_states.append(next_local_state)

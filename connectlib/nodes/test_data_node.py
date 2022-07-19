@@ -4,6 +4,8 @@ from typing import List
 
 import substra
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
 from connectlib.nodes.node import Node
@@ -59,6 +61,11 @@ class TestDataNode(Node):
                 "traintuple_id": traintuple_id,
                 "data_manager_key": self.data_manager_key,
                 "test_data_sample_keys": self.test_data_sample_keys,
+                "outputs": {
+                    "predictions": ComputeTaskOutput(
+                        permissions=Permissions(public=False, authorized_ids=[self.organization_id])
+                    )
+                },
                 "metadata": {
                     "round_idx": round_idx,
                 },
@@ -71,6 +78,9 @@ class TestDataNode(Node):
                     "predicttuple_id": predicttuple_id,
                     "data_manager_key": self.data_manager_key,
                     "test_data_sample_keys": self.test_data_sample_keys,
+                    "outputs": {
+                        "performance": ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[]))
+                    },
                     "metadata": {
                         "round_idx": round_idx,
                     },

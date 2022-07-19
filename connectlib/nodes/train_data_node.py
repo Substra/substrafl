@@ -6,6 +6,8 @@ from typing import Tuple
 
 import substra
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
 from connectlib.nodes.node import Node
@@ -43,6 +45,7 @@ class TrainDataNode(Node):
         self,
         operation: DataOperation,
         round_idx: int,
+        authorized_ids: List[str],
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
         """Adding a composite train tuple to the list of operations to
@@ -57,6 +60,7 @@ class TrainDataNode(Node):
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
                 it is preceded by an initialization round tagged: 0.
+            authorized_ids (List[str]): Authorized org to access the output model.
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.
 
         Raises:
@@ -85,6 +89,12 @@ class TrainDataNode(Node):
             else None,  # user-defined id (last aggregation node task id)
             "tag": "train",
             "composite_traintuple_id": op_id,
+            "outputs": {
+                "shared": ComputeTaskOutput(permissions=Permissions(public=False, authorized_ids=authorized_ids)),
+                "local": ComputeTaskOutput(
+                    permissions=Permissions(public=False, authorized_ids=[self.organization_id])
+                ),
+            },
             "metadata": {
                 "round_idx": round_idx,
             },
