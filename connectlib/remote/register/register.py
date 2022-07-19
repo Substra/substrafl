@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
 def _copy_local_packages(path: Path, local_dependencies: List[Path], python_major_minor: str, operation_dir: Path):
     """Copy the local libraries given by the user and generate the installation command."""
-    local_dependencies_cmd = ""
+    local_dependencies_cmd = list()
     path.mkdir(exist_ok=True)
     for dependency_path in local_dependencies:
         dest_path = path / dependency_path.name
@@ -91,10 +91,10 @@ def _copy_local_packages(path: Path, local_dependencies: List[Path], python_majo
         else:
             raise ValueError(f"Does not exist {dependency_path}")
 
-        local_dependencies_cmd += (
+        local_dependencies_cmd.append(
             f"RUN python{python_major_minor} -m pip install " f"--no-cache-dir {dest_path.relative_to(operation_dir)}"
         )
-    return local_dependencies_cmd
+    return "\n".join(local_dependencies_cmd)
 
 
 def _copy_local_code(path: Path, algo_file_path: Path, operation_dir: Path):
