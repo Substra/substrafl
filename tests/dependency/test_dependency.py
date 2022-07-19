@@ -10,6 +10,7 @@ from substra import BackendType
 from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import CompositeTraintupleSpec
+from substra.sdk.schemas import ComputeTaskOutput
 from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
@@ -76,7 +77,10 @@ class TestLocalDependency:
             algo_key=algo_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
-            out_trunk_model_permissions=Permissions(public=True, authorized_ids=list()),
+            outputs={
+                "shared": ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
+                "local": ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
+            },
         )
         composite_key = client.add_composite_traintuple(composite_traintuple_query)
         composite_traintuple = client.get_composite_traintuple(composite_key)

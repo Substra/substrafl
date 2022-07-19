@@ -13,13 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- fead: add compute task output (#231)
 - BREAKING CHANGE: add the torch Dataset as argument of TorchAlgo to preprocess the data (#224)
-The `_init_` function of the dataset must contain (self, x, y, is_inference).
-The `__getitem__` function is expected to return x, y if is_inference is False, else x.
-This behavior can be changed by re-writing the `_local_train` or `predict` methods.
-`_local_train` is no longer mandatory to overwrite any more. Its signature passed from `(x, y)` to `(train_dataset)`
-`_local_predict` has been deleted.
-`_get_len_from_x` has been deleted.
+  The `_init_` function of the dataset must contain (self, x, y, is_inference).
+  The `__getitem__` function is expected to return x, y if is_inference is False, else x.
+  This behavior can be changed by re-writing the `_local_train` or `predict` methods.
+  `_local_train` is no longer mandatory to overwrite any more. Its signature passed from `(x, y)` to `(train_dataset)`
+  `_local_predict` has been deleted.
+  `_get_len_from_x` has been deleted.
 
 ### Changed
 
@@ -75,20 +76,20 @@ This behavior can be changed by re-writing the `_local_train` or `predict` metho
 ### Changed
 
 - BREAKING CHANGE: Strategy rounds starts at `1` and initialization round is now `0`. It used to start at `0`
-and the initialization round was `-1` (#200)
-For each composite train tuple, aggregate tuple and test tuple the meta data `round_idx` has changed
-accordingly to the rule stated above.
+  and the initialization round was `-1` (#200)
+  For each composite train tuple, aggregate tuple and test tuple the meta data `round_idx` has changed
+  accordingly to the rule stated above.
 - BREAKING CHANGE: rename node to organization in Connect (#201)
-- Rename the ``OneNode`` strategy to ``SingleOrganization`` (#206)
+- Rename the `OneNode` strategy to `SingleOrganization` (#206)
 
 ### Added
 
 - when using the `TorchScaffoldAlgo`: (#199)
-  - The number of time the `_scaffold_parameters_update` method  must be called within the `_local_train` method is now checked
+  - The number of time the `_scaffold_parameters_update` method must be called within the `_local_train` method is now checked
   - A warning is thrown if an other optimizer than `SGD`
   - If multiple learning rates are set for the optimizer, a warning is thrown and the smallest learning rate is used for
-  the shared state aggregation operation. `0` is not considered as a learning rate for this choice as it could be used to
-  deactivate the learning process of certain layers from the model.
+    the shared state aggregation operation. `0` is not considered as a learning rate for this choice as it could be used to
+    deactivate the learning process of certain layers from the model.
 
 ## [0.16.0](https://github.com/owkin/connectlib/releases/tag/0.16.0) - 2022-06-07
 
@@ -124,7 +125,7 @@ The full discussion regarding this feature can be found [here](https://github.co
 
 - chore: add latest connect-tools docker image selection (#173)
 - Torch algorithms now support GPUs, there is a parameter `use_gpu` in the `__init__` of the Torch algo classes.
-    If `use_gpu` is True and there is no GPU detected, the code runs on CPU. (#145)
+  If `use_gpu` is True and there is no GPU detected, the code runs on CPU. (#145)
 
 ### Changed
 
@@ -139,7 +140,7 @@ The full discussion regarding this feature can be found [here](https://github.co
 
 - BREAKING CHANGE: replace "tag" argument with "name" in execute_experiment (#176)
 - `execute_experiment` checks that the algo and strategy are compatible. You can override the list of strategies the
-algo is compatible with using the `strategies` property (#):
+  algo is compatible with using the `strategies` property (#):
 
   ```python
   from connectlib.algorithms.algo import Algo
@@ -255,7 +256,7 @@ algo is compatible with using the `strategies` property (#):
 ### Improved
 
 - feat: `EvaluationStrategy` can now be reinitialized (#90)
-- Refactoring `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo`  (#92):
+- Refactoring `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` (#92):
   - replace the `_preprocess` and `_postprocess` functions by `_local_train` and `_local_predict`
   - the user can override the `_get_len_from_x` function to get the number of samples in the dataset from x
   - `batch_size` is now a required argument, and a warning is issued if it is None

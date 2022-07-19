@@ -84,12 +84,17 @@ class Scaffold(Strategy):
             assert self._local_states is None
             assert self._shared_states is None
             self._perform_local_updates(
-                algo=algo, train_data_nodes=train_data_nodes, current_aggregation=None, round_idx=0
+                algo=algo,
+                train_data_nodes=train_data_nodes,
+                current_aggregation=None,
+                round_idx=0,
+                aggregation_id=aggregation_node.organization_id,
             )
 
         current_aggregation = aggregation_node.update_states(
             self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
             round_idx=round_idx,
+            authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
         )
 
         self._perform_local_updates(
@@ -97,6 +102,7 @@ class Scaffold(Strategy):
             train_data_nodes=train_data_nodes,
             current_aggregation=current_aggregation,
             round_idx=round_idx,
+            aggregation_id=aggregation_node.organization_id,
         )
 
     def predict(
@@ -303,6 +309,7 @@ class Scaffold(Strategy):
         train_data_nodes: List[TrainDataNode],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
+        aggregation_id: str,
     ):
         """Perform a local update (train on n mini-batches) of the models
         on each train data nodes.
@@ -313,22 +320,24 @@ class Scaffold(Strategy):
             local updates current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to be
             passed as input to each local training
             round_idx (int): Round number, it starts at 1.
+            aggregation_id (str): Id of the aggregation node the shared state is given to.
         """
 
         next_local_states = []
         next_shared_states = []
 
-        for i, organization in enumerate(train_data_nodes):
+        for i, node in enumerate(train_data_nodes):
             # define composite tuples (do not submit yet)
             # for each composite tuple give description of Algo instead of a key for an algo
-            next_local_state, next_shared_state = organization.update_states(
+            next_local_state, next_shared_state = node.update_states(
                 algo.train(  # type: ignore
-                    organization.data_sample_keys,
+                    node.data_sample_keys,
                     shared_state=current_aggregation,
                     _algo_name=f"Training with {algo.__class__.__name__}",
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
+                authorized_ids=list(set([node.organization_id, aggregation_id])),
             )
             # keep the states in a list: one/organization
             next_local_states.append(next_local_state)

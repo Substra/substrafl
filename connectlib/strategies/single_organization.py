@@ -75,6 +75,7 @@ class SingleOrganization(Strategy):
             ),
             local_state=self.local_state,
             round_idx=round_idx,
+            authorized_ids=[train_data_nodes[0].organization_id],
         )
 
         # keep the states in a list: one/organization
