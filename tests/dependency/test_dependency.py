@@ -211,13 +211,16 @@ class TestLocalDependency:
         utils.wait(client, composite_traintuple)
 
     @pytest.mark.docker_only
-    @pytest.mark.parametrize("pkg_path", ["installable_library", "poetry_installable_library"])
+    @pytest.mark.parametrize(
+        "pkg_paths",
+        [["installable_library"], ["poetry_installable_library"], ["installable_library", "installable_library2"]],
+    )
     def test_local_dependencies_installable_library(
         self,
         network,
         numpy_datasets,
         constant_samples,
-        pkg_path,
+        pkg_paths,
         session_dir,
         dummy_algo_class,
     ):
@@ -246,7 +249,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_dependencies=[CURRENT_FILE.parent / pkg_path],
+            local_dependencies=[CURRENT_FILE.parent / pkg_path for pkg_path in pkg_paths],
             editable_mode=True,
         )
         algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)

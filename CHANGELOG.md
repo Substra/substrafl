@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- fix: support several items in the `Dependency` - `local_dependencies` field (#234)
+
 ### Added
 
 - BREAKING CHANGE: add the torch Dataset as argument of TorchAlgo to preprocess the data (#224)
