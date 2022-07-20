@@ -477,5 +477,6 @@ def test_download_load_model(network, compute_plan, train_linear_nodes, session_
                 assert algo._counter == len(train_linear_nodes) * (round - 1) + k
 
             else:
-                # in local it should always be the model with the highest rank (cf https://github.com/owkin/connectlib/blob/5d784d7680abf479f1e398183a7eecdcd08fee1b/connectlib/model_loading.py#L170)
+                # in local it should always be the model with the highest rank
+                # (cf https://github.com/owkin/connectlib/blob/5d784d7680abf479f1e398183a7eecdcd08fee1b/connectlib/model_loading.py#L170) # noqa: E501
                 assert algo._counter == len(train_linear_nodes) * round
