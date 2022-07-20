@@ -101,8 +101,16 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
 
+      - name: Checkout pyconfig from a private repos
+        uses: actions/checkout@v3
+        with:
+          repository: owkin/substra
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substra
+
       - name: Install Dependencies
         run: |
+          pip install --upgrade ./substra
           pip install --upgrade .[dev]
           pip install --upgrade -r docs/requirements.txt
 
