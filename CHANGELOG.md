@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0](https://github.com/owkin/connectlib/releases/tag/0.22.0) - 2022-07-25
+
 ### Fixed
 
 - fix: support several items in the `Dependency` - `local_dependencies` field (#234)
