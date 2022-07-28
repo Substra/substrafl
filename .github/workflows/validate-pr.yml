@@ -72,7 +72,7 @@ jobs:
       - name: Run the fast local tests
         run: |
           cd connectlib
-          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-local-fast
+          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-subprocess-fast
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
