@@ -371,9 +371,8 @@ def cyclic_strategy(dummy_strategy_class):
             round_idx,
         ):
 
+            ids = [node.organization_id for node in train_data_nodes]
             for k, organization in enumerate(train_data_nodes):
-
-                # Local updates from the latest aggregation
 
                 if round_idx == 1 and self._previous_shared_state is not None:
                     useless_local, _ = organization.update_states(
@@ -383,6 +382,7 @@ def cyclic_strategy(dummy_strategy_class):
                             _algo_name=f"Training with {algo.__class__.__name__}",
                         ),
                         round_idx=0,
+                        authorized_ids=ids,
                     )
 
                     self._previous_local_states[k] = useless_local
@@ -395,6 +395,7 @@ def cyclic_strategy(dummy_strategy_class):
                     ),
                     local_state=self._previous_local_states.get(k),
                     round_idx=round_idx,
+                    authorized_ids=ids,
                 )
                 self._previous_local_states[k] = local_state
                 self._previous_shared_state = shared_state
