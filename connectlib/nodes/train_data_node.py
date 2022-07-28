@@ -7,11 +7,14 @@ from typing import Tuple
 import substra
 from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
+from connectlib.nodes.node import InputIdentifiers
 from connectlib.nodes.node import Node
 from connectlib.nodes.node import OperationKey
+from connectlib.nodes.node import OutputIdentifiers
 from connectlib.nodes.references.local_state import LocalStateRef
 from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote.operations import DataOperation
@@ -79,6 +82,35 @@ class TrainDataNode(Node):
 
         op_id = str(uuid.uuid4())
 
+        data_samples_inputs = [
+            InputRef(identifier=InputIdentifiers.DATASAMPLES, asset_key=data_sample_key)
+            for data_sample_key in self.data_sample_keys
+        ]
+        data_manager_input = [InputRef(identifier=InputIdentifiers.OPENER, asset_key=self.data_manager_key)]
+        local_state_input = (
+            [
+                InputRef(
+                    identifier=InputIdentifiers.LOCAL,
+                    parent_task_key=local_state.key,
+                    parent_task_output_identifier=OutputIdentifiers.LOCAL,
+                )
+            ]
+            if local_state is not None
+            else []
+        )
+
+        aggregated_updates_input = (
+            [
+                InputRef(
+                    identifier=InputIdentifiers.SHARED,
+                    parent_task_key=operation.shared_state.key,
+                    parent_task_output_identifier=OutputIdentifiers.MODEL,
+                )
+            ]
+            if operation.shared_state is not None
+            else []
+        )
+
         composite_traintuple = {
             "remote_operation": operation.remote_struct,
             "data_manager_key": self.data_manager_key,
@@ -89,9 +121,12 @@ class TrainDataNode(Node):
             else None,  # user-defined id (last aggregation node task id)
             "tag": "train",
             "composite_traintuple_id": op_id,
+            "inputs": data_samples_inputs + data_manager_input + local_state_input + aggregated_updates_input,
             "outputs": {
-                "shared": ComputeTaskOutput(permissions=Permissions(public=False, authorized_ids=authorized_ids)),
-                "local": ComputeTaskOutput(
+                OutputIdentifiers.SHARED: ComputeTaskOutput(
+                    permissions=Permissions(public=False, authorized_ids=authorized_ids)
+                ),
+                OutputIdentifiers.LOCAL: ComputeTaskOutput(
                     permissions=Permissions(public=False, authorized_ids=[self.organization_id])
                 ),
             },

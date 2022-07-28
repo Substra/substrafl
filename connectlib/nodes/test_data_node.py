@@ -5,11 +5,14 @@ from typing import List
 import substra
 from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
+from connectlib.nodes.node import InputIdentifiers
 from connectlib.nodes.node import Node
 from connectlib.nodes.node import OperationKey
+from connectlib.nodes.node import OutputIdentifiers
 from connectlib.remote.register import register_algo
 from connectlib.remote.remote_struct import RemoteStruct
 
@@ -55,14 +58,38 @@ class TestDataNode(Node):
         """
 
         predicttuple_id = str(uuid.uuid4())
+
+        data_samples_inputs = [
+            InputRef(identifier=InputIdentifiers.DATASAMPLES, asset_key=data_sample_key)
+            for data_sample_key in self.test_data_sample_keys
+        ]
+        data_manager_input = [InputRef(identifier=InputIdentifiers.OPENER, asset_key=self.data_manager_key)]
+
+        model_input = [
+            InputRef(
+                identifier=InputIdentifiers.MODEL,
+                parent_task_key=traintuple_id,
+                parent_task_output_identifier=OutputIdentifiers.LOCAL,
+            )
+        ]
+
+        predictions_input = [
+            InputRef(
+                identifier=InputIdentifiers.PREDICTIONS,
+                parent_task_key=predicttuple_id,
+                parent_task_output_identifier=OutputIdentifiers.PREDICTIONS,
+            )
+        ]
+
         self.predicttuples.append(
             {
                 "predicttuple_id": predicttuple_id,
                 "traintuple_id": traintuple_id,
                 "data_manager_key": self.data_manager_key,
                 "test_data_sample_keys": self.test_data_sample_keys,
+                "inputs": data_samples_inputs + data_manager_input + model_input,
                 "outputs": {
-                    "predictions": ComputeTaskOutput(
+                    OutputIdentifiers.PREDICTIONS: ComputeTaskOutput(
                         permissions=Permissions(public=False, authorized_ids=[self.organization_id])
                     )
                 },
@@ -78,8 +105,11 @@ class TestDataNode(Node):
                     "predicttuple_id": predicttuple_id,
                     "data_manager_key": self.data_manager_key,
                     "test_data_sample_keys": self.test_data_sample_keys,
+                    "inputs": data_manager_input + data_samples_inputs + predictions_input,
                     "outputs": {
-                        "performance": ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[]))
+                        OutputIdentifiers.PERFORMANCE: ComputeTaskOutput(
+                            permissions=Permissions(public=True, authorized_ids=[])
+                        )
                     },
                     "metadata": {
                         "round_idx": round_idx,

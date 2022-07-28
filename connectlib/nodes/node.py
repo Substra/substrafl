@@ -1,8 +1,29 @@
+from dataclasses import dataclass
 from typing import Dict
 from typing import List
 from typing import NewType
 
 OperationKey = NewType("OperationKey", str)
+
+
+@dataclass
+class InputIdentifiers:
+    LOCAL = "local"
+    SHARED = "shared"
+    MODEL = "model"
+    PREDICTIONS = "predictions"
+    PERFORMANCE = "performance"
+    OPENER = "opener"
+    DATASAMPLES = "datasamples"
+
+
+@dataclass
+class OutputIdentifiers:
+    LOCAL = "local"
+    SHARED = "shared"
+    MODEL = "model"
+    PREDICTIONS = "predictions"
+    PERFORMANCE = "performance"
 
 
 class Node:
