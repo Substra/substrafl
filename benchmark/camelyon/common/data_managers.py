@@ -1,5 +1,4 @@
 import math
-import os
 from pathlib import Path
 from typing import List
 
@@ -14,21 +13,19 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Data:
     def __init__(self, paths: List[Path]):
-        indexes = np.empty((0, 2), dtype=object)
+        indexes = list()
         for path in paths:
             index_path = Path(path) / "index.csv"
             assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
             ds_indexes = np.loadtxt(index_path, delimiter=",", dtype=object)
-            ds_indexes[:, 0] = np.array(list(map(lambda x: str(os.path.join(path, x)), ds_indexes[:, 0])))  # noqa B023
+            ds_indexes[:, 0] = np.array([str(path / x) for x in ds_indexes[:, 0]])
+            indexes.append(ds_indexes)
 
-            def to_connectlib_path(x):
-                return str(os.path.join(path, x))  # noqa B023
+        self._indexes = np.asarray(indexes, dtype=object).squeeze(axis=0)
 
-            ds_indexes[:, 0] = np.vectorize(to_connectlib_path)(ds_indexes[:, 0])
-
-            indexes = np.concatenate((indexes, ds_indexes))
-
-        self.indexes = indexes
+    @property
+    def indexes(self):
+        return self._indexes
 
     def __len__(self):
         return len(self.indexes)
@@ -37,10 +34,13 @@ class Data:
 class CamelyonDataset(Dataset):
     """Torch Dataset for the Camelyon data. Padding is done on the fly."""
 
-    def __init__(self, data_indexes) -> None:
+    def __init__(self, x, y=None, is_inference=False) -> None:
+
+        data_indexes = x.indexes
         self.data_indexes = (
             data_indexes if len(data_indexes.shape) > 1 else np.array(data_indexes).reshape(1, data_indexes.shape[0])
         )
+        self.is_inference = is_inference
 
     def __len__(self):
         return len(self.data_indexes)
@@ -57,5 +57,8 @@ class CamelyonDataset(Dataset):
         down = missing_tiles // 2
 
         x = F.pad(input=x, pad=(0, 0, up, down), mode="constant", value=0)
+
+        if self.is_inference:
+            return x
 
         return x, y

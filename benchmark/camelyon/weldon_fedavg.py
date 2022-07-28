@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 
 from connectlib.algorithms.pytorch import TorchFedAvgAlgo
 from connectlib.index_generator import NpIndexGenerator
+from connectlib.remote import remote_data
 
 
 def get_weldon_fedavg(
@@ -45,18 +46,17 @@ def get_weldon_fedavg(
                 criterion=criterion,
                 optimizer=optimizer,
                 index_generator=index_generator,
+                dataset=CamelyonDataset,
             )
 
-        def _local_train(self, x, y):
+        def _local_train(self, train_dataset):
             # The opener only give all the paths in x and nothin in y
-            dataset = CamelyonDataset(data_indexes=x.indexes)
-
             multiprocessing_context = None
             if num_workers != 0:
                 multiprocessing_context = torch.multiprocessing.get_context("spawn")
 
             dataloader = DataLoader(
-                dataset,
+                train_dataset,
                 batch_sampler=self._index_generator,
                 num_workers=num_workers,
                 multiprocessing_context=multiprocessing_context,
@@ -77,8 +77,9 @@ def get_weldon_fedavg(
                 if self._scheduler is not None:
                     self._scheduler.step()
 
-        def _local_predict(self, x):
-            dataset = CamelyonDataset(data_indexes=x.indexes)
+        @remote_data
+        def predict(self, x, shared_state):
+            dataset = CamelyonDataset(x=x)
 
             multiprocessing_context = None
             if num_workers != 0:
