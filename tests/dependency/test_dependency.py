@@ -11,10 +11,13 @@ from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import CompositeTraintupleSpec
 from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
 from connectlib.exceptions import InvalidPathError
+from connectlib.nodes.node import InputIdentifiers
+from connectlib.nodes.node import OutputIdentifiers
 from connectlib.remote import remote_data
 from connectlib.remote.register.register import _create_substra_algo_files
 
@@ -77,9 +80,13 @@ class TestLocalDependency:
             algo_key=algo_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
+            inputs=[
+                InputRef(identifier=InputIdentifiers.OPENER, asset_key=dataset_key),
+                InputRef(identifier=InputIdentifiers.DATASAMPLES, asset_key=data_sample_key),
+            ],
             outputs={
-                "shared": ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
-                "local": ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
+                OutputIdentifiers.SHARED: ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
+                OutputIdentifiers.LOCAL: ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
             },
         )
         composite_key = client.add_composite_traintuple(composite_traintuple_query)

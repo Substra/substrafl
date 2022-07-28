@@ -6,11 +6,14 @@ from typing import TypeVar
 import substra
 from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
 from connectlib.dependency import Dependency
+from connectlib.nodes.node import InputIdentifiers
 from connectlib.nodes.node import Node
 from connectlib.nodes.node import OperationKey
+from connectlib.nodes.node import OutputIdentifiers
 from connectlib.nodes.references.shared_state import SharedStateRef
 from connectlib.remote.operations import AggregateOperation
 from connectlib.remote.register import register_algo
@@ -65,8 +68,20 @@ class AggregationNode(Node):
             "metadata": {
                 "round_idx": round_idx,
             },
+            "inputs": [
+                InputRef(
+                    identifier=InputIdentifiers.MODEL,
+                    parent_task_key=ref.key,
+                    parent_task_output_identifier=OutputIdentifiers.SHARED,
+                )
+                for ref in operation.shared_states
+            ]
+            if operation.shared_states is not None
+            else None,
             "outputs": {
-                "model": ComputeTaskOutput(permissions=Permissions(public=False, authorized_ids=authorized_ids))
+                OutputIdentifiers.MODEL: ComputeTaskOutput(
+                    permissions=Permissions(public=False, authorized_ids=authorized_ids)
+                )
             },
         }
         self.tuples.append(aggregate_tuple)

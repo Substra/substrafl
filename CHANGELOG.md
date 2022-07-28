@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- feat: add compute task inputs (#236)
+
 ## [0.22.0](https://github.com/owkin/connectlib/releases/tag/0.22.0) - 2022-07-25
 
 ### Fixed
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- fead: add compute task output (#231)
+- feat: add compute task output (#231)
 - BREAKING CHANGE: add the torch Dataset as argument of TorchAlgo to preprocess the data (#224)
   The `_init_` function of the dataset must contain (self, x, y, is_inference).
   The `__getitem__` function is expected to return x, y if is_inference is False, else x.

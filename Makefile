@@ -24,7 +24,7 @@ test-subprocess-slow: pyclean
 	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local -m "slow and not docker_only and not gpu"
 
 test-subprocess: pyclean
-    DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local --nbmake -m "not docker_only and not gpu"
+	DEBUG_SPAWNER=subprocess pytest tests ${COV_OPTIONS} --local --nbmake -m "not docker_only and not gpu"
 
 # Run the slow tests in subprocess mode (those not marked docker only)
 # then run all the substra tests in local docker mode
