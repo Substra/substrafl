@@ -134,14 +134,6 @@ To run a very complete benchmark (48 hours of compute time):
 sh benchmarks.sh
 ```
 
-### **DEPRECATED:** Plot the results of the local benchmark
-
-Default comparative graphics can be generated with:
-
-```sh
-python deprecated_plot_results.py
-```
-
 ## Remote speed benchmark
 
 The benchmark can be run on remote with

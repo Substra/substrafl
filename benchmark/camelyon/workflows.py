@@ -112,7 +112,7 @@ def connectlib_fed_avg(
         aggregation_node=aggregation_node,
         num_rounds=n_rounds,
         dependencies=algo_deps,
-        experiment_folder=Path(__file__).resolve().parent / "experiment_folder",
+        experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
 
     # Wait for the compute plan to finish
@@ -178,7 +178,7 @@ def torch_fed_avg(
 
     train_datasets = [
         CamelyonDataset(
-            data_indexes=train_camelyon.indexes,
+            x=train_camelyon,
         )
         for _ in range(n_centers)
     ]
@@ -205,7 +205,7 @@ def torch_fed_avg(
 
     test_camelyon = Data(paths=[test_folder] * nb_test_data_samples)
 
-    test_datasets = [CamelyonDataset(data_indexes=test_camelyon.indexes) for _ in range(n_centers)]
+    test_datasets = [CamelyonDataset(x=test_camelyon) for _ in range(n_centers)]
 
     test_dataloaders = [
         DataLoader(

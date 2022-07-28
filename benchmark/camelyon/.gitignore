@@ -1,8 +1,8 @@
 pure_connectlib/assets/metric.tar.gz
-data/**
+data
 !data/index.csv
-results/**
-experiment_folder
-connect_conf/**
+results
+benchmark_cl_experiment_folder
+connect_conf
 !connect_conf/remote.yaml
 !connect_conf/ci.yaml

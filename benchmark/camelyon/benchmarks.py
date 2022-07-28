@@ -1,5 +1,6 @@
 import json
 import multiprocessing
+import shutil
 import time
 from pathlib import Path
 
@@ -109,20 +110,25 @@ def main():
     if params["mode"] != "remote":
         results = read_results(LOCAL_RESULTS_FILE)
 
-    # Not use in remote, TODO: refactor at some point
+    # Not used in remote, TODO: refactor at some point
     reset_data_folder()
     train_folder = creates_data_folder(dest_folder=DATA_DIR / "train", index_path=DATA_DIR / "index.csv")
     test_folder = creates_data_folder(dest_folder=DATA_DIR / "test", index_path=DATA_DIR / "index.csv")
 
-    # Execute experiment
-    res = fed_avg(params, train_folder, test_folder)
+    try:
+        # Execute experiment
+        res = fed_avg(params, train_folder, test_folder)
 
-    if params["mode"] != "remote":
-        # Update results
-        results.update(res)
+        if params["mode"] != "remote":
+            # Update results
+            results.update(res)
 
-        # Save results
-        LOCAL_RESULTS_FILE.write_text(json.dumps(results, sort_keys=True, indent=4))
+            # Save results
+            LOCAL_RESULTS_FILE.write_text(json.dumps(results, sort_keys=True, indent=4))
+    finally:
+        # Delete the temporary experiment folders at the end of the benchmark
+        shutil.rmtree("local-worker", ignore_errors=True)
+        shutil.rmtree("benchmark_cl_experiment_folder", ignore_errors=True)
 
 
 if __name__ == "__main__":
