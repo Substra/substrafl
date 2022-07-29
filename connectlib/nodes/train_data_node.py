@@ -166,9 +166,6 @@ class TrainDataNode(Node):
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
         for tuple in self.tuples:
-            if tuple.get("out_trunk_model_permissions", None) is None:
-                tuple["out_trunk_model_permissions"] = permissions
-
             if isinstance(tuple["remote_operation"], RemoteStruct):
                 remote_struct: RemoteStruct = tuple["remote_operation"]
 
