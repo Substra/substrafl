@@ -262,7 +262,7 @@ class TorchAlgo(Algo):
         if self._device == torch.device("cpu"):
             torch.set_rng_state(checkpoint.pop("rng_state").to(self._device))
         else:
-            torch.cuda.set_rng_state(checkpoint.pop("rng_state").to(self._device))
+            torch.cuda.set_rng_state(checkpoint.pop("rng_state").to("cpu"))
 
         return checkpoint
 
