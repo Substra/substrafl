@@ -19,9 +19,9 @@ class Data:
             assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
             ds_indexes = np.loadtxt(index_path, delimiter=",", dtype=object)
             ds_indexes[:, 0] = np.array([str(path / x) for x in ds_indexes[:, 0]])
-            indexes.append(ds_indexes)
+            indexes.extend(ds_indexes)
 
-        self._indexes = np.asarray(indexes, dtype=object).squeeze(axis=0)
+        self._indexes = np.asarray(indexes, dtype=object)
 
     @property
     def indexes(self):
