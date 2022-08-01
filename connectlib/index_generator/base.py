@@ -52,6 +52,15 @@ class BaseIndexGenerator(abc.ABC):
         self._n_samples: Optional[int] = None
 
     @property
+    def batch_size(self) -> int:
+        """Number of samples used per batch.
+
+        Returns:
+            int: Batch size used by the index generator
+        """
+        return self._batch_size
+
+    @property
     def counter(self) -> int:
         """Number of calls made to the iterator since the last counter reset.
 

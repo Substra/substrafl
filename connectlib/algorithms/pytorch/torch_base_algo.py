@@ -4,10 +4,12 @@ import logging
 from pathlib import Path
 from typing import Any
 from typing import Optional
+from typing import Union
 
 import torch
 
 from connectlib.algorithms.algo import Algo
+from connectlib.exceptions import BatchSizeNotFoundError
 from connectlib.exceptions import DatasetSignatureError
 from connectlib.exceptions import DatasetTypeError
 from connectlib.exceptions import OptimizerValueError
@@ -37,7 +39,7 @@ class TorchAlgo(Algo):
         self,
         model: torch.nn.Module,
         criterion: torch.nn.modules.loss._Loss,
-        index_generator: BaseIndexGenerator,
+        index_generator: Union[BaseIndexGenerator, None],
         dataset: torch.utils.data.Dataset,
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
@@ -62,7 +64,7 @@ class TorchAlgo(Algo):
         self._criterion = criterion
         self._scheduler = scheduler
 
-        self._index_generator: BaseIndexGenerator = index_generator
+        self._index_generator = index_generator
         self._dataset: torch.utils.data.Dataset = dataset
         self._check_torch_dataset()
 
@@ -93,6 +95,7 @@ class TorchAlgo(Algo):
     ):
         """Executes the following operations:
 
+            * Create the test torch dataset and the test torch dataloader using the index generator batch size.
             * Sets the model to `eval` mode
             * Returns the predictions
 
@@ -102,11 +105,21 @@ class TorchAlgo(Algo):
 
         Returns:
             typing.Any: Model prediction.
+
+        Raises:
+            BatchSizeNotFoundError: No default batch size have been found to perform local prediction.
+                Please overwrite the predict function of your algorithm.
         """
         # Create torch dataset
         predict_dataset = self._dataset(x=x, y=None, is_inference=True)
 
-        predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=len(predict_dataset))
+        if self._index_generator is not None:
+            predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._index_generator.batch_size)
+        else:
+            raise BatchSizeNotFoundError(
+                "No default batch size have been found to perform local prediction. "
+                "Please overwrite the predict function of your algorithm."
+            )
 
         self._model.eval()
 
