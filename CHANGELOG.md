@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.2](https://github.com/owkin/connectlib/releases/tag/0.21.2) - 2022-08-01
+
+- fix: move the RNG state to CPU in case the checkpoint has been loaded on the GPU (#244)
+
 ## [0.21.1](https://github.com/owkin/connectlib/releases/tag/0.21.1) - 2022-07-19
 
 ### Fixed
