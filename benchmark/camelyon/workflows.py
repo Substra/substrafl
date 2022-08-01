@@ -87,6 +87,9 @@ def substrafl_fed_avg(
 
     # Algo dependencies
     base = Path(__file__).parent
+
+    # Classic algos must be installed locally in editable mode
+    # for the Dockerfile mode
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy", "sklearn"],
         local_code=[base / "common" / "data_managers.py", base / "common" / "weldon.py", base / "weldon_fedavg.py"],
@@ -126,15 +129,9 @@ def substrafl_fed_avg(
         else:
             time.sleep(1)
 
-    testtuples = clients[1].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
-
-    # Resetting the clients
-    # BUG: if we don't reset clients, substra tries to find an algo that do not exist
-    # TODO: investigate
-    del clients
-
     # Returning performances
-    return {k: list(testtuple.test.perfs.values())[0] for k, testtuple in enumerate(testtuples)}
+    performances = clients[1].get_performances(compute_plan.key)
+    return performances.dict().values()
 
 
 def torch_fed_avg(
