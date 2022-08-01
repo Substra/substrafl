@@ -11,6 +11,7 @@ from connectlib.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
 from connectlib.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
 from connectlib.dependency import Dependency
 from connectlib.evaluation_strategy import EvaluationStrategy
+from connectlib.exceptions import BatchSizeNotFoundError
 from connectlib.exceptions import DatasetSignatureError
 from connectlib.exceptions import DatasetTypeError
 from connectlib.index_generator import NpIndexGenerator
@@ -242,6 +243,32 @@ def test_instance_error_torch_dataset():
 
     with pytest.raises(DatasetTypeError):
         MyAlgo()
+
+
+def test_none_index_generator_for_predict(numpy_torch_dataset):
+    lin = torch.nn.Linear(3, 2)
+
+    class MyAlgo(TorchAlgo):
+        def __init__(self):
+            super().__init__(
+                model=lin,
+                criterion=torch.nn.MSELoss(),
+                optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
+                index_generator=None,
+                dataset=numpy_torch_dataset,
+            )
+
+        @property
+        def strategies(self):
+            return list()
+
+        def train(self, x, y, shared_state):
+            pass
+
+    my_algo = MyAlgo()
+
+    with pytest.raises(BatchSizeNotFoundError):
+        my_algo.predict(x=np.zeros(3), _skip=True)
 
 
 @pytest.mark.gpu

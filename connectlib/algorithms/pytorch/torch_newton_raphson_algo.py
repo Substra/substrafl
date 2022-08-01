@@ -249,6 +249,36 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             self._update_gradients_and_hessian(loss, current_batch_size)
 
     @remote_data
+    def predict(self, x: Any):
+        """Executes the following operations:
+
+            * Create the test torch dataset and the test torch dataloader using the class batch size.
+            * Sets the model to `eval` mode
+            * Returns the predictions
+
+        Args:
+            x (typing.Any): Input data
+            shared_state (Any): Latest train task shared state (output of the train method)
+
+        Returns:
+            typing.Any: Model prediction.
+        """
+
+        # Create torch dataset
+        predict_dataset = self._dataset(x=x, y=None, is_inference=True)
+
+        predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._batch_size)
+
+        self._model.eval()
+
+        predictions = torch.Tensor([])
+        with torch.inference_mode():
+            for x in predict_loader:
+                predictions = torch.cat((predictions, self._model(x)), 0)
+
+        return predictions
+
+    @remote_data
     def train(
         self,
         x: Any,

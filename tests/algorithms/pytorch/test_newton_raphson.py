@@ -77,7 +77,7 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
 
     my_algo.train(x=x_train, y=y_train, _skip=True)
 
-    assert my_algo._index_generator._batch_size == batch_size or n_samples
+    assert my_algo._index_generator.batch_size == batch_size or n_samples
     assert my_algo._index_generator.n_samples == n_samples
     assert my_algo._index_generator.num_updates == expected_n_updates
     assert not my_algo._index_generator._drop_last

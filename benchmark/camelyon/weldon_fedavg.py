@@ -87,7 +87,7 @@ def get_weldon_fedavg(
 
             dataloader = DataLoader(
                 dataset,
-                batch_size=self._index_generator._batch_size,
+                batch_size=self._index_generator.batch_size,
                 drop_last=False,
                 num_workers=num_workers,
                 multiprocessing_context=multiprocessing_context,

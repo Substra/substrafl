@@ -5,6 +5,10 @@ class AlgoCategoryError(Exception):
     """The given algo category does not match any substra AlgoCategory."""
 
 
+class BatchSizeNotFoundError(Exception):
+    """No batch size found."""
+
+
 class ConnectToolsDeprecationWarning(DeprecationWarning):
     """The connect-tools version used is deprecated."""
 

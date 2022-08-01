@@ -210,7 +210,7 @@ def torch_fed_avg(
     test_dataloaders = [
         DataLoader(
             test_dataset,
-            batch_size=index_generator._batch_size,
+            batch_size=index_generator.batch_size,
             shuffle=False,
             drop_last=True,
             num_workers=num_workers,
