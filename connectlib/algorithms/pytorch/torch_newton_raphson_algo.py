@@ -249,7 +249,11 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             self._update_gradients_and_hessian(loss, current_batch_size)
 
     @remote_data
-    def predict(self, x: Any):
+    def predict(
+        self,
+        x: Any,
+        shared_state: Any,
+    ):
         """Executes the following operations:
 
             * Create the test torch dataset and the test torch dataloader using the class batch size.
