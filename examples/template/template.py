@@ -200,7 +200,7 @@ class MyAlgo(TorchFedAvgAlgo):
 # Algo dependencies
 # =================
 
-algo_deps = Dependency(pypi_dependencies=["numpy==1.21.5", "torch==1.11.0"])
+algo_deps = Dependency(pypi_dependencies=["numpy==1.23.1", "torch==1.12.0"])
 
 # %%
 # Federated Learning strategies
