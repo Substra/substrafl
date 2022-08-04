@@ -43,6 +43,7 @@ class TorchAlgo(Algo):
         dataset: torch.utils.data.Dataset,
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        seed: Optional[int] = None,
         use_gpu: bool = True,
         *args,
         **kwargs,
@@ -52,6 +53,9 @@ class TorchAlgo(Algo):
         before the `train()` or `predict()` function is ran.
         """
         super().__init__(*args, **kwargs)
+
+        if seed is not None:
+            torch.manual_seed(seed)
 
         self._device = self._get_torch_device(use_gpu=use_gpu)
 
