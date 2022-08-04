@@ -1,8 +1,10 @@
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pytest
 import torch
+from substra.sdk.models import ModelType
 
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
@@ -17,11 +19,97 @@ from substrafl.exceptions import DatasetTypeError
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.remote.serializers import PickleSerializer
 from substrafl.schemas import StrategyName
 from substrafl.strategies import FedAvg
 from substrafl.strategies import Scaffold
 from substrafl.strategies import SingleOrganization
+from substrafl.strategies.strategy import Strategy
 from tests import utils
+
+
+@pytest.fixture(params=[None, 31, 42])
+def rng_algo(request, torch_linear_model, numpy_torch_dataset):
+
+    test_seed = request.param
+    n_rng_sample = 10
+
+    nig = NpIndexGenerator(
+        batch_size=1,
+        num_updates=1,
+    )
+    perceptron = torch_linear_model()
+
+    class RngAlgo(TorchAlgo):
+        def __init__(self):
+            super().__init__(
+                model=perceptron,
+                dataset=numpy_torch_dataset,
+                criterion=torch.nn.MSELoss(),
+                optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
+                index_generator=nig,
+                seed=test_seed,
+            )
+
+        @property
+        def strategies(self):
+            return ["rng_strategy"]
+
+        @remote_data
+        def train(self, x, y, shared_state=None):
+            return torch.rand(n_rng_sample)
+
+    return RngAlgo, test_seed
+
+
+@pytest.fixture
+def rng_strategy():
+    class RngStrategy(Strategy):
+
+        _local_states = None
+        _shared_states = None
+
+        @property
+        def name(self) -> StrategyName:
+            return "rng_strategy"
+
+        def perform_round(
+            self,
+            algo,
+            train_data_nodes,
+            aggregation_node,
+            round_idx,
+        ):
+            next_local_states = []
+            next_shared_states = []
+
+            for i, node in enumerate(train_data_nodes):
+                next_local_state, next_shared_state = node.update_states(
+                    algo.train(
+                        node.data_sample_keys,
+                    ),
+                    round_idx=round_idx,
+                    authorized_ids=[node.organization_id],
+                    local_state=self._local_states[i] if self._local_states is not None else None,
+                )
+
+                # keep the states in a list: one/organization
+                next_local_states.append(next_local_state)
+                next_shared_states.append(next_shared_state)
+
+            self._local_states = next_local_states
+            self._shared_states = next_shared_states
+
+        def predict(
+            self,
+            algo,
+            test_data_nodes,
+            train_data_nodes,
+            round_idx: int,
+        ):
+            pass
+
+    return RngStrategy
 
 
 @pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchSingleOrganizationAlgo, TorchScaffoldAlgo])
@@ -131,6 +219,60 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
     _, result = remote_struct.train(X=None, y=None, head_model=None, trunk_model=None, rank=0)
 
     assert result == arg_value
+
+
+@pytest.mark.substra
+def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_strategy, rng_algo):
+    """
+    Test that the RNG state is well incremented through the different rounds.
+    """
+    n_rng_sample = 10
+
+    algo_class, test_seed = rng_algo
+    my_algo = algo_class()
+
+    if test_seed is not None:
+        torch.manual_seed(test_seed)
+
+    expected_output_round_1 = torch.rand(n_rng_sample)
+    expected_output_round_2 = torch.rand(n_rng_sample)
+
+    algo_deps = Dependency(
+        pypi_dependencies=["torch", "numpy"],
+        editable_mode=True,
+    )
+    strategy = rng_strategy()
+
+    cp = execute_experiment(
+        client=network.clients[0],
+        algo=my_algo,
+        strategy=strategy,
+        train_data_nodes=[train_linear_nodes[0]],
+        evaluation_strategy=None,
+        aggregation_node=None,
+        num_rounds=2,
+        dependencies=algo_deps,
+        experiment_folder=session_dir / "experiment_folder",
+    )
+    utils.wait(network.clients[0], cp)
+
+    output_model = {}
+
+    for composite_traintuple in network.clients[0].list_composite_traintuple(filters={"compute_plan_key": [cp.key]}):
+        network.clients[0].download_trunk_model_from_composite_traintuple(composite_traintuple.key, session_dir)
+        for m in composite_traintuple.composite.models:
+            if m.category == ModelType.simple:
+                download_path = "model_" + m.key
+                output_model[composite_traintuple.metadata["round_idx"]] = PickleSerializer().load(
+                    Path(session_dir) / download_path
+                )
+
+    if test_seed is not None:
+        assert all(output_model["1"] == expected_output_round_1)
+        assert all(output_model["2"] == expected_output_round_2)
+    else:
+        assert not all(output_model["1"] == expected_output_round_1)
+        assert not all(output_model["2"] == expected_output_round_2)
 
 
 @pytest.mark.parametrize("n_samples", [1, 2])

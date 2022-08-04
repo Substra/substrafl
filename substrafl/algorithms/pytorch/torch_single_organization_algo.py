@@ -93,6 +93,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         index_generator: BaseIndexGenerator,
         dataset: torch.utils.data.Dataset,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        seed: Optional[int] = None,
         use_gpu: bool = True,
         *args,
         **kwargs,
@@ -123,6 +124,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
                 This behavior can be changed by re-writing the `_local_train` or `predict` methods.
             scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
                 batch. If None, no scheduler will be used. Defaults to None.
+            seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
             use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         super().__init__(
@@ -132,6 +134,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             index_generator=index_generator,
             dataset=dataset,
             scheduler=scheduler,
+            seed=seed,
             use_gpu=use_gpu,
             *args,
             **kwargs,

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - GPU execution: move the RNG state to CPU in case the checkpoint has been loaded on the GPU (#244)
+- fix: rng state for torch algos. Add test for both stability between organizations and rounds. (#254)
 
 ### Added
 

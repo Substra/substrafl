@@ -121,6 +121,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
         c_update_rule: CUpdateRule = CUpdateRule.FAST,
+        seed: Optional[int] = None,
         use_gpu: bool = True,
         *args,
         **kwargs,
@@ -155,6 +156,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             c_update_rule (CUpdateRule): The rule used to update the
                 client control variate.
                 Defaults to CUpdateRule.FAST.
+            seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
             use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         Raises:
             :ref:`~substrafl.exceptions.NumUpdatesValueError`: If `num_updates` is inferior or equal to zero.
@@ -167,6 +169,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             dataset=dataset,
             scheduler=scheduler,
             use_gpu=use_gpu,
+            seed=seed,
             *args,
             **kwargs,
         )
