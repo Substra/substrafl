@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          path: connectlib
+          path: substrafl
           lfs: true
 
       - uses: actions/setup-python@v3
@@ -39,7 +39,7 @@ jobs:
 
       - name: Code conventions
         run: |
-          cd connectlib
+          cd substrafl
           pre-commit run --all-files
 
       - name: Checkout pyconfig from a private repos
@@ -67,18 +67,18 @@ jobs:
         run: |
              pip install --upgrade -e substra
              pip install --upgrade -e substratools
-             pip install --upgrade -e connectlib[dev]
+             pip install --upgrade -e substrafl[dev]
 
       - name: Run the fast local tests
         run: |
-          cd connectlib
-          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-subprocess-fast
+          cd substrafl
+          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-subprocess-fast
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: connectlib/htmlcov
+          path: substrafl/htmlcov
 
   pr-validation-docs:
     runs-on: ubuntu-20.04

@@ -1,6 +1,6 @@
 import torch
 
-from connectlib.algorithms.pytorch.weight_manager import get_parameters
+from substrafl.algorithms.pytorch.weight_manager import get_parameters
 
 
 def assert_tensor_list_equal(tensor_list_1, tensor_list_2):

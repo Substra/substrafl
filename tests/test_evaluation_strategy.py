@@ -2,8 +2,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.nodes.test_data_node import TestDataNode
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.nodes.test_data_node import TestDataNode
 
 
 @pytest.mark.parametrize("rounds", [1, 2, 4, 10, [1], [1, 4], [5, 1, 7, 3]])

@@ -1,10 +1,10 @@
 """
 ==================================
-Connectlib template example
+Substrafl template example
 ==================================
 
 State the objective of this example, what will the user learn. For instance:
-This example illustrate the basic usage of Connectlib, and proposes a model training by federated learning
+This example illustrate the basic usage of Substrafl, and proposes a model training by federated learning
 using the federated averaging strategy.
 
 Then state the main information about the example. For instance:
@@ -22,12 +22,12 @@ in the same directory as the example:
 
     .. only:: builder_html or readthedocs
 
-        :download:`assets required to run this example <../../../../../tmp/connectlib_fedavg_assets.zip>`
+        :download:`assets required to run this example <../../../../../tmp/substrafl_fedavg_assets.zip>`
 
     Please ensure that all the libraries are installed, a *requirements.txt* file is included in the zip file.
     Run the command: `pip install -r requirements.txt` to install the requirements.
 
-  - To install **Substra** and **Connectlib** follow the instructions described here:
+  - To install **Substra** and **Substrafl** follow the instructions described here:
     :ref:`get_started/installation:Installation`
 
 """
@@ -49,13 +49,13 @@ from substra.sdk.schemas import MetricSpec
 from substra.sdk.schemas import Permissions
 from torch import nn
 
-from connectlib.algorithms.pytorch import TorchFedAvgAlgo
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.experiment import execute_experiment
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.nodes import AggregationNode
-from connectlib.strategies import FedAvg
+from substrafl.algorithms.pytorch import TorchFedAvgAlgo
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.experiment import execute_experiment
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.nodes import AggregationNode
+from substrafl.strategies import FedAvg
 
 # The list of their associated ids (for substra permissions)
 NODES_ID = ["org-1MSP", "org-2MSP"]
@@ -124,7 +124,7 @@ metric_key = client.add_metric(metric_spec)
 # CNN definition
 # ==============
 # We choose to use a classic torch CNN as the model to train. The model structure is defined by the user independently
-# of Connectlib.
+# of Substrafl.
 
 seed = 42
 torch.manual_seed(seed)
@@ -156,7 +156,7 @@ model = CNN()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # %%
-# Connectlib algo definition
+# Substrafl algo definition
 # ==========================
 
 # Number of model update between each FL strategy aggregation.

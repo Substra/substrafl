@@ -4,7 +4,7 @@ import json
 import substra
 import substratools
 
-import connectlib
+import substrafl
 
 
 def parse_params() -> dict:
@@ -18,7 +18,7 @@ def parse_params() -> dict:
         "seed": 42,
         "n_centers": 2,
         "learning_rate": 0.01,
-        "connectlib_version": connectlib.__version__,
+        "substrafl_version": substrafl.__version__,
         "substra_version": substra.__version__,
         "substratools_version": substratools.__version__,
     }

@@ -5,19 +5,19 @@ import numpy as np
 import pytest
 import torch
 
-from connectlib import execute_experiment
-from connectlib.algorithms.pytorch import TorchScaffoldAlgo
-from connectlib.algorithms.pytorch.weight_manager import increment_parameters
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.exceptions import NumUpdatesValueError
-from connectlib.exceptions import TorchScaffoldAlgoParametersUpdateError
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.model_loading import download_algo_files
-from connectlib.model_loading import load_algo
-from connectlib.schemas import ScaffoldAveragedStates
-from connectlib.schemas import ScaffoldSharedState
-from connectlib.strategies import Scaffold
+from substrafl import execute_experiment
+from substrafl.algorithms.pytorch import TorchScaffoldAlgo
+from substrafl.algorithms.pytorch.weight_manager import increment_parameters
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.exceptions import NumUpdatesValueError
+from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
+from substrafl.schemas import ScaffoldAveragedStates
+from substrafl.schemas import ScaffoldSharedState
+from substrafl.strategies import Scaffold
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
 from tests.algorithms.pytorch.torch_tests_utils import assert_tensor_list_equal

@@ -1,4 +1,4 @@
 Model Loading
 =============
 
-.. automodule:: connectlib.model_loading
+.. automodule:: substrafl.model_loading

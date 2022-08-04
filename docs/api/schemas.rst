@@ -2,5 +2,5 @@ Schemas
 ========
 
 
-.. automodule:: connectlib.schemas
+.. automodule:: substrafl.schemas
     :private-members:

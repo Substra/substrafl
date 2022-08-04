@@ -40,17 +40,17 @@ This means that:
 - in local subprocess mode, the Dockerfile is generated but the image is not built so no need to access the Docker
   registry
 
-Connectlib dependencies
+Substrafl dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note:: In local subprocess mode we use the packages installed in the user Python environment, so none of what
    follows is applicable
 
-Connectlib needs the following libraries to be installed in the container:
+Substrafl needs the following libraries to be installed in the container:
 
 - connect-tools
 - substra
-- connectlib
+- substrafl
 
 These libraries are available either from the user's computer or from a private Owkin PyPi.
 When we are building the container, we do not have access to the private Owkin PyPi, because it would require giving the
@@ -59,16 +59,16 @@ Connect.
 
 There are two modes: the **release mode** and the **editable mode**, chosen with the ``editable_mode`` parameter in the ``dependency`` argument.
 
-In **release mode**, Connectlib downloads the wheels of substra and connectlib (connect-tools is already installed) from
+In **release mode**, Substrafl downloads the wheels of substra and substrafl (connect-tools is already installed) from
 the private Owkin PyPi and copies them to the Docker image. The download is made through a subprocess, and it needs pip
 to be configured to access Owkin's PyPi.
 
 In **editable mode**, those libraries must be installed in editable mode (`pip install -e .`) in the Python's environment
-Connectlib is executed with. The script goes through each library, and:
+Substrafl is executed with. The script goes through each library, and:
 
-- if the wheel for the installed version already exists (looking for it in the ``$HOME/.connectlib`` folder of
+- if the wheel for the installed version already exists (looking for it in the ``$HOME/.substrafl`` folder of
   the target directory), reuse it
-- otherwise generate the wheel in the ``$HOME/.connectlib`` folder and copy it to the Docker image
+- otherwise generate the wheel in the ``$HOME/.substrafl`` folder and copy it to the Docker image
 
 Then copy the wheel to the Docker image.
 This is not the preferred method as it can lead to difficulties of knowing which version was used: there may be local changes to the code.

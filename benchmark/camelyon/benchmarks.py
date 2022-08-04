@@ -11,10 +11,10 @@ from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
 from common.utils import parse_params
 from common.utils import read_results
-from workflows import connectlib_fed_avg
+from workflows import substrafl_fed_avg
 from workflows import torch_fed_avg
 
-from connectlib.index_generator import NpIndexGenerator
+from substrafl.index_generator import NpIndexGenerator
 
 RESULTS_FOLDER = Path(__file__).parent / "results"
 LOCAL_RESULTS_FILE = RESULTS_FOLDER / "results.json"
@@ -22,7 +22,7 @@ LOCAL_RESULTS_FILE = RESULTS_FOLDER / "results.json"
 
 def fed_avg(params: dict, train_folder: Path, test_folder: Path):
     """If remote, only running the benchmark on the connect platform (from the remote.yaml file) else running
-    both connectlib and pure_torch fed avg strategy with the given parameters.
+    both substrafl and pure_torch fed avg strategy with the given parameters.
 
     Args:
         params (dict): Strategy and algo parameters.
@@ -57,7 +57,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
     ]
 
     cl_start = time.time()
-    cl_perf = connectlib_fed_avg(
+    cl_perf = substrafl_fed_avg(
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
@@ -70,8 +70,8 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
     cl_end = time.time()
     exp_params.update(
         {
-            "connectlib_time": cl_end - cl_start,
-            "connectlib_perf": cl_perf,
+            "substrafl_time": cl_end - cl_start,
+            "substrafl_perf": cl_perf,
         }
     )
 

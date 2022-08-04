@@ -26,16 +26,16 @@ with open(os.path.join(here, "README.md"), "r", "utf-8") as fp:
     readme = fp.read()
 
 about: dict = dict()
-with open(os.path.join(here, "connectlib", "__version__.py"), "r", "utf-8") as fp:
+with open(os.path.join(here, "substrafl", "__version__.py"), "r", "utf-8") as fp:
     exec(fp.read(), about)
 
 setup(
-    name="connectlib",
+    name="substrafl",
     version=about["__version__"],
     description="Federated Learning library",
     long_description="",
     long_description_content_type="text/markdown",
-    url="https://owkin-connectlib.readthedocs-hosted.com/en/latest/",
+    url="https://owkin-substrafl.readthedocs-hosted.com/en/latest/",
     author="Owkin",
     author_email="flow@owkin.com",
     license="Apache 2.0",
@@ -49,7 +49,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
-    keywords=["connectlib"],
+    keywords=["substrafl"],
     packages=find_packages(exclude=["tests*", "benchmark*"]),
     # Not compatible with substratools 0.8.0 because
     # that release is private and in the Docker container

@@ -2,17 +2,17 @@ import numpy as np
 import pytest
 import torch
 
-from connectlib import execute_experiment
-from connectlib.algorithms.pytorch import TorchNewtonRaphsonAlgo
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.exceptions import CriterionReductionError
-from connectlib.exceptions import NegativeHessianMatrixError
-from connectlib.model_loading import download_algo_files
-from connectlib.model_loading import load_algo
-from connectlib.nodes.test_data_node import TestDataNode
-from connectlib.nodes.train_data_node import TrainDataNode
-from connectlib.strategies import NewtonRaphson
+from substrafl import execute_experiment
+from substrafl.algorithms.pytorch import TorchNewtonRaphsonAlgo
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.exceptions import CriterionReductionError
+from substrafl.exceptions import NegativeHessianMatrixError
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
+from substrafl.nodes.test_data_node import TestDataNode
+from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.strategies import NewtonRaphson
 from tests import utils
 
 from ... import assets_factory

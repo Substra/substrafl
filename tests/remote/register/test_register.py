@@ -6,9 +6,9 @@ import pytest
 import substra
 from substra.sdk.schemas import AlgoCategory
 
-from connectlib.dependency import Dependency
-from connectlib.remote.decorators import remote_data
-from connectlib.remote.register.register import register_algo
+from substrafl.dependency import Dependency
+from substrafl.remote.decorators import remote_data
+from substrafl.remote.register.register import register_algo
 
 
 class RemoteClass:

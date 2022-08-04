@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "substrafl.fullname" . }}
+  labels:
+{{ include "substrafl.labels" . | indent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "substrafl.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "substrafl.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      initContainers:
+        - name: wait-backend-1
+          image: jwilder/dockerize
+          command: ['dockerize',
+                    '-wait', 'http://backend-org-1-substra-backend-server.org-1.svc.cluster.local:8000/readiness',
+                    '-wait', 'http://backend-org-2-substra-backend-server.org-2.svc.cluster.local:8000/readiness',
+                    '-timeout', '1200s']
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sleep", "infinity"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2376
+            - name: DOCKER_TLS_VERIFY
+              value: "1"
+            - name: DOCKER_CERT_PATH
+              value: /root/.docker/client
+          volumeMounts:
+            - name: dind-certs
+              mountPath: /root/.docker
+            - name: tmp
+              mountPath: /tmp
+            - name: local-worker
+              mountPath: /usr/src/app/local-worker/
+        - name: dind
+          image: docker:19.03.12-dind
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: dind-storage
+              mountPath: /var/lib/docker
+            - name: dind-certs
+              mountPath: /root/.docker
+            - name: tmp
+              mountPath: /tmp
+            - name: local-worker
+              mountPath: /usr/src/app/local-worker/
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: /root/.docker
+      {{- with .Values.organizationSelector }}
+      organizationSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: dind-storage
+          emptyDir: {}
+        - name: dind-certs
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: local-worker
+          emptyDir: {}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

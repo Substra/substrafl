@@ -1,7 +1,7 @@
 Remote
 ======
 
-This is an internal Connectlib module, the user should not use
+This is an internal Substrafl module, the user should not use
 any functions here directly, apart from the ``remote_data`` and ``remote``
 decorators.
 This modules defines how the user code is wrapped, transformed and registered as
@@ -9,28 +9,28 @@ Connect algorithms.
 
 Decorator
 ^^^^^^^^^^
-.. automodule:: connectlib.remote.decorators
+.. automodule:: substrafl.remote.decorators
 
 Remote Struct
 ^^^^^^^^^^^^^^
-.. autoclass:: connectlib.remote.remote_struct.RemoteStruct
+.. autoclass:: substrafl.remote.remote_struct.RemoteStruct
 
 Operations
 ^^^^^^^^^^^
-.. automodule:: connectlib.remote.operations
+.. automodule:: substrafl.remote.operations
 
 Connect tools methods
 ^^^^^^^^^^^^^^^^^^^^^^
-.. automodule:: connectlib.remote.connect_tools_methods
+.. automodule:: substrafl.remote.connect_tools_methods
 
 Register
 ^^^^^^^^
 
-.. automodule:: connectlib.remote.register.register
-.. automodule:: connectlib.remote.register.generate_wheel
+.. automodule:: substrafl.remote.register.register
+.. automodule:: substrafl.remote.register.generate_wheel
 
 
 Serializers
 ^^^^^^^^^^^^
 
-.. automodule:: connectlib.remote.serializers
+.. automodule:: substrafl.remote.serializers

@@ -14,12 +14,12 @@ from substra.sdk.schemas import ComputeTaskOutput
 from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
-from connectlib.dependency import Dependency
-from connectlib.exceptions import InvalidPathError
-from connectlib.nodes.node import InputIdentifiers
-from connectlib.nodes.node import OutputIdentifiers
-from connectlib.remote import remote_data
-from connectlib.remote.register.register import _create_substra_algo_files
+from substrafl.dependency import Dependency
+from substrafl.exceptions import InvalidPathError
+from substrafl.nodes.node import InputIdentifiers
+from substrafl.nodes.node import OutputIdentifiers
+from substrafl.remote import remote_data
+from substrafl.remote.register.register import _create_substra_algo_files
 
 CURRENT_FILE = Path(__file__)
 
@@ -249,7 +249,7 @@ class TestLocalDependency:
             ):
                 # the import is here so that we can run the test without
                 # installing it locally
-                from connectlibtestlibrary import dummy_string_function
+                from substrafltestlibrary import dummy_string_function
 
                 some_strings = dummy_string_function("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes

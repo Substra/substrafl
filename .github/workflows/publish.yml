@@ -20,9 +20,9 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade setuptools wheel twine
-    - name: Build connectlib
+    - name: Build substrafl
       run: |
         python setup.py sdist bdist_wheel
-    - name: Publish connectlib on pypi.owkin.com
+    - name: Publish substrafl on pypi.owkin.com
       run: |
         twine upload dist/* --verbose

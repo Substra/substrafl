@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
 
-from connectlib.exceptions import DampingFactorValueError
-from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.references.local_state import LocalStateRef
-from connectlib.nodes.test_data_node import TestDataNode
-from connectlib.nodes.train_data_node import TrainDataNode
-from connectlib.remote.decorators import remote_data
-from connectlib.schemas import NewtonRaphsonAveragedStates
-from connectlib.schemas import NewtonRaphsonSharedState
-from connectlib.strategies import NewtonRaphson
+from substrafl.exceptions import DampingFactorValueError
+from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.references.local_state import LocalStateRef
+from substrafl.nodes.test_data_node import TestDataNode
+from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.remote.decorators import remote_data
+from substrafl.schemas import NewtonRaphsonAveragedStates
+from substrafl.schemas import NewtonRaphsonSharedState
+from substrafl.strategies import NewtonRaphson
 
 
 @pytest.mark.parametrize(

@@ -20,21 +20,21 @@ from substra.sdk.models import OutModel
 from substra.sdk.models import Status
 from substra.sdk.models import _Composite
 
-import connectlib
-from connectlib.dependency import Dependency
-from connectlib.exceptions import LoadAlgoFileNotFoundError
-from connectlib.exceptions import LoadAlgoLocalDependencyError
-from connectlib.exceptions import LoadAlgoMetadataError
-from connectlib.exceptions import MultipleTrainTaskError
-from connectlib.exceptions import TrainTaskNotFoundError
-from connectlib.exceptions import UnfinishedTrainTaskError
-from connectlib.model_loading import ALGO_FILE
-from connectlib.model_loading import LOCAL_STATE_KEY
-from connectlib.model_loading import METADATA_FILE
-from connectlib.model_loading import REQUIRED_KEYS
-from connectlib.model_loading import download_algo_files
-from connectlib.model_loading import load_algo
-from connectlib.remote.register.register import _create_substra_algo_files
+import substrafl
+from substrafl.dependency import Dependency
+from substrafl.exceptions import LoadAlgoFileNotFoundError
+from substrafl.exceptions import LoadAlgoLocalDependencyError
+from substrafl.exceptions import LoadAlgoMetadataError
+from substrafl.exceptions import MultipleTrainTaskError
+from substrafl.exceptions import TrainTaskNotFoundError
+from substrafl.exceptions import UnfinishedTrainTaskError
+from substrafl.model_loading import ALGO_FILE
+from substrafl.model_loading import LOCAL_STATE_KEY
+from substrafl.model_loading import METADATA_FILE
+from substrafl.model_loading import REQUIRED_KEYS
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
+from substrafl.remote.register.register import _create_substra_algo_files
 
 FILE_PATH = Path(__file__).resolve().parent
 
@@ -53,7 +53,7 @@ def fake_compute_plan():
     compute_plan = Mock(spec=ComputePlan)
     compute_plan.key = AssetKeys.compute_plan
     compute_plan.metadata = {
-        "connectlib_version": connectlib.__version__,
+        "substrafl_version": substrafl.__version__,
         "substra_version": substra.__version__,
         "substratools_version": substratools.__version__,
         "python_version": python_version(),
@@ -132,19 +132,19 @@ def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_
 
     class MyAlgo(dummy_algo_class):
         def load(self, path):
-            import connectlibtestlibrary
+            import substrafltestlibrary
 
-            return connectlibtestlibrary.dummy_string_function("hello ", "world")
+            return substrafltestlibrary.dummy_string_function("hello ", "world")
 
     my_algo = MyAlgo()
 
     _create_algo_files(input_folder, my_algo, metadata)
 
     if is_dependency_uninstalled:
-        subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "connectlibtestlibrary"], check=True)
+        subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "substrafltestlibrary"], check=True)
 
     yield input_folder
-    subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "connectlibtestlibrary"])
+    subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "substrafltestlibrary"])
 
 
 def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog):
@@ -285,7 +285,7 @@ def _create_algo_files(input_folder, algo, metadata):
 
 
 def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
-    """Checks that the load_algo method can load the file given by connectlib to substra
+    """Checks that the load_algo method can load the file given by substrafl to substra
     and that the state of the algo is properly updated"""
 
     input_folder = session_dir / str(uuid.uuid4())

@@ -23,13 +23,13 @@ import torch
 import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
-from connectlib.algorithms.algo import Algo
-from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.test_data_node import TestDataNode
-from connectlib.nodes.train_data_node import TrainDataNode
-from connectlib.remote.decorators import remote_data
-from connectlib.schemas import StrategyName
-from connectlib.strategies.strategy import Strategy
+from substrafl.algorithms.algo import Algo
+from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.test_data_node import TestDataNode
+from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.remote.decorators import remote_data
+from substrafl.schemas import StrategyName
+from substrafl.strategies.strategy import Strategy
 
 from . import assets_factory
 from . import settings
@@ -264,7 +264,7 @@ def test_linear_nodes(
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:
-        List[TestDataNode]: A one element list containing a connectlib TestDataNode for linear data with
+        List[TestDataNode]: A one element list containing a substrafl TestDataNode for linear data with
         a mae metric.
     """
 
@@ -290,7 +290,7 @@ def aggregation_node(network):
         network (Network): Substra network from the configuration file.
 
     Returns:
-        AggregationNode: Connectlib aggregation Node.
+        AggregationNode: Substrafl aggregation Node.
     """
     return AggregationNode(network.msp_ids[0])
 
