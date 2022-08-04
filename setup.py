@@ -44,10 +44,8 @@ setup(
         "Topic :: Utilities",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
     ],
     keywords=["substrafl"],
     packages=find_packages(exclude=["tests*", "benchmark*"]),
@@ -57,8 +55,8 @@ setup(
     install_requires=[
         "numpy>=1.20.3",
         "cloudpickle>=1.6.0",
-        "substra==0.31.0",
-        "substratools==0.13.0",
+        "substra~=0.31.0",
+        "substratools~=0.13.0",
         "pydantic>=1.9.0",
         "pip>=21.2",
         "wheel",
@@ -75,5 +73,5 @@ setup(
             "nbmake>=1.1",
         ],
     },
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )
