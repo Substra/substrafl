@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from connectlib.algorithms.pytorch import weight_manager
+from substrafl.algorithms.pytorch import weight_manager
 
 
 def test_get_parameters(torch_linear_model):

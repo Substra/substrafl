@@ -2,4 +2,4 @@ Dependency
 ==========
 
 
-.. automodule:: connectlib.dependency
+.. automodule:: substrafl.dependency

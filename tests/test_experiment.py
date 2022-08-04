@@ -6,12 +6,12 @@ import numpy as np
 import pytest
 import substra
 
-from connectlib import execute_experiment
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.exceptions import IncompatibleAlgoStrategyError
-from connectlib.exceptions import LenMetadataError
-from connectlib.strategies import FedAvg
+from substrafl import execute_experiment
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.exceptions import IncompatibleAlgoStrategyError
+from substrafl.exceptions import LenMetadataError
+from substrafl.strategies import FedAvg
 
 
 # mocking the add_compute_plan as we don't want to test Substra, just the execute_experiment

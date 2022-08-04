@@ -7,24 +7,24 @@ import torch
 import weldon_fedavg
 from common.data_managers import CamelyonDataset
 from common.data_managers import Data
-from pure_connectlib import register_assets
-from pure_connectlib.register_assets import get_clients
-from pure_connectlib.register_assets import load_asset_keys
-from pure_connectlib.register_assets import save_asset_keys
+from pure_substrafl import register_assets
+from pure_substrafl.register_assets import get_clients
+from pure_substrafl.register_assets import load_asset_keys
+from pure_substrafl.register_assets import save_asset_keys
 from pure_torch.strategies import basic_fed_avg
 from sklearn.metrics import roc_auc_score
 from substra.sdk.models import ComputePlanStatus
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from connectlib import execute_experiment
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.strategies import FedAvg
+from substrafl import execute_experiment
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.strategies import FedAvg
 
 
-def connectlib_fed_avg(
+def substrafl_fed_avg(
     train_folder: Path,
     test_folder: Path,
     nb_train_data_samples: int,
@@ -40,7 +40,7 @@ def connectlib_fed_avg(
     credentials_path: Path,
     asset_keys_path: Path,
 ) -> dict:
-    """Execute Weldon algorithm for a fed avg strategy with connectlib API.
+    """Execute Weldon algorithm for a fed avg strategy with substrafl API.
 
     Args:
         train_folder (Path): Path to the data sample that will be used and duplicate for the benchmark.
@@ -68,7 +68,7 @@ def connectlib_fed_avg(
     clients = get_clients(credentials=credentials_path, mode=mode, n_centers=n_centers)
     asset_keys = load_asset_keys(asset_keys_path, mode)
 
-    # Connectlib asset registration
+    # Substrafl asset registration
     train_data_nodes = register_assets.get_train_data_nodes(
         clients=clients, train_folder=train_folder, asset_keys=asset_keys, nb_data_sample=nb_train_data_samples
     )

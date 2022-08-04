@@ -1,4 +1,4 @@
-# Connectlib local and remote speed benchmark
+# Substrafl local and remote speed benchmark
 
 ## Table of content
 
@@ -13,7 +13,7 @@
 ### Objectives
 
 Being able to run the benchmark on a deployed connect with a variable amount of data.
-Being able to compare connectlib local speed to a full torch example with a variable amount of data.
+Being able to compare substrafl local speed to a full torch example with a variable amount of data.
 
 ### Basic install
 
@@ -80,7 +80,7 @@ Those 400 mb of data are saved as one data sample. It is duplicated to create ot
 
 The local benchmark aims at comparing the execution time between
 
-- a connectlib fed avg experiment (with substra debug mode as a backend)
+- a substrafl fed avg experiment (with substra debug mode as a backend)
 - a pure torch implementation of a fed avg experiment
 
 Substra local mode can be chosen from the CLI:
@@ -98,13 +98,13 @@ After each run the [result file](./results/results.json) is populated with a new
  "1651743200.005445": {  // timestamp of the experiment
         "asset_keys": "keys.json",
         "batch_size": 4,
-        "connectlib_perf": {
-        // connectlib performances on each center (should be the same and the same as the torch results)
+        "substrafl_perf": {
+        // substrafl performances on each center (should be the same and the same as the torch results)
             "0": 0.25000000000000006,
             "1": 0.25000000000000006
         },
-        "connectlib_time": 179.76791310310364, // connectlib execution time (do not take the data registration into account)
-        "connectlib_version": "0.11.0",
+        "substrafl_time": 179.76791310310364, // substrafl execution time (do not take the data registration into account)
+        "substrafl_version": "0.11.0",
         "credentials": "remote.yaml",
         "learning_rate": 0.01,
         "mode": "subprocess",
@@ -115,7 +115,7 @@ After each run the [result file](./results/results.json) is populated with a new
         "nb_train_data_samples": 5,
         "num_workers": 3,
         "pure_torch_perf": {
-        // pure torch performances on each center (should be the same and the same as the connectlib results)
+        // pure torch performances on each center (should be the same and the same as the substrafl results)
             "0": 0.25520833333333337,
             "1": 0.25520833333333337
         },

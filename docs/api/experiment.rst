@@ -1,4 +1,4 @@
 Experiment
 ==========
 
-.. automodule:: connectlib.experiment
+.. automodule:: substrafl.experiment

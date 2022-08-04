@@ -4,15 +4,15 @@ import torch
 from common.data_managers import CamelyonDataset
 from torch.utils.data import DataLoader
 
-from connectlib.algorithms.pytorch import TorchFedAvgAlgo
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.remote import remote_data
+from substrafl.algorithms.pytorch import TorchFedAvgAlgo
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.remote import remote_data
 
 
 def get_weldon_fedavg(
     seed: int, learning_rate: float, num_workers: int, index_generator: NpIndexGenerator, model: torch.nn.Module
 ):
-    """Generates a connectlib compatible model for the fed avg strategy
+    """Generates a substrafl compatible model for the fed avg strategy
 
     Args:
         seed (int): Seed to fix the random generators (for reproducibility reasons)
@@ -22,10 +22,10 @@ def get_weldon_fedavg(
         model (nn.Module): model template to be used by the algo.
 
     Returns:
-        TorchFedAvgAlgo: To be submit to a connectlib execute experiment function.
+        TorchFedAvgAlgo: To be submit to a substrafl execute experiment function.
     """
 
-    # Connectlib will instantiate each center with a copy of this model, hence we need to set the seed at
+    # Substrafl will instantiate each center with a copy of this model, hence we need to set the seed at
     # initialization
     torch.manual_seed(seed)
 
@@ -35,7 +35,7 @@ def get_weldon_fedavg(
     criterion = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    # Connectlib formatted Algo
+    # Substrafl formatted Algo
     class MyAlgo(TorchFedAvgAlgo):
         def __init__(
             self,

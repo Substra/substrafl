@@ -14,14 +14,14 @@
 #
 from datetime import date
 
-import connectlib
+import substrafl
 
 # -- Project information -----------------------------------------------------
 
 project = "Connect Lib"
 copyright = f"{date.today().year}, OWKIN"
 author = "OWKIN"
-version = connectlib.__version__
+version = substrafl.__version__
 release = version
 
 
@@ -135,7 +135,7 @@ html_favicon = "favicon.ico"
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "connectlibdoc"
+htmlhelp_basename = "substrafldoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------

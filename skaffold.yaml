@@ -16,20 +16,20 @@ apiVersion: skaffold/v1beta13
 kind: Config
 build:
   artifacts:
-    - image: substrafoundation/connectlib
+    - image: substrafoundation/substrafl
       context: .
       docker:
-        dockerfile: docker/connectlib-tests/Dockerfile
+        dockerfile: docker/substrafl-tests/Dockerfile
 deploy:
   statusCheckDeadlineSeconds: 300
   helm:
     releases:
-      - name: connectlib
-        chartPath: charts/connectlib
+      - name: substrafl
+        chartPath: charts/substrafl
         namespace: connect-tests
         imageStrategy:
           helm: {}
         values:
-          image: substrafoundation/connectlib
+          image: substrafoundation/substrafl
     flags:
       install: ["--create-namespace"]

@@ -16,6 +16,6 @@
 from setuptools import setup
 
 setup(
-    name="connectlibtestlibrary2",
+    name="substrafltestlibrary2",
     version="0.0.1",
 )

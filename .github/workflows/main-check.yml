@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          path: connectlib
+          path: substrafl
           lfs: true
 
       - uses: actions/setup-python@v3
@@ -57,15 +57,15 @@ jobs:
         run: |
              pip install --upgrade -e substratools
              cd substra && pip install --upgrade -e . && cd ..
-             cd connectlib && pip install --upgrade -e '.[dev]' && cd ..
+             cd substrafl && pip install --upgrade -e '.[dev]' && cd ..
 
       - name: Run the slow local tests
         run: |
-          cd connectlib
-          make COV_OPTIONS="--cov=connectlib --cov-append --cov-report=html:htmlcov" test-local-slow
+          cd substrafl
+          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-local-slow
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: connectlib/htmlcov
+          path: substrafl/htmlcov

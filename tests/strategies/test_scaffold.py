@@ -3,9 +3,9 @@ from logging import getLogger
 import numpy as np
 import pytest
 
-from connectlib.schemas import ScaffoldAveragedStates
-from connectlib.schemas import ScaffoldSharedState
-from connectlib.strategies import Scaffold
+from substrafl.schemas import ScaffoldAveragedStates
+from substrafl.schemas import ScaffoldSharedState
+from substrafl.strategies import Scaffold
 
 logger = getLogger("tests")
 

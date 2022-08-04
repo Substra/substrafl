@@ -1,6 +1,6 @@
 # Example guidelines
 
-This document provides general guidelines when writing examples that will be integrated into the Connect documentation. It applies to both Substra and Connectlib examples. It is mainly based on the [Google developer documentation style guide](https://developers.google.com/style).
+This document provides general guidelines when writing examples that will be integrated into the Connect documentation. It applies to both Substra and Substrafl examples. It is mainly based on the [Google developer documentation style guide](https://developers.google.com/style).
 
 Please also read the `template.py` file, as it goes through the structure of an example.
 

@@ -1,9 +1,9 @@
 from typing import List
 
-from connectlib.remote.decorators import remote
-from connectlib.remote.decorators import remote_data
-from connectlib.remote.operations import AggregateOperation
-from connectlib.remote.operations import DataOperation
+from substrafl.remote.decorators import remote
+from substrafl.remote.decorators import remote_data
+from substrafl.remote.operations import AggregateOperation
+from substrafl.remote.operations import DataOperation
 
 # TODO: these are actually integration tests between the decorator, the RemoteStruct and the Remote methods
 

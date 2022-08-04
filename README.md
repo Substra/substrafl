@@ -1,4 +1,4 @@
-# ConnectLib
+# Substrafl
 
 ## Installation
 
@@ -17,21 +17,21 @@ If you want to use deployed or local docker modes, you will need to [setup acces
 
 ## Contribute
 
-ConnectLib is open to contributions. Please have a look at the [Contribution Guidelines](https://github.com/owkin/FLow-meetings/blob/master/FLow_information.md).
+Substrafl is open to contributions. Please have a look at the [Contribution Guidelines](https://github.com/owkin/FLow-meetings/blob/master/FLow_information.md).
 
 ## Release
 
-See the release process on the tech-team [releasing guide](https://github.com/owkin/tech-team/blob/main/releasing_guide.md#connectlib).
+See the release process on the tech-team [releasing guide](https://github.com/owkin/tech-team/blob/main/releasing_guide.md#substrafl).
 
 ## Documentation
 
-Documentation of the api is generated from the connectlib repository thanks to the auto doc module.
+Documentation of the api is generated from the substrafl repository thanks to the auto doc module.
 It is automatically built by <https://github.com/owkin/connect-documentation> and available [here](https://connect-docs.owkin.com/).
 You can build it locally to check the technical documentation and see the changes made by your PR.
 
 ### Requirements
 
-You need to have connectlib.dev installed on your machine and some extra requirements. From the connectlib repo:
+You need to have substrafl.dev installed on your machine and some extra requirements. From the substrafl repo:
 
 ```sh
 pip install -e .[dev]
@@ -87,8 +87,8 @@ The **developer** discusses the design with the **primary reviewer**, the **prim
 
 The output of the design phase is:
 
-- a description of the FL strategy in [connect-documentation](https://github.com/owkin/connect-documentation/blob/main/docs/source/connectlib/index.rst)
-- an open PR on the [connectlib](https://github.com/owkin/connectlib) repository, with in the description:
+- a description of the FL strategy in [connect-documentation](https://github.com/owkin/connect-documentation/blob/main/docs/source/substrafl/index.rst)
+- an open PR on the [substrafl](https://github.com/owkin/connectlib) repository, with in the description:
   - the list of changes to do to implement the strategy, with special emphasis on sensitive points
   - the docstring of the algo, and the docstring of the strategy
   - a description of the tests
@@ -124,7 +124,7 @@ A few points on the implementation itself:
   - the `__init__` function is called once on the user's computer and at the beginning of each round: avoid costly operations
   - the `load` and `save` functions manage the local state i.e. the parameters that must be passed from one round to the next
   - the `_local_train` and `predict` functions can be overwritten by the user so they contain as little strategy-specific code as possible
-- Add the name of the strategy to the `connectlib.schemas.StrategyName` enum
+- Add the name of the strategy to the `substrafl.schemas.StrategyName` enum
 
 #### Tests
 

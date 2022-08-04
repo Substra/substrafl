@@ -3,13 +3,13 @@ from logging import getLogger
 import numpy as np
 import pytest
 
-from connectlib import execute_experiment
-from connectlib.dependency import Dependency
-from connectlib.nodes.aggregation_node import AggregationNode
-from connectlib.nodes.train_data_node import TrainDataNode
-from connectlib.remote import remote_data
-from connectlib.schemas import FedAvgSharedState
-from connectlib.strategies import FedAvg
+from substrafl import execute_experiment
+from substrafl.dependency import Dependency
+from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.remote import remote_data
+from substrafl.schemas import FedAvgSharedState
+from substrafl.strategies import FedAvg
 
 from .. import utils
 

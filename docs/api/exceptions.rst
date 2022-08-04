@@ -1,4 +1,4 @@
 Exceptions
 ==========
 
-.. automodule:: connectlib.exceptions
+.. automodule:: substrafl.exceptions

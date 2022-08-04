@@ -3,14 +3,14 @@ import logging
 import pytest
 import torch
 
-from connectlib import execute_experiment
-from connectlib.algorithms.pytorch import TorchSingleOrganizationAlgo
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.model_loading import download_algo_files
-from connectlib.model_loading import load_algo
-from connectlib.strategies import SingleOrganization
+from substrafl import execute_experiment
+from substrafl.algorithms.pytorch import TorchSingleOrganizationAlgo
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
+from substrafl.strategies import SingleOrganization
 from tests import utils
 
 logger = logging.getLogger(__name__)

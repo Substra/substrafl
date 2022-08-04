@@ -4,23 +4,23 @@ import numpy as np
 import pytest
 import torch
 
-from connectlib import execute_experiment
-from connectlib.algorithms.pytorch.torch_base_algo import TorchAlgo
-from connectlib.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
-from connectlib.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
-from connectlib.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.exceptions import BatchSizeNotFoundError
-from connectlib.exceptions import DatasetSignatureError
-from connectlib.exceptions import DatasetTypeError
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.remote.decorators import remote_data
-from connectlib.remote.remote_struct import RemoteStruct
-from connectlib.schemas import StrategyName
-from connectlib.strategies import FedAvg
-from connectlib.strategies import Scaffold
-from connectlib.strategies import SingleOrganization
+from substrafl import execute_experiment
+from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
+from substrafl.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
+from substrafl.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
+from substrafl.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.exceptions import BatchSizeNotFoundError
+from substrafl.exceptions import DatasetSignatureError
+from substrafl.exceptions import DatasetTypeError
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.remote.decorators import remote_data
+from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.schemas import StrategyName
+from substrafl.strategies import FedAvg
+from substrafl.strategies import Scaffold
+from substrafl.strategies import SingleOrganization
 from tests import utils
 
 

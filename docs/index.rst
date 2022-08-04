@@ -1,4 +1,4 @@
-ConnectLib
+Substrafl
 ==========
 
 .. toctree::

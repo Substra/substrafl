@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from connectlib.index_generator.np_index_generator import NpIndexGenerator
+from substrafl.index_generator.np_index_generator import NpIndexGenerator
 
 
 @pytest.mark.parametrize("batch_size", [0, 3, 5, 8])

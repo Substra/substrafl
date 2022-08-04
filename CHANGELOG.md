@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat: add default batching to `predict` (#229)
 
+### Changed
+
+- BREAKING CHANGE: the library is now named "substrafl" (#253)
+
 ## [0.23.0](https://github.com/owkin/connectlib/releases/tag/0.22.0) - 2022-08-01
 
 - feat: add compute task inputs (#236)
@@ -50,11 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added functions to download the model of a strategy (#208):
 
-  - The function `connectlib.model_loading.download_algo_files` downloads the files needed to load the output model of a strategy
+  - The function `substrafl.model_loading.download_algo_files` downloads the files needed to load the output model of a strategy
     according to the given round. These files are downloaded to the given folder.
 
-  - The `connectlib.model_loading.load_algo` function to load the output model of a strategy from the files previously downloaded via the
-    the function `connectlib.model_loading.download_algo_files` .
+  - The `substrafl.model_loading.load_algo` function to load the output model of a strategy from the files previously downloaded via the
+    the function `substrafl.model_loading.download_algo_files` .
 
   Those two functions works together:
 
@@ -143,7 +147,7 @@ The full discussion regarding this feature can be found [here](https://github.co
 
 ### Changed
 
-- The wheels of the libraries installed with `editable=True` are now in `$HOME/.connectlib` instead of `$LIB_PATH/dist` (#177)
+- The wheels of the libraries installed with `editable=True` are now in `$HOME/.substrafl` instead of `$LIB_PATH/dist` (#177)
 - benchmark:
   - `make benchmark` runs the default remote benchmark on the connect platform specified in the [config file](./benchmark/camelyon/connect_conf/ci.yaml)
   - `make benchmark-local` runs the default local benchmark in subprocess mode
@@ -157,8 +161,8 @@ The full discussion regarding this feature can be found [here](https://github.co
   algo is compatible with using the `strategies` property (#):
 
   ```python
-  from connectlib.algorithms.algo import Algo
-  from connectlib import StrategyName
+  from substrafl.algorithms.algo import Algo
+  from substrafl import StrategyName
 
   class MyAlgo(Algo):
       @property
@@ -190,7 +194,7 @@ The full discussion regarding this feature can be found [here](https://github.co
 - BREAKING CHANGE: the index generator is now required when implementing a strategy (#142)
 
   ```python
-  from connectlib.index_generator import NpIndexGenerator
+  from substrafl.index_generator import NpIndexGenerator
 
   nig = NpIndexGenerator(
         batch_size=batch_size,
@@ -246,7 +250,7 @@ The full discussion regarding this feature can be found [here](https://github.co
 - (BREAKING CHANGE) FedAvg strategy: the train function must return a FedAvgSharedState, the average function returns a FedAvgAveragedState.
   No need to change your code if you use TorchFedAvgAlgo (#126)
 - benchmark:
-  - Use the same batch sampler between the torch and Connectlib examples (#94)
+  - Use the same batch sampler between the torch and Substrafl examples (#94)
   - Make it work with `num_workers` > 0 (#94)
   - Explain the effect of the sub-sampling (#94)
   - Update the default benchmark parameters in `benchmarks.sh` (#94)
@@ -265,17 +269,17 @@ The full discussion regarding this feature can be found [here](https://github.co
 - fix: `execute_experiment` has no side effects on its arguments (#90)
 - fix: `Dependency.local_package` are installed in no editable mode and additionally accepts `pyproject.yaml` as configuration file (#88)
 - fix: `execute_experiment` accepts `None` as `evaluation_strategy` (#83)
-- fix: The `connectlib.algorithms.algo.Algo` `abstractmethod` decorator is now taken into account (#96)
+- fix: The `substrafl.algorithms.algo.Algo` `abstractmethod` decorator is now taken into account (#96)
 
 ### Improved
 
 - feat: `EvaluationStrategy` can now be reinitialized (#90)
-- Refactoring `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` (#92):
+- Refactoring `substrafl.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` (#92):
   - replace the `_preprocess` and `_postprocess` functions by `_local_train` and `_local_predict`
   - the user can override the `_get_len_from_x` function to get the number of samples in the dataset from x
   - `batch_size` is now a required argument, and a warning is issued if it is None
-- The `connectlib.index_generator.np_index_generator.NpIndexGenerator` class now works with `torch.utils.data.DataLoader`, with `num_workers` > 0 (#92)
-- The benchmark uses `connectlib.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` instead of its own custom algorithm (#92)
+- The `substrafl.index_generator.np_index_generator.NpIndexGenerator` class now works with `torch.utils.data.DataLoader`, with `num_workers` > 0 (#92)
+- The benchmark uses `substrafl.algorithms.pytorch.fed_avg.TorchFedAvgAlgo` instead of its own custom algorithm (#92)
 - Add the `clean_models` option to the `execute_experiment` function (#100)
 
 ### Added
@@ -289,15 +293,15 @@ The full discussion regarding this feature can be found [here](https://github.co
 ### Fixed
 
 - fix: notebook dependency failure (#78)
-  You can now run a connectlib experiment with local dependencies in a Jupyter notebook
+  You can now run a substrafl experiment with local dependencies in a Jupyter notebook
 
 ### Added
 
 - feat: models can now be tested every n rounds, on the same nodes they were trained on (#79)
-  This feature introduces a new parameter `evaluation_strategy` in `execute_experiment`, which takes an `EvaluationStrategy` instance from `connectlib.evaluation_strategy`.
+  This feature introduces a new parameter `evaluation_strategy` in `execute_experiment`, which takes an `EvaluationStrategy` instance from `substrafl.evaluation_strategy`.
   If this parameter is not given, performance will not be measured at all (previously, it was measured at the end of the experiment by default).
 
-- feat: install connectlib from pypi (#71)
+- feat: install substrafl from pypi (#71)
 
 ## [0.6.0](https://github.com/owkin/connectlib/releases/tag/0.6.0) - 2021-12-31
 

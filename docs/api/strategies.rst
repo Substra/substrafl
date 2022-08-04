@@ -5,25 +5,25 @@ Strategies
 Federate Averaging
 ^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: connectlib.strategies.FedAvg
+.. autoclass:: substrafl.strategies.FedAvg
 
 Scaffold
 ^^^^^^^^
 
-.. autoclass:: connectlib.strategies.Scaffold
+.. autoclass:: substrafl.strategies.Scaffold
 
 
 Newton Raphson
 ^^^^^^^^^^^^^^
 
-.. autoclass:: connectlib.strategies.NewtonRaphson
+.. autoclass:: substrafl.strategies.NewtonRaphson
 
 Single Organization
 ^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: connectlib.strategies.SingleOrganization
+.. autoclass:: substrafl.strategies.SingleOrganization
 
 Strategies Base Class
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: connectlib.strategies.strategy.Strategy
+.. autoclass:: substrafl.strategies.strategy.Strategy

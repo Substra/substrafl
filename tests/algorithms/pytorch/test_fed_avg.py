@@ -3,15 +3,15 @@ import logging
 import pytest
 import torch
 
-from connectlib import execute_experiment
-from connectlib.algorithms.pytorch import TorchFedAvgAlgo
-from connectlib.algorithms.pytorch.weight_manager import increment_parameters
-from connectlib.dependency import Dependency
-from connectlib.evaluation_strategy import EvaluationStrategy
-from connectlib.index_generator import NpIndexGenerator
-from connectlib.model_loading import download_algo_files
-from connectlib.model_loading import load_algo
-from connectlib.strategies import FedAvg
+from substrafl import execute_experiment
+from substrafl.algorithms.pytorch import TorchFedAvgAlgo
+from substrafl.algorithms.pytorch.weight_manager import increment_parameters
+from substrafl.dependency import Dependency
+from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.index_generator import NpIndexGenerator
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
+from substrafl.strategies import FedAvg
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
 
