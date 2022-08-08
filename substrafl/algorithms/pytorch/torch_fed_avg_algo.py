@@ -30,7 +30,7 @@ class TorchFedAvgAlgo(TorchAlgo):
     The ``predict`` method generates the predictions.
 
     The child class can override the :py:func:`~substrafl.algorithms.pytorch.TorchFedAvgAlgo._local_train` and
-    :py:func:`~substrafl.algorithms.pytorch.TorchFedAvgAlgo.predict` methods, or other methods if necessary.
+    :py:func:`~substrafl.algorithms.pytorch.TorchFedAvgAlgo._local_predict` methods, or other methods if necessary.
 
     To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``
     as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported

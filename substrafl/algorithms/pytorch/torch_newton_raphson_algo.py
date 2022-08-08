@@ -33,7 +33,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
     The child class can overwrite
     :py:func:`~substrafl.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_train`
-    and :py:func:`~substrafl.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo.predict`,
+    and :py:func:`~substrafl.algorithms.pytorch.torch_newton_raphson_algo.TorchNewtonRaphsonAlgo._local_predict`,
     or other methods if necessary.
 
     To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``.
@@ -251,29 +251,19 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
             self._update_gradients_and_hessian(loss, current_batch_size)
 
-    @remote_data
-    def predict(
-        self,
-        x: Any,
-        shared_state: Any,
-    ):
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
         """Executes the following operations:
 
-            * Create the test torch dataset and the test torch dataloader using the class batch size.
+            * Create the torch dataloader using the batch size given at the ``__init__`` of the class
             * Sets the model to `eval` mode
             * Returns the predictions
 
         Args:
-            x (typing.Any): Input data
-            shared_state (Any): Latest train task shared state (output of the train method)
+            predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
 
         Returns:
-            typing.Any: Model prediction.
+            typing.Any: Model predictions.
         """
-
-        # Create torch dataset
-        predict_dataset = self._dataset(x=x, y=None, is_inference=True)
-
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._batch_size)
 
         self._model.eval()

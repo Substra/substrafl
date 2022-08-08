@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 
 from substrafl.algorithms.pytorch import TorchFedAvgAlgo
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.remote import remote_data
 
 
 def get_weldon_fedavg(
@@ -77,16 +76,14 @@ def get_weldon_fedavg(
                 if self._scheduler is not None:
                     self._scheduler.step()
 
-        @remote_data
-        def predict(self, x, shared_state):
-            dataset = CamelyonDataset(x=x)
+        def _local_predict(self, predict_dataset):
 
             multiprocessing_context = None
             if num_workers != 0:
                 multiprocessing_context = torch.multiprocessing.get_context("spawn")
 
             dataloader = DataLoader(
-                dataset,
+                predict_dataset,
                 batch_size=self._index_generator.batch_size,
                 drop_last=False,
                 num_workers=num_workers,
@@ -95,7 +92,7 @@ def get_weldon_fedavg(
 
             y_pred = []
             with torch.no_grad():
-                for X, _ in dataloader:
+                for X in dataloader:
                     y_pred.append(self._model(X)[0].reshape(-1))
 
             y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()

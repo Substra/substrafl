@@ -8,28 +8,28 @@ TorchFedAvgAlgo
 -----------------
 
 .. autoclass:: substrafl.algorithms.pytorch.TorchFedAvgAlgo
-    :private-members: _local_train
+    :private-members: _local_train, _local_predict
     :inherited-members:
 
 TorchScaffoldAlgo
 -----------------
 
 .. automodule:: substrafl.algorithms.pytorch.torch_scaffold_algo
-    :private-members: _local_train, _scaffold_parameters_update
+    :private-members: _local_train, _local_predict, _scaffold_parameters_update
     :inherited-members:
 
 TorchNewtonRaphsonAlgo
 ----------------------
 
 .. automodule:: substrafl.algorithms.pytorch.torch_newton_raphson_algo
-    :private-members: _local_train, _update_gradients_and_hessian
+    :private-members: _local_train, _local_predict, _update_gradients_and_hessian
     :inherited-members:
 
 TorchSingleOrganizationAlgo
 ----------------------------
 
 .. autoclass:: substrafl.algorithms.pytorch.TorchSingleOrganizationAlgo
-    :private-members: _local_train
+    :private-members: _local_train, _local_predict
     :inherited-members:
 
 
