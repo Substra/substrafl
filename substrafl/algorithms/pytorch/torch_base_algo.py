@@ -92,20 +92,33 @@ class TorchAlgo(Algo):
         raise NotImplementedError()
 
     @remote_data
-    def predict(
-        self,
-        x: Any,
-        shared_state: Any,
-    ):
+    def predict(self, x: Any, shared_state: Any) -> Any:
         """Executes the following operations:
 
-            * Create the test torch dataset and the test torch dataloader using the index generator batch size.
-            * Sets the model to `eval` mode
-            * Returns the predictions
+            * Create the test torch dataset.
+            * Execute and return the results of the ``self._local_predict`` method
 
         Args:
             x (typing.Any): Input data
             shared_state (Any): Latest train task shared state (output of the train method)
+        Returns:
+            typing.Any: Predictions computed by the ``self._local_predict`` method.
+        """
+
+        # Create torch dataset
+        predict_dataset = self._dataset(x=x, y=None, is_inference=True)
+
+        return self._local_predict(predict_dataset=predict_dataset)
+
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
+        """Executes the following operations:
+
+            * Create the torch dataloader using the index generator batch size.
+            * Sets the model to `eval` mode
+            * Returns the predictions
+
+        Args:
+            predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
 
         Returns:
             typing.Any: Model prediction.
@@ -114,15 +127,12 @@ class TorchAlgo(Algo):
             BatchSizeNotFoundError: No default batch size have been found to perform local prediction.
                 Please overwrite the predict function of your algorithm.
         """
-        # Create torch dataset
-        predict_dataset = self._dataset(x=x, y=None, is_inference=True)
-
         if self._index_generator is not None:
             predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._index_generator.batch_size)
         else:
             raise BatchSizeNotFoundError(
-                "No default batch size have been found to perform local prediction. "
-                "Please overwrite the predict function of your algorithm."
+                "No default batch size has been found to perform local prediction. "
+                "Please overwrite the _local_predict function of your algorithm."
             )
 
         self._model.eval()

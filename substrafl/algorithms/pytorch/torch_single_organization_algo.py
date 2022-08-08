@@ -29,7 +29,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
 
     The child class can override the
     :py:func:`~substrafl.algorithms.pytorch.TorchSingleOrganizationAlgo._local_train`
-    and :py:func:`~substrafl.algorithms.pytorch.TorchSingleOrganizationAlgo.predict` methods, or
+    and :py:func:`~substrafl.algorithms.pytorch.TorchSingleOrganizationAlgo._local_predict` methods, or
     other methods if necessary.
 
     To add a custom parameter to the ``__init__``of the class, also add it to the call to ``super().__init__```
