@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0](https://github.com/owkin/connectlib/releases/tag/0.24.0) - 2022-08-09
+
 ### Fixed
 
 - GPU execution: move the RNG state to CPU in case the checkpoint has been loaded on the GPU (#244)
@@ -22,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING CHANGE: the library is now named "substrafl" (#253)
 
-## [0.23.0](https://github.com/owkin/connectlib/releases/tag/0.22.0) - 2022-08-01
+## [0.23.0](https://github.com/owkin/connectlib/releases/tag/0.23.0) - 2022-08-01
 
 - feat: add compute task inputs (#236)
 
