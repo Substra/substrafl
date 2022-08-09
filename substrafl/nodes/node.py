@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from enum import Enum
 from typing import Dict
 from typing import List
 from typing import NewType
@@ -6,24 +6,23 @@ from typing import NewType
 OperationKey = NewType("OperationKey", str)
 
 
-@dataclass
-class InputIdentifiers:
-    LOCAL = "local"
-    SHARED = "shared"
-    MODEL = "model"
-    PREDICTIONS = "predictions"
-    PERFORMANCE = "performance"
-    OPENER = "opener"
-    DATASAMPLES = "datasamples"
+class InputIdentifiers(str, Enum):
+    local = "local"
+    shared = "shared"
+    model = "model"
+    models = "models"
+    predictions = "predictions"
+    performance = "performance"
+    opener = "opener"
+    datasamples = "datasamples"
 
 
-@dataclass
-class OutputIdentifiers:
-    LOCAL = "local"
-    SHARED = "shared"
-    MODEL = "model"
-    PREDICTIONS = "predictions"
-    PERFORMANCE = "performance"
+class OutputIdentifiers(str, Enum):
+    local = "local"
+    shared = "shared"
+    model = "model"
+    predictions = "predictions"
+    performance = "performance"
 
 
 class Node:

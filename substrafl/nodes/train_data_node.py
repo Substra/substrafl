@@ -6,6 +6,9 @@ from typing import Tuple
 
 import substra
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoInputSpec
+from substra.sdk.schemas import AlgoOutputSpec
+from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import ComputeTaskOutput
 from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
@@ -81,35 +84,43 @@ class TrainDataNode(Node):
             )
 
         op_id = str(uuid.uuid4())
-
-        data_samples_inputs = [
-            InputRef(identifier=InputIdentifiers.DATASAMPLES, asset_key=data_sample_key)
-            for data_sample_key in self.data_sample_keys
+        data_inputs = [InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
+            InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
+            for data_sample in self.data_sample_keys
         ]
-        data_manager_input = [InputRef(identifier=InputIdentifiers.OPENER, asset_key=self.data_manager_key)]
-        local_state_input = (
+
+        local_inputs = (
             [
                 InputRef(
-                    identifier=InputIdentifiers.LOCAL,
+                    identifier=InputIdentifiers.local,
                     parent_task_key=local_state.key,
-                    parent_task_output_identifier=OutputIdentifiers.LOCAL,
+                    parent_task_output_identifier=OutputIdentifiers.local,
                 )
             ]
             if local_state is not None
             else []
         )
 
-        aggregated_updates_input = (
-            [
+        if operation.shared_state is not None:
+            shared_inputs = [
                 InputRef(
-                    identifier=InputIdentifiers.SHARED,
+                    identifier=InputIdentifiers.shared,
                     parent_task_key=operation.shared_state.key,
-                    parent_task_output_identifier=OutputIdentifiers.MODEL,
+                    parent_task_output_identifier=OutputIdentifiers.model,
                 )
             ]
-            if operation.shared_state is not None
-            else []
-        )
+
+        elif local_state is not None:
+            shared_inputs = [
+                InputRef(
+                    identifier=InputIdentifiers.shared,
+                    parent_task_key=local_state.key,
+                    parent_task_output_identifier=OutputIdentifiers.shared,
+                )
+            ]
+
+        else:
+            shared_inputs = []
 
         composite_traintuple = {
             "remote_operation": operation.remote_struct,
@@ -121,12 +132,12 @@ class TrainDataNode(Node):
             else None,  # user-defined id (last aggregation node task id)
             "tag": "train",
             "composite_traintuple_id": op_id,
-            "inputs": data_samples_inputs + data_manager_input + local_state_input + aggregated_updates_input,
+            "inputs": data_inputs + local_inputs + shared_inputs,
             "outputs": {
-                OutputIdentifiers.SHARED: ComputeTaskOutput(
+                OutputIdentifiers.shared: ComputeTaskOutput(
                     permissions=Permissions(public=False, authorized_ids=authorized_ids)
                 ),
-                OutputIdentifiers.LOCAL: ComputeTaskOutput(
+                OutputIdentifiers.local: ComputeTaskOutput(
                     permissions=Permissions(public=False, authorized_ids=[self.organization_id])
                 ),
             },
@@ -175,6 +186,40 @@ class TrainDataNode(Node):
                         category=AlgoCategory.composite,
                         remote_struct=remote_struct,
                         permissions=permissions,
+                        inputs=[
+                            AlgoInputSpec(
+                                identifier=InputIdentifiers.datasamples,
+                                kind=AssetKind.data_sample.value,
+                                optional=False,
+                                multiple=True,
+                            ),
+                            AlgoInputSpec(
+                                identifier=InputIdentifiers.opener,
+                                kind=AssetKind.data_manager.value,
+                                optional=False,
+                                multiple=False,
+                            ),
+                            AlgoInputSpec(
+                                identifier=InputIdentifiers.local,
+                                kind=AssetKind.model.value,
+                                optional=True,
+                                multiple=False,
+                            ),
+                            AlgoInputSpec(
+                                identifier=InputIdentifiers.shared,
+                                kind=AssetKind.model.value,
+                                optional=True,
+                                multiple=False,
+                            ),
+                        ],
+                        outputs=[
+                            AlgoOutputSpec(
+                                identifier=OutputIdentifiers.local, kind=AssetKind.model.value, multiple=False
+                            ),
+                            AlgoOutputSpec(
+                                identifier=OutputIdentifiers.shared, kind=AssetKind.model.value, multiple=False
+                            ),
+                        ],
                         dependencies=dependencies,
                     )
                     cache[remote_struct] = algo_key

@@ -5,6 +5,9 @@ from typing import TypeVar
 
 import substra
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoInputSpec
+from substra.sdk.schemas import AlgoOutputSpec
+from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import ComputeTaskOutput
 from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
@@ -57,29 +60,31 @@ class AggregationNode(Node):
 
         op_id = str(uuid.uuid4())
 
+        inputs = (
+            [
+                InputRef(
+                    identifier=InputIdentifiers.models,
+                    parent_task_key=ref.key,
+                    parent_task_output_identifier=OutputIdentifiers.shared,
+                )
+                for ref in operation.shared_states
+            ]
+            if operation.shared_states is not None
+            else None
+        )
+
         aggregate_tuple = {
             "remote_operation": operation.remote_struct,
             "worker": self.organization_id,
-            "in_models_ids": [ref.key for ref in operation.shared_states]
-            if operation.shared_states is not None
-            else None,
+            "in_models_ids": [_input.parent_task_key for _input in inputs] if inputs is not None else None,
             "tag": "aggregate",
             "aggregatetuple_id": op_id,
             "metadata": {
                 "round_idx": round_idx,
             },
-            "inputs": [
-                InputRef(
-                    identifier=InputIdentifiers.MODEL,
-                    parent_task_key=ref.key,
-                    parent_task_output_identifier=OutputIdentifiers.SHARED,
-                )
-                for ref in operation.shared_states
-            ]
-            if operation.shared_states is not None
-            else None,
+            "inputs": inputs,
             "outputs": {
-                OutputIdentifiers.MODEL: ComputeTaskOutput(
+                OutputIdentifiers.model: ComputeTaskOutput(
                     permissions=Permissions(public=False, authorized_ids=authorized_ids)
                 )
             },
@@ -125,6 +130,19 @@ class AggregationNode(Node):
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,
+                        inputs=[
+                            AlgoInputSpec(
+                                identifier=InputIdentifiers.models,
+                                kind=AssetKind.model.value,
+                                optional=False,
+                                multiple=True,
+                            )
+                        ],
+                        outputs=[
+                            AlgoOutputSpec(
+                                identifier=OutputIdentifiers.model, kind=AssetKind.model.value, multiple=False
+                            )
+                        ],
                     )
                     cache[remote_struct] = algo_key
                 else:

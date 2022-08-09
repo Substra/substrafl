@@ -4,6 +4,9 @@ from typing import List
 
 import substra
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoInputSpec
+from substra.sdk.schemas import AlgoOutputSpec
+from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import ComputeTaskOutput
 from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
@@ -59,25 +62,29 @@ class TestDataNode(Node):
 
         predicttuple_id = str(uuid.uuid4())
 
-        data_samples_inputs = [
-            InputRef(identifier=InputIdentifiers.DATASAMPLES, asset_key=data_sample_key)
-            for data_sample_key in self.test_data_sample_keys
+        data_inputs = [InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
+            InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
+            for data_sample in self.test_data_sample_keys
         ]
-        data_manager_input = [InputRef(identifier=InputIdentifiers.OPENER, asset_key=self.data_manager_key)]
 
-        model_input = [
+        predict_input = [
             InputRef(
-                identifier=InputIdentifiers.MODEL,
+                identifier=InputIdentifiers.model,
                 parent_task_key=traintuple_id,
-                parent_task_output_identifier=OutputIdentifiers.LOCAL,
-            )
+                parent_task_output_identifier=OutputIdentifiers.local,
+            ),
+            InputRef(
+                identifier=InputIdentifiers.shared,
+                parent_task_key=traintuple_id,
+                parent_task_output_identifier=OutputIdentifiers.shared,
+            ),
         ]
 
-        predictions_input = [
+        test_input = [
             InputRef(
-                identifier=InputIdentifiers.PREDICTIONS,
+                identifier=InputIdentifiers.predictions,
                 parent_task_key=predicttuple_id,
-                parent_task_output_identifier=OutputIdentifiers.PREDICTIONS,
+                parent_task_output_identifier=OutputIdentifiers.predictions,
             )
         ]
 
@@ -87,9 +94,9 @@ class TestDataNode(Node):
                 "traintuple_id": traintuple_id,
                 "data_manager_key": self.data_manager_key,
                 "test_data_sample_keys": self.test_data_sample_keys,
-                "inputs": data_samples_inputs + data_manager_input + model_input,
+                "inputs": data_inputs + predict_input,
                 "outputs": {
-                    OutputIdentifiers.PREDICTIONS: ComputeTaskOutput(
+                    OutputIdentifiers.predictions: ComputeTaskOutput(
                         permissions=Permissions(public=False, authorized_ids=[self.organization_id])
                     )
                 },
@@ -105,9 +112,9 @@ class TestDataNode(Node):
                     "predicttuple_id": predicttuple_id,
                     "data_manager_key": self.data_manager_key,
                     "test_data_sample_keys": self.test_data_sample_keys,
-                    "inputs": data_manager_input + data_samples_inputs + predictions_input,
+                    "inputs": data_inputs + test_input,
                     "outputs": {
-                        OutputIdentifiers.PERFORMANCE: ComputeTaskOutput(
+                        OutputIdentifiers.performance: ComputeTaskOutput(
                             permissions=Permissions(public=True, authorized_ids=[])
                         )
                     },
@@ -162,6 +169,39 @@ class TestDataNode(Node):
                                 remote_struct=remote_struct,
                                 permissions=permissions,
                                 dependencies=dependencies,
+                                inputs=[
+                                    AlgoInputSpec(
+                                        identifier=InputIdentifiers.datasamples,
+                                        kind=AssetKind.data_sample.value,
+                                        optional=False,
+                                        multiple=True,
+                                    ),
+                                    AlgoInputSpec(
+                                        identifier=InputIdentifiers.opener,
+                                        kind=AssetKind.data_manager.value,
+                                        optional=False,
+                                        multiple=False,
+                                    ),
+                                    AlgoInputSpec(
+                                        identifier=InputIdentifiers.model,
+                                        kind=AssetKind.model.value,
+                                        optional=False,
+                                        multiple=False,
+                                    ),
+                                    AlgoInputSpec(
+                                        identifier=InputIdentifiers.shared,
+                                        kind=AssetKind.model.value,
+                                        optional=True,
+                                        multiple=False,
+                                    ),
+                                ],
+                                outputs=[
+                                    AlgoOutputSpec(
+                                        identifier=OutputIdentifiers.predictions,
+                                        kind=AssetKind.model.value,
+                                        multiple=False,
+                                    )
+                                ],
                             )
                             predicttuple["algo_key"] = algo_key
                             cache[remote_struct] = algo_key

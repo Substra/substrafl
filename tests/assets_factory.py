@@ -8,10 +8,16 @@ import numpy as np
 from substra import Client
 from substra.sdk import DEBUG_OWNER
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoInputSpec
+from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AlgoSpec
+from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import Permissions
+
+from substrafl.nodes.node import InputIdentifiers
+from substrafl.nodes.node import OutputIdentifiers
 
 DEFAULT_SUBSTRATOOLS_VERSION = (
     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
@@ -284,6 +290,23 @@ def add_python_metric(
     metric_spec = AlgoSpec(
         category=AlgoCategory.metric,
         name=name,
+        inputs=[
+            AlgoInputSpec(
+                identifier=InputIdentifiers.datasamples,
+                kind=AssetKind.data_sample.value,
+                optional=False,
+                multiple=True,
+            ),
+            AlgoInputSpec(
+                identifier=InputIdentifiers.opener, kind=AssetKind.data_manager.value, optional=False, multiple=False
+            ),
+            AlgoInputSpec(
+                identifier=InputIdentifiers.predictions, kind=AssetKind.model.value, optional=False, multiple=False
+            ),
+        ],
+        outputs=[
+            AlgoOutputSpec(identifier=OutputIdentifiers.performance, kind=AssetKind.performance.value, multiple=False)
+        ],
         description=description,
         file=archive,
         permissions=permissions,

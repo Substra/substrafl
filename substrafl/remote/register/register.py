@@ -17,6 +17,8 @@ import substra
 import substratools
 from packaging import version
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoInputSpec
+from substra.sdk.schemas import AlgoOutputSpec
 
 import substrafl
 from substrafl.dependency import Dependency
@@ -263,6 +265,8 @@ def register_algo(
     remote_struct: RemoteStruct,
     category: substra.sdk.schemas.AlgoCategory,
     permissions: substra.sdk.schemas.Permissions,
+    inputs: List[AlgoInputSpec],
+    outputs: List[AlgoOutputSpec],
     dependencies: Dependency,
 ) -> str:
     """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
@@ -273,6 +277,8 @@ def register_algo(
         category (substra.sdk.schemas.AlgoCategory): Register the algorithm to the platform for the composite, predict
             or aggregate categories.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
+        inputs (List[AlgoInputSpec]): List of algo inputs to be used.
+        inputs (List[AlgoInputSpec]): List of algo outputs to be used.
         dependencies (Dependency): Algorithm dependencies.
 
     Returns:
@@ -297,6 +303,8 @@ def register_algo(
                 name=remote_struct.algo_name,
                 description=description_path,
                 file=archive_path,
+                inputs=inputs,
+                outputs=outputs,
                 permissions=permissions,
                 metadata=dict(),
                 category=category,
