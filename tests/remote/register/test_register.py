@@ -48,6 +48,8 @@ def test_latest_connecttools_image_selection(use_latest, monkeypatch, default_pe
         category=AlgoCategory.aggregate,
         permissions=default_permissions,
         dependencies=algo_deps,
+        inputs=None,  # No need to register inputs and outputs as this algo is not actually used
+        outputs=None,
     )
 
     algo = client.get_algo(algo_key)
@@ -102,6 +104,8 @@ def test_register_algo_name(algo_name, result, default_permissions):
         category=AlgoCategory.aggregate,
         permissions=default_permissions,
         dependencies=algo_deps,
+        inputs=None,  # No need to register inputs and outputs as this algo is not actually used
+        outputs=None,
     )
 
     assert substra.sdk.schemas.AlgoSpec.call_args[1]["name"] == result

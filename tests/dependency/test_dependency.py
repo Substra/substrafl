@@ -8,7 +8,10 @@ import pytest
 from pydantic import ValidationError
 from substra import BackendType
 from substra.sdk.schemas import AlgoCategory
+from substra.sdk.schemas import AlgoInputSpec
+from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AlgoSpec
+from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import CompositeTraintupleSpec
 from substra.sdk.schemas import ComputeTaskOutput
 from substra.sdk.schemas import InputRef
@@ -67,6 +70,30 @@ class TestLocalDependency:
         algo_query = AlgoSpec(
             name="algo_test_deps",
             category=AlgoCategory.composite,
+            inputs=[
+                AlgoInputSpec(
+                    identifier=InputIdentifiers.datasamples,
+                    kind=AssetKind.data_sample.value,
+                    optional=False,
+                    multiple=True,
+                ),
+                AlgoInputSpec(
+                    identifier=InputIdentifiers.opener,
+                    kind=AssetKind.data_manager.value,
+                    optional=False,
+                    multiple=False,
+                ),
+                AlgoInputSpec(
+                    identifier=InputIdentifiers.local, kind=AssetKind.model.value, optional=True, multiple=False
+                ),
+                AlgoInputSpec(
+                    identifier=InputIdentifiers.shared, kind=AssetKind.model.value, optional=True, multiple=False
+                ),
+            ],
+            outputs=[
+                AlgoOutputSpec(identifier=OutputIdentifiers.local, kind=AssetKind.model.value, multiple=False),
+                AlgoOutputSpec(identifier=OutputIdentifiers.shared, kind=AssetKind.model.value, multiple=False),
+            ],
             description=description_path,
             file=archive_path,
             permissions=Permissions(public=True, authorized_ids=list()),
@@ -81,12 +108,12 @@ class TestLocalDependency:
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
             inputs=[
-                InputRef(identifier=InputIdentifiers.OPENER, asset_key=dataset_key),
-                InputRef(identifier=InputIdentifiers.DATASAMPLES, asset_key=data_sample_key),
+                InputRef(identifier=InputIdentifiers.opener, asset_key=dataset_key),
+                InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample_key),
             ],
             outputs={
-                OutputIdentifiers.SHARED: ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
-                OutputIdentifiers.LOCAL: ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
+                OutputIdentifiers.local: ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
+                OutputIdentifiers.shared: ComputeTaskOutput(permissions=Permissions(public=True, authorized_ids=[])),
             },
         )
         composite_key = client.add_composite_traintuple(composite_traintuple_query)
