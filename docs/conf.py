@@ -190,6 +190,8 @@ nitpick_ignore = [
     ("py:class", "substra.sdk.client.Client"),
     ("py:class", "substra.sdk.models.ComputePlan"),
     ("py:class", "substra.sdk.schemas.AlgoCategory"),
+    ("py:class", "substra.sdk.schemas.AlgoOutputSpec"),
+    ("py:class", "substra.sdk.schemas.AlgoInputSpec"),
     ("py:class", "ComputePlan"),
     ("py:class", "substratools.algo.CompositeAlgo"),
     ("py:class", "substratools.algo.AggregateAlgo"),

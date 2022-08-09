@@ -6,19 +6,16 @@ import os
 import shutil
 import tarfile
 import tempfile
+import typing
 import warnings
 from distutils import util
 from pathlib import Path
 from platform import python_version
-from typing import List
-from typing import Tuple
 
 import substra
 import substratools
 from packaging import version
 from substra.sdk.schemas import AlgoCategory
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
 
 import substrafl
 from substrafl.dependency import Dependency
@@ -80,7 +77,9 @@ if __name__ == "__main__":
 """
 
 
-def _copy_local_packages(path: Path, local_dependencies: List[Path], python_major_minor: str, operation_dir: Path):
+def _copy_local_packages(
+    path: Path, local_dependencies: typing.List[Path], python_major_minor: str, operation_dir: Path
+):
     """Copy the local libraries given by the user and generate the installation command."""
     local_dependencies_cmd = list()
     path.mkdir(exist_ok=True)
@@ -146,7 +145,7 @@ def _create_substra_algo_files(
     install_libraries: bool,
     dependencies: Dependency,
     operation_dir: Path,
-) -> Tuple[Path, Path]:
+) -> typing.Tuple[Path, Path]:
     """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
         an archive (.tar.gz).
 
@@ -265,8 +264,8 @@ def register_algo(
     remote_struct: RemoteStruct,
     category: substra.sdk.schemas.AlgoCategory,
     permissions: substra.sdk.schemas.Permissions,
-    inputs: List[AlgoInputSpec],
-    outputs: List[AlgoOutputSpec],
+    inputs: typing.List[substra.sdk.schemas.AlgoInputSpec],
+    outputs: typing.List[substra.sdk.schemas.AlgoOutputSpec],
     dependencies: Dependency,
 ) -> str:
     """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
@@ -277,8 +276,8 @@ def register_algo(
         category (substra.sdk.schemas.AlgoCategory): Register the algorithm to the platform for the composite, predict
             or aggregate categories.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-        inputs (List[AlgoInputSpec]): List of algo inputs to be used.
-        inputs (List[AlgoInputSpec]): List of algo outputs to be used.
+        inputs (typing.List[substra.sdk.schemas.AlgoInputSpec]): List of algo inputs to be used.
+        outputs (typing.List[substra.sdk.schemas.AlgoOutputSpec]): List of algo outputs to be used.
         dependencies (Dependency): Algorithm dependencies.
 
     Returns:
