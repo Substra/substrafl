@@ -15,11 +15,9 @@ from platform import python_version
 import substra
 import substratools
 from packaging import version
-from substra.sdk.schemas import AlgoCategory
 
 import substrafl
 from substrafl.dependency import Dependency
-from substrafl.exceptions import AlgoCategoryError
 from substrafl.exceptions import ConnectToolsDeprecationWarning
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
@@ -282,10 +280,6 @@ def register_algo(
 
     Returns:
         str: Substra algorithm key.
-
-    Raises:
-        AlgoCategoryError: The given algo category does not match any allowed substra AlgoCategory.
-
     """
     with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix="substrafl_") as operation_dir:
         archive_path, description_path = _create_substra_algo_files(
@@ -294,9 +288,6 @@ def register_algo(
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=Path(operation_dir),
         )
-        if category not in [AlgoCategory.composite, AlgoCategory.aggregate, AlgoCategory.predict]:
-            raise AlgoCategoryError(f"Algo category {category} is not allowed.")
-
         key = client.add_algo(
             substra.sdk.schemas.AlgoSpec(
                 name=remote_struct.algo_name,

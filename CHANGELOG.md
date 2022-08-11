@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Update the inputs/outputs to make them compatible with the task execution
+
 ## [0.24.0](https://github.com/owkin/connectlib/releases/tag/0.24.0) - 2022-08-09
 
 ### Fixed
