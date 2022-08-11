@@ -1,5 +1,5 @@
 """
-Generate wheels for the Connect algo.
+Generate wheels for the Substra algo.
 """
 import logging
 import shutil

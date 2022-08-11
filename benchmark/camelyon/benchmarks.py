@@ -21,7 +21,7 @@ LOCAL_RESULTS_FILE = RESULTS_FOLDER / "results.json"
 
 
 def fed_avg(params: dict, train_folder: Path, test_folder: Path):
-    """If remote, only running the benchmark on the connect platform (from the remote.yaml file) else running
+    """If remote, only running the benchmark on the Substra platform (from the remote.yaml file) else running
     both substrafl and pure_torch fed avg strategy with the given parameters.
 
     Args:

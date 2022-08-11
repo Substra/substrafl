@@ -18,7 +18,7 @@ import substrafl
 
 # -- Project information -----------------------------------------------------
 
-project = "Substrafl"
+project = "SubstraFL"
 copyright = f"{date.today().year}, OWKIN"
 author = "OWKIN"
 version = substrafl.__version__

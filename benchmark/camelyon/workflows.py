@@ -49,7 +49,7 @@ def substrafl_fed_avg(
             a duplicate of the passed train folder.
         nb_test_data_samples (int): Number of data samples to run the experiment with. Each data sample is
             a duplicate of the passed test folder.
-        mode (str): The connect execution mode, must be either subprocess, docker, remote.
+        mode (str): The Substra execution mode, must be either subprocess, docker, remote.
         seed (int): Random seed.
         n_centers (int): Number of centers to be used for the fed avg strategy.
         learning_rate (int): Learning rate to be used.
@@ -58,9 +58,9 @@ def substrafl_fed_avg(
         num_workers (int): Number of workers for the torch data loader.
         index_generator (NpIndexGenerator): index generator to be used by the algo.
         model (nn.Module): model template to be used by the algo.
-        credentials_path (Path): Remote only: file to connect credentials configuration path.
+        credentials_path (Path): Remote only: file to Substra credentials configuration path.
         asset_keys_path (Path): Remote only: path to asset key file. If un existent, it will be created.
-            Otherwise, all present keys in this fill will be reused per connect in remote mode.
+            Otherwise, all present keys in this fill will be reused per Substra in remote mode.
     Returns:
         dict: Results of the experiment.
     """

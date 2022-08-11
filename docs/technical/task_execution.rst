@@ -1,7 +1,7 @@
 Task execution
 ===============
 
-For the task to execute, the first step is to submit the algos to Connect. Then we define the tasks and submit a compute plan of tasks.
+For the task to execute, the first step is to submit the algos to Substra. Then we define the tasks and submit a compute plan of tasks.
 
 To submit the algo, we:
 
@@ -9,12 +9,12 @@ To submit the algo, we:
 - write the algo description
 - create a folder and put all the necessary files in it
 - compress the folder into an archive
-- submit the algo to Connect
+- submit the algo to Substra
 
 Algo
 -----
 
-What we need to submit to Connect:
+What we need to submit to Substra:
 
 - a Dockerfile
 - the file `algo.py`
@@ -24,18 +24,18 @@ Base Dockerfile
 ^^^^^^^^^^^^^^^^
 
 The Dockerfile describes the commands to run to create a container with all the needed dependencies.
-Its base image is the connect-tools Docker image, accessible from the private Owkin docker registry (which is a google container registry).
+Its base image is the substratools Docker image, accessible from the private Owkin docker registry (which is a google container registry).
 
 The base image is chosen following two criteria:
 
 - the version of Python is the same as the one the code is run with, to satisfy cloudpickle requirements
-- the version of connect-tools is the version of the connect-tools installed in the Python environment (can be
-  overriden, see below). If the version is inferior to 0.10.0, we use 0.10.0 as the name of the connect-tools images
+- the version of substratools is the version of the substratools installed in the Python environment (can be
+  overriden, see below). If the version is inferior to 0.10.0, we use 0.10.0 as the name of the substratools images
   changed.
 
 This means that:
 
-- in remote, the Connect platform must have access to the private Owkin Docker registry (or pre-register the images)
+- in remote, the Substra platform must have access to the private Owkin Docker registry (or pre-register the images)
 - in local Docker mode, the user must have access to this Docker registry
 - in local subprocess mode, the Dockerfile is generated but the image is not built so no need to access the Docker
   registry
@@ -48,18 +48,18 @@ Substrafl dependencies
 
 Substrafl needs the following libraries to be installed in the container:
 
-- connect-tools
+- substratools
 - substra
 - substrafl
 
 These libraries are available either from the user's computer or from a private Owkin PyPi.
 When we are building the container, we do not have access to the private Owkin PyPi, because it would require giving the
 credentials to the Docker image, which would then be available to anyone who has the rights to download the algo from
-Connect.
+Substra.
 
 There are two modes: the **release mode** and the **editable mode**, chosen with the ``editable_mode`` parameter in the ``dependency`` argument.
 
-In **release mode**, Substrafl downloads the wheels of substra and substrafl (connect-tools is already installed) from
+In **release mode**, Substrafl downloads the wheels of substra and substrafl (substratools is already installed) from
 the private Owkin PyPi and copies them to the Docker image. The download is made through a subprocess, and it needs pip
 to be configured to access Owkin's PyPi.
 
@@ -73,7 +73,7 @@ Substrafl is executed with. The script goes through each library, and:
 Then copy the wheel to the Docker image.
 This is not the preferred method as it can lead to difficulties of knowing which version was used: there may be local changes to the code.
 
-Please note that in editable mode connect-tools is re-installed in the image.
+Please note that in editable mode substratools is re-installed in the image.
 
 
 User dependencies

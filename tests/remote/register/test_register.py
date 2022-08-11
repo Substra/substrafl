@@ -30,7 +30,7 @@ class DummyClient:
 
 @pytest.mark.parametrize("use_latest", [True, False])
 def test_latest_connecttools_image_selection(use_latest, monkeypatch, default_permissions):
-    monkeypatch.setenv("USE_LATEST_CONNECT_TOOLS", str(use_latest))
+    monkeypatch.setenv("USE_LATEST_SUBSTRATOOLS", str(use_latest))
 
     client = substra.Client(debug=True)
 

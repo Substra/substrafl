@@ -132,7 +132,7 @@ def _save_experiment_summary(
         aggregation_node (typing.Optional[AggregationNode]): aggregation_node
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
-        additional_metadata (dict, Optional): Optional dictionary of metadata to be shown on the Connect WebApp.
+        additional_metadata (dict, Optional): Optional dictionary of metadata to be shown on the Substra WebApp.
     """
     # create the experiment folder if it doesn't exist
     experiment_folder = Path(experiment_folder)
@@ -227,7 +227,7 @@ def execute_experiment(
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the
     `test_data_nodes`) your `algo` with the specified `strategy` `n_rounds` times and return the
-    compute plan object from the connect platform.
+    compute plan object from the Substra platform.
 
     In substrafl, operations are linked to each other statically before being submitted to substra.
 
@@ -239,14 +239,14 @@ def execute_experiment(
     generate the static graph of operations.
 
     Each element necessary for those operations (CompositeTrainTuples, TestTuples and Algorithms)
-    is registered to the connect platform thanks to the specified client.
+    is registered to the Substra platform thanks to the specified client.
 
     Finally, the compute plan is sent and executed.
 
     The experiment summary is saved in `experiment_folder`, with the name format `{timestamp}_{compute_plan.key}.json`
 
     Args:
-        client (substra.Client): A substra client to interact with the connect platform
+        client (substra.Client): A substra client to interact with the Substra platform
         algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         strategy (Strategy): The strategy by which your algorithm will be executed
         train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
@@ -258,12 +258,12 @@ def execute_experiment(
         dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the substrafl Dependency class. Defaults None.
         experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
-        clean_models (bool): Clean the intermediary models on the Connect platform. Set it to False
+        clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
             quickly so should be set to True unless needed. Defaults to True.
         name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
             the compute plan name is set to the timestamp.
-        additional_metadata(dict, Optional): Optional dictionary of metadata to be passed to the Connect WebApp.
+        additional_metadata(dict, Optional): Optional dictionary of metadata to be passed to the Substra WebApp.
 
     Returns:
         ComputePlan: The generated compute plan
@@ -323,7 +323,7 @@ def execute_experiment(
             )
 
     # Computation graph is created
-    logger.info("Registering the algorithm to Connect.")
+    logger.info("Registering the algorithm to Substra.")
     composite_traintuples, aggregation_tuples, predicttuples, testtuples, operation_cache = _register_operations(
         client=client,
         train_data_nodes=train_data_nodes,
@@ -333,7 +333,7 @@ def execute_experiment(
     )
 
     # Execute the compute plan
-    logger.info("Registering the compute plan to Connect.")
+    logger.info("Registering the compute plan to Substra.")
     timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
 
     # Generate the compute plan key.
@@ -365,5 +365,5 @@ def execute_experiment(
             metadata=cp_metadata,
         ),
     )
-    logger.info(("The compute plan has been registered to Connect, its key is {0}.").format(compute_plan.key))
+    logger.info(("The compute plan has been registered to Substra, its key is {0}.").format(compute_plan.key))
     return compute_plan

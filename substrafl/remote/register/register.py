@@ -1,5 +1,5 @@
 """
-Create the Connect algo assets and register them to the platform.
+Create the Substra algo assets and register them to the platform.
 """
 import logging
 import os
@@ -18,18 +18,18 @@ from packaging import version
 
 import substrafl
 from substrafl.dependency import Dependency
-from substrafl.exceptions import ConnectToolsDeprecationWarning
+from substrafl.exceptions import SubstraToolsDeprecationWarning
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
 
 logger = logging.getLogger(__name__)
 
-# Connect tools version for which the image naming scheme changed
-MINIMAL_DOCKER_CONNECT_TOOLS_VERSION = "0.10.0"
+# Substra tools version for which the image naming scheme changed
+MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.10.0"
 
-_DEFAULT_CONNECT_TOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
-{connect_tools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
+_DEFAULT_SUBSTRATOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
+{substratools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
 
 SUBSTRAFL_FOLDER = "substrafl_internal"
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Load the wrapped user code
     remote_struct = RemoteStruct.load(src=Path(__file__).parent / '{substrafl_folder}')
 
-    # Create a Connect algo from the wrapped user code
+    # Create a Substra algo from the wrapped user code
     remote_instance = remote_struct.get_remote_instance()
 
     # Execute the algo using connect-tools
@@ -119,23 +119,23 @@ def _create_archive(archive_path: Path, src_path: Path):
 def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
     """Get the base Docker image for the Dockerfile"""
 
-    connect_tools_image_version = substratools.__version__
-    if util.strtobool(os.environ.get("USE_LATEST_CONNECT_TOOLS", "False")):
-        connect_tools_image_version = "latest"
-    elif version.parse(connect_tools_image_version) < version.parse(MINIMAL_DOCKER_CONNECT_TOOLS_VERSION):
+    substratools_image_version = substratools.__version__
+    if util.strtobool(os.environ.get("USE_LATEST_SUBSTRATOOLS", "False")):
+        substratools_image_version = "latest"
+    elif version.parse(substratools_image_version) < version.parse(MINIMAL_DOCKER_SUBSTRATOOLS_VERSION):
         if not editable_mode:
             warnings.warn(
-                f"Your environment uses connect-tools={connect_tools_image_version}. Version \
-                {MINIMAL_DOCKER_CONNECT_TOOLS_VERSION} will be used on Docker.",
-                ConnectToolsDeprecationWarning,
+                f"Your environment uses connect-tools={substratools_image_version}. Version \
+                {MINIMAL_DOCKER_SUBSTRATOOLS_VERSION} will be used on Docker.",
+                SubstraToolsDeprecationWarning,
             )
-        connect_tools_image_version = MINIMAL_DOCKER_CONNECT_TOOLS_VERSION
-    connect_tools_image = _DEFAULT_CONNECT_TOOLS_IMAGE.format(
-        connect_tools_version=connect_tools_image_version,
+        substratools_image_version = MINIMAL_DOCKER_SUBSTRATOOLS_VERSION
+    substratools_image = _DEFAULT_SUBSTRATOOLS_IMAGE.format(
+        substratools_version=substratools_image_version,
         python_version=python_major_minor,
     )
 
-    return connect_tools_image
+    return substratools_image
 
 
 def _create_substra_algo_files(
@@ -234,7 +234,7 @@ def _create_substra_algo_files(
     description_path.write_text("# Substrafl Operation")
 
     # Get the base Docker image
-    connect_tools_image = _get_base_docker_image(
+    substratools_image = _get_base_docker_image(
         python_major_minor=python_major_minor, editable_mode=dependencies.editable_mode
     )
 
@@ -242,7 +242,7 @@ def _create_substra_algo_files(
     dockerfile_path = operation_dir / "Dockerfile"
     dockerfile_path.write_text(
         DOCKERFILE_TEMPLATE.format(
-            docker_image=connect_tools_image,
+            docker_image=substratools_image,
             python_version=python_major_minor,
             cl_deps=install_cmd,
             pypi_dependencies=pypi_dependencies_cmd,

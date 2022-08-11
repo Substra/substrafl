@@ -13,7 +13,7 @@ Then state the main information about the example. For instance:
 - FL setup: three organizations, two data providers and one algo provider
 
 Specify that this example uses the local mode:
-This example does not use the deployed platform of Connect, it runs in local mode.
+This example does not use the deployed platform of Substra, it runs in local mode.
 
 **Requirements:**
 

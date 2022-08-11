@@ -12,7 +12,7 @@
 
 ### Objectives
 
-Being able to run the benchmark on a deployed connect with a variable amount of data.
+Being able to run the benchmark on a deployed Substra with a variable amount of data.
 Being able to compare substrafl local speed to a full torch example with a variable amount of data.
 
 ### Basic install
@@ -59,9 +59,9 @@ python benchmarks.py --mode subprocess --n-rounds 2 --n-local-steps 1 --nb-train
 --batch-size BATCH_SIZE             Number of samples used in each local step (i.e. each batch) (default: 16)
 --num-workers NUM_WORKERS           Number of torch workers to use for data loading (default: 0)
 --mode MODE                         Benchmark mode, either `subprocess`, `docker` or `remote` (default: subprocess)
---credentials-path CREDENTIALS      Remote only: relative path from the connect_conf folder to connect credentials (default: remote.yaml)
+--credentials-path CREDENTIALS      Remote only: relative path from the substra_conf folder to Substra credentials (default: remote.yaml)
 --assets-keys-path asset_keys_PATH
-                                    Remote only: relative path from the connect_conf folder to a file where to fill in the connect assets to be reused (default: keys.json)
+                                    Remote only: relative path from the substra_conf folder to a file where to fill in the Substra assets to be reused (default: keys.json)
 --nb-train-data-samples NB_TRAIN_DATA_SAMPLES
                                     Number of data sample of 400 Mb to use for each train task on each center (default: 5)
 --nb-test-data-samples NB_TEST_DATA_SAMPLES
@@ -144,17 +144,17 @@ python benchmarks.py --mode remote
 
 ### Configuration
 
-Modify the [configuration file](./connect_conf/remote.yaml) with the needed credentials
-If you already have a configuration file, you can specify its relative path to the `./connect_conf` folder as
+Modify the [configuration file](./substra_conf/remote.yaml) with the needed credentials
+If you already have a configuration file, you can specify its relative path to the `./substra_conf` folder as
 an optional arg when running the benchmark:
 
 ```sh
 python benchmarks.py --mode remote --credentials my_credentials.yaml
 ```
 
-### Connect assets management
+### Substra assets management
 
-In remote, one can chose to reuse some assets by passing their keys in the [keys.json](./connect_conf/keys.json), e.g.:
+In remote, one can chose to reuse some assets by passing their keys in the [keys.json](./substra_conf/keys.json), e.g.:
 
 ```json
 {
@@ -172,11 +172,11 @@ In remote, one can chose to reuse some assets by passing their keys in the [keys
 }
 ```
 
-If an asset is not filled in, it will be created and registered to connect, otherwise it will be reused.
+If an asset is not filled in, it will be created and registered to Substra, otherwise it will be reused.
 
 At the end of the asset registration, this file will be completed with the new registered asset keys.
 
-If you want to use a custom asset file, you can pass its relative path to the connect_conf folder as argument when running the benchmark:
+If you want to use a custom asset file, you can pass its relative path to the substra_conf folder as argument when running the benchmark:
 
 ```sh
 python benchmarks.py --assets-keys my_keys.json
@@ -193,4 +193,4 @@ This means that if the number of data samples passed within each `train_data_sam
 
 - greater than `--nb-train-data-samples`, only the first `--nb-train-data-samples` will be used
 
-- lower than `--nb-train-data-samples`, the right number of data sample will be added to connect so `--nb-train-data-samples` will be used
+- lower than `--nb-train-data-samples`, the right number of data sample will be added to Substra so `--nb-train-data-samples` will be used

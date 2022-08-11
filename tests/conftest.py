@@ -36,7 +36,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--ci",
         action="store_true",
-        help="Run the tests on the backend deployed by connect-test nightly (remote mode). "
+        help="Run the tests on the backend deployed by substra-test nightly (remote mode). "
         "Otherwise run the tests only on the default remote backend.",
     )
 
@@ -71,7 +71,7 @@ def network(request):
         network_cfg: Network configuration.
 
     Returns:
-        Network: All the elements needed to interact with the :term:`Connect` platform.
+        Network: All the elements needed to interact with the :term:`Substra` platform.
     """
     is_local = request.config.getoption("--local")
     is_ci = request.config.getoption("--ci")

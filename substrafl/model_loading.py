@@ -247,7 +247,7 @@ def download_algo_files(
             the last round will be used. (Default to None).
 
     Raises:
-        NotImplementedError: The given compute plan must have been submitted to connect through the
+        NotImplementedError: The given compute plan must have been submitted to Substra through the
             :func:`~substrafl.experiment.execute_experiment` function.
         TrainTaskNotFoundError: If no composite matches the given requirements.
         MultipleTrainTaskError: The experiment to get the model from can't have multiple

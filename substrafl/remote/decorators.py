@@ -8,11 +8,11 @@ from typing import Callable
 from typing import List
 from typing import Optional
 
-from substrafl.remote.connect_tools_methods import RemoteDataMethod
-from substrafl.remote.connect_tools_methods import RemoteMethod
 from substrafl.remote.operations import AggregateOperation
 from substrafl.remote.operations import DataOperation
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.remote.substratools_methods import RemoteDataMethod
+from substrafl.remote.substratools_methods import RemoteMethod
 
 
 def remote_data(method: Callable):

@@ -5,8 +5,8 @@ class BatchSizeNotFoundError(Exception):
     """No batch size found."""
 
 
-class ConnectToolsDeprecationWarning(DeprecationWarning):
-    """The connect-tools version used is deprecated."""
+class SubstraToolsDeprecationWarning(DeprecationWarning):
+    """The substratools version used is deprecated."""
 
 
 class CriterionReductionError(Exception):
@@ -52,7 +52,7 @@ class KeyMetadataError(Exception):
 
 
 class LenMetadataError(Exception):
-    """Too long additional metadata passed to the execute_experiment function to be shown on the Connect WebApp."""
+    """Too long additional metadata passed to the execute_experiment function to be shown on the Substra WebApp."""
 
 
 class NegativeHessianMatrixError(Exception):
