@@ -69,7 +69,7 @@ class TestDataNode(Node):
 
         predict_input = [
             InputRef(
-                identifier=InputIdentifiers.model,
+                identifier=InputIdentifiers.local,
                 parent_task_key=traintuple_id,
                 parent_task_output_identifier=OutputIdentifiers.local,
             ),
@@ -183,7 +183,7 @@ class TestDataNode(Node):
                                         multiple=False,
                                     ),
                                     AlgoInputSpec(
-                                        identifier=InputIdentifiers.model,
+                                        identifier=InputIdentifiers.local,
                                         kind=AssetKind.model.value,
                                         optional=False,
                                         multiple=False,
@@ -191,7 +191,7 @@ class TestDataNode(Node):
                                     AlgoInputSpec(
                                         identifier=InputIdentifiers.shared,
                                         kind=AssetKind.model.value,
-                                        optional=True,
+                                        optional=False,
                                         multiple=False,
                                     ),
                                 ],

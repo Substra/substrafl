@@ -1,10 +1,6 @@
 # Alphabetically ordered
 
 
-class AlgoCategoryError(Exception):
-    """The given algo category does not match any substra AlgoCategory."""
-
-
 class BatchSizeNotFoundError(Exception):
     """No batch size found."""
 
