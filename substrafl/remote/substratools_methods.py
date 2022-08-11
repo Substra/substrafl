@@ -1,5 +1,5 @@
 """
-Methods inherited from connect-tools.
+Methods inherited from substratools.
 """
 from pathlib import Path
 from typing import Any
@@ -14,7 +14,7 @@ from substrafl.remote.serializers.serializer import Serializer
 
 
 class RemoteMethod(substratools.AggregateAlgo):
-    """Aggregate algo to register to Connect."""
+    """Aggregate algo to register to Substra."""
 
     def __init__(
         self,
@@ -66,7 +66,7 @@ class RemoteMethod(substratools.AggregateAlgo):
 
 
 class RemoteDataMethod(substratools.CompositeAlgo):
-    """Composite algo to register to Connect"""
+    """Composite algo to register to Substra"""
 
     def __init__(
         self,

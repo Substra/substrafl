@@ -31,7 +31,7 @@ ASSETS_DIRECTORY = CURRENT_DIRECTORY / "assets"
 
 PUBLIC_PERMISSIONS = Permissions(public=True, authorized_ids=[])
 
-CONNECT_CONFIG_FOLDER = Path(__file__).parents[1].resolve() / "connect_conf"
+SUBSTRA_CONFIG_FOLDER = Path(__file__).parents[1].resolve() / "substra_conf"
 
 DEFAULT_DATASET = DatasetSpec(
     name="Camelyon",
@@ -49,7 +49,7 @@ def instantiate_clients(mode: str = "subprocess", n_centers: Optional[int] = 2, 
     Args:
         mode (str, optional): Specify a backend type. Either subprocess, docker or remote. Defaults to "subprocess".
         n_centers (int, optional): Only subprocess and docker. Number of clients to create. Defaults to 2.
-        conf (dict, optional): Only remote: connect configuration. Defaults to None.
+        conf (dict, optional): Only remote: Substra configuration. Defaults to None.
 
     Returns:
         _type_: _description_
@@ -70,21 +70,21 @@ def instantiate_clients(mode: str = "subprocess", n_centers: Optional[int] = 2, 
 
 def get_clients(mode: str = "subprocess", credentials: os.PathLike = "remote.yaml", n_centers: int = 2):
     # Load Configuration
-    conf = yaml.full_load((CONNECT_CONFIG_FOLDER / credentials).read_text())
+    conf = yaml.full_load((SUBSTRA_CONFIG_FOLDER / credentials).read_text())
     clients = instantiate_clients(conf=conf, mode=mode, n_centers=n_centers)
     return clients
 
 
 def load_asset_keys(asset_keys_path, mode):
-    if mode == "remote" and (CONNECT_CONFIG_FOLDER / asset_keys_path).exists():
-        keys = json.loads((CONNECT_CONFIG_FOLDER / asset_keys_path).read_text())
+    if mode == "remote" and (SUBSTRA_CONFIG_FOLDER / asset_keys_path).exists():
+        keys = json.loads((SUBSTRA_CONFIG_FOLDER / asset_keys_path).read_text())
     else:
         keys = {}
     return keys
 
 
 def save_asset_keys(asset_keys_path, asset_keys):
-    (CONNECT_CONFIG_FOLDER / asset_keys_path).write_text(json.dumps(asset_keys, indent=4, sort_keys=True))
+    (SUBSTRA_CONFIG_FOLDER / asset_keys_path).write_text(json.dumps(asset_keys, indent=4, sort_keys=True))
 
 
 def get_msp_id(client, default=""):
@@ -113,7 +113,7 @@ def add_duplicated_dataset(
         client (substra.Client): Substra client to use to add the data samples
         nb_data_sample (int): Number of data sample keys to be returned in the asset_keys dict.
         data_sample_folder (os.PathLike): Folder where the data sample data are stored.
-        asset_keys (dict): already registered assets within connect. It needs to be formatted as followed:
+        asset_keys (dict): already registered assets within Substra. It needs to be formatted as followed:
             .. code-block:: json
 
                 {
@@ -220,7 +220,7 @@ def get_train_data_nodes(
 
 
 def register_metric(client: substra.Client) -> str:
-    """Register a metric default metric to connect.
+    """Register a default metric.
 
     Args:
         client (substra.Client): Substra client to register the metric.

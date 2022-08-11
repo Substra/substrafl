@@ -10,20 +10,20 @@ from pydantic import validator
 
 CURRENT_DIR = Path(__file__).parent
 
-DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "local.yaml"
-DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "remote.yaml"
-CI_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "connect_conf" / "ci.yaml"
+DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "local.yaml"
+DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "remote.yaml"
+CI_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "ci.yaml"
 
 MIN_ORGANIZATIONS = 2
 
 
 class OrganizationCfg(BaseModel):
-    """Information needed to configure a Connect client to interact with a organization.
+    """Information needed to configure a Substra client to interact with a organization.
 
     Args:
-        url (str): URL of the Connect organization.
-        username (str): A user define username to login to the Connect platform. This username will
-            be the one used to access Connect frontend.
+        url (str): URL of the Substra organization.
+        username (str): A user define username to login to the Substra platform. This username will
+            be the one used to access Substra frontend.
         password (str): The password to login to the organization.
     """
 
@@ -54,7 +54,7 @@ class RemoteConfiguration(BaseModel):
     """Configuration for the remote tests i.e. a list of organizations configuration.
 
     Args:
-        organizations (List[OrganizationCfg]): A list of Connect organizations configuration.
+        organizations (List[OrganizationCfg]): A list of Substra organizations configuration.
     """
 
     organizations: List[OrganizationCfg]
@@ -69,13 +69,13 @@ class RemoteConfiguration(BaseModel):
 
 
 class Network(BaseModel):
-    """:term:`Connect` network elements required for testing.
+    """:term:`Substra` network elements required for testing.
     `msp_ids` and `clients` must be passed in the same order.
 
     Args:
         msp_ids (List[str]): Ids for each organization of your network. These will be
             used as input permissions during the test.
-        clients (List[substra.Client]): Substra clients managing the interaction with the :term:`Connect` platform.
+        clients (List[substra.Client]): Substra clients managing the interaction with the :term:`Substra` platform.
         n_organizations (int): The number of organizations in the network.
     """
 
@@ -104,11 +104,11 @@ class Network(BaseModel):
 
 
 def local_network():
-    """Instantiates a local connect network from the user defined configuration file.
+    """Instantiates a local Substra network from the user defined configuration file.
     As the configuration is static and immutable, it is loaded only once from the disk.
 
     Returns:
-        Network: A local network (debug mode) where all connect clients are duplicated from one an other.
+        Network: A local network (debug mode) where all Substra clients are duplicated from one an other.
     """
     cfg = yaml.full_load(DEFAULT_LOCAL_NETWORK_CONFIGURATION_FILE.read_text())
 
@@ -125,11 +125,11 @@ def local_network():
 
 
 def remote_network(is_ci: bool = False):
-    """Instantiates a remote connect network from the user defined configuration file.
+    """Instantiates a remote Substra network from the user defined configuration file.
     As the configuration is static and immutable, it is loaded only once from the disk.
 
     Args:
-        is_ci (bool): Set to True the substra network has to be configured to the connect-test.
+        is_ci (bool): Set to True the substra network has to be configured to the substra-test.
 
     Returns:
         Network: A remote network.

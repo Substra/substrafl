@@ -46,14 +46,14 @@ def parse_params() -> dict:
         "--credentials-path",
         type=str,
         default="remote.yaml",
-        help="Remote only: relative path from the connect_conf folder to connect credentials",
+        help="Remote only: relative path from the substra_conf folder to Substra credentials",
     )
     parser.add_argument(
         "--asset-keys-path",
         type=str,
         default="keys.json",
-        help="""Remote only: relative path from the connect_conf folder to a
-file where to fill in the connect assets to be reused""",
+        help="""Remote only: relative path from the substra_conf folder to a
+file where to fill in the Substra assets to be reused""",
     )
     parser.add_argument(
         "--nb-train-data-samples",

@@ -13,8 +13,8 @@ class Dependency(BaseModel):
     """Dependency pydantic class.
 
     Args:
-        editable_mode (bool): If set to False, substra, substrafl and substra-tools used in the
-            Dockerfiles submitted to connect platform will be taken from owkin pypi. Be sure to have
+        editable_mode (bool): If set to False, substra, substrafl and substratools used in the
+            Dockerfiles submitted to Substra platform will be taken from owkin pypi. Be sure to have
             access to owkin's pypi and configure accordingly your pip.conf.
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.

@@ -5,7 +5,7 @@ This is an internal Substrafl module, the user should not use
 any functions here directly, apart from the ``remote_data`` and ``remote``
 decorators.
 This modules defines how the user code is wrapped, transformed and registered as
-Connect algorithms.
+Substra algorithms.
 
 Decorator
 ^^^^^^^^^^
@@ -19,9 +19,9 @@ Operations
 ^^^^^^^^^^^
 .. automodule:: substrafl.remote.operations
 
-Connect tools methods
+Substra tools methods
 ^^^^^^^^^^^^^^^^^^^^^^
-.. automodule:: substrafl.remote.connect_tools_methods
+.. automodule:: substrafl.remote.substratools_methods
 
 Register
 ^^^^^^^^

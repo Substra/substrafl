@@ -8,13 +8,13 @@ from typing import Union
 
 import cloudpickle
 
-from substrafl.remote.connect_tools_methods import RemoteDataMethod
-from substrafl.remote.connect_tools_methods import RemoteMethod
+from substrafl.remote.substratools_methods import RemoteDataMethod
+from substrafl.remote.substratools_methods import RemoteMethod
 
 
 class RemoteStruct:
     """Contains the wrapped user code and the necessary functions
-    to transform it into a Connect asset to execute on the platform.
+    to transform it into a Substra asset to execute on the platform.
 
     Args:
         cls (Type): The remote struct type (e.g. Algorithm, dataset)
@@ -117,10 +117,10 @@ class RemoteStruct:
         return self._cls(*self._cls_args, **self._cls_kwargs)
 
     def get_remote_instance(self) -> Union[RemoteMethod, RemoteDataMethod]:
-        """Get the remote class (ie Connect algo) instance.
+        """Get the remote class (ie Substra algo) instance.
 
         Returns:
-            typing.Union[RemoteMethod, RemoteDataMethod]: instance of the remote Connect class
+            typing.Union[RemoteMethod, RemoteDataMethod]: instance of the remote Substra class
         """
         return self._remote_cls(
             self.get_instance(),
