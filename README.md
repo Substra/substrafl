@@ -1,14 +1,15 @@
 # Substrafl
 
-## Installation
+Substrafl is a high-level federated learning Python library.
+Substrafl is used to run complex federated learning experiments on a Substra deployed platform. It can also be used locally to run federated learning simulations.
 
-With pip >= 21.2.0:
+Note that substrafl will be soon merged with the [substra](https://github.com/substra/substra) library.
 
-```bash
-pip install substrafl
-```
+For more information on what is substrafl and how to use it, please refer to the [user documentation](https://connect-docs.owkin.com/en/stable/).
 
-## Documentation
+To discuss on Slack, please join the [substra-general](https://lfaifoundation.slack.com/#substra-general) channel and the [substra-help](https://lfaifoundation.slack.com/#substra-help) channel.
+
+## Building the documentation
 
 The API documentation is generated from the substrafl repository thanks to the auto doc module.
 It is automatically built by <https://github.com/Substra/substra-documentation> and integrated into the general documentation [here](https://connect-docs.owkin.com/).
@@ -25,7 +26,7 @@ cd docs
 pip install -r requirements.txt
 ```
 
-### Building the documentation
+### Build
 
 You can build the documentation to see if your changes are well taken into account.
 From the ./docs folder :
