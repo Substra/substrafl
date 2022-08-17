@@ -6,7 +6,6 @@ from typing import List
 
 import numpy as np
 from substra import Client
-from substra.sdk import DEBUG_OWNER
 from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
@@ -113,9 +112,7 @@ def generic_description(name: str, tmp_folder: Path) -> Path:
     return description_path
 
 
-def add_numpy_datasets(
-    datasets_permissions: Permissions, clients: List[Client], msp_ids: List[str], tmp_folder: Path
-) -> List[str]:
+def add_numpy_datasets(datasets_permissions: Permissions, clients: List[Client], tmp_folder: Path) -> List[str]:
     """Add a numpy opener with the corresponding datasets_permissions to the clients.
     Pairs are created based on their indexes.
     During the process a description.md and a opener.py files are created in the tmp_folder.
@@ -143,7 +140,7 @@ def add_numpy_datasets(
     opener_path.write_text(DEFAULT_OPENER_FILE)
 
     keys = []
-    for client, msp_id, permissions in zip(clients, msp_ids, datasets_permissions):
+    for client, permissions in zip(clients, datasets_permissions):
         dataset_spec = DatasetSpec(
             name="Numpy Opener",
             type="npy",
@@ -151,9 +148,6 @@ def add_numpy_datasets(
             description=description_path,
             permissions=permissions,
             logs_permission=permissions,
-            metadata={
-                DEBUG_OWNER: msp_id,
-            },
         )
 
         keys.append(client.add_dataset(dataset_spec))

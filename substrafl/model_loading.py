@@ -31,20 +31,6 @@ ALGO_FILE = "algo.tar.gz"
 LOCAL_STATE_KEY = "local_state_file"
 
 
-def _check_client_compatibility(client: substra.Client):
-    """Checks wether the client backend is compatible with the download model files feature.
-
-    Args:
-        client (substra.Client): Substra client used to download the model from.
-    """
-
-    if client.backend_mode != substra.BackendType.DEPLOYED:
-        logger.warning(
-            "`download_algo` function is not fully supported yet for local backend. This could "
-            "lead to unexpected behaviors and errors."
-        )
-
-
 def _check_environment_compatibility(metadata: dict):
     """Checks whether or not the local environment is compatible with the execution environment of the
     compute plan.
@@ -147,15 +133,13 @@ def _get_composite_from_round(
     Returns:
         substra.models.CompositeTraintuple: The composite matching the given requirements.
     """
+    org_id = client.organization_info().organization_id
 
-    filters = {"compute_plan_key": [compute_plan_key]}
-    org_id = client.organization_info().get("organization_id")
-
-    # remote mode, in local mode the org_id is None
-    if org_id is not None:
-        filters["worker"] = [org_id]
-
-    filters["metadata"] = [{"key": "round_idx", "type": "is", "value": str(round_idx)}]
+    filters = {
+        "compute_plan_key": [compute_plan_key],
+        "worker": [org_id],
+        "metadata": [{"key": "round_idx", "type": "is", "value": str(round_idx)}],
+    }
 
     composite_traintuples = client.list_composite_traintuple(filters=filters)
 
@@ -166,26 +150,14 @@ def _get_composite_from_round(
         )
 
     elif len(composite_traintuples) > 1:
-        if client.backend_mode != substra.BackendType.DEPLOYED:
-            logger.warning(
-                "The given compute plan has {} composite train tuples for the round {}. The one with the "
-                "highest rank is used to get the model".format(
-                    str(len(composite_traintuples)),
-                    str(round_idx),
-                )
+        raise MultipleTrainTaskError(
+            "The given compute plan has {} composite train tuples of round_idx {}. Downloading a model "
+            "from an experiment containing multiple TrainDataNodes hosted on the same organization is "
+            "not supported yet in local mode.".format(
+                str(len(composite_traintuples)),
+                str(round_idx),
             )
-
-            composite_traintuples = sorted(composite_traintuples, key=lambda x: x.rank, reverse=True)
-
-        else:
-            raise MultipleTrainTaskError(
-                "The given compute plan has {} composite train tuples of round_idx {}. Downloading a model "
-                "from an experiment containing multiple TrainDataNodes hosted on the same organization is "
-                "not supported yet in local mode.".format(
-                    str(len(composite_traintuples)),
-                    str(round_idx),
-                )
-            )
+        )
     composite_traintuple = composite_traintuples[0]
 
     return composite_traintuple
@@ -255,8 +227,6 @@ def download_algo_files(
             composite train tuples with the same round number on the same rank.
         UnfinishedTrainTaskError: The task from which the files are trying to be downloaded is not done.
     """
-    _check_client_compatibility(client=client)
-
     compute_plan = client.get_compute_plan(compute_plan_key)
 
     _check_environment_compatibility(metadata=compute_plan.metadata)
