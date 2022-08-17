@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## 0.25.0 - 2022-08-17
+
 ### Fixed
 
 - Update the inputs/outputs to make them compatible with the task execution
