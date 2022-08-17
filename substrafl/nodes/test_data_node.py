@@ -7,7 +7,7 @@ from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AssetKind
-from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import ComputeTaskOutputSpec
 from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
@@ -96,7 +96,7 @@ class TestDataNode(Node):
                 "test_data_sample_keys": self.test_data_sample_keys,
                 "inputs": data_inputs + predict_input,
                 "outputs": {
-                    OutputIdentifiers.predictions: ComputeTaskOutput(
+                    OutputIdentifiers.predictions: ComputeTaskOutputSpec(
                         permissions=Permissions(public=False, authorized_ids=[self.organization_id])
                     )
                 },
@@ -114,7 +114,7 @@ class TestDataNode(Node):
                     "test_data_sample_keys": self.test_data_sample_keys,
                     "inputs": data_inputs + test_input,
                     "outputs": {
-                        OutputIdentifiers.performance: ComputeTaskOutput(
+                        OutputIdentifiers.performance: ComputeTaskOutputSpec(
                             permissions=Permissions(public=True, authorized_ids=[])
                         )
                     },
