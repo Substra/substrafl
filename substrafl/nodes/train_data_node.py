@@ -9,7 +9,7 @@ from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AssetKind
-from substra.sdk.schemas import ComputeTaskOutput
+from substra.sdk.schemas import ComputeTaskOutputSpec
 from substra.sdk.schemas import InputRef
 from substra.sdk.schemas import Permissions
 
@@ -134,10 +134,10 @@ class TrainDataNode(Node):
             "composite_traintuple_id": op_id,
             "inputs": data_inputs + local_inputs + shared_inputs,
             "outputs": {
-                OutputIdentifiers.shared: ComputeTaskOutput(
+                OutputIdentifiers.shared: ComputeTaskOutputSpec(
                     permissions=Permissions(public=False, authorized_ids=authorized_ids)
                 ),
-                OutputIdentifiers.local: ComputeTaskOutput(
+                OutputIdentifiers.local: ComputeTaskOutputSpec(
                     permissions=Permissions(public=False, authorized_ids=[self.organization_id])
                 ),
             },
