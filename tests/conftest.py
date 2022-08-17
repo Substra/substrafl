@@ -76,7 +76,7 @@ def network(request):
     is_local = request.config.getoption("--local")
     is_ci = request.config.getoption("--ci")
 
-    network = settings.local_network() if is_local else settings.remote_network(is_ci=is_ci)
+    network = settings.network(is_local=is_local, is_ci=is_ci)
     return network
 
 
@@ -135,7 +135,6 @@ def numpy_datasets(network, session_dir, default_permissions):
     dataset_key = assets_factory.add_numpy_datasets(
         datasets_permissions=[default_permissions] * network.n_organizations,
         clients=network.clients,
-        msp_ids=network.msp_ids,
         tmp_folder=session_dir,
     )
 

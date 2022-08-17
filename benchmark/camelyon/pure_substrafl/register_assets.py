@@ -8,7 +8,6 @@ from typing import Optional
 
 import substra
 import yaml
-from substra.sdk import DEBUG_OWNER
 from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
@@ -60,10 +59,9 @@ def instantiate_clients(mode: str = "subprocess", n_centers: Optional[int] = 2, 
             client = substra.Client(debug=False, url=organization.get("url"))
             client.login(username=organization.get("username"), password=organization.get("password"))
             clients.append(client)
-
     else:
         os.environ["DEBUG_SPAWNER"] = mode
-        clients = [substra.Client(debug=True)] * n_centers
+        clients = [substra.Client(debug=True) for _ in range(n_centers)]
 
     return clients
 
@@ -85,16 +83,6 @@ def load_asset_keys(asset_keys_path, mode):
 
 def save_asset_keys(asset_keys_path, asset_keys):
     (SUBSTRA_CONFIG_FOLDER / asset_keys_path).write_text(json.dumps(asset_keys, indent=4, sort_keys=True))
-
-
-def get_msp_id(client, default=""):
-    organizations = client.list_organization()
-    if organizations:
-        msp_id = [c.id for c in organizations if c.is_current][0]
-    else:
-        msp_id = str(default)
-
-    return msp_id
 
 
 def add_duplicated_dataset(
@@ -140,8 +128,6 @@ def add_duplicated_dataset(
     asset_keys.setdefault(msp_id, {})
 
     dataset = deepcopy(DEFAULT_DATASET)
-
-    dataset.metadata = {DEBUG_OWNER: msp_id}
 
     dataset_key = asset_keys.get(msp_id).get("dataset_key") or client.add_dataset(dataset)
 
@@ -196,9 +182,8 @@ def get_train_data_nodes(
 
     train_data_nodes = []
 
-    for k, client in enumerate(clients):
-        msp_id = get_msp_id(client=client, default=k)
-
+    for client in clients:
+        msp_id = client.organization_info().organization_id
         asset_keys = add_duplicated_dataset(
             client=client,
             nb_data_sample=nb_data_sample,
@@ -292,9 +277,8 @@ def get_test_data_nodes(
 
     test_data_nodes = []
 
-    for k, client in enumerate(clients):
-
-        msp_id = get_msp_id(client=client, default=k)
+    for client in clients:
+        msp_id = client.organization_info().organization_id
         asset_keys = add_duplicated_dataset(
             client=client,
             data_sample_folder=test_folder,
