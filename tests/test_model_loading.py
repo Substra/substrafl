@@ -4,7 +4,6 @@ import os
 import subprocess
 import sys
 import uuid
-from copy import deepcopy
 from pathlib import Path
 from platform import python_version
 from unittest.mock import MagicMock
@@ -99,7 +98,17 @@ def fake_client(fake_compute_plan, fake_composite_traintuple):
     client = Mock(spec=substra.Client)
     client.backend_mode = substra.BackendType.DEPLOYED
     client.get_compute_plan = MagicMock(return_value=fake_compute_plan)
-    client.organization_info = MagicMock(return_value={"organization_id": "Org1"})
+    client.organization_info = MagicMock(
+        return_value=substra.models.OrganizationInfo(
+            host="http://example.com",
+            organization_id="Org1",
+            organization_name="Org1",
+            config=substra.models.OrganizationInfoConfig(model_export_enabled=True),
+            channel="",
+            version="",
+            orchestrator_version="",
+        )
+    )
     client.list_composite_traintuple = MagicMock(return_value=[fake_composite_traintuple])
     client.download_algo = MagicMock(
         side_effect=lambda key, destination_folder: (Path(destination_folder) / ALGO_FILE).write_text("Hello there !")
@@ -165,16 +174,6 @@ def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog
     assert (dest_folder / metadata.get(LOCAL_STATE_KEY)).exists()
 
 
-@pytest.mark.parametrize("backend_mode", [substra.BackendType.LOCAL_SUBPROCESS, substra.BackendType.LOCAL_DOCKER])
-def test_local_client_warning(fake_client, fake_compute_plan, session_dir, caplog, backend_mode):
-    """Warning for local clients"""
-    dest_folder = session_dir / str(uuid.uuid4())
-    fake_client.backend_mode = backend_mode
-    caplog.clear()
-    download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
-    assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 1
-
-
 @pytest.mark.parametrize("to_remove", list(REQUIRED_KEYS))
 def test_environment_compatibility_error(fake_client, fake_compute_plan, to_remove, session_dir):
     """Error if one of the required key is not in the metadata."""
@@ -208,60 +207,13 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
 
 
 def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_composite_traintuple):
-    """With a deployed backend, error if multiple train tasks are found."""
+    """Error if multiple train tasks are found."""
     dest_folder = session_dir / str(uuid.uuid4())
     fake_client.list_composite_traintuple = MagicMock(
         return_value=[fake_composite_traintuple, fake_composite_traintuple]
     )
     with pytest.raises(MultipleTrainTaskError):
         download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
-
-
-@pytest.mark.parametrize("backend_mode", [substra.BackendType.LOCAL_SUBPROCESS, substra.BackendType.LOCAL_DOCKER])
-def test_multiple_train_task_local(
-    fake_client, fake_compute_plan, session_dir, fake_composite_traintuple, trunk_model, backend_mode, caplog
-):
-    """With a local backend, if multiple train tasks are found, the one with the highest rank is used and a warning is
-    thrown"""
-    dest_folder = session_dir / str(uuid.uuid4())
-
-    fake_client.list_composite_traintuple = MagicMock(
-        return_value=[fake_composite_traintuple, fake_composite_traintuple]
-    )
-    fake_client.backend_mode = backend_mode
-    # This test needs to be removed when substra client will simulates multiple clients
-
-    # Let's define an other composite of smaller rank and let's check that the downloaded model
-    # is the right one. We can check this in the metadata as the name of the model is
-    # computed from the head_model key.
-    # TODO: simplify the test once substra returns the file path with the get methods
-    smaller_fake_composite_traintuple = deepcopy(fake_composite_traintuple)
-    smaller_fake_composite_traintuple.rank = 1
-    head_model = Mock(spec=OutModel)
-    head_model.category = substra.models.ModelType.head
-    head_model.key = AssetKeys.invalid_head_model
-    composite = Mock(spec=_Composite)
-    composite.models = [head_model, trunk_model]
-
-    caplog.clear()
-    fake_client.list_composite_traintuple = MagicMock(
-        return_value=[
-            smaller_fake_composite_traintuple,
-            smaller_fake_composite_traintuple,
-            fake_composite_traintuple,
-            smaller_fake_composite_traintuple,
-        ]
-    )
-    download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
-    assert (
-        len(
-            list(filter(lambda x: x.levelname == "WARNING" and "has 4 composite train tuples" in x.msg, caplog.records))
-        )
-        == 1
-    )
-    metadata = json.loads((dest_folder / METADATA_FILE).read_text())
-
-    assert metadata.get(LOCAL_STATE_KEY) == str(dest_folder / f"model_{AssetKeys.valid_head_model}")
 
 
 def _create_algo_files(input_folder, algo, metadata):
