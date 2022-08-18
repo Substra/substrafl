@@ -37,11 +37,6 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
     or other methods if necessary.
 
     To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``.
-
-    As development tools, the ``train``  and ``predict`` method comes with a default argument : ``_skip``.
-
-    If ``_skip`` is set to ``True``, only the function will be executed and not all the code related to Substra.
-    This allows to quickly debug code and use the defined algorithm as is.
     """
 
     def __init__(
