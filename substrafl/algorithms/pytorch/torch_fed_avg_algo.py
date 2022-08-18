@@ -79,10 +79,6 @@ class TorchFedAvgAlgo(TorchAlgo):
 
                         if self._scheduler is not None:
                             self._scheduler.step()
-
-    As development tools, the ``train`` and ``predict`` method comes with a default argument : ``_skip``.
-    If ``_skip`` is set to ``True``, only the function will be executed and not all the code related to Substra.
-    This allows to quickly debug code and use the defined algorithm as is.
     """
 
     def __init__(
