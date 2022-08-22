@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## 0.26.0 - 2022-08-22
+
 ### Removed
 
 - Documentation for the `_skip` argument from the `_local_predict` and `_local_train` methods of `Torch*Algo`.
