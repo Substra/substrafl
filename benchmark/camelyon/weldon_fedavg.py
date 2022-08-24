@@ -76,7 +76,7 @@ def get_weldon_fedavg(
                 if self._scheduler is not None:
                     self._scheduler.step()
 
-        def _local_predict(self, predict_dataset):
+        def _local_predict(self, predict_dataset, predictions_path):
 
             multiprocessing_context = None
             if num_workers != 0:
@@ -96,6 +96,8 @@ def get_weldon_fedavg(
                     y_pred.append(self._model(X)[0].reshape(-1))
 
             y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
+
+            self._save_predictions(y_pred, predictions_path)
 
             return y_pred
 

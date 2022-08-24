@@ -18,6 +18,8 @@ from substrafl.exceptions import BatchSizeNotFoundError
 from substrafl.exceptions import DatasetSignatureError
 from substrafl.exceptions import DatasetTypeError
 from substrafl.index_generator import NpIndexGenerator
+from substrafl.nodes.node import InputIdentifiers
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.serializers import PickleSerializer
@@ -214,7 +216,20 @@ def test_base_algo_custom_init_arg_default_value(session_dir, dummy_algo_custom_
     loaded_struct = RemoteStruct.load(session_dir)
 
     remote_struct = loaded_struct.get_remote_instance()
-    _, result = remote_struct.train(X=None, y=None, head_model=None, trunk_model=None, rank=0)
+    inputs = {
+        InputIdentifiers.X: None,
+        InputIdentifiers.y: None,
+        InputIdentifiers.local: None,
+        InputIdentifiers.shared: None,
+        InputIdentifiers.rank: 0,
+    }
+    outputs = {
+        OutputIdentifiers.local: session_dir / OutputIdentifiers.local,
+        OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared,
+    }
+    remote_struct.train(inputs, outputs)
+
+    result = remote_struct.load_trunk_model(outputs[OutputIdentifiers.shared])
 
     assert result == 5
 
@@ -228,8 +243,20 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
     loaded_struct = RemoteStruct.load(session_dir)
 
     remote_struct = loaded_struct.get_remote_instance()
-    _, result = remote_struct.train(X=None, y=None, head_model=None, trunk_model=None, rank=0)
+    inputs = {
+        InputIdentifiers.X: None,
+        InputIdentifiers.y: None,
+        InputIdentifiers.local: None,
+        InputIdentifiers.shared: None,
+        InputIdentifiers.rank: 0,
+    }
+    outputs = {
+        OutputIdentifiers.local: session_dir / OutputIdentifiers.local,
+        OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared,
+    }
+    remote_struct.train(inputs, outputs)
 
+    result = remote_struct.load_trunk_model(outputs[OutputIdentifiers.shared])
     assert result == arg_value
 
 

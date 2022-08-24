@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 from pathlib import Path
 from typing import List
 
@@ -36,13 +35,6 @@ class MnistOpener(tools.Opener):
         data = self.get_X(folders)
         y_true = np.array([int(x == "Tumor") for x in data.indexes[:, 1]])
         return y_true
-
-    def save_predictions(self, y_pred, path):
-        np.save(path, y_pred)
-        shutil.move(str(path) + ".npy", path)
-
-    def get_predictions(self, path):
-        return np.load(path)
 
     def fake_X(self, n_samples=None):  # noqa: N802
         pass
