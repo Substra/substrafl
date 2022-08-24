@@ -9,6 +9,7 @@ from substra.sdk.models import ModelType
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
 from substrafl.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
+from substrafl.algorithms.pytorch.torch_newton_raphson_algo import TorchNewtonRaphsonAlgo
 from substrafl.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
 from substrafl.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
 from substrafl.dependency import Dependency
@@ -112,7 +113,9 @@ def rng_strategy():
     return RngStrategy
 
 
-@pytest.fixture(params=[TorchAlgo, TorchFedAvgAlgo, TorchSingleOrganizationAlgo, TorchScaffoldAlgo])
+@pytest.fixture(
+    params=[TorchAlgo, TorchFedAvgAlgo, TorchSingleOrganizationAlgo, TorchScaffoldAlgo, TorchNewtonRaphsonAlgo]
+)
 def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
     lin = torch.nn.Linear(3, 2)
     nig = NpIndexGenerator(
@@ -122,14 +125,23 @@ def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
 
     class MyAlgo(request.param):
         def __init__(self, dummy_test_param=5):
-            super().__init__(
-                model=lin,
-                criterion=torch.nn.MSELoss(),
-                optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
-                index_generator=nig,
-                dataset=numpy_torch_dataset,
-                dummy_test_param=dummy_test_param,
-            )
+            if isinstance(self, TorchNewtonRaphsonAlgo):
+                super().__init__(
+                    model=lin,
+                    criterion=torch.nn.MSELoss(),
+                    dataset=numpy_torch_dataset,
+                    batch_size=1,
+                    dummy_test_param=dummy_test_param,
+                )
+            else:
+                super().__init__(
+                    model=lin,
+                    criterion=torch.nn.MSELoss(),
+                    optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
+                    index_generator=nig,
+                    dataset=numpy_torch_dataset,
+                    dummy_test_param=dummy_test_param,
+                )
             self.dummy_test_param = dummy_test_param
 
         @property
