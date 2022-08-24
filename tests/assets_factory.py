@@ -30,13 +30,20 @@ COPY metrics.py .
 ENTRYPOINT ["python3", "metrics.py"]
 """
 
-DEFAULT_METRICS_FILE = """
+DEFAULT_METRICS_FILE = f"""
 import substratools as tools
 import math
 import numpy as np
 class AccuracyMetric(tools.Metrics):
-    def score(self, y_true, y_pred):
-        return {}
+    def score(self, inputs, outputs):
+        y_true = inputs['{InputIdentifiers.y}']
+        y_pred = self.load_predictions(inputs['{InputIdentifiers.predictions}'])
+        tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
+
+    def load_predictions(self, path):
+        return np.load(path)
+
+
 if __name__ == "__main__":
     tools.metrics.execute(AccuracyMetric())
 """
@@ -55,13 +62,6 @@ class NumpyOpener(tools.Opener):
     def get_y(self, folders):
         data = self._get_data(folders)
         return self._get_y(data)
-
-    def save_predictions(self, y_pred, path):
-        np.save(path, y_pred)
-        shutil.move(str(path) + ".npy", path)
-
-    def get_predictions(self, path):
-        return np.load(path, allow_pickle=True)
 
     def fake_X(self, n_samples=None):
         data = self._fake_data(n_samples)

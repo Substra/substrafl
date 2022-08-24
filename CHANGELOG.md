@@ -7,6 +7,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- BREAKING CHANGES:
+  - an extra argument `predictions_path` has been added to both `predict` and `_local_predict` methods from all `*TorchAglo` classes.
+    The user now have to use the `_save_predictions` method to save its predictions in `_local_predict`.
+    The user defined metrics will load those saved prediction with `np.load(inputs['predictions'])`.
+    The `_save_predictions` method can be overwritten.
+
+Default `_local_predict` method from substrafl algorithms went from:
+
+```python
+def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
+        if self._index_generator is not None:
+            predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._index_generator.batch_size)
+        else:
+            raise BatchSizeNotFoundError(
+                "No default batch size has been found to perform local prediction. "
+                "Please overwrite the _local_predict function of your algorithm."
+            )
+
+        self._model.eval()
+
+        predictions = torch.Tensor([])
+        with torch.inference_mode():
+            for x in predict_loader:
+                predictions = torch.cat((predictions, self._model(x)), 0)
+
+        return predictions
+```
+
+to
+
+```python
+def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path: Path):
+
+      if self._index_generator is not None:
+          predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._index_generator.batch_size)
+      else:
+          raise BatchSizeNotFoundError(
+              "No default batch size has been found to perform local prediction. "
+              "Please overwrite the _local_predict function of your algorithm."
+          )
+
+      self._model.eval()
+
+      predictions = torch.Tensor([])
+      with torch.inference_mode():
+          for x in predict_loader:
+              predictions = torch.cat((predictions, self._model(x)), 0)
+
+      self._save_predictions(predictions, predictions_path)
+
+      return predictions
+```
+
+- NOTABLE CHANGES due to breaking changes in connect-tools.
+  - both `load_predictions` and `get_predictions` methods have been removed from the opener
+  - the user defined `metrics` now takes `inputs` and `outputs` as argument.
+    - `inputs` is a dict containing:
+      - `rank`: int
+      - `y`: the result of `get_y` applied to the task datasamples
+      - `predictions`: a file path where the output predictions of the user defined algo has been saved.
+        As stated above, those predictions can be load thanks to `np.load` if the user didn't overwrite the
+        `_save_predictions` methods from substrafl defined `*Algo`.
+    - `outputs` is a dict containing:
+      - `performance`: a file path where to save the result of the metrics. It must be done through the `tools.save_performance` function.
+
+Instead of:
+
+```python
+import substratools as tools
+from sklearn.metrics import roc_auc_score
+
+
+class AUC(tools.Metrics):
+   def score(self, y_true, y_pred):
+       """AUC"""
+       metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
+
+       return float(metric)
+
+
+if __name__ == "__main__":
+   tools.metrics.execute(AUC())
+```
+
+the metric files should look like:
+
+```python
+import numpy as np
+import substratools as tools
+from sklearn.metrics import roc_auc_score
+
+
+class AUC(tools.Metrics):
+    def score(self, inputs, outputs):
+        """AUC"""
+
+        y_pred = np.load(inputs["predictions"])
+        y_true = inputs["y"]
+
+        metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
+
+        tools.save_performance(float(metric), outputs["performance"])
+
+
+if __name__ == "__main__":
+    tools.metrics.execute(AUC())
+```
+
 ## 0.26.0 - 2022-08-22
 
 ### Removed

@@ -1,11 +1,14 @@
 import abc
 import inspect
 import logging
+import os
+import shutil
 from pathlib import Path
 from typing import Any
 from typing import Optional
 from typing import Union
 
+import numpy as np
 import torch
 
 from substrafl.algorithms.algo import Algo
@@ -92,7 +95,7 @@ class TorchAlgo(Algo):
         raise NotImplementedError()
 
     @remote_data
-    def predict(self, x: Any, shared_state: Any) -> Any:
+    def predict(self, x: Any, shared_state: Any, predictions_path: os.PathLike = None) -> Any:
         """Executes the following operations:
 
             * Create the test torch dataset.
@@ -107,10 +110,22 @@ class TorchAlgo(Algo):
 
         # Create torch dataset
         predict_dataset = self._dataset(x=x, y=None, is_inference=True)
+        pred = self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
 
-        return self._local_predict(predict_dataset=predict_dataset)
+        return pred
 
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
+    def _save_predictions(self, predictions: torch.Tensor, predictions_path: os.PathLike):
+        """Save the predictions under the torch format.
+
+        Args:
+            predictions (torch.Tensor): predictions to save.
+            predictions_path (os.PathLike): destination file to save predictions.
+        """
+        if predictions_path is not None:
+            np.save(predictions_path, predictions)
+            shutil.move(str(predictions_path) + ".npy", predictions_path)
+
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
         """Executes the following operations:
 
             * Create the torch dataloader using the index generator batch size.
@@ -120,8 +135,15 @@ class TorchAlgo(Algo):
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
 
+
         Returns:
             typing.Any: Model prediction.
+
+        Important:
+            The onus is on the user to ``save`` and ``return`` the compute predictions. Substrafl provides the
+            ``torch_base_algo.TorchAlgo._save_predictions`` to do so.
+            The user can load those predictions from a metric file with the command:
+            ``y_pred = np.load(inputs['predictions'])``.
 
         Raises:
             BatchSizeNotFoundError: No default batch size have been found to perform local prediction.
@@ -141,6 +163,8 @@ class TorchAlgo(Algo):
         with torch.inference_mode():
             for x in predict_loader:
                 predictions = torch.cat((predictions, self._model(x)), 0)
+
+        self._save_predictions(predictions, predictions_path)
 
         return predictions
 

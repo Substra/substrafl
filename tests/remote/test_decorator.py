@@ -1,5 +1,9 @@
 from typing import List
 
+import numpy as np
+
+from substrafl.nodes.node import InputIdentifiers
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.decorators import remote
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.operations import AggregateOperation
@@ -20,7 +24,14 @@ class RemoteClass:
 
     @remote_data
     def train(self, x: int, y: int, shared_state: int, extra_arg: int = 0) -> int:
-        return x + y + shared_state + extra_arg
+        self.local_state = x + y + shared_state + extra_arg
+        return self.local_state
+
+    def save(self, path):
+        np.save(str(path) + ".npy", self.local_state)
+
+    def load(self, path):
+        return np.load(str(path) + ".npy")
 
 
 def test_remote_data():
@@ -44,7 +55,7 @@ def test_remote_data():
     assert result == 13
 
 
-def test_remote_data_get_method_from_remote_struct():
+def test_remote_data_get_method_from_remote_struct(session_dir):
     """Test that the remote_data decorator works properly with the RemoteStruct
     when getting the name of the method from the RemoteStruct"""
     my_remote_class = RemoteClass()
@@ -53,18 +64,25 @@ def test_remote_data_get_method_from_remote_struct():
     assert isinstance(data_op, DataOperation)
 
     new_remote_class = data_op.remote_struct.get_remote_instance()
-    result = new_remote_class.train(
-        X=4,
-        y=5,
-        trunk_model=4,
-        head_model=None,
-        rank=0,
-    )
+    new_remote_class.save_trunk_model(4, session_dir / InputIdentifiers.shared)
+    inputs = {
+        InputIdentifiers.X: 4,
+        InputIdentifiers.y: 5,
+        InputIdentifiers.local: None,
+        InputIdentifiers.shared: session_dir / InputIdentifiers.shared,
+        InputIdentifiers.rank: 0,
+    }
+    outputs = {
+        OutputIdentifiers.local: session_dir / OutputIdentifiers.local.value,
+        OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared.value,
+    }
+    new_remote_class.train(inputs, outputs)
 
-    assert result[1] == 13
+    result = new_remote_class.load_head_model(session_dir / OutputIdentifiers.local.value)
+    assert result == 13
 
 
-def test_remote_data_extra_arg():
+def test_remote_data_extra_arg(session_dir):
     """Test that the remote_data decorator works properly with the RemoteStruct and that an
     extra argument in the function is saved in the RemoteStruct"""
     my_remote_class = RemoteClass()
@@ -72,15 +90,23 @@ def test_remote_data_extra_arg():
     assert isinstance(data_op, DataOperation)
 
     new_remote_class = data_op.remote_struct.get_remote_instance()
-    result = new_remote_class.train(
-        X=4,
-        y=5,
-        trunk_model=4,
-        head_model=None,
-        rank=0,
-    )
 
-    assert result[1] == 113
+    new_remote_class.save_trunk_model(4, session_dir / InputIdentifiers.shared)
+    inputs = {
+        InputIdentifiers.X: 4,
+        InputIdentifiers.y: 5,
+        InputIdentifiers.local: None,
+        InputIdentifiers.shared: session_dir / InputIdentifiers.shared,
+        InputIdentifiers.rank: 0,
+    }
+    outputs = {
+        OutputIdentifiers.local: session_dir / OutputIdentifiers.local.value,
+        OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared.value,
+    }
+    new_remote_class.train(inputs, outputs)
+
+    result = new_remote_class.load_head_model(session_dir / OutputIdentifiers.local.value)
+    assert result == 113
 
 
 def test_remote():
