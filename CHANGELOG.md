@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- install `classic-algos` and benchmark pip requirements as part of the docker image
 - BREAKING CHANGES:
   - an extra argument `predictions_path` has been added to both `predict` and `_local_predict` methods from all `*TorchAglo` classes.
     The user now have to use the `_save_predictions` method to save its predictions in `_local_predict`.
