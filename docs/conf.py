@@ -195,8 +195,6 @@ nitpick_ignore = [
     ("py:class", "ComputePlan"),
     ("py:class", "substratools.algo.CompositeAlgo"),
     ("py:class", "substratools.algo.AggregateAlgo"),
-    ("py:class", "substrafl.remote.substratools_methods.inputs"),
-    ("py:class", "substrafl.remote.substratools_methods.outputs"),
 ]
 
 html_css_files = [

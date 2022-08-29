@@ -141,7 +141,7 @@ class TorchAlgo(Algo):
 
         Important:
             The onus is on the user to ``save`` and ``return`` the compute predictions. Substrafl provides the
-            ``torch_base_algo.TorchAlgo._save_predictions`` to do so.
+            :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` to do so.
             The user can load those predictions from a metric file with the command:
             ``y_pred = np.load(inputs['predictions'])``.
 
