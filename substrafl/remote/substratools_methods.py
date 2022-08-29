@@ -1,12 +1,9 @@
 """
 Methods inherited from substratools.
 """
-import os
 from pathlib import Path
 from typing import Any
 from typing import Dict
-from typing import List
-from typing import Optional
 from typing import Type
 from typing import TypedDict
 
@@ -37,21 +34,17 @@ class RemoteMethod(substratools.AggregateAlgo):
 
     def aggregate(
         self,
-        inputs: TypedDict(
-            "inputs",
-            {
-                InputIdentifiers.models: List[os.PathLike],
-                InputIdentifiers.rank: int,
-            },
-        ),
-        outputs: TypedDict("outputs", {OutputIdentifiers.model: os.PathLike}),
+        inputs: TypedDict,
+        outputs: TypedDict,
     ) -> None:
         """Aggregation operation
 
         Args:
-            inputs (typing.TypedDict): dict containing the list of models path loaded with `AggregateAlgo.load_model()`;
+            inputs (typing.TypedDict): dictionary containing:
+                the list of models path loaded with `AggregateAlgo.load_model()`;
                 the rank of the aggregate task.
-            outputs (typing.TypedDict):dict containing the output model path to save the aggregated model.
+            outputs (typing.TypedDict):dictionary containing:
+                the output model path to save the aggregated model.
         """
         models = []
         for m_path in inputs[InputIdentifiers.models]:
@@ -102,33 +95,20 @@ class RemoteDataMethod(substratools.CompositeAlgo):
 
     def train(
         self,
-        inputs: TypedDict(
-            "inputs",
-            {
-                InputIdentifiers.X: Any,
-                InputIdentifiers.y: Any,
-                InputIdentifiers.local: Optional[os.PathLike],
-                InputIdentifiers.shared: Optional[os.PathLike],
-                InputIdentifiers.rank: int,
-            },
-        ),
-        outputs: TypedDict(
-            "outputs",
-            {
-                OutputIdentifiers.local: os.PathLike,
-                OutputIdentifiers.shared: os.PathLike,
-            },
-        ),  # outputs contains a dict where keys are identifiers and values are paths on disk
+        inputs: TypedDict,
+        outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
     ) -> None:
         """train method
 
         Args:
-            inputs (typing.TypedDict): dict containing the training data samples loaded with `Opener.get_X()`;
+            inputs (typing.TypedDict): dictionary containing:
+                the training data samples loaded with `Opener.get_X()`;
                 the training data samples labels loaded with `Opener.get_y()`;
                 the head model loaded with `CompositeAlgo.load_head_model()` (may be None);
                 the trunk model loaded with `CompositeAlgo.load_trunk_model()` (may be None);
                 the rank of the training task.
-            outputs (typing.TypedDict): dict containing the output head model path to save the head model;
+            outputs (typing.TypedDict): dictionary containing:
+                the output head model path to save the head model;
                 the output trunk model path to save the trunk model.
         """
         # head_model should be None only at initialization
@@ -152,28 +132,18 @@ class RemoteDataMethod(substratools.CompositeAlgo):
 
     def predict(
         self,
-        inputs: TypedDict(
-            "inputs",
-            {
-                InputIdentifiers.X: Any,
-                InputIdentifiers.local: os.PathLike,
-                InputIdentifiers.shared: os.PathLike,
-            },
-        ),
-        outputs: TypedDict(
-            "outputs",
-            {
-                OutputIdentifiers.predictions: os.PathLike,
-            },
-        ),
+        inputs: TypedDict,
+        outputs: TypedDict,
     ) -> None:
         """predict function
 
         Args:
-            inputs (typing.TypedDict): dict containing the testing data samples loaded with `Opener.get_X()`;
+            inputs (typing.TypedDict): dictionary containing:
+                the testing data samples loaded with `Opener.get_X()`;
                 the head model loaded with `CompositeAlgo.load_head_model()`;
                 the trunk model loaded with `CompositeAlgo.load_trunk_model()`;
-            outputs (typing.TypedDict): dict containing the output predictions path to save the predictions.
+            outputs (typing.TypedDict): dictionary containing:
+                the output predictions path to save the predictions.
         """
         head_model_path = inputs.get(InputIdentifiers.local)
         assert head_model_path is not None, "head model is None. Possibly you did not train() before running predict()"
