@@ -15,8 +15,6 @@ from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
-from substrafl.schemas import ScaffoldAveragedStates
-from substrafl.schemas import ScaffoldSharedState
 from substrafl.strategies import Scaffold
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -164,72 +162,6 @@ def test_pytorch_scaffold_algo_performance(
     testtuples = network.clients[0].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
     testtuple = testtuples[0]
     assert list(testtuple.test.perfs.values())[0] == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
-
-
-@pytest.mark.skip("Can't use inference mode because of the set weight function")
-# TODO: fixe
-def test_train_skip(rtol):
-    # check the results of the train function with simple data and model
-    torch.manual_seed(42)
-    n_samples = 32
-
-    class Perceptron(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(1, 1, bias=False)
-            # we init the weights at 0
-            self.linear1.weight.data.fill_(0)
-
-        def forward(self, x):
-            out = self.linear1(x)
-            return out
-
-    dummy_model = Perceptron()
-    nig = NpIndexGenerator(
-        batch_size=n_samples,
-        num_updates=2,
-        shuffle=True,
-        drop_last=False,
-    )
-
-    class MyAlgo(TorchScaffoldAlgo):
-        def __init__(
-            self,
-        ):
-            super().__init__(
-                optimizer=torch.optim.SGD(dummy_model.parameters(), lr=0.5),
-                criterion=torch.nn.MSELoss(),
-                model=dummy_model,
-                index_generator=nig,
-            )
-
-    my_algo = MyAlgo()
-
-    # we generate linear data x=ay+b with a = 2, b = 0
-    a = 2
-    x = np.ones((n_samples, 1))  # ones
-    y = np.ones((n_samples, 1)) * a  # twos
-    shared_states: ScaffoldSharedState = my_algo.train(x=x, y=y, shared_state=None, _skip=True)
-
-    # the model should overfit so that weight_updates (= the new weighs) = a in x=ay+b
-    assert np.allclose(a, shared_states.parameters_update, rtol=rtol)
-    # lr * num_updates = 1 so control_variate_update = - parameters_update
-    assert np.allclose(-1 * a, shared_states.control_variate_update, rtol=rtol)
-    assert np.allclose(n_samples, shared_states.n_samples, rtol)
-    # server_control_variate is init to zero should not be modified
-    assert np.allclose(np.array([[0.0]]), shared_states.server_control_variate, rtol)
-
-    # we create a ScaffoldAveragedStates with the output state of the train function and predict on x
-    avg_shared_states = ScaffoldAveragedStates(
-        server_control_variate=shared_states.control_variate_update,
-        avg_parameters_update=shared_states.parameters_update,
-    )
-    my_algo.train(x=x, y=y, shared_state=avg_shared_states, _skip=True)
-
-    predictions = my_algo.predict(x=x, shared_state=None, _skip=True)
-
-    # the model should overfit so that predictions = y
-    assert np.allclose(y, predictions, rtol=rtol)
 
 
 @pytest.mark.parametrize("use_scheduler", [True, False])
