@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        python: ['3.8', '3.9']
+        python: ["3.8", "3.9"]
 
     steps:
       - uses: actions/checkout@v3
@@ -55,9 +55,9 @@ jobs:
 
       - name: Install package
         run: |
-             pip install --upgrade -e substratools
-             cd substra && pip install --upgrade -e . && cd ..
-             cd substrafl && pip install --upgrade -e '.[dev]' && cd ..
+          pip install --upgrade -e substratools
+          cd substra && pip install --upgrade -e . && cd ..
+          cd substrafl && pip install --upgrade -e '.[dev]' && cd ..
 
       - name: Run the slow local tests
         run: |
