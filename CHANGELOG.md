@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+
+### Features
+
+- In the PyTorch algorithms, move the data to the device (GPU or CPU) in the training loop and predict function so that the user does not need to do it.
+
+### Tests
+
+- Fix the GPU test to the last breaking changes, and unskip the `use_gpu=False` case
+
 ## 0.27.0 - 2022-08-29
 
 ### Changed

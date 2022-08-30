@@ -233,6 +233,9 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         for x_batch, y_batch in train_data_loader:
 
+            x_batch = x_batch.to(self._device)
+            y_batch = y_batch.to(self._device)
+
             # Forward pass
             y_pred = self._model(x_batch)
 
@@ -266,7 +269,10 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         predictions = torch.Tensor([])
         with torch.inference_mode():
             for x in predict_loader:
+                x = x.to(self._device)
                 predictions = torch.cat((predictions, self._model(x)), 0)
+
+        predictions = predictions.cpu().detach()
 
         self._save_predictions(predictions, predictions_path)
 

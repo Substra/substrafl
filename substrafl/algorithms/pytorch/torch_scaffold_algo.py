@@ -314,6 +314,9 @@ class TorchScaffoldAlgo(TorchAlgo):
 
         for x_batch, y_batch in train_data_loader:
 
+            x_batch = x_batch.to(self._device)
+            y_batch = y_batch.to(self._device)
+
             # Forward pass
             y_pred = self._model(x_batch)
             # Compute Loss
