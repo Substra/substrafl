@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pytest
@@ -25,6 +24,7 @@ from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.serializers import PickleSerializer
 from substrafl.schemas import StrategyName
 from substrafl.strategies import FedAvg
+from substrafl.strategies import NewtonRaphson
 from substrafl.strategies import Scaffold
 from substrafl.strategies import SingleOrganization
 from substrafl.strategies.strategy import Strategy
@@ -158,13 +158,18 @@ def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
     return MyAlgo
 
 
-@pytest.fixture(params=[True, False])
+@pytest.fixture(params=[pytest.param(True, marks=pytest.mark.gpu), False])
 def use_gpu(request):
     return request.param
 
 
 @pytest.fixture(
-    params=[(TorchFedAvgAlgo, FedAvg), (TorchSingleOrganizationAlgo, SingleOrganization), (TorchScaffoldAlgo, Scaffold)]
+    params=[
+        (TorchFedAvgAlgo, FedAvg),
+        (TorchSingleOrganizationAlgo, SingleOrganization),
+        (TorchScaffoldAlgo, Scaffold),
+        (TorchNewtonRaphsonAlgo, NewtonRaphson),
+    ]
 )
 def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
     nig = NpIndexGenerator(
@@ -175,31 +180,27 @@ def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
 
     class MyAlgo(request.param[0]):
         def __init__(self):
-            super().__init__(
-                model=perceptron,
-                optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
-                criterion=torch.nn.MSELoss(),
-                dataset=numpy_torch_dataset,
-                index_generator=nig,
-                use_gpu=use_gpu,
-            )
-
-        def _local_train(self, x: Any, y: Any):
+            if isinstance(self, TorchNewtonRaphsonAlgo):
+                super().__init__(
+                    model=perceptron,
+                    criterion=torch.nn.MSELoss(),
+                    dataset=numpy_torch_dataset,
+                    batch_size=1,
+                    use_gpu=use_gpu,
+                )
+            else:
+                super().__init__(
+                    model=perceptron,
+                    optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
+                    criterion=torch.nn.MSELoss(),
+                    dataset=numpy_torch_dataset,
+                    index_generator=nig,
+                    use_gpu=use_gpu,
+                )
             if use_gpu:
                 assert self._device == torch.device("cuda")
             else:
                 assert self._device == torch.device("cpu")
-            super()._local_train(
-                torch.from_numpy(x).float().to(self._device), torch.from_numpy(y).float().to(self._device)
-            )
-
-        def predict(self, x: Any) -> Any:
-            if use_gpu:
-                assert self._device == torch.device("cuda")
-            else:
-                assert self._device == torch.device("cpu")
-            y_pred = super().predict(torch.from_numpy(x).float().to(self._device))
-            return y_pred.cpu().detach().numpy()
 
         @property
         def strategies(self):
@@ -452,7 +453,6 @@ def test_none_index_generator_for_predict(numpy_torch_dataset):
         my_algo.predict(x=np.zeros(3), _skip=True)
 
 
-@pytest.mark.gpu
 @pytest.mark.substra
 def test_gpu(
     dummy_gpu,
@@ -473,7 +473,8 @@ def test_gpu(
     train_data_nodes = [train_linear_nodes[0]] if strategy_class == SingleOrganization else train_linear_nodes
     test_data_nodes = [test_linear_nodes[0]] if strategy_class == SingleOrganization else test_linear_nodes
 
-    strategy = strategy_class()
+    strategy = strategy_class(damping_factor=0.1) if strategy_class == NewtonRaphson else strategy_class()
+
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_data_nodes, rounds=[num_rounds]  # test only at the last round
     )
