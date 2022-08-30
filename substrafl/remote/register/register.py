@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # Substra tools version for which the image naming scheme changed
 MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.10.0"
 
-_DEFAULT_SUBSTRATOOLS_IMAGE = "gcr.io/connect-314908/connect-tools:\
+_DEFAULT_SUBSTRATOOLS_IMAGE = "gcr.io/connect-314908/substra-tools:\
 {substratools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
 
 SUBSTRAFL_FOLDER = "substrafl_internal"
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Create a Substra algo from the wrapped user code
     remote_instance = remote_struct.get_remote_instance()
 
-    # Execute the algo using connect-tools
+    # Execute the algo using substra-tools
     tools.algo.execute(remote_instance)
 """
 
@@ -125,7 +125,7 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
     elif version.parse(substratools_image_version) < version.parse(MINIMAL_DOCKER_SUBSTRATOOLS_VERSION):
         if not editable_mode:
             warnings.warn(
-                f"Your environment uses connect-tools={substratools_image_version}. Version \
+                f"Your environment uses substra-tools={substratools_image_version}. Version \
                 {MINIMAL_DOCKER_SUBSTRATOOLS_VERSION} will be used on Docker.",
                 SubstraToolsDeprecationWarning,
             )
