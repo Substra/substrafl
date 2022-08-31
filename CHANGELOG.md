@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix the GPU test to the last breaking changes, and unskip the `use_gpu=False` case
 
+### Documentation
+
+- Update the NpIndexGenerator docstrings to add information how to use it as a full epoch index generator.
+
 ## 0.27.0 - 2022-08-29
 
 ### Changed

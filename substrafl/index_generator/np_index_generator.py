@@ -46,6 +46,21 @@ class NpIndexGenerator(BaseIndexGenerator):
         with open(indexer_path, "rb") as f:
             loaded_batch_generator = pickle.load(f)
             f.close()
+
+    This index generator can be used to generate the batches for one epoch. For that, ``num_updates`` must be equal to:
+
+    If ``drop_last=True``:
+
+    .. code-block:: python
+
+        num_updates = math.floor(num_samples / batch_size)
+
+    If ``drop_last=False``:
+
+    .. code-block:: python
+
+        num_updates = math.ceil(num_samples / batch_size)
+
     """
 
     def __init__(
