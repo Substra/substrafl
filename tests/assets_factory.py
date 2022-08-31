@@ -27,7 +27,7 @@ DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"gcr.io/connect-314908/substra-tools:{DEFAU
 DEFAULT_METRICS_DOCKERFILE = f"""
 FROM {DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE}
 COPY metrics.py .
-ENTRYPOINT ["python3", "metrics.py"]
+ENTRYPOINT ["python3", "metrics.py", "--method-name", "score"]
 """
 
 DEFAULT_METRICS_FILE = f"""

@@ -264,6 +264,7 @@ class NewtonRaphson(Strategy):
 
     def predict(
         self,
+        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -271,6 +272,7 @@ class NewtonRaphson(Strategy):
         """Predict function for test_data_nodes on which the model have been trained on.
 
         Args:
+            algo (Algo): algo to use for computing the predictions.
             test_data_nodes (List[TestDataNode]): test data nodes to intersect with train data
                 nodes to evaluate the model on.
             train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
@@ -281,9 +283,11 @@ class NewtonRaphson(Strategy):
             NotImplementedError: Cannot test on a node we did not train on for now.
         """
 
-        for test_node in test_data_nodes:
+        for test_data_node in test_data_nodes:
             matching_train_nodes = [
-                train_node for train_node in train_data_nodes if train_node.organization_id == test_node.organization_id
+                train_node
+                for train_node in train_data_nodes
+                if train_node.organization_id == test_data_node.organization_id
             ]
             if len(matching_train_nodes) == 0:
                 raise NotImplementedError("Cannot test on a node we did not train on for now.")
@@ -293,7 +297,12 @@ class NewtonRaphson(Strategy):
             assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
             local_state = self._local_states[node_index]
 
-            test_node.update_states(
+            test_data_node.update_states(
+                operation=algo.predict(
+                    data_samples=test_data_node.test_data_sample_keys,
+                    shared_state=None,
+                    _algo_name=f"Testing with {algo.__class__.__name__}",
+                ),
                 traintuple_id=local_state.key,
                 round_idx=round_idx,
             )  # Init state for testtuple

@@ -317,6 +317,7 @@ def execute_experiment(
 
         if evaluation_strategy is not None and next(evaluation_strategy):
             strategy.predict(
+                algo=algo,
                 train_data_nodes=train_data_nodes,
                 test_data_nodes=evaluation_strategy.test_data_nodes,
                 round_idx=round_idx,

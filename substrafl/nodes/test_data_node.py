@@ -16,6 +16,7 @@ from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
+from substrafl.remote.operations import DataOperation
 from substrafl.remote.register import register_algo
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -50,12 +51,16 @@ class TestDataNode(Node):
     def update_states(
         self,
         traintuple_id: str,
+        operation: DataOperation,
         round_idx: int,
     ):
         """Creating a test tuple based on the node characteristic.
 
         Args:
             traintuple_id (str): The substra parent id
+            operation (DataOperation): Automatically generated structure returned by
+                the :py:func:`~substrafl.remote.decorators.remote_data` decorator. This allows to register an
+                operation and execute it later on.
             round_idx: (int): Round number of the strategy starting at 1.
 
         """
@@ -90,6 +95,7 @@ class TestDataNode(Node):
 
         self.predicttuples.append(
             {
+                "remote_operation": operation.remote_struct,
                 "predicttuple_id": predicttuple_id,
                 "traintuple_id": traintuple_id,
                 "data_manager_key": self.data_manager_key,
@@ -153,62 +159,55 @@ class TestDataNode(Node):
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
 
-        # TODO: double loop might slow down a lot large experiments. Consider refactoring.
         for predicttuple in self.predicttuples:
-            for traintuple in traintuples:
-                if traintuple["composite_traintuple_id"] == predicttuple["traintuple_id"]:
-                    if isinstance(traintuple["remote_operation"], RemoteStruct):
-                        remote_struct: RemoteStruct = traintuple["remote_operation"]
-
-                        if remote_struct not in cache:
-
-                            # Register the traintuple algorithm as a predict algo category.
-                            algo_key = register_algo(
-                                client=client,
-                                category=AlgoCategory.predict,
-                                remote_struct=remote_struct,
-                                permissions=permissions,
-                                dependencies=dependencies,
-                                inputs=[
-                                    AlgoInputSpec(
-                                        identifier=InputIdentifiers.datasamples,
-                                        kind=AssetKind.data_sample.value,
-                                        optional=False,
-                                        multiple=True,
-                                    ),
-                                    AlgoInputSpec(
-                                        identifier=InputIdentifiers.opener,
-                                        kind=AssetKind.data_manager.value,
-                                        optional=False,
-                                        multiple=False,
-                                    ),
-                                    AlgoInputSpec(
-                                        identifier=InputIdentifiers.local,
-                                        kind=AssetKind.model.value,
-                                        optional=False,
-                                        multiple=False,
-                                    ),
-                                    AlgoInputSpec(
-                                        identifier=InputIdentifiers.shared,
-                                        kind=AssetKind.model.value,
-                                        optional=False,
-                                        multiple=False,
-                                    ),
-                                ],
-                                outputs=[
-                                    AlgoOutputSpec(
-                                        identifier=OutputIdentifiers.predictions,
-                                        kind=AssetKind.model.value,
-                                        multiple=False,
-                                    )
-                                ],
-                            )
-                            predicttuple["algo_key"] = algo_key
-                            cache[remote_struct] = algo_key
-                            break
-                        else:
-                            algo_key = cache[remote_struct]
-                            predicttuple["algo_key"] = algo_key
+            remote_struct: RemoteStruct = predicttuple["remote_operation"]
+            if remote_struct not in cache:
+                # Register the predictuple algorithm
+                algo_key = register_algo(
+                    client=client,
+                    category=AlgoCategory.predict,
+                    remote_struct=remote_struct,
+                    permissions=permissions,
+                    dependencies=dependencies,
+                    inputs=[
+                        AlgoInputSpec(
+                            identifier=InputIdentifiers.datasamples,
+                            kind=AssetKind.data_sample.value,
+                            optional=False,
+                            multiple=True,
+                        ),
+                        AlgoInputSpec(
+                            identifier=InputIdentifiers.opener,
+                            kind=AssetKind.data_manager.value,
+                            optional=False,
+                            multiple=False,
+                        ),
+                        AlgoInputSpec(
+                            identifier=InputIdentifiers.local,
+                            kind=AssetKind.model.value,
+                            optional=False,
+                            multiple=False,
+                        ),
+                        AlgoInputSpec(
+                            identifier=InputIdentifiers.shared,
+                            kind=AssetKind.model.value,
+                            optional=False,
+                            multiple=False,
+                        ),
+                    ],
+                    outputs=[
+                        AlgoOutputSpec(
+                            identifier=OutputIdentifiers.predictions,
+                            kind=AssetKind.model.value,
+                            multiple=False,
+                        )
+                    ],
+                )
+                predicttuple["algo_key"] = algo_key
+                cache[remote_struct] = algo_key
+            else:
+                algo_key = cache[remote_struct]
+                predicttuple["algo_key"] = algo_key
 
         return cache
 

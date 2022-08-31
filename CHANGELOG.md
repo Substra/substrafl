@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- NOTABLE CHANGES due to breaking changes in connect-tools: the user must now pass the method name to execute from the
+  tools defined class within the dockerfile of both `algo` and `metric` under the `--method-name` argument:
+
+  ```Dockerfile
+  ENTRYPOINT ["python3", "metrics.py"]
+  ```
+
+  shall be replaced by:
+
+  ```Dockerfile
+  ENTRYPOINT ["python3", "metrics.py", "--method-name", "score"]
+  ```
+
 ### Features
 
 - In the PyTorch algorithms, move the data to the device (GPU or CPU) in the training loop and predict function so that the user does not need to do it.

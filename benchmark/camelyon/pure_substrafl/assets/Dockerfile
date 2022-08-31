@@ -8,4 +8,4 @@ RUN pip3 install scikit-learn
 ADD metrics.py .
 
 # define how script is run
-ENTRYPOINT ["python3", "metrics.py"]
+ENTRYPOINT ["python3", "metrics.py", "--method-name", "score"]
