@@ -1,10 +1,14 @@
 import argparse
 import json
+from pathlib import Path
 
 import substra
 import substratools
 
 import substrafl
+
+DEST_DIR = Path(__file__).parents[1]
+DATA_DIR = DEST_DIR / "data"
 
 
 def parse_params() -> dict:
@@ -67,6 +71,12 @@ file where to fill in the Substra assets to be reused""",
         default=2,
         help="Number of data sample of 400 Mb to use for each test task on each center",
     )
+    parser.add_argument(
+        "--data-path",
+        type=Path,
+        default=DATA_DIR,
+        help="Path to the data folder",
+    )
 
     args = parser.parse_args()
     params["n_centers"] = args.n_centers
@@ -79,6 +89,7 @@ file where to fill in the Substra assets to be reused""",
     params["asset_keys"] = args.asset_keys_path
     params["nb_train_data_samples"] = args.nb_train_data_samples
     params["nb_test_data_samples"] = args.nb_test_data_samples
+    params["data_path"] = args.data_path
 
     return params
 

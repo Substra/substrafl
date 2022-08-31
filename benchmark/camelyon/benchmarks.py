@@ -5,7 +5,6 @@ import time
 from pathlib import Path
 
 from classic_algos.nn import Weldon
-from common.dataset_manager import DATA_DIR
 from common.dataset_manager import creates_data_folder
 from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
@@ -100,20 +99,25 @@ def main():
     # necessary on OS X, Python >= 3.8 to run multiprocessing
     multiprocessing.set_start_method("fork")
 
-    # Get dataset
-    fetch_camelyon()
-
     # Parse experiment params from the cli and system configuration
     params = parse_params()
+
+    # Get dataset
+    data_path = params.pop("data_path").resolve()
+    fetch_camelyon(data_path=data_path)
 
     # Read old benchmark results from file if run in local
     if params["mode"] != "remote":
         results = read_results(LOCAL_RESULTS_FILE)
 
     # Not used in remote, TODO: refactor at some point
-    reset_data_folder()
-    train_folder = creates_data_folder(dest_folder=DATA_DIR / "train", index_path=DATA_DIR / "index.csv")
-    test_folder = creates_data_folder(dest_folder=DATA_DIR / "test", index_path=DATA_DIR / "index.csv")
+    reset_data_folder(data_path=data_path)
+    train_folder = creates_data_folder(
+        img_dir_path=data_path / "tiles_0.5mpp", dest_folder=data_path / "train", index_path=data_path / "index.csv"
+    )
+    test_folder = creates_data_folder(
+        img_dir_path=data_path / "tiles_0.5mpp", dest_folder=data_path / "test", index_path=data_path / "index.csv"
+    )
 
     try:
         # Execute experiment

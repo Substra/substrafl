@@ -300,15 +300,10 @@ def get_test_data_nodes(
     return test_data_nodes
 
 
-def get_aggregation_node(client) -> AggregationNode:
+def get_aggregation_node(client: substra.Client) -> AggregationNode:
     """Returns a substrafl aggregation node.
 
     Returns:
         AggregationNode: Substrafl aggregation node.
     """
-    organizations = client.list_organization()
-    if organizations:
-        msp_id = [c.id for c in organizations if c.is_current][0]
-    else:
-        msp_id = "0"
-    return AggregationNode(msp_id)
+    return AggregationNode(organization_id=client.organization_info().organization_id)

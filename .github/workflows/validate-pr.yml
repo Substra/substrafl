@@ -20,18 +20,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: substrafl
-          lfs: true
 
       - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
 
-      - uses: actions/cache@v3.0.2
+      - uses: actions/cache@v3.0.8
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
-
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/setup.py') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
       - name: Install lint checks
         run: |
           pip install --upgrade pip
@@ -42,15 +40,13 @@ jobs:
           cd substrafl
           pre-commit run --all-files
 
-      - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           repository: owkin/connect-tools
           token: ${{ secrets.ACCESS_TOKEN }}
           path: substratools
 
-      - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           repository: owkin/substra
           token: ${{ secrets.ACCESS_TOKEN }}
@@ -95,14 +91,13 @@ jobs:
           echo "[global]" >> ~/.pip/pip.conf
           echo "extra-index-url = https://connectors-service-account:${{ secrets.TWINE_PASSWORD }}@pypi.owkin.com/simple" >> ~/.pip/pip.conf
 
-      - uses: actions/cache@v3.0.2
+      - uses: actions/cache@v3.0.8
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/setup.py') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
 
-      - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           repository: owkin/substra
           token: ${{ secrets.ACCESS_TOKEN }}
@@ -118,3 +113,60 @@ jobs:
         run: |
           cd docs
           make clean html
+
+  benchmark:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+
+      - uses: actions/checkout@v3
+        with:
+          path: substrafl
+
+      - uses: actions/checkout@v3
+        with:
+          repository: owkin/connect-tools
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substratools
+
+      - uses: actions/checkout@v3
+        with:
+          repository: owkin/substra
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: substra
+
+      - name: Set up gcloud Cloud SDK environment
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: actions/cache@v3.0.8
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/setup.py') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
+
+      # Get classic-algos
+      - name: Login pypi
+        run: |
+             mkdir ~/.pip || touch ~/.pip/pip.conf
+             echo "[global]" >> ~/.pip/pip.conf
+             echo "extra-index-url = https://connectors-service-account:${{ secrets.TWINE_PASSWORD }}@pypi.owkin.com/simple" >> ~/.pip/pip.conf
+
+      - name: Download the classic-algos wheel
+        run: cd substrafl/benchmark/camelyon && pip download --no-deps classic-algos==1.6.0
+
+      - name: Install package
+        run: |
+             pip install --upgrade -e substra
+             pip install --upgrade -e substratools
+             pip install --upgrade -e substrafl[dev]
+             pip install --upgrade -r substrafl/benchmark/camelyon/requirements.txt
+
+      - name: Run the local benchmark
+        run: |
+          cd substrafl
+          make benchmark-local

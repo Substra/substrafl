@@ -86,8 +86,6 @@ def substrafl_fed_avg(
     )
 
     # Algo dependencies
-    # Classic algos must be installed locally in editable mode
-    # for the Dockerfile mode
     base = Path(__file__).parent
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy", "sklearn"],
