@@ -22,6 +22,7 @@ from substrafl.exceptions import SubstraToolsDeprecationWarning
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.remote.substratools_methods import RemoteDataMethod
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ RUN python{python_version} -m pip install -U pip
 # Install local dependencies
 {local_dependencies}
 
-ENTRYPOINT ["python{python_version}", "algo.py"]
+ENTRYPOINT ["python{python_version}", "algo.py", "--method-name", "{method_name}"]
 """
 
 ALGO = """
@@ -247,6 +248,12 @@ def _create_substra_algo_files(
             cl_deps=install_cmd,
             pypi_dependencies=pypi_dependencies_cmd,
             local_dependencies=local_dependencies_cmd,
+            # INFO: this is a temporary solution
+            # At the moment the method name is the one from the former Melody
+            # schemas, this will be variabilized soon
+            method_name=remote_struct._method_name
+            if remote_struct._remote_cls.__name__ == RemoteDataMethod.__name__
+            else "aggregate",
         )
     )
 

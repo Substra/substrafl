@@ -83,6 +83,7 @@ class SingleOrganization(Strategy):
 
     def predict(
         self,
+        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -93,9 +94,17 @@ class SingleOrganization(Strategy):
                 f" {len(train_data_nodes)} were passed."
             )
 
-        for test_node in test_data_nodes:
+        for test_data_node in test_data_nodes:
 
-            if train_data_nodes[0].organization_id != test_node.organization_id:
+            if train_data_nodes[0].organization_id != test_data_node.organization_id:
                 raise NotImplementedError("Cannot test on a organization we did not train on for now.")
             # Init state for testtuple
-            test_node.update_states(traintuple_id=self.local_state.key, round_idx=round_idx)
+            test_data_node.update_states(
+                traintuple_id=self.local_state.key,
+                operation=algo.predict(
+                    data_samples=test_data_node.test_data_sample_keys,
+                    shared_state=None,
+                    _algo_name=f"Testing with {algo.__class__.__name__}",
+                ),
+                round_idx=round_idx,
+            )  # Init state for testtuple

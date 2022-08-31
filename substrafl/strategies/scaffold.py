@@ -107,6 +107,7 @@ class Scaffold(Strategy):
 
     def predict(
         self,
+        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -127,6 +128,11 @@ class Scaffold(Strategy):
             local_state = self._local_states[organization_index]
 
             test_data_node.update_states(
+                operation=algo.predict(
+                    data_samples=test_data_node.test_data_sample_keys,
+                    shared_state=None,
+                    _algo_name=f"Testing with {algo.__class__.__name__}",
+                ),
                 traintuple_id=local_state.key,
                 round_idx=round_idx,
             )  # Init state for testtuple

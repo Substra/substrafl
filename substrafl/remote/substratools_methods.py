@@ -49,7 +49,7 @@ class RemoteMethod(substratools.AggregateAlgo):
         models = []
         for m_path in inputs[InputIdentifiers.models]:
             models.append(self.load_model(m_path))
-        outputs
+
         method_to_call = getattr(self.instance, self.method_name)
         next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
