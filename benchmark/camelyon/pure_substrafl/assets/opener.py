@@ -36,6 +36,12 @@ class MnistOpener(tools.Opener):
         y_true = np.array([int(x == "Tumor") for x in data.indexes[:, 1]])
         return y_true
 
+    def get_predictions(self):
+        pass
+
+    def save_predictions(self):
+        pass
+
     def fake_X(self, n_samples=None):  # noqa: N802
         pass
 

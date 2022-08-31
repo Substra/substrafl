@@ -1,6 +1,5 @@
 pure_substrafl/assets/metric.tar.gz
 data
-!data/index.csv
 results
 benchmark_cl_experiment_folder
 substra_conf/*
