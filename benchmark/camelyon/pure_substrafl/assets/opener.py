@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 from typing import List
 
@@ -12,16 +11,19 @@ logger = logging.getLogger(__name__)
 # Duplicated of common.data_manager.Data for dependencies reasons
 class Data:
     def __init__(self, paths: List[Path]):
-        indexes = np.empty((0, 2), dtype=object)
+        indexes = list()
         for path in paths:
             index_path = Path(path) / "index.csv"
             assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
             ds_indexes = np.loadtxt(index_path, delimiter=",", dtype=object)
-            ds_indexes[:, 0] = np.array(list(map(lambda x: str(os.path.join(path, x)), ds_indexes[:, 0])))  # noqa B023
+            ds_indexes[:, 0] = np.array([str(Path(path) / x) for x in ds_indexes[:, 0]])
+            indexes.extend(ds_indexes)
 
-            indexes = np.concatenate((indexes, ds_indexes))
+        self._indexes = np.asarray(indexes, dtype=object)
 
-        self.indexes = indexes
+    @property
+    def indexes(self):
+        return self._indexes
 
     def __len__(self):
         return len(self.indexes)

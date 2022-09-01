@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
+# Duplicated in connectlib/benchmark/camelyon/pure_substrafl/assets/opener.py
 class Data:
     def __init__(self, paths: List[Path]):
         indexes = list()
@@ -18,7 +19,7 @@ class Data:
             index_path = Path(path) / "index.csv"
             assert index_path.is_file(), "Wrong data sample, it must contain index.csv"
             ds_indexes = np.loadtxt(index_path, delimiter=",", dtype=object)
-            ds_indexes[:, 0] = np.array([str(path / x) for x in ds_indexes[:, 0]])
+            ds_indexes[:, 0] = np.array([str(Path(path) / x) for x in ds_indexes[:, 0]])
             indexes.extend(ds_indexes)
 
         self._indexes = np.asarray(indexes, dtype=object)
@@ -48,11 +49,13 @@ class CamelyonDataset(Dataset):
     def __getitem__(self, index):
         """Get the needed item from index and preprocess them on the fly."""
         sample_file_path, target = self.data_indexes[index]
-        x = torch.from_numpy(np.load(sample_file_path).astype(np.float32)[:, 3:]).to(device)
+        x = torch.from_numpy(np.load(sample_file_path).astype(np.float32)).to(device)
 
         y = torch.tensor(int(target == "Tumor")).type(torch.float32).to(device)
 
-        missing_tiles = 10000 - x.shape[0]
+        missing_tiles = 25000 - x.shape[0]
+        assert missing_tiles > 0, f"The padding value is too low, got {x.shape[0]} in this sample."
+
         up = math.ceil(missing_tiles / 2)
         down = missing_tiles // 2
 

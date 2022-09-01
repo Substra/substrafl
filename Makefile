@@ -40,7 +40,7 @@ benchmark: pyclean
 		--credentials-path ci.yaml \
 		--nb-train-data-samples 5 \
 		--nb-test-data-samples 2 \
-		--batch-size 8 \
+		--batch-size 4 \
 		--n-local-steps 10 \
 		--n-rounds 7
 
@@ -49,6 +49,6 @@ benchmark-local: pyclean
 		--mode subprocess \
 		--nb-train-data-samples 2 \
 		--nb-test-data-samples 2 \
-		--batch-size 8 \
+		--batch-size 4 \
 		--n-local-steps 1 \
 		--n-rounds 2

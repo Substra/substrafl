@@ -1,7 +1,10 @@
 pure_substrafl/assets/metric.tar.gz
-data
+
 results
 benchmark_cl_experiment_folder
+
 substra_conf/*
 !substra_conf/remote.yaml
 !substra_conf/ci.yaml
+
+data/tmp

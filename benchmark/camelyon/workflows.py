@@ -171,7 +171,6 @@ def torch_fed_avg(
     Returns:
         Tuple[float, dict]: Result of the experiment and more details on the speed.
     """
-
     train_camelyon = Data(paths=[train_folder] * nb_train_data_samples)
 
     train_datasets = [
@@ -205,16 +204,19 @@ def torch_fed_avg(
 
     test_datasets = [CamelyonDataset(x=test_camelyon) for _ in range(n_centers)]
 
+    for test_dataset in test_datasets:
+        batch_sampler = deepcopy(index_generator)
+        batch_sampler.n_samples = len(test_dataset)
+        batch_samplers.append(batch_sampler)
+
     test_dataloaders = [
         DataLoader(
             test_dataset,
-            batch_size=index_generator.batch_size,
-            shuffle=False,
-            drop_last=True,
+            batch_sampler=batch_sampler,
             num_workers=num_workers,
             multiprocessing_context=multiprocessing_context,
         )
-        for test_dataset in test_datasets
+        for batch_sampler, test_dataset in zip(batch_samplers, test_datasets)
     ]
 
     # Models definition
