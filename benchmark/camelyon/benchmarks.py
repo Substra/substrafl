@@ -4,11 +4,11 @@ import shutil
 import time
 from pathlib import Path
 
-from classic_algos.nn import Weldon
 from common.dataset_manager import creates_data_folder
 from common.dataset_manager import reset_data_folder
 from common.utils import parse_params
 from common.utils import read_results
+from common.weldon import Weldon
 from workflows import substrafl_fed_avg
 from workflows import torch_fed_avg
 
@@ -39,7 +39,6 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
     model = Weldon(
         in_features=2048,
         out_features=1,
-        n_extreme=10,
         n_top=10,
         n_bottom=10,
     )

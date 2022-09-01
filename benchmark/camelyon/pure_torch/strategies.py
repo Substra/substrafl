@@ -51,7 +51,7 @@ def basic_fed_avg(  # noqa: C901
             # Run local steps
             for X, y in dataloaders_train[idx_client]:
                 optimizers[idx_client].zero_grad()
-                y_pred = nets[idx_client](X)[0].reshape(-1)
+                y_pred = nets[idx_client](X).reshape(-1)
                 loss = criteria[idx_client](y_pred, y)
                 loss.backward()
                 optimizers[idx_client].step()

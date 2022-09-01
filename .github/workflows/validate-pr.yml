@@ -144,22 +144,12 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/setup.py') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
 
-      # Get classic-algos
-      - name: Login pypi
-        run: |
-             mkdir ~/.pip || touch ~/.pip/pip.conf
-             echo "[global]" >> ~/.pip/pip.conf
-             echo "extra-index-url = https://connectors-service-account:${{ secrets.TWINE_PASSWORD }}@pypi.owkin.com/simple" >> ~/.pip/pip.conf
-
-      - name: Download the classic-algos wheel
-        run: cd substrafl/benchmark/camelyon && pip download --no-deps classic-algos==1.6.0
-
       - name: Install package
         run: |
-             pip install --upgrade -e substra
-             pip install --upgrade -e substratools
-             pip install --upgrade -e substrafl[dev]
-             pip install --upgrade -r substrafl/benchmark/camelyon/requirements.txt
+          pip install --upgrade -e substra
+          pip install --upgrade -e substratools
+          pip install --upgrade -e substrafl[dev]
+          pip install --upgrade -r substrafl/benchmark/camelyon/requirements.txt
 
       - name: Run the local benchmark
         run: |

@@ -23,7 +23,6 @@ In a new python 3.9 environment :
 
 ```sh
 pip install -r requirements.txt
-pip download --no-deps classic-algos==1.6.0
 ```
 
 ### Common Installation error
@@ -78,6 +77,10 @@ There are 4 Camelyon slide data (i.e. extracted features from slides), for a tot
 Those 392 mb of data are saved as one Substra data sample. It is duplicated to create other data samples and form a large dataset (eg 400Gb per organization).
 
 **IMPORTANT NOTE:** those folder are populated with `symlinks` hence no useless space will be used on your device.
+
+### Model
+
+The model is named `Weldon`. The implementation is taken from [this paper](https://openaccess.thecvf.com/content_cvpr_2016/papers/Durand_WELDON_Weakly_Supervised_CVPR_2016_paper.pdf). Increasing the performances of the experiment could be done by implementing more complex models like [Chowder](https://arxiv.org/pdf/1802.02212.pdf)
 
 ## Local speed benchmark
 
@@ -161,17 +164,17 @@ In remote, one can chose to reuse some assets by passing their keys in the [keys
 
 ```json
 {
-    "MyOrg1MSP": {
-        "dataset_key": "b8d754f0-40a5-4976-ae16-8dd4eca35ffc",
-        "test_data_sample_keys": ["1238452c-a1dd-47ef-84a8-410c0841693a"],
-        "train_data_sample_keys": ["38071944-c974-4b3b-a671-aa4835a0ae62"]
-    },
-    "MyOrg2MSP": {
-        "dataset_key": "fa8e9bf7-5084-4b59-b089-a459495a08be",
-        "test_data_sample_keys": ["73715d69-9447-4270-9d3f-d0b17bb88a87"],
-        "train_data_sample_keys": ["766d2029-f90b-440e-8b39-2389ab04041d"]
-    },
-    "metric_key": "e5a99be6-0138-461a-92fe-23f685cdc9e1"
+  "MyOrg1MSP": {
+    "dataset_key": "b8d754f0-40a5-4976-ae16-8dd4eca35ffc",
+    "test_data_sample_keys": ["1238452c-a1dd-47ef-84a8-410c0841693a"],
+    "train_data_sample_keys": ["38071944-c974-4b3b-a671-aa4835a0ae62"]
+  },
+  "MyOrg2MSP": {
+    "dataset_key": "fa8e9bf7-5084-4b59-b089-a459495a08be",
+    "test_data_sample_keys": ["73715d69-9447-4270-9d3f-d0b17bb88a87"],
+    "train_data_sample_keys": ["766d2029-f90b-440e-8b39-2389ab04041d"]
+  },
+  "metric_key": "e5a99be6-0138-461a-92fe-23f685cdc9e1"
 }
 ```
 

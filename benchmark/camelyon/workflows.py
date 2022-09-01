@@ -89,8 +89,7 @@ def substrafl_fed_avg(
     base = Path(__file__).parent
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy", "sklearn"],
-        local_code=[base / "common" / "data_managers.py", base / "weldon_fedavg.py"],
-        local_dependencies=[base / "classic_algos-1.6.0-py3-none-any.whl"],
+        local_code=[base / "common" / "data_managers.py", base / "common" / "weldon.py", base / "weldon_fedavg.py"],
         editable_mode=False,
     )
 
@@ -245,7 +244,7 @@ def torch_fed_avg(
             y_pred = []
             y_true = np.array([])
             for X, y in test_dataloader:
-                y_pred.append(models[k](X)[0].reshape(-1))
+                y_pred.append(models[k](X).reshape(-1))
                 y_true = np.append(y_true, y.numpy())
 
             # Fusion, sigmoid and to numpy
