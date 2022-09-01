@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Removing `classic-algos` from the benchmark dependencies
 - NOTABLE CHANGES due to breaking changes in connect-tools: the user must now pass the method name to execute from the
   tools defined class within the dockerfile of both `algo` and `metric` under the `--method-name` argument:
 

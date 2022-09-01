@@ -65,7 +65,7 @@ def get_weldon_fedavg(
             for x_batch, y_batch in dataloader:
 
                 # Forward pass
-                y_pred = self._model(x_batch)[0].reshape(-1)
+                y_pred = self._model(x_batch).reshape(-1)
 
                 # Compute Loss
                 loss = self._criterion(y_pred, y_batch)
@@ -93,7 +93,7 @@ def get_weldon_fedavg(
             y_pred = []
             with torch.no_grad():
                 for X in dataloader:
-                    y_pred.append(self._model(X)[0].reshape(-1))
+                    y_pred.append(self._model(X).reshape(-1))
 
             y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
 
