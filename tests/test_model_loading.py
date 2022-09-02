@@ -27,8 +27,8 @@ from substrafl.exceptions import LoadAlgoMetadataError
 from substrafl.exceptions import MultipleTrainTaskError
 from substrafl.exceptions import TrainTaskNotFoundError
 from substrafl.exceptions import UnfinishedTrainTaskError
-from substrafl.model_loading import ALGO_FILE
-from substrafl.model_loading import LOCAL_STATE_KEY
+from substrafl.model_loading import ALGO_DICT_KEY
+from substrafl.model_loading import LOCAL_STATE_DICT_KEY
 from substrafl.model_loading import METADATA_FILE
 from substrafl.model_loading import REQUIRED_KEYS
 from substrafl.model_loading import download_algo_files
@@ -95,6 +95,16 @@ def fake_composite_traintuple(trunk_model):
 
 @pytest.fixture
 def fake_client(fake_compute_plan, fake_composite_traintuple):
+    def download_head_model_from_composite_traintuple(tuple_key, folder):
+        path = Path(folder) / f"model_{AssetKeys.valid_head_model}"
+        path.write_text("General Kenobi ...")
+        return path
+
+    def download_algo(key, destination_folder):
+        path = Path(destination_folder) / "algo.tar.gz"
+        path.write_text("Hello there !")
+        return path
+
     client = Mock(spec=substra.Client)
     client.backend_mode = substra.BackendType.DEPLOYED
     client.get_compute_plan = MagicMock(return_value=fake_compute_plan)
@@ -110,13 +120,9 @@ def fake_client(fake_compute_plan, fake_composite_traintuple):
         )
     )
     client.list_composite_traintuple = MagicMock(return_value=[fake_composite_traintuple])
-    client.download_algo = MagicMock(
-        side_effect=lambda key, destination_folder: (Path(destination_folder) / ALGO_FILE).write_text("Hello there !")
-    )
+    client.download_algo = MagicMock(side_effect=lambda key, destination_folder: download_algo(key, destination_folder))
     client.download_head_model_from_composite_traintuple = MagicMock(
-        side_effect=lambda tuple_key, folder: (Path(folder) / f"model_{AssetKeys.valid_head_model}").write_text(
-            "General Kenobi ..."
-        )
+        side_effect=lambda tuple_key, folder: download_head_model_from_composite_traintuple(tuple_key, folder)
     )
 
     return client
@@ -135,7 +141,8 @@ def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_
     input_folder.mkdir()
 
     metadata = fake_compute_plan.metadata
-    metadata.update({LOCAL_STATE_KEY: str(input_folder / "model")})
+    metadata.update({LOCAL_STATE_DICT_KEY: "model"})
+    metadata.update({ALGO_DICT_KEY: "algo.tar.gz"})
 
     subprocess.check_output([sys.executable, "-m", "pip", "install", "."], cwd=str(FILE_PATH / "installable_library"))
 
@@ -161,7 +168,8 @@ def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog
     dest_folder = session_dir / str(uuid.uuid4())
 
     expected_metadata = fake_compute_plan.metadata
-    expected_metadata.update({LOCAL_STATE_KEY: str(dest_folder / f"model_{AssetKeys.valid_head_model}")})
+    expected_metadata.update({LOCAL_STATE_DICT_KEY: f"model_{AssetKeys.valid_head_model}"})
+    expected_metadata.update({ALGO_DICT_KEY: "algo.tar.gz"})
 
     caplog.clear()
     download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
@@ -170,8 +178,8 @@ def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
 
     assert expected_metadata == metadata
-    assert (dest_folder / ALGO_FILE).exists()
-    assert (dest_folder / metadata.get(LOCAL_STATE_KEY)).exists()
+    assert (dest_folder / metadata.get(ALGO_DICT_KEY)).exists()
+    assert (dest_folder / metadata.get(LOCAL_STATE_DICT_KEY)).exists()
 
 
 @pytest.mark.parametrize("to_remove", list(REQUIRED_KEYS))
@@ -219,12 +227,15 @@ def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, 
 def _create_algo_files(input_folder, algo, metadata):
 
     # model file
-    if metadata.get(LOCAL_STATE_KEY):
-        Path(metadata.get(LOCAL_STATE_KEY)).write_text("True")
+    if metadata.get(LOCAL_STATE_DICT_KEY):
+        (input_folder / metadata.get(LOCAL_STATE_DICT_KEY)).write_text("True")
+
+    # algo file
+    if metadata.get(ALGO_DICT_KEY):
+        (input_folder / metadata.get(ALGO_DICT_KEY)).write_text("True")
 
     # metadata.json file
-    metadata_file = input_folder / METADATA_FILE
-    metadata_file.write_text(json.dumps(metadata))
+    (input_folder / METADATA_FILE).write_text(json.dumps(metadata))
 
     data_operation = algo.train(data_samples=[])
 
@@ -256,7 +267,8 @@ def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
     my_algo = MyAlgo()
 
     metadata = fake_compute_plan.metadata
-    metadata.update({LOCAL_STATE_KEY: str(input_folder / "model")})
+    metadata.update({LOCAL_STATE_DICT_KEY: "model"})
+    metadata.update({ALGO_DICT_KEY: "algo.tar.gz"})
 
     _create_algo_files(input_folder, my_algo, metadata)
 
@@ -266,14 +278,15 @@ def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
     assert my_loaded_algo._updated
 
 
-@pytest.mark.parametrize("to_remove", [ALGO_FILE, METADATA_FILE, "model"])
+@pytest.mark.parametrize("to_remove", ["algo.tar.gz", METADATA_FILE, "model"])
 def test_missing_file_error(session_dir, fake_compute_plan, dummy_algo_class, to_remove):
     """Checks that the load_algo method raises an error if one of the needed file is not found."""
     input_folder = session_dir / str(uuid.uuid4())
     input_folder.mkdir()
 
     metadata = fake_compute_plan.metadata
-    metadata.update({LOCAL_STATE_KEY: str(input_folder / "model")})
+    metadata.update({LOCAL_STATE_DICT_KEY: "model"})
+    metadata.update({ALGO_DICT_KEY: "algo.tar.gz"})
 
     _create_algo_files(input_folder, dummy_algo_class(), metadata)
 

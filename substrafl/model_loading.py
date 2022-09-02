@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 REQUIRED_LIBS = [substrafl, substra, substratools]
 REQUIRED_KEYS = set([lib.__name__ + "_version" for lib in REQUIRED_LIBS] + ["python_version", "num_rounds"])
 METADATA_FILE = "metadata.json"
-ALGO_FILE = "algo.tar.gz"
-LOCAL_STATE_KEY = "local_state_file"
+ALGO_DICT_KEY = "algo_file"
+LOCAL_STATE_DICT_KEY = "local_state_file"
 
 
 def _check_environment_compatibility(metadata: dict):
@@ -75,38 +75,46 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
     Returns:
         dict: execution environment metadata of the model stored in the given folder
     """
-    algo_path = folder / ALGO_FILE
     metadata_path = folder / METADATA_FILE
     local_state_file = None
 
     missing = []
     end_of_msg = (
         "This folder should be the result of the `substrafl.download_algo_files` function "
-        f"and contain the following files: `{ALGO_FILE}`, `{METADATA_FILE}` and file staring with `model_` "
+        f"and contain the {METADATA_FILE}, model and algo files."
         "being the local state of the model to load within memory."
     )
-
-    if not algo_path.exists():
-        missing.append(ALGO_FILE)
 
     if not metadata_path.exists():
         missing.append(METADATA_FILE)
     else:
         metadata = json.loads(metadata_path.read_text())
 
-        # if metadata file exist we check that the LOCAL_STATE_KEY key is provided
-        local_state_file = metadata.get(LOCAL_STATE_KEY)
-
-        if local_state_file is None:
+        # if metadata file exist we check that the LOCAL_STATE_DICT_KEY key is provided
+        if LOCAL_STATE_DICT_KEY not in metadata:
             raise LoadAlgoMetadataError(
-                "The metadata.json file from the specified folder should contain a `local_state_file` key"
-                "pointing the the downloaded local state of the model to load within memory."
+                f"The {METADATA_FILE} file from the specified folder should contain a `{LOCAL_STATE_DICT_KEY}` key"
+                "pointing the downloaded local state of the model to load within memory."
             )
 
-        # And that the pointed file exists
-        elif not ((folder / local_state_file).exists()):
+        # if metadata file exist we check that the ALGO_DICT_KEY key is provided
+        elif ALGO_DICT_KEY not in metadata:
+            raise LoadAlgoMetadataError(
+                f"The {METADATA_FILE} file from the specified folder should contain an `{ALGO_DICT_KEY}` key"
+                "pointing the downloaded algo file to load within memory."
+            )
+
+        local_state_file = metadata[LOCAL_STATE_DICT_KEY]
+        algo_path = metadata[ALGO_DICT_KEY]
+
+        # And that the pointed files exists
+        if not ((folder / local_state_file).exists()):
             missing.append(local_state_file)
             end_of_msg += f", `{local_state_file}`"
+
+        if not ((folder / algo_path).exists()):
+            missing.append(algo_path)
+            end_of_msg += f", `{algo_path}`"
 
     if len(missing) > 0:
         raise LoadAlgoFileNotFoundError(
@@ -248,19 +256,15 @@ def download_algo_files(
             f"in status {composite_traintuple.status}"
         )
 
-    client.download_algo(composite_traintuple.algo.key, destination_folder=folder)
+    algo_file = client.download_algo(composite_traintuple.algo.key, destination_folder=folder)
 
     # Get the associated head model (local state)
-    client.download_head_model_from_composite_traintuple(composite_traintuple.key, folder=folder)
-    head_model_key = [
-        model.key for model in composite_traintuple.composite.models if model.category == substra.models.ModelType.head
-    ]
-    head_model_key = head_model_key[0]
-    local_state_file = folder / f"model_{head_model_key}"
+    local_state_file = client.download_head_model_from_composite_traintuple(composite_traintuple.key, folder=folder)
 
     # Environment requirements and local state path
     metadata = {k: v for k, v in compute_plan.metadata.items() if k in REQUIRED_KEYS}
-    metadata[LOCAL_STATE_KEY] = str(local_state_file)
+    metadata[LOCAL_STATE_DICT_KEY] = str(local_state_file.relative_to(folder))
+    metadata[ALGO_DICT_KEY] = str(algo_file.relative_to(folder))
     metadata_path = folder / METADATA_FILE
     metadata_path.write_text(json.dumps(metadata))
 
@@ -290,15 +294,13 @@ def load_algo(input_folder: os.PathLike) -> Any:
 
     folder = Path(input_folder)
 
-    algo_path = folder / ALGO_FILE
-
     metadata = _validate_load_algo_inputs(folder=folder)
 
     _check_environment_compatibility(metadata=metadata)
 
     try:
-        algo = _load_algo(algo_path=algo_path, extraction_folder=folder)
-        local_state = algo.load(Path(metadata[LOCAL_STATE_KEY]))
+        algo = _load_algo(algo_path=folder / metadata[ALGO_DICT_KEY], extraction_folder=folder)
+        local_state = algo.load(folder / metadata[LOCAL_STATE_DICT_KEY])
 
     except ModuleNotFoundError as e:
         raise LoadAlgoLocalDependencyError(

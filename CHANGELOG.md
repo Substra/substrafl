@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ENTRYPOINT ["python3", "metrics.py", "--method-name", "score"]
   ```
 
+- Use the new Susbtra sdk features that return the path of the downloaded file. Change the ``model_loading.py``implementation and the tests.
+
 ### Features
 
 - In the PyTorch algorithms, move the data to the device (GPU or CPU) in the training loop and predict function so that the user does not need to do it.
