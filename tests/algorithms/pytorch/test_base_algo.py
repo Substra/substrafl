@@ -1,9 +1,6 @@
-from pathlib import Path
-
 import numpy as np
 import pytest
 import torch
-from substra.sdk.models import ModelType
 
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
@@ -299,13 +296,10 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
     output_model = {}
 
     for composite_traintuple in network.clients[0].list_composite_traintuple(filters={"compute_plan_key": [cp.key]}):
-        network.clients[0].download_trunk_model_from_composite_traintuple(composite_traintuple.key, session_dir)
-        for m in composite_traintuple.composite.models:
-            if m.category == ModelType.simple:
-                download_path = "model_" + m.key
-                output_model[composite_traintuple.metadata["round_idx"]] = PickleSerializer().load(
-                    Path(session_dir) / download_path
-                )
+        download_path = network.clients[0].download_trunk_model_from_composite_traintuple(
+            composite_traintuple.key, session_dir
+        )
+        output_model[composite_traintuple.metadata["round_idx"]] = PickleSerializer().load(download_path)
 
     if test_seed is not None:
         assert all(output_model["1"] == expected_output_round_1)

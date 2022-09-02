@@ -88,8 +88,7 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
                 client = network.clients[0]
             elif task.worker == network.msp_ids[1]:
                 client = network.clients[1]
-            client.download_model(model.key, session_dir)
-            model_path = session_dir / f"model_{model.key}"
+            model_path = client.download_model(model.key, session_dir)
             if model.category == ModelType.head:
                 model = my_algo.load(model_path)
                 # Move the torch model to CPU
@@ -104,8 +103,7 @@ def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: i
         filters={"compute_plan_key": [compute_plan.key], "rank": [rank]}
     )[0]
     model_key = aggregate_task.aggregate.models[0].key
-    network.clients[0].download_model(model_key, session_dir)
-    model_path = session_dir / f"model_{model_key}"
+    model_path = network.clients[0].download_model(model_key, session_dir)
     aggregate_model = pickle.loads(model_path.read_bytes())
 
     return aggregate_model
