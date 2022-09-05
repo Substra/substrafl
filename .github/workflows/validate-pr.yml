@@ -59,9 +59,9 @@ jobs:
       - name: Run the fast local tests
         env:
           USE_LATEST_SUBSTRATOOLS: True
-        run: |
+        run: | # TODO: Change back to # test-subprocess-fast before merge
           cd substrafl
-          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-subprocess-fast
+          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-local-slow
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
