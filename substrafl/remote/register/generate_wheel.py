@@ -138,7 +138,7 @@ def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: 
                 )
             except subprocess.CalledProcessError as e:
                 raise ConnectionError(
-                    "Couldn't access to Owkin pypi, please ensure you have access to https://pypi.owkin.com/simple/.",
+                    "Couldn't access to pypi, please ensure you have access to https://pypi.org",
                     e.output,
                 )
 
