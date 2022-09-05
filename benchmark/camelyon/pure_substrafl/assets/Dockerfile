@@ -1,5 +1,5 @@
 # this base image works in both CPU and GPU enabled environments
-FROM gcr.io/connect-314908/substra-tools:latest-nvidiacuda11.6.0-base-ubuntu20.04-python3.9
+FROM ghcr.io/substra/substra-tools:latest-nvidiacuda11.6.0-base-ubuntu20.04-python3.9
 
 # install dependencies # TODO remove sklearn ?
 RUN pip3 install scikit-learn

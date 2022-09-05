@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-# Duplicated in connectlib/benchmark/camelyon/pure_substrafl/assets/opener.py
+# Duplicated in substrafl/benchmark/camelyon/pure_substrafl/assets/opener.py
 class Data:
     def __init__(self, paths: List[Path]):
         indexes = list()
