@@ -136,7 +136,6 @@ def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: 
                 ]
             )
 
-
         # Get wheel name based on current version
         shutil.copy(LOCAL_WHEELS_FOLDER / wheel_name, wheels_dir / wheel_name)
         install_cmd = f"RUN cd {dest_dir} && python{python_major_minor} -m pip install {wheel_name}\n"
