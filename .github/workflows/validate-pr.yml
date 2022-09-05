@@ -43,13 +43,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: substra/substra-tools
-          token: ${{ secrets.ACCESS_TOKEN }}
           path: substratools
 
       - uses: actions/checkout@v3
         with:
           repository: substra/substra
-          token: ${{ secrets.ACCESS_TOKEN }}
           path: substra
 
       - name: Install package
@@ -89,7 +87,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: substra/substra
-          token: ${{ secrets.ACCESS_TOKEN }}
           path: substra
 
       - name: Install Dependencies
@@ -118,13 +115,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: substra/substra-tools
-          token: ${{ secrets.ACCESS_TOKEN }}
           path: substratools
 
       - uses: actions/checkout@v3
         with:
           repository: substra/substra
-          token: ${{ secrets.ACCESS_TOKEN }}
           path: substra
 
       - uses: actions/cache@v3.0.8
