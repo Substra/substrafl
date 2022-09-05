@@ -22,7 +22,7 @@ DEFAULT_SUBSTRATOOLS_VERSION = (
     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
 )
 
-DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"gcr.io/connect-314908/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
+DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"ghcr.io/substra/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
 
 DEFAULT_METRICS_DOCKERFILE = f"""
 FROM {DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE}

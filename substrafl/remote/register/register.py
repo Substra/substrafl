@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # Substra tools version for which the image naming scheme changed
 MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.10.0"
 
-_DEFAULT_SUBSTRATOOLS_IMAGE = "gcr.io/connect-314908/substra-tools:\
+_DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
 {substratools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
 
 SUBSTRAFL_FOLDER = "substrafl_internal"

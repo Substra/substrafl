@@ -43,7 +43,7 @@ def test_generate_pypi_lib_wheel(session_dir):
 
     # save the current versions the libs to set them back later
     substratools_version = substratools.__version__
-    substratools.__version__ = "0.9.1"
+    substratools.__version__ = "0.7.0"
 
     pypi_lib_wheels(
         lib_modules=libs,
