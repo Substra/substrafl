@@ -23,28 +23,16 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Set up gcloud Cloud SDK environment
-        uses: google-github-actions/setup-gcloud@v0.2.0
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Configure docker for GCP
-        run: gcloud auth configure-docker
-        shell: bash
-
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
         with:
-          repository: owkin/connect-tools
-          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: substra/substra-tools
           path: substratools
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
         with:
-          repository: owkin/substra
-          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: substra/substra
           path: substra
 
       - uses: actions/cache@v3.0.8
@@ -60,6 +48,8 @@ jobs:
           cd substrafl && pip install --upgrade -e '.[dev]' && cd ..
 
       - name: Run the slow local tests
+        env:
+          USE_LATEST_SUBSTRATOOLS: True
         run: |
           cd substrafl
           make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-local-slow
