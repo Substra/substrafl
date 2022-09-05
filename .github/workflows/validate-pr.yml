@@ -89,9 +89,15 @@ jobs:
           repository: substra/substra
           path: substra
 
+      - uses: actions/checkout@v3
+        with:
+          repository: substra/substra-tools
+          path: substratools
+
       - name: Install Dependencies
         run: |
           pip install --upgrade ./substra
+          pip install --upgrade -e ./substratools
           pip install --upgrade .[dev]
           pip install --upgrade -r docs/requirements.txt
 
