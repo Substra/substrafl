@@ -36,15 +36,13 @@ jobs:
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
         with:
-          repository: owkin/connect-tools
-          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: substra/substra-tools
           path: substratools
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
         with:
-          repository: owkin/substra
-          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: substra/substra
           path: substra
 
       - uses: actions/cache@v3.0.8
