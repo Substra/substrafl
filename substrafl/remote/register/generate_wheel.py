@@ -117,30 +117,25 @@ def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: 
 
         # Download only if exists
         if not ((LOCAL_WHEELS_FOLDER / wheel_name).exists()):
-            try:
-                subprocess.check_output(
-                    [
-                        sys.executable,
-                        "-m",
-                        "pip",
-                        "download",
-                        "--only-binary",
-                        ":all:",
-                        "--python-version",
-                        python_major_minor,
-                        "--no-deps",
-                        "--implementation",
-                        "py",
-                        "-d",
-                        LOCAL_WHEELS_FOLDER,
-                        f"{lib_module.__name__}=={lib_module.__version__}",
-                    ]
-                )
-            except subprocess.CalledProcessError as e:
-                raise ConnectionError(
-                    "Couldn't access to pypi, please ensure you have access to https://pypi.org",
-                    e.output,
-                )
+            subprocess.check_output(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "download",
+                    "--only-binary",
+                    ":all:",
+                    "--python-version",
+                    python_major_minor,
+                    "--no-deps",
+                    "--implementation",
+                    "py",
+                    "-d",
+                    LOCAL_WHEELS_FOLDER,
+                    f"{lib_module.__name__}=={lib_module.__version__}",
+                ]
+            )
+
 
         # Get wheel name based on current version
         shutil.copy(LOCAL_WHEELS_FOLDER / wheel_name, wheels_dir / wheel_name)
