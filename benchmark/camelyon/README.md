@@ -81,7 +81,6 @@ python benchmarks.py --mode subprocess --n-rounds 2 --n-local-steps 1 --nb-train
 
 For this example, we use a few samples from the Camelyon dataset already processed by the [FLamby team](https://github.com/owkin/FLamby/tree/main/flamby/datasets/fed_camelyon16).
 
-The dataset is available using ``git lfs``: install Git LFS on your computer then go to the repo folder and do `git lfs pull`. The samples should appear in the folder `benchmark/camelyon/data/tiles_0.5mpp`.
 There are 4 Camelyon slide data (i.e. extracted features from slides), for a total of 392 Mb.
 
 Those 392 mb of data are saved as one Substra data sample. It is duplicated to create other data samples and form a large dataset (eg 400Gb per organization).
