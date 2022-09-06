@@ -25,6 +25,16 @@ In a new python 3.9 environment :
 pip install -r requirements.txt
 ```
 
+On Mac, you need to install the `parallel` command to download the dataset:
+
+```sh
+brew install parallel
+```
+
+It is already included on Linux distributions.
+
+You can also download the dataset manually from the [Zenodo project](https://zenodo.org/record/7053167), and put the `index.csv` file in the `substrafl/benchmark/camelyon/data` folder, and the features (`.npy` files) in the `substrafl/benchmark/camelyon/data/tiles_0.5mpp` folder.
+
 ### Common Installation error
 
 Please ensure that your python installation is complete. For Mac users if you get the following warning :

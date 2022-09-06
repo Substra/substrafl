@@ -1,10 +1,36 @@
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 import numpy as np
 
 ROOT_DIR = Path(__file__).parents[1]
+
+FILE_LIST = [
+    "normal_001.tif.npy",
+    "normal_002.tif.npy",
+    "tumor_106.tif.npy",
+    "tumor_108.tif.npy",
+]
+URL = "https://zenodo.org/api/files/d5520b8a-6a5b-41ef-bde0-247dbdded101/"
+N_PARALLEL = 4
+
+
+def fetch_camelyon(data_path: Path):
+    index_filename = "index.csv"
+    if not (data_path / index_filename).exists():
+        print("Downloading the dataset (~400Mb), this may take a few minutes.")
+        subprocess.run(
+            ["wget", f"{URL}index.csv"],
+            check=True,
+            cwd=data_path,
+        )
+        subprocess.run(
+            ["parallel", "-j", str(N_PARALLEL), "wget", ":::"] + [f"{URL}{filename}" for filename in FILE_LIST],
+            check=True,
+            cwd=data_path / "tiles_0.5mpp",
+        )
 
 
 def reset_data_folder(data_path: Path):
