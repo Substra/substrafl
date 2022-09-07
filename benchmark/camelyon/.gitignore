@@ -8,3 +8,4 @@ substra_conf/*
 !substra_conf/ci.yaml
 
 data/tmp
+data/index.csv

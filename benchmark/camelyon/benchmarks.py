@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 
 from common.dataset_manager import creates_data_folder
+from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
 from common.utils import parse_params
 from common.utils import read_results
@@ -107,6 +108,7 @@ def main():
     # Not used in remote, TODO: refactor at some point
     data_path = Path(__file__).parent.resolve() / "data"
     exp_data_path = data_path / "tmp"
+    fetch_camelyon(data_path)
     reset_data_folder(exp_data_path)
     train_folder = creates_data_folder(
         img_dir_path=data_path / "tiles_0.5mpp",
