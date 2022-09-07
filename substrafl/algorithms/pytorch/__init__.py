@@ -1,5 +1,3 @@
-# bug in torch 1.12.0 (https://github.com/pytorch/pytorch/pull/80345)
-# raise an error if this version is used
 from torch import __version__ as torch_version
 
 from substrafl.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
