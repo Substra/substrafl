@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
+from tqdm.auto import tqdm
 
 ROOT_DIR = Path(__file__).parents[1]
 
@@ -26,11 +27,24 @@ def fetch_camelyon(data_path: Path):
             check=True,
             cwd=data_path,
         )
-        subprocess.run(
-            ["parallel", "-j", str(N_PARALLEL), "wget", ":::"] + [f"{URL}{filename}" for filename in FILE_LIST],
-            check=True,
-            cwd=data_path / "tiles_0.5mpp",
-        )
+        processes = [
+            subprocess.Popen(
+                ["wget", f"{URL}{filename}"],
+                cwd=data_path / "tiles_0.5mpp",
+            )
+            for filename in FILE_LIST
+        ]
+        errors = list()
+        for proc in tqdm(processes):
+            try:
+                outs, errs = proc.communicate(timeout=60)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                outs, errs = proc.communicate()
+            if proc.returncode != 0:
+                errors.append((proc.args, proc.returncode))
+        if len(errors) > 0:
+            raise subprocess.CalledProcessError(proc.args, proc.returncode)
 
 
 def reset_data_folder(data_path: Path):
