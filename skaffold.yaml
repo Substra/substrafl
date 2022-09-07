@@ -12,7 +12,7 @@ deploy:
     releases:
       - name: substrafl
         chartPath: charts/substrafl
-        namespace: connect-tests
+        namespace: substra-tests
         imageStrategy:
           helm: {}
         values:
