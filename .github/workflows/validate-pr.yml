@@ -150,7 +150,7 @@ jobs:
       - name: Run the local benchmark
         run: |
           cd substrafl
-          mkdir -p /home/runner/work/substrafl/data
+          mkdir -p /home/runner/work/substrafl/data/tiles_0.5mpp
           python benchmark/camelyon/benchmarks.py \
             --mode subprocess \
             --nb-train-data-samples 2 \
