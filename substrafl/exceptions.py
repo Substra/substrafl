@@ -116,3 +116,7 @@ class LoadAlgoFileNotFoundError(Exception):
 class LoadAlgoLocalDependencyError(Exception):
     """When using the :func:`~substrafl.model_loading.load_algo`, all dependencies from the local input folder should be
     install by the user."""
+
+
+class UnsupportedPytorchVersionError(Exception):
+    """Unsupported Pytorch version"""
