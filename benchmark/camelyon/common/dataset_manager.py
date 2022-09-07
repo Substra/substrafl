@@ -16,6 +16,7 @@ FILE_LIST = [
 ]
 URL = "https://zenodo.org/api/files/d5520b8a-6a5b-41ef-bde0-247dbdded101/"
 N_PARALLEL = 4
+TIMEOUT = 600
 
 
 def fetch_camelyon(data_path: Path):
@@ -37,10 +38,10 @@ def fetch_camelyon(data_path: Path):
         errors = list()
         for proc in tqdm(processes):
             try:
-                outs, errs = proc.communicate(timeout=60)
+                proc.communicate(timeout=TIMEOUT)
             except subprocess.TimeoutExpired:
                 proc.kill()
-                outs, errs = proc.communicate()
+                proc.communicate(timeout=TIMEOUT)
             if proc.returncode != 0:
                 errors.append((proc.args, proc.returncode))
         if len(errors) > 0:
