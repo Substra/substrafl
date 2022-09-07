@@ -196,6 +196,7 @@ def torch_fed_avg(
 
     test_datasets = [CamelyonDataset(x=test_camelyon) for _ in range(n_centers)]
 
+    batch_samplers = list()
     for test_dataset in test_datasets:
         batch_sampler = deepcopy(index_generator)
         batch_sampler.n_samples = len(test_dataset)
