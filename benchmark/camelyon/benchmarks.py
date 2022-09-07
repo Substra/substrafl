@@ -130,7 +130,7 @@ def main():
             results.update(res)
 
             # Save results
-            LOCAL_RESULTS_FILE.write_text(json.dumps(results, sort_keys=True, indent=4))
+            LOCAL_RESULTS_FILE.write_text(json.dumps(list(results), sort_keys=True, indent=4))
     finally:
         # Delete the temporary experiment folders at the end of the benchmark
         shutil.rmtree("local-worker", ignore_errors=True)
