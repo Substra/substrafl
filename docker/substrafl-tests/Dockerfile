@@ -20,4 +20,6 @@ RUN cd substra && python -m pip install --no-cache-dir -e .
 
 RUN cd substrafl && python -m pip install --no-cache-dir -e .[dev]
 
+RUN cd substrafl/benchmark/camelyon && python -m pip install -r requirements.txt
+
 WORKDIR /usr/src/app/substrafl
