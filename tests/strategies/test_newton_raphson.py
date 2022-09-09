@@ -109,6 +109,7 @@ def test_newton_raphson_perform_round(dummy_algo_class):
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
         round_idx=0,
+        clean_models=False,
     )
 
     assert len(aggregation_node.tuples) == 1

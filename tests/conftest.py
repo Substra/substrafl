@@ -357,6 +357,7 @@ def dummy_strategy_class():
             train_data_nodes: List[TrainDataNode],
             aggregation_node: Optional[AggregationNode],
             round_idx: int,
+            clean_models: bool,
         ):
             pass
 

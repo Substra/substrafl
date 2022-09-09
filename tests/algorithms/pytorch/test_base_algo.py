@@ -79,6 +79,7 @@ def rng_strategy():
             train_data_nodes,
             aggregation_node,
             round_idx,
+            clean_models: bool,
         ):
             next_local_states = []
             next_shared_states = []
