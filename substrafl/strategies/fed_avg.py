@@ -107,7 +107,7 @@ class FedAvg(Strategy):
             self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
             round_idx=round_idx,
             authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
-            transient_outputs=clean_models,
+            clean_models=clean_models,
         )
 
         self._perform_local_updates(
@@ -245,7 +245,7 @@ class FedAvg(Strategy):
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
                 authorized_ids=list(set([node.organization_id, aggregation_id])),
-                transient_outputs=clean_models,
+                clean_models=clean_models,
             )
             # keep the states in a list: one/organization
             next_local_states.append(next_local_state)

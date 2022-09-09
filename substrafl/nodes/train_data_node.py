@@ -52,7 +52,7 @@ class TrainDataNode(Node):
         operation: DataOperation,
         round_idx: int,
         authorized_ids: List[str],
-        transient_outputs: bool = False,
+        clean_models: bool = False,
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
         """Adding a composite train tuple to the list of operations to
@@ -68,7 +68,7 @@ class TrainDataNode(Node):
             round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
                 it is preceded by an initialization round tagged: 0.
             authorized_ids (List[str]): Authorized org to access the output model.
-            transient_outputs (bool): Whether outputs of this operation are transient (deleted when they are not used
+            clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.
 
@@ -139,11 +139,11 @@ class TrainDataNode(Node):
             "outputs": {
                 OutputIdentifiers.shared: ComputeTaskOutputSpec(
                     permissions=Permissions(public=False, authorized_ids=authorized_ids),
-                    transient=transient_outputs,
+                    transient=clean_models,
                 ),
                 OutputIdentifiers.local: ComputeTaskOutputSpec(
                     permissions=Permissions(public=False, authorized_ids=[self.organization_id]),
-                    transient=transient_outputs,
+                    transient=clean_models,
                 ),
             },
             "metadata": {

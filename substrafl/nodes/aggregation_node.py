@@ -36,7 +36,7 @@ class AggregationNode(Node):
         operation: AggregateOperation,
         round_idx: int,
         authorized_ids: List[str],
-        transient_outputs: bool = False,
+        clean_models: bool = False,
     ) -> SharedStateRef:
         """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
         This is done in a static way, nothing is submitted to substra.
@@ -49,7 +49,7 @@ class AggregationNode(Node):
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1.
             authorized_ids (List[str]): Authorized org to access the output model.
-            transient_outputs (bool): Whether outputs of this operation are transient (deleted when they are not used
+            clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
 
         Raises:
@@ -94,7 +94,7 @@ class AggregationNode(Node):
             "outputs": {
                 OutputIdentifiers.model: ComputeTaskOutputSpec(
                     permissions=Permissions(public=False, authorized_ids=authorized_ids),
-                    transient=transient_outputs,
+                    transient=clean_models,
                 )
             },
         }
