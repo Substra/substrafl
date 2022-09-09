@@ -77,8 +77,8 @@ class Scaffold(Strategy):
                 operations on the shared states of the models
             round_idx (int): Round number, it starts at 1.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
-            Set it to False if you want to download or re-use intermediary models. This causes the disk
-            space to fill quickly so should be set to True unless needed.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
         """
         if aggregation_node is None:
             raise ValueError("In Scaffold strategy aggregation node cannot be None")

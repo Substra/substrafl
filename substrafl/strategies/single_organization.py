@@ -56,8 +56,8 @@ class SingleOrganization(Strategy):
             aggregation_node (AggregationNode): Should be None otherwise it will be ignored
             round_idx (int): Round number, it starts at 1.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
-            Set it to False if you want to download or re-use intermediary models. This causes the disk
-            space to fill quickly so should be set to True unless needed.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
         """
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
