@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
 - Use the new Susbtra sdk features that return the path of the downloaded file. Change the ``model_loading.py``implementation and the tests.
+- Use the new Substra SDK feature that enable setting the `transient` flag on tasks instead of `clean_models` on compute plans to remove intermediary models.
 
 ### Features
 
