@@ -225,6 +225,9 @@ class FedAvg(Strategy):
                 be passed as input to each local training
             round_idx (int): Round number, it starts at 1.
             aggregation_id (str): Id of the aggregation node the shared state is given to.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
         """
 
         next_local_states = []
