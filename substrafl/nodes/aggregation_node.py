@@ -31,7 +31,13 @@ class AggregationNode(Node):
     The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.
     """
 
-    def update_states(self, operation: AggregateOperation, round_idx: int, authorized_ids: List[str]) -> SharedStateRef:
+    def update_states(
+        self,
+        operation: AggregateOperation,
+        round_idx: int,
+        authorized_ids: List[str],
+        transient_outputs: bool = False,
+    ) -> SharedStateRef:
         """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
         This is done in a static way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (substrafl local reference of the algorithm)
@@ -43,6 +49,8 @@ class AggregationNode(Node):
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1.
             authorized_ids (List[str]): Authorized org to access the output model.
+            transient_outputs (bool): Whether outputs of this operation are transient (deleted when they are not used
+                anymore) or not. Defaults to False.
 
         Raises:
             TypeError: operation must be an AggregateOperation, make sure to decorate your (user defined) aggregate
@@ -85,7 +93,8 @@ class AggregationNode(Node):
             "inputs": inputs,
             "outputs": {
                 OutputIdentifiers.model: ComputeTaskOutputSpec(
-                    permissions=Permissions(public=False, authorized_ids=authorized_ids)
+                    permissions=Permissions(public=False, authorized_ids=authorized_ids),
+                    transient=transient_outputs,
                 )
             },
         }

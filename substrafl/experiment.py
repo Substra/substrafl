@@ -313,6 +313,7 @@ def execute_experiment(
             train_data_nodes=train_data_nodes,
             aggregation_node=aggregation_node,
             round_idx=round_idx,
+            clean_models=clean_models,
         )
 
         if evaluation_strategy is not None and next(evaluation_strategy):
@@ -362,7 +363,6 @@ def execute_experiment(
             predicttuples=predicttuples,
             testtuples=testtuples,
             name=name or timestamp,
-            clean_models=clean_models,
             metadata=cp_metadata,
         ),
     )

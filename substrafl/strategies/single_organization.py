@@ -43,6 +43,7 @@ class SingleOrganization(Strategy):
         algo: Algo,
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
+        clean_models: bool,
         aggregation_node: Optional[AggregationNode] = None,
     ):
         """One round of the SingleOrganization strategy: perform a local update (train on n mini-batches) of the models
@@ -54,6 +55,9 @@ class SingleOrganization(Strategy):
                 updates, there should be exactly one item in the list.
             aggregation_node (AggregationNode): Should be None otherwise it will be ignored
             round_idx (int): Round number, it starts at 1.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+            Set it to False if you want to download or re-use intermediary models. This causes the disk
+            space to fill quickly so should be set to True unless needed.
         """
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
@@ -76,6 +80,7 @@ class SingleOrganization(Strategy):
             local_state=self.local_state,
             round_idx=round_idx,
             authorized_ids=[train_data_nodes[0].organization_id],
+            transient_outputs=clean_models,
         )
 
         # keep the states in a list: one/organization

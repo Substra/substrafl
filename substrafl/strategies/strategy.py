@@ -37,6 +37,7 @@ class Strategy(ABC):
         train_data_nodes: List[TrainDataNode],
         aggregation_node: Optional[AggregationNode],
         round_idx: int,
+        clean_models: bool,
     ):
         """Perform one round of the strategy
 
@@ -46,6 +47,9 @@ class Strategy(ABC):
             aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             round_idx (int): index of the round
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+            Set it to False if you want to download or re-use intermediary models. This causes the disk
+            space to fill quickly so should be set to True unless needed.
         """
         raise NotImplementedError
 

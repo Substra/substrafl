@@ -73,6 +73,7 @@ class NewtonRaphson(Strategy):
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         round_idx: int,
+        clean_models: bool,
     ):
         """One round of the Newton-Raphson strategy consists in:
 
@@ -89,6 +90,9 @@ class NewtonRaphson(Strategy):
             aggregation_node (AggregationNode): node without data, used to perform operations
                 on the shared states of the models
             round_idx (int): Round number, it starts at 1.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+            Set it to False if you want to download or re-use intermediary models. This causes the disk
+            space to fill quickly so should be set to True unless needed.
         """
         if aggregation_node is None:
             raise ValueError("In Newton-Raphson strategy aggregation node cannot be None")
@@ -103,6 +107,7 @@ class NewtonRaphson(Strategy):
                 current_aggregation=None,
                 round_idx=0,
                 aggregation_id=aggregation_node.organization_id,
+                clean_models=clean_models,
             )
 
         current_aggregation = aggregation_node.update_states(
@@ -112,6 +117,7 @@ class NewtonRaphson(Strategy):
             ),  # type: ignore
             round_idx=round_idx,
             authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
+            transient_outputs=clean_models,
         )
 
         self._perform_local_updates(
@@ -120,6 +126,7 @@ class NewtonRaphson(Strategy):
             current_aggregation=current_aggregation,
             round_idx=round_idx,
             aggregation_id=aggregation_node.organization_id,
+            clean_models=clean_models,
         )
 
     @remote
@@ -226,6 +233,7 @@ class NewtonRaphson(Strategy):
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
+        clean_models: bool,
     ):
         """Perform a local update of the model on each train data nodes.
 
@@ -254,6 +262,7 @@ class NewtonRaphson(Strategy):
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
                 authorized_ids=list(set([node.organization_id, aggregation_id])),
+                transient_outputs=clean_models,
             )
             # keep the states in a list: one/node
             next_local_states.append(next_local_state)

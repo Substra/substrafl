@@ -61,6 +61,7 @@ class Scaffold(Strategy):
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         round_idx: int,
+        clean_models: bool,
     ):
         """One round of the Scaffold strategy consists in:
             - if ``round_idx==1``: initialize the strategy by performing a local update
@@ -75,6 +76,9 @@ class Scaffold(Strategy):
             local updates aggregation_node (AggregationNode): Node without data, used to perform
                 operations on the shared states of the models
             round_idx (int): Round number, it starts at 1.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+            Set it to False if you want to download or re-use intermediary models. This causes the disk
+            space to fill quickly so should be set to True unless needed.
         """
         if aggregation_node is None:
             raise ValueError("In Scaffold strategy aggregation node cannot be None")
@@ -89,12 +93,14 @@ class Scaffold(Strategy):
                 current_aggregation=None,
                 round_idx=0,
                 aggregation_id=aggregation_node.organization_id,
+                clean_models=clean_models,
             )
 
         current_aggregation = aggregation_node.update_states(
             self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
             round_idx=round_idx,
             authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
+            transient_outputs=clean_models,
         )
 
         self._perform_local_updates(
@@ -103,6 +109,7 @@ class Scaffold(Strategy):
             current_aggregation=current_aggregation,
             round_idx=round_idx,
             aggregation_id=aggregation_node.organization_id,
+            clean_models=clean_models,
         )
 
     def predict(
@@ -316,6 +323,7 @@ class Scaffold(Strategy):
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
+        clean_models: bool,
     ):
         """Perform a local update (train on n mini-batches) of the models
         on each train data nodes.
@@ -344,6 +352,7 @@ class Scaffold(Strategy):
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
                 authorized_ids=list(set([node.organization_id, aggregation_id])),
+                transient_outputs=clean_models,
             )
             # keep the states in a list: one/organization
             next_local_states.append(next_local_state)
