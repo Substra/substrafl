@@ -364,7 +364,6 @@ def execute_experiment(
             clean_models=clean_models,
             metadata=cp_metadata,
         ),
-        auto_batching=False,
     )
     logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
     return compute_plan
