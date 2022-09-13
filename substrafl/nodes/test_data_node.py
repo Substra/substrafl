@@ -103,7 +103,8 @@ class TestDataNode(Node):
                 "inputs": data_inputs + predict_input,
                 "outputs": {
                     OutputIdentifiers.predictions: ComputeTaskOutputSpec(
-                        permissions=Permissions(public=False, authorized_ids=[self.organization_id])
+                        permissions=Permissions(public=False, authorized_ids=[self.organization_id]),
+                        transient=True,
                     )
                 },
                 "metadata": {
@@ -121,7 +122,8 @@ class TestDataNode(Node):
                     "inputs": data_inputs + test_input,
                     "outputs": {
                         OutputIdentifiers.performance: ComputeTaskOutputSpec(
-                            permissions=Permissions(public=True, authorized_ids=[])
+                            permissions=Permissions(public=True, authorized_ids=[]),
+                            transient=False,
                         )
                     },
                     "metadata": {

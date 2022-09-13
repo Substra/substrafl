@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- Use the new Substra SDK feature that enable setting the `transient` flag on tasks instead of `clean_models` on compute plans to remove intermediary models.
+
 ## [0.28.0](https://github.com/Substra/substrafl/releases/tag/0.28.0) - 2022-09-12
 
 ### Fixed
