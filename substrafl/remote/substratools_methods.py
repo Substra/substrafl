@@ -102,8 +102,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
 
         Args:
             inputs (typing.TypedDict): dictionary containing:
-                the training data samples loaded with `Opener.get_X()`;
-                the training data samples labels loaded with `Opener.get_y()`;
+                the training data samples loaded with `Opener.get_data()`;
                 the head model loaded with `CompositeAlgo.load_head_model()` (may be None);
                 the trunk model loaded with `CompositeAlgo.load_trunk_model()` (may be None);
                 the rank of the training task.
@@ -139,7 +138,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
 
         Args:
             inputs (typing.TypedDict): dictionary containing:
-                the testing data samples loaded with `Opener.get_X()`;
+                the testing data samples loaded with `Opener.get_data()`;
                 the head model loaded with `CompositeAlgo.load_head_model()`;
                 the trunk model loaded with `CompositeAlgo.load_trunk_model()`;
             outputs (typing.TypedDict): dictionary containing:

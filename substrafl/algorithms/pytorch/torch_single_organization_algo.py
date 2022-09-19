@@ -105,7 +105,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
             index_generator (BaseIndexGenerator): a stateful index generator.
                 Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
-                which is used for selecting each batch from the output of the get_X and get_y methods of the opener
+                which is used for selecting each batch from the output of the the get_data method of the opener
                 during training in this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
