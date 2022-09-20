@@ -36,7 +36,6 @@ in the same directory as the example:
 # *****
 # At the top of each section explain briefly the objective of the section if this is not obvious.
 
-import os
 import pathlib
 from typing import Any
 
@@ -63,13 +62,9 @@ NODES_ID = ["org-1MSP", "org-2MSP"]
 # The node id on which your computation tasks are registered
 ALGO_NODE_ID = NODES_ID[1]
 
-# Choose the subprocess mode to locally simulate the FL process
-DEBUG_SPAWNER = "subprocess"
-os.environ["DEBUG_SPAWNER"] = DEBUG_SPAWNER
-
 assets_directory = ""
 
-client = substra.Client(debug=True)
+client = substra.Client(execution_mode=substra.BackendType.LOCAL_SUBPROCESS)
 clients = {node_name: client for node_name in NODES_ID}
 
 # %%

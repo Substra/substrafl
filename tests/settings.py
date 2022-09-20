@@ -96,9 +96,9 @@ def network(is_local: bool, is_ci: bool = False):
     clients = []
     for organization in cfg.organizations:
         if is_local:
-            client = substra.Client(debug=True)
+            client = substra.Client(execution_mode=substra.BackendType.LOCAL_SUBPROCESS)
         else:
-            client = substra.Client(debug=False, url=organization.url)
+            client = substra.Client(execution_mode=substra.BackendType.DEPLOYED, url=organization.url)
         client.login(username=organization.username, password=organization.password)
         clients.append(client)
 

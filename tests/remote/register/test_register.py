@@ -32,7 +32,7 @@ class DummyClient:
 def test_latest_substratools_image_selection(use_latest, monkeypatch, default_permissions):
     monkeypatch.setenv("USE_LATEST_SUBSTRATOOLS", str(use_latest))
 
-    client = substra.Client(debug=True)
+    client = substra.Client(execution_mode=substra.BackendType.LOCAL_SUBPROCESS)
 
     my_class = RemoteClass()
 
