@@ -12,6 +12,132 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update the Client, it takes a backend type instead of debug=True + env variable to set the spawner - (#210)
 - Do not use Model.category since this field is being removed from the SDK
 
+### Changed
+
+- NOTABLE CHANGES due to breaking changes in substra-tools:
+  - the opener only exposes `get_data` and `fake_data` methods
+  - the results of the above method is passed under the `datasamples` keys within the `inputs` dict arg of all
+    tools methods (train, predict, aggregate, score)
+  - all method (train, predict, aggregate, score) now takes a `task_properties` argument (dict) in addition to
+    `inputs` and `outputs`
+  - The `rank` of a task previously passed under the `rank` key within the inputs is now given in the `task_properties`
+    dict under the `rank` key
+
+This means that all `opener.py` file should be changed from:
+
+```py
+import substratools as tools
+
+class TestOpener(tools.Opener):
+    def get_X(self, folders):
+      ...
+
+    def get_y(self, folders):
+      ...
+
+    def fake_X(self, n_samples=None):
+      ...
+
+    def fake_y(self, n_samples=None):
+      ...
+```
+
+to:
+
+```py
+import substratools as tools
+
+class TestOpener(tools.Opener):
+    def get_data(self, folders):
+      ...
+
+    def fake_data(self, n_samples=None):
+      ...
+```
+
+This also implies that `metrics` has now access to the results of `get_data`
+and not only `get_y` as previously. The user should adapt all of his `metrics` file accordingly e.g.:
+
+```py
+class AUC(tools.Metrics):
+    def score(self, inputs, outputs):
+        """AUC"""
+        y_true = inputs["y"]
+        ...
+
+    def get_predictions(self, path):
+        return np.load(path)
+
+if __name__ == "__main__":
+    tools.metrics.execute(AUC())
+```
+
+could be replace with:
+
+```py
+class AUC(tools.Metrics):
+    def score(self, inputs, outputs, task_properties):
+        """AUC"""
+        datasamples = inputs["datasamples"]
+        y_true = ... # getting target from the whole datasamples
+
+    def get_predictions(self, path):
+        return np.load(path)
+
+if __name__ == "__main__":
+    tools.metrics.execute(AUC())
+```
+
+- BREAKING CHANGE: `train` and `predict` method of all substrafl algos now takes `datasamples` as argument instead of `X` abd `y`. This is impacting the user code only
+  if he or she overwrite those methods instead of using the `_local_train` and `_local_predict` methods.
+- BREAKING CHANGE: The result of the `get_data` method from the opener is automatically provided to the given `dataset` as `__init__` arg
+  instead of `x` and `y` within the `train` and `predict` methods of all `Torch*Algo` classes. The user `dataset` should be adapted
+  accordingly e.g.:
+
+```py
+from torch.utils.data import Dataset
+
+class MyDataset(Dataset):
+    def __init__(self, x, y, is_inference=False) -> None:
+        ...
+
+class MyAlgo(TorchFedAvgAlgo):
+    def __init__(
+        self,
+    ):
+        torch.manual_seed(seed)
+        super().__init__(
+            model=my_model,
+            criterion=criterion,
+            optimizer=optimizer,
+            index_generator=index_generator,
+            dataset=MyDataset,
+        )
+```
+
+should be replaced with
+
+```py
+from torch.utils.data import Dataset
+
+class MyDataset(Dataset):
+    def __init__(self, datasamples, is_inference=False) -> None:
+        ...
+
+class MyAlgo(TorchFedAvgAlgo):
+    def __init__(
+        self,
+    ):
+        torch.manual_seed(seed)
+        super().__init__(
+            model=my_model,
+            criterion=criterion,
+            optimizer=optimizer,
+            index_generator=index_generator,
+            dataset=MyDataset,
+        )
+```
+
 ## [0.29.0](https://github.com/Substra/substrafl/releases/tag/0.29.0) - 2022-09-19
 
 ### Changed
@@ -25,11 +151,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Throw an error if `pytorch 1.12.0` is used.
   There is a regression bug in `torch 1.12.0`, that impacts optimizers that have been pickled and unpickled. This bug occurs for Adam optimizer for example (but not for SGD). Here is a link to one issue covering it: https://github.com/pytorch/pytorch/pull/80345
 
-
 ### Changed
 
 - Removing `classic-algos` from the benchmark dependencies
-- NOTABLE CHANGES due to breaking changes in connect-tools: the user must now pass the method name to execute from the
+- NOTABLE CHANGES due to breaking changes in substra-tools: the user must now pass the method name to execute from the
   tools defined class within the dockerfile of both `algo` and `metric` under the `--method-name` argument:
 
   ```Dockerfile
@@ -42,7 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ENTRYPOINT ["python3", "metrics.py", "--method-name", "score"]
   ```
 
-- Use the new Susbtra sdk features that return the path of the downloaded file. Change the ``model_loading.py``implementation and the tests.
+- Use the new Susbtra sdk features that return the path of the downloaded file. Change the `model_loading.py`implementation and the tests.
 
 ### Features
 
