@@ -28,10 +28,14 @@ LINEAR_N_TARGET = 1
 def pytest_addoption(parser):
     """Command line arguments to configure the network to be local or remote."""
     parser.addoption(
-        "--local",
+        "--subprocess",
         action="store_true",
-        help="Run the tests on the local backend only (debug mode). "
-        "Otherwise run the tests only on the remote backend.",
+        help="Run the tests in local subprocess mode. ",
+    )
+    parser.addoption(
+        "--docker",
+        action="store_true",
+        help="Run the tests in local docker mode",
     )
     parser.addoption(
         "--ci",
@@ -65,7 +69,8 @@ def network(request):
     Network must be started outside of the tests environment and the network is kept
     alive while running all tests.
 
-    if --local is passed, the session will be started in debug mode and all the clients will be duplicated.
+    if --subprocess or --docker is passed, the session is be started in local mode and all the clients will be
+        duplicated.
 
     Args:
         network_cfg: Network configuration.
@@ -73,10 +78,14 @@ def network(request):
     Returns:
         Network: All the elements needed to interact with the :term:`Substra` platform.
     """
-    is_local = request.config.getoption("--local")
+    is_subprocess = request.config.getoption("--subprocess")
+    is_docker = request.config.getoption("--docker")
     is_ci = request.config.getoption("--ci")
 
-    network = settings.network(is_local=is_local, is_ci=is_ci)
+    if (is_subprocess and is_docker) or (is_subprocess and is_ci) or (is_docker and is_ci):
+        raise ValueError("Only one argument between --subprocess, --docker, --ci can be used at the same time.")
+
+    network = settings.network(is_subprocess=is_subprocess, is_docker=is_docker, is_ci=is_ci)
     return network
 
 

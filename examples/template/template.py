@@ -64,7 +64,7 @@ ALGO_NODE_ID = NODES_ID[1]
 
 assets_directory = ""
 
-client = substra.Client(execution_mode=substra.BackendType.LOCAL_SUBPROCESS)
+client = substra.Client(backend_type=substra.BackendType.LOCAL_SUBPROCESS)
 clients = {node_name: client for node_name in NODES_ID}
 
 # %%
