@@ -56,7 +56,7 @@ def rng_algo(request, torch_linear_model, numpy_torch_dataset):
             return ["rng_strategy"]
 
         @remote_data
-        def train(self, x, y, shared_state=None):
+        def train(self, datasamples, shared_state=None):
             return torch.rand(n_rng_sample)
 
     return RngAlgo, test_seed
@@ -149,7 +149,7 @@ def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
             return list()
 
         @remote_data
-        def train(self, x, y, shared_state):
+        def train(self, datasamples, shared_state):
             # Return the parameter
             return self.dummy_test_param
 
@@ -216,8 +216,7 @@ def test_base_algo_custom_init_arg_default_value(session_dir, dummy_algo_custom_
 
     remote_struct = loaded_struct.get_remote_instance()
     inputs = {
-        InputIdentifiers.X: None,
-        InputIdentifiers.y: None,
+        InputIdentifiers.datasamples: None,
         InputIdentifiers.local: None,
         InputIdentifiers.shared: None,
         InputIdentifiers.rank: 0,
@@ -243,8 +242,7 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
 
     remote_struct = loaded_struct.get_remote_instance()
     inputs = {
-        InputIdentifiers.X: None,
-        InputIdentifiers.y: None,
+        InputIdentifiers.datasamples: None,
         InputIdentifiers.local: None,
         InputIdentifiers.shared: None,
         InputIdentifiers.rank: 0,
@@ -253,7 +251,10 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
         OutputIdentifiers.local: session_dir / OutputIdentifiers.local,
         OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared,
     }
-    remote_struct.train(inputs, outputs)
+    task_properties = {
+        InputIdentifiers.rank: 0,
+    }
+    remote_struct.train(inputs, outputs, task_properties)
 
     result = remote_struct.load_trunk_model(outputs[OutputIdentifiers.shared])
     assert result == arg_value
@@ -342,15 +343,15 @@ def test_check_predict_shapes(n_samples, test_linear_data_samples, numpy_torch_d
 
     my_algo = MyAlgo()
 
-    res = my_algo.predict(x=test_linear_data_samples[0][:n_samples, :-1], _skip=True)
+    res = my_algo.predict(datasamples=test_linear_data_samples[0][:n_samples, :-1], _skip=True)
     assert res.shape == (n_samples, 1)
 
 
 @pytest.mark.parametrize(
     "init_function, is_valid",
     [
-        ((lambda self, x, y, is_inference: None), True),
-        ((lambda self, not_x, y, is_inference: None), False),
+        ((lambda self, datasamples, is_inference: None), True),
+        ((lambda self, not_datasamples, is_inference: None), False),
     ],
 )
 def test_signature_error_torch_dataset(init_function, is_valid):
@@ -377,10 +378,10 @@ def test_signature_error_torch_dataset(init_function, is_valid):
         def strategies(self):
             return list()
 
-        def predict(self, x, shared_state):
+        def predict(self, datasamples, shared_state):
             pass
 
-        def train(self, x, y, shared_state):
+        def train(self, datasamples, shared_state):
             pass
 
     if is_valid:
@@ -398,7 +399,7 @@ def test_instance_error_torch_dataset():
     )
 
     class TorchDataset(torch.utils.data.Dataset):
-        def __init__(self, x, y, is_inference):
+        def __init__(self, datasamples, is_inference):
             pass
 
     class MyAlgo(TorchAlgo):
@@ -408,14 +409,14 @@ def test_instance_error_torch_dataset():
                 criterion=torch.nn.MSELoss(),
                 optimizer=torch.optim.SGD(lin.parameters(), lr=0.1),
                 index_generator=nig,
-                dataset=TorchDataset(0, 1, False),
+                dataset=TorchDataset(0, False),
             )
 
         @property
         def strategies(self):
             return list()
 
-        def train(self, x, y, shared_state):
+        def train(self, datasamples, shared_state):
             pass
 
     with pytest.raises(DatasetTypeError):
@@ -439,13 +440,13 @@ def test_none_index_generator_for_predict(numpy_torch_dataset):
         def strategies(self):
             return list()
 
-        def train(self, x, y, shared_state):
+        def train(self, datasamples, shared_state):
             pass
 
     my_algo = MyAlgo()
 
     with pytest.raises(BatchSizeNotFoundError):
-        my_algo.predict(x=np.zeros(3), _skip=True)
+        my_algo.predict(datasamples=np.zeros(3), _skip=True)
 
 
 @pytest.mark.substra

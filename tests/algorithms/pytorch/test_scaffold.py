@@ -329,7 +329,7 @@ def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_u
     my_algo = MyAlgo()
 
     with pytest.raises(TorchScaffoldAlgoParametersUpdateError):
-        my_algo.train(x=np.random.random(10), y=np.random.random(10), _skip=True)
+        my_algo.train(datasamples=np.random.rand(2, 10), _skip=True)
 
     assert my_algo._scaffold_parameters_update_num_call == nb_update_params_call
 

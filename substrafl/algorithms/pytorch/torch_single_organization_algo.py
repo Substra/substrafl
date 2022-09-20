@@ -61,8 +61,8 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
                     train_dataset: torch.utils.data.Dataset,
                 ):
                     # Create torch dataloader
-                    # ``train_dataset = self._dataset(x=x, y=y, is_inference=False)`` is executed prior the execution
-                    # of this function
+                    # ``train_dataset = self._dataset(datasamples=datasamples, is_inference=False)`` is executed
+                    # prior the execution of this function
                     train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
                     for x_batch, y_batch in train_data_loader:
@@ -148,8 +148,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
     @remote_data
     def train(
         self,
-        x: Any,
-        y: Any,
+        datasamples: Any,
         shared_state=None,  # Is always None for this strategy
     ) -> Dict[str, np.ndarray]:
         """Train method of the SingleOrganization strategy implemented with torch.
@@ -166,7 +165,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         """
 
         # Create torch dataset
-        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+        train_dataset = self._dataset(datasamples, is_inference=False)
 
         # Instantiate the index_generator
         if self._index_generator.n_samples is None:

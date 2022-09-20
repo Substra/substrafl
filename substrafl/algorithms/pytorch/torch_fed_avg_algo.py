@@ -62,8 +62,8 @@ class TorchFedAvgAlgo(TorchAlgo):
                 ):
 
                     # Create torch dataloader from the automatically instantiated dataset
-                    # ``train_dataset = self._dataset(x=x, y=y, is_inference=False)`` is executed prior the execution
-                    # of this function
+                    # ``train_dataset = self._dataset(datasamples=datasamples, is_inference=False)`` is executed prior
+                    #  the execution of this function
                     train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
                     for x_batch, y_batch in train_data_loader:
@@ -152,8 +152,7 @@ class TorchFedAvgAlgo(TorchAlgo):
     @remote_data
     def train(
         self,
-        x: Any,
-        y: Any,
+        datasamples: Any,
         shared_state: Optional[FedAvgAveragedState] = None,  # Set to None per default for clarity reason as
         # the decorator will do it if the arg shared_state is not passed.
     ) -> FedAvgSharedState:
@@ -166,8 +165,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             * compute the weight update
 
         Args:
-            x (typing.Any): Input data.
-            y (typing.Any): Input target.
+            datasamples (typing.Any): Input data returned by the ``get_data`` method from the opener.
             shared_state (FedAvgAveragedState, Optional): Dict containing torch parameters that
                 will be set to the model. Defaults to None.
 
@@ -177,7 +175,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         """
 
         # Create torch dataset
-        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+        train_dataset = self._dataset(datasamples, is_inference=False)
 
         if shared_state is None:
             # Instantiate the index_generator

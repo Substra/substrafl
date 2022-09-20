@@ -36,15 +36,17 @@ class RemoteMethod(substratools.AggregateAlgo):
         self,
         inputs: TypedDict,
         outputs: TypedDict,
+        task_properties: TypedDict,
     ) -> None:
         """Aggregation operation
 
         Args:
             inputs (typing.TypedDict): dictionary containing:
                 the list of models path loaded with `AggregateAlgo.load_model()`;
-                the rank of the aggregate task.
             outputs (typing.TypedDict):dictionary containing:
                 the output model path to save the aggregated model.
+            task_properties (typing.TypedDict): dictionary containing:
+                the rank of the aggregate task.
         """
         models = []
         for m_path in inputs[InputIdentifiers.models]:
@@ -56,7 +58,7 @@ class RemoteMethod(substratools.AggregateAlgo):
         self.save_model(next_shared_state, outputs[OutputIdentifiers.model])
         # return next_shared_state
 
-    def predict(self, inputs, outputs):
+    def predict(self, inputs, outputs, task_properties):
         """This predict method is required by substratools"""
         pass
 
@@ -97,6 +99,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         self,
         inputs: TypedDict,
         outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
+        task_properties: TypedDict,
     ) -> None:
         """train method
 
@@ -120,11 +123,12 @@ class RemoteDataMethod(substratools.CompositeAlgo):
             instance = self.instance
 
         trunk_model = self.load_trunk_model(trunk_model_path) if trunk_model_path else None
-        X = inputs[InputIdentifiers.X]
-        y = inputs[InputIdentifiers.y]
+        datasamples = inputs[InputIdentifiers.datasamples]
 
         method_to_call = instance.train
-        next_shared_state = method_to_call(x=X, y=y, shared_state=trunk_model, _skip=True, **self.method_parameters)
+        next_shared_state = method_to_call(
+            datasamples=datasamples, shared_state=trunk_model, _skip=True, **self.method_parameters
+        )
 
         self.save_head_model(instance, outputs[OutputIdentifiers.local])
         self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.shared])
@@ -133,6 +137,7 @@ class RemoteDataMethod(substratools.CompositeAlgo):
         self,
         inputs: TypedDict,
         outputs: TypedDict,
+        task_properties: TypedDict,
     ) -> None:
         """predict function
 
@@ -150,12 +155,16 @@ class RemoteDataMethod(substratools.CompositeAlgo):
 
         method_to_call = instance.predict
         trunk_model = self.load_trunk_model(inputs.get(InputIdentifiers.shared))
-        X = inputs[InputIdentifiers.X]
+        datasamples = inputs[InputIdentifiers.datasamples]
 
         predictions_path = outputs[OutputIdentifiers.predictions]
 
         method_to_call(
-            x=X, shared_state=trunk_model, predictions_path=predictions_path, _skip=True, **self.method_parameters
+            datasamples=datasamples,
+            shared_state=trunk_model,
+            predictions_path=predictions_path,
+            _skip=True,
+            **self.method_parameters,
         )
 
     def load_trunk_model(self, path: str) -> Any:

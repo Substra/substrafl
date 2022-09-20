@@ -68,8 +68,7 @@ def remote_data(method: Callable):
 
         assert data_samples is not None
 
-        assert "x" not in method_parameters.keys()
-        assert "y" not in method_parameters.keys()
+        assert "datasamples" not in method_parameters.keys()
 
         return DataOperation(
             RemoteStruct(

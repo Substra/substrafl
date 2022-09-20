@@ -18,6 +18,9 @@ from substra.sdk.schemas import Permissions
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 
+from .conftest import LINEAR_N_TARGET
+from .conftest import LINEAR_N_COL
+
 DEFAULT_SUBSTRATOOLS_VERSION = (
     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
 )
@@ -35,8 +38,8 @@ import substratools as tools
 import math
 import numpy as np
 class AccuracyMetric(tools.Metrics):
-    def score(self, inputs, outputs):
-        y_true = inputs['{InputIdentifiers.y}']
+    def score(self, inputs, outputs, task_properties):
+        y_true = inputs['{InputIdentifiers.datasamples}'][:, -{LINEAR_N_TARGET}:]
         y_pred = self.load_predictions(inputs['{InputIdentifiers.predictions}'])
         tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
 
@@ -48,49 +51,22 @@ if __name__ == "__main__":
     tools.metrics.execute(AccuracyMetric())
 """
 
-DEFAULT_OPENER_FILE = """
+DEFAULT_OPENER_FILE = f"""
 import os
-import shutil
 import numpy as np
 import substratools as tools
 
 class NumpyOpener(tools.Opener):
-    def get_X(self, folders):
-        data = self._get_data(folders)
-        return self._get_X(data)
-
-    def get_y(self, folders):
-        data = self._get_data(folders)
-        return self._get_y(data)
-
-    def fake_X(self, n_samples=None):
-        data = self._fake_data(n_samples)
-        return self._get_X(data)
-
-    def fake_y(self, n_samples=None):
-        data = self._fake_data(n_samples)
-        return self._get_y(data)
-
-    @classmethod
-    def _get_X(cls, data):
-        return data[:, :-1]
-
-    @classmethod
-    def _get_y(cls, data):
-        return data[:, -1:]
-
-    @classmethod
-    def _fake_data(cls, n_samples=None, n_col=3):
-        return np.random.uniform(0, 1, (n_samples, n_col))
-
-    @classmethod
-    def _get_data(cls, folders):
+    def get_data(self, folders):
         paths = []
         for folder in folders:
             paths += [
                 os.path.join(folder, f) for f in os.listdir(folder) if f[-4:] == ".npy"
             ]
         return np.concatenate([np.load(file, allow_pickle=True) for file in paths], axis=0)
+
+    def fake_data(self, n_samples=None, n_col={LINEAR_N_COL + LINEAR_N_TARGET}):
+        return np.random.uniform(0, 1, (n_samples, n_col))
 """
 
 
