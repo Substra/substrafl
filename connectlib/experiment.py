@@ -224,6 +224,7 @@ def execute_experiment(
     clean_models: bool = True,
     name: Optional[str] = None,
     additional_metadata: Optional[Dict] = None,
+    task_submission_batch_size: int = 500,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the
     `test_data_nodes`) your `algo` with the specified `strategy` `n_rounds` times and return the
@@ -264,6 +265,9 @@ def execute_experiment(
         name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
             the compute plan name is set to the timestamp.
         additional_metadata(dict, Optional): Optional dictionary of metadata to be passed to the Connect WebApp.
+        task_submission_batch_size(int): The compute plan tasks are submitted by batch. The higher the batch size,
+            the faster the submission, a batch size that is too high makes the submission fail.
+            Rule of thumb: batch_size = math.floor(120000 / number_of_samples_per_task)
 
     Returns:
         ComputePlan: The generated compute plan
@@ -364,6 +368,8 @@ def execute_experiment(
             clean_models=clean_models,
             metadata=cp_metadata,
         ),
+        auto_batching=True,
+        batch_size=task_submission_batch_size,
     )
     logger.info(("The compute plan has been submitted to Connect, its key is {0}.").format(compute_plan.key))
     return compute_plan
