@@ -6,6 +6,7 @@ from typing import Optional
 
 import numpy as np
 import pytest
+import substra
 import torch
 import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
@@ -28,14 +29,10 @@ LINEAR_N_TARGET = 1
 def pytest_addoption(parser):
     """Command line arguments to configure the network to be local or remote."""
     parser.addoption(
-        "--subprocess",
-        action="store_true",
-        help="Run the tests in local subprocess mode. ",
-    )
-    parser.addoption(
-        "--docker",
-        action="store_true",
-        help="Run the tests in local docker mode",
+        "--mode",
+        choices=["subprocess", "docker", "remote"],
+        default="remote",
+        help="Choose the mode on which to run the tests",
     )
     parser.addoption(
         "--ci",
@@ -69,7 +66,7 @@ def network(request):
     Network must be started outside of the tests environment and the network is kept
     alive while running all tests.
 
-    if --subprocess or --docker is passed, the session is be started in local mode and all the clients will be
+    if mode is subprocess or docker, the session is be started in local mode and all the clients will be
         duplicated.
 
     Args:
@@ -78,14 +75,13 @@ def network(request):
     Returns:
         Network: All the elements needed to interact with the :term:`Substra` platform.
     """
-    is_subprocess = request.config.getoption("--subprocess")
-    is_docker = request.config.getoption("--docker")
+    backend_type = substra.BackendType(request.config.getoption("--mode"))
     is_ci = request.config.getoption("--ci")
 
-    if (is_subprocess and is_docker) or (is_subprocess and is_ci) or (is_docker and is_ci):
-        raise pytest.UsageError("Only one argument between --subprocess, --docker, --ci can be used at the same time.")
+    if backend_type != substra.BackendType.REMOTE and is_ci:
+        raise pytest.UsageError("--ci can only be used with a remote backend")
 
-    network = settings.network(is_subprocess=is_subprocess, is_docker=is_docker, is_ci=is_ci)
+    network = settings.network(backend_type=backend_type, is_ci=is_ci)
     return network
 
 
