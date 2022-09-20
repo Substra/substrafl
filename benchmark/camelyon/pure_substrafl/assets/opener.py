@@ -20,6 +20,11 @@ class Data:
             indexes.extend(ds_indexes)
 
         self._indexes = np.asarray(indexes, dtype=object)
+        self._y_true = np.array([int(x == "Tumor") for x in self._indexes[:, 1]])
+
+    @property
+    def y_true(self):
+        return self._y_true
 
     @property
     def indexes(self):
@@ -32,11 +37,6 @@ class Data:
 class MnistOpener(tools.Opener):
     def get_data(self, folders):
         return Data(folders)
-
-    # def get_y(self, folders):
-    #     data = self.get_data(folders)
-    #     y_true = np.array([int(x == "Tumor") for x in data.indexes[:, 1]])
-    #     return y_true
 
     def fake_data(self, n_samples=None):
         pass

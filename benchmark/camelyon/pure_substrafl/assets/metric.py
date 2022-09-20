@@ -4,11 +4,11 @@ from sklearn.metrics import roc_auc_score
 
 
 class AUC(tools.Metrics):
-    def score(self, inputs, outputs):
+    def score(self, inputs, outputs, task_properties):
         """AUC"""
 
         y_pred = self.get_predictions(inputs["predictions"])
-        y_true = inputs["y"]
+        y_true = inputs["datasamples"].y_true
 
         metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
 
