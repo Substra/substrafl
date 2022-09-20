@@ -83,7 +83,7 @@ def network(request):
     is_ci = request.config.getoption("--ci")
 
     if (is_subprocess and is_docker) or (is_subprocess and is_ci) or (is_docker and is_ci):
-        raise ValueError("Only one argument between --subprocess, --docker, --ci can be used at the same time.")
+        raise pytest.UsageError("Only one argument between --subprocess, --docker, --ci can be used at the same time.")
 
     network = settings.network(is_subprocess=is_subprocess, is_docker=is_docker, is_ci=is_ci)
     return network
