@@ -51,7 +51,7 @@ def test_remote_data():
     assert new_class.kwargs == {"a": 42, "b": 3}
 
     # Execute the function itself
-    result = new_class.train(x=4, y=5, _skip=True, shared_state=4)
+    result = new_class.train(datasamples=(4, 5), _skip=True, shared_state=4)
     assert result == 13
 
 
