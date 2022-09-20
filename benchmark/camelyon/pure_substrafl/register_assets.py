@@ -58,7 +58,7 @@ def instantiate_clients(
     Returns:
         _type_: _description_
     """
-    if mode == substra.BackendType.DEPLOYED:
+    if mode == substra.BackendType.REMOTE:
         clients = []
         for organization in conf:
             client = substra.Client(backend_type=mode, url=organization.get("url"))
@@ -78,7 +78,7 @@ def get_clients(mode: substra.BackendType, credentials: os.PathLike = "remote.ya
 
 
 def load_asset_keys(asset_keys_path, mode: substra.BackendType):
-    if mode == substra.BackendType.DEPLOYED and (SUBSTRA_CONFIG_FOLDER / asset_keys_path).exists():
+    if mode == substra.BackendType.REMOTE and (SUBSTRA_CONFIG_FOLDER / asset_keys_path).exists():
         keys = json.loads((SUBSTRA_CONFIG_FOLDER / asset_keys_path).read_text())
     else:
         keys = {}

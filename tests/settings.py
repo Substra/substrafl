@@ -101,7 +101,7 @@ def network(is_subprocess: bool, is_docker: bool, is_ci: bool = False):
         elif is_docker:
             client = substra.Client(backend_type=substra.BackendType.LOCAL_DOCKER)
         else:
-            client = substra.Client(backend_type=substra.BackendType.DEPLOYED, url=organization.url)
+            client = substra.Client(backend_type=substra.BackendType.REMOTE, url=organization.url)
         client.login(username=organization.username, password=organization.password)
         clients.append(client)
 
