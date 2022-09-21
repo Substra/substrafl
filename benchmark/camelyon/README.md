@@ -85,7 +85,7 @@ The model is named `Weldon`. The implementation is taken from [this paper](https
 
 The local benchmark aims at comparing the execution time between
 
-- a substrafl fed avg experiment (with substra debug mode as a backend)
+- a substrafl fed avg experiment (with substra local mode as a backend)
 - a pure torch implementation of a fed avg experiment
 
 Substra local mode can be chosen from the CLI:

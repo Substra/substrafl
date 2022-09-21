@@ -6,6 +6,7 @@ from typing import Optional
 
 import numpy as np
 import pytest
+import substra
 import torch
 import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
@@ -28,10 +29,10 @@ LINEAR_N_TARGET = 1
 def pytest_addoption(parser):
     """Command line arguments to configure the network to be local or remote."""
     parser.addoption(
-        "--local",
-        action="store_true",
-        help="Run the tests on the local backend only (debug mode). "
-        "Otherwise run the tests only on the remote backend.",
+        "--mode",
+        choices=["subprocess", "docker", "remote"],
+        default="remote",
+        help="Choose the mode on which to run the tests",
     )
     parser.addoption(
         "--ci",
@@ -65,7 +66,8 @@ def network(request):
     Network must be started outside of the tests environment and the network is kept
     alive while running all tests.
 
-    if --local is passed, the session will be started in debug mode and all the clients will be duplicated.
+    if mode is subprocess or docker, the session is be started in local mode and all the clients will be
+        duplicated.
 
     Args:
         network_cfg: Network configuration.
@@ -73,10 +75,13 @@ def network(request):
     Returns:
         Network: All the elements needed to interact with the :term:`Substra` platform.
     """
-    is_local = request.config.getoption("--local")
+    backend_type = substra.BackendType(request.config.getoption("--mode"))
     is_ci = request.config.getoption("--ci")
 
-    network = settings.network(is_local=is_local, is_ci=is_ci)
+    if backend_type != substra.BackendType.REMOTE and is_ci:
+        raise pytest.UsageError("--ci can only be used with a remote backend")
+
+    network = settings.network(backend_type=backend_type, is_ci=is_ci)
     return network
 
 

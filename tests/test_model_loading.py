@@ -104,7 +104,7 @@ def fake_client(fake_compute_plan, fake_composite_traintuple):
         return path
 
     client = Mock(spec=substra.Client)
-    client.backend_mode = substra.BackendType.DEPLOYED
+    client.backend_mode = substra.BackendType.REMOTE
     client.get_compute_plan = MagicMock(return_value=fake_compute_plan)
     client.organization_info = MagicMock(
         return_value=substra.models.OrganizationInfo(

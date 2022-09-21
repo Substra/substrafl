@@ -42,39 +42,43 @@ DEFAULT_DATASET = DatasetSpec(
 )
 
 
-def instantiate_clients(mode: str = "subprocess", n_centers: Optional[int] = 2, conf: Optional[dict] = None):
+def instantiate_clients(
+    mode: substra.BackendType = substra.BackendType.LOCAL_SUBPROCESS,
+    n_centers: Optional[int] = 2,
+    conf: Optional[dict] = None,
+):
     """Create substra client according to passed args
 
     Args:
-        mode (str, optional): Specify a backend type. Either subprocess, docker or remote. Defaults to "subprocess".
+        mode (substra.BackendType): Specify a backend type. Either subprocess, docker or remote. Defaults to
+        "subprocess".
         n_centers (int, optional): Only subprocess and docker. Number of clients to create. Defaults to 2.
         conf (dict, optional): Only remote: Substra configuration. Defaults to None.
 
     Returns:
         _type_: _description_
     """
-    if mode == "remote":
+    if mode == substra.BackendType.REMOTE:
         clients = []
         for organization in conf:
-            client = substra.Client(debug=False, url=organization.get("url"))
+            client = substra.Client(backend_type=mode, url=organization.get("url"))
             client.login(username=organization.get("username"), password=organization.get("password"))
             clients.append(client)
     else:
-        os.environ["DEBUG_SPAWNER"] = mode
-        clients = [substra.Client(debug=True) for _ in range(n_centers)]
+        clients = [substra.Client(backend_type=mode) for _ in range(n_centers)]
 
     return clients
 
 
-def get_clients(mode: str = "subprocess", credentials: os.PathLike = "remote.yaml", n_centers: int = 2):
+def get_clients(mode: substra.BackendType, credentials: os.PathLike = "remote.yaml", n_centers: int = 2):
     # Load Configuration
     conf = yaml.full_load((SUBSTRA_CONFIG_FOLDER / credentials).read_text())
     clients = instantiate_clients(conf=conf, mode=mode, n_centers=n_centers)
     return clients
 
 
-def load_asset_keys(asset_keys_path, mode):
-    if mode == "remote" and (SUBSTRA_CONFIG_FOLDER / asset_keys_path).exists():
+def load_asset_keys(asset_keys_path, mode: substra.BackendType):
+    if mode == substra.BackendType.REMOTE and (SUBSTRA_CONFIG_FOLDER / asset_keys_path).exists():
         keys = json.loads((SUBSTRA_CONFIG_FOLDER / asset_keys_path).read_text())
     else:
         keys = {}

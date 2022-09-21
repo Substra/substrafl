@@ -14,7 +14,7 @@ addopts = "--durations=0"
 markers = [
     "slow", # mark test as slow.
     "substra", # mark test as using substra.
-    "docker_only", # mark test as only useful in remote and local mode with DEBUG_SPAWNER set to docker.
+    "docker_only", # mark test as only useful in remote and local docker mode
     "e2e", # test run in the end-to-end tests with Substra
     "gpu", # gpu tests, to run manually
 ]

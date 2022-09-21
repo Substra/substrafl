@@ -76,7 +76,8 @@ class Network(BaseModel):
         self.msp_ids = [client.organization_info().organization_id for client in data["clients"]]
 
 
-def network(is_local: bool, is_ci: bool = False):
+def network(backend_type: substra.BackendType, is_ci: bool = False):
+
     cfg_file = DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
     if is_ci:
         cfg_file = CI_REMOTE_NETWORK_CONFIGURATION_FILE
@@ -95,10 +96,10 @@ def network(is_local: bool, is_ci: bool = False):
 
     clients = []
     for organization in cfg.organizations:
-        if is_local:
-            client = substra.Client(debug=True)
+        if backend_type == substra.BackendType.REMOTE:
+            client = substra.Client(backend_type=substra.BackendType.REMOTE, url=organization.url)
         else:
-            client = substra.Client(debug=False, url=organization.url)
+            client = substra.Client(backend_type=backend_type)
         client.login(username=organization.username, password=organization.password)
         clients.append(client)
 
