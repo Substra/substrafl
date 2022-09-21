@@ -34,7 +34,8 @@ DEFAULT_METRICS_FILE = f"""
 import substratools as tools
 import math
 import numpy as np
-class AccuracyMetric(tools.Metrics):
+
+class AccuracyMetric(tools.MetricAlgo):
     def score(self, inputs, outputs, task_properties):
         # Datasamples are passed as a tuple of two elements: x and y
         y_true = inputs['{InputIdentifiers.datasamples}'][1]
@@ -46,7 +47,7 @@ class AccuracyMetric(tools.Metrics):
 
 
 if __name__ == "__main__":
-    tools.metrics.execute(AccuracyMetric())
+    tools.algo.execute(AccuracyMetric())
 """
 
 DEFAULT_OPENER_FILE = """

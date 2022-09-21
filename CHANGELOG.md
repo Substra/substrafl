@@ -260,7 +260,7 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
-class AUC(tools.Metrics):
+class AUC(tools.MetricAlgo):
    def score(self, y_true, y_pred):
        """AUC"""
        metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
@@ -269,7 +269,7 @@ class AUC(tools.Metrics):
 
 
 if __name__ == "__main__":
-   tools.metrics.execute(AUC())
+   tools.algo.execute(AUC())
 ```
 
 the metric files should look like:
@@ -280,7 +280,7 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
-class AUC(tools.Metrics):
+class AUC(tools.MetricAlgo):
     def score(self, inputs, outputs):
         """AUC"""
 
@@ -293,7 +293,7 @@ class AUC(tools.Metrics):
 
 
 if __name__ == "__main__":
-    tools.metrics.execute(AUC())
+    tools.algo.execute(AUC())
 ```
 
 ## 0.26.0 - 2022-08-22

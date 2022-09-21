@@ -3,7 +3,7 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
-class AUC(tools.Metrics):
+class AUC(tools.MetricAlgo):
     def score(self, inputs, outputs, task_properties):
         """AUC"""
 
@@ -19,4 +19,4 @@ class AUC(tools.Metrics):
 
 
 if __name__ == "__main__":
-    tools.metrics.execute(AUC())
+    tools.algo.execute(AUC())
