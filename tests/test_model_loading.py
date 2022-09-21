@@ -65,7 +65,6 @@ def fake_compute_plan():
 @pytest.fixture
 def trunk_model():
     model = Mock(spec=OutModel)
-    model.category = substra.models.ModelType.simple
     model.key = AssetKeys.trunk_model
 
     return model
@@ -77,7 +76,6 @@ def fake_composite_traintuple(trunk_model):
     algo.key = AssetKeys.algo
 
     head_model = Mock(spec=OutModel)
-    head_model.category = substra.models.ModelType.head
     head_model.key = AssetKeys.valid_head_model
 
     composite = Mock(spec=_Composite)

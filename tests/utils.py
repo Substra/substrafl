@@ -2,8 +2,9 @@ import pickle
 import time
 
 from substra.sdk.models import ComputePlanStatus
-from substra.sdk.models import ModelType
 from substra.sdk.models import Status
+
+from substrafl.nodes.node import OutputIdentifiers
 
 FUTURE_TIMEOUT = 3600
 FUTURE_POLLING_PERIOD = 1
@@ -82,18 +83,20 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
     )
     local_models = list()
     for task in train_tasks:
-        for model in task.composite.models:
-            client = None
-            if task.worker == network.msp_ids[0]:
-                client = network.clients[0]
-            elif task.worker == network.msp_ids[1]:
-                client = network.clients[1]
-            model_path = client.download_model(model.key, session_dir)
-            if model.category == ModelType.head:
-                model = my_algo.load(model_path)
-                # Move the torch model to CPU
-                model.model.to("cpu")
-                local_models.append(model)
+        client = None
+        if task.worker == network.msp_ids[0]:
+            client = network.clients[0]
+        elif task.worker == network.msp_ids[1]:
+            client = network.clients[1]
+
+        for identifier, output in task.outputs.items():
+            if identifier != OutputIdentifiers.local:
+                continue
+            model_path = client.download_model(output.value.key, session_dir)
+            model = my_algo.load(model_path)
+            # Move the torch model to CPU
+            model.model.to("cpu")
+            local_models.append(model)
     return local_models
 
 
