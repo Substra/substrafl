@@ -2,8 +2,8 @@ Strategies
 ==========
 
 
-Federate Averaging
-^^^^^^^^^^^^^^^^^^
+Federated Averaging
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: substrafl.strategies.FedAvg
 
