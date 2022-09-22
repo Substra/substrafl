@@ -413,8 +413,8 @@ def dummy_algo_class():
 def numpy_torch_dataset():
     class TorchDataset(torch.utils.data.Dataset):
         def __init__(self, datasamples, is_inference=False):
-            self.x = datasamples[:, :-LINEAR_N_TARGET]
-            self.y = datasamples[:, -LINEAR_N_TARGET:]
+            self.x = datasamples[0]
+            self.y = datasamples[1]
             self.is_inference = is_inference
 
         def __getitem__(self, index):

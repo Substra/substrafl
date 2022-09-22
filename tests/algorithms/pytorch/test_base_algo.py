@@ -26,6 +26,8 @@ from substrafl.strategies import Scaffold
 from substrafl.strategies import SingleOrganization
 from substrafl.strategies.strategy import Strategy
 from tests import utils
+from tests.conftest import LINEAR_N_TARGET
+from tests.conftest import LINEAR_N_COL
 
 
 @pytest.fixture(params=[None, 31, 42])
@@ -345,7 +347,10 @@ def test_check_predict_shapes(n_samples, test_linear_data_samples, numpy_torch_d
 
     my_algo = MyAlgo()
 
-    res = my_algo.predict(datasamples=test_linear_data_samples[0][:n_samples, :], _skip=True)
+    x = test_linear_data_samples[0][:n_samples, :-LINEAR_N_TARGET]
+    y = test_linear_data_samples[0][:n_samples, -LINEAR_N_TARGET:]
+
+    res = my_algo.predict(datasamples=(x, y), _skip=True)
     assert res.shape == (n_samples, 1)
 
 
@@ -448,7 +453,7 @@ def test_none_index_generator_for_predict(numpy_torch_dataset):
     my_algo = MyAlgo()
 
     with pytest.raises(BatchSizeNotFoundError):
-        my_algo.predict(datasamples=np.zeros((1, 3)), _skip=True)
+        my_algo.predict(datasamples=(np.zeros((1, LINEAR_N_COL)), np.zeros((1, LINEAR_N_TARGET))), _skip=True)
 
 
 @pytest.mark.substra

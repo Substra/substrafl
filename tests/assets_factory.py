@@ -42,7 +42,8 @@ import math
 import numpy as np
 class AccuracyMetric(tools.Metrics):
     def score(self, inputs, outputs, task_properties):
-        y_true = inputs['{InputIdentifiers.datasamples}'][:, -{LINEAR_N_TARGET}:]
+        # Datasamples are passed as a tuple of two elements: x and y
+        y_true = inputs['{InputIdentifiers.datasamples}'][1]
         y_pred = self.load_predictions(inputs['{InputIdentifiers.predictions}'])
         tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
 
@@ -66,7 +67,8 @@ class NumpyOpener(tools.Opener):
             paths += [
                 os.path.join(folder, f) for f in os.listdir(folder) if f[-4:] == ".npy"
             ]
-        return np.concatenate([np.load(file, allow_pickle=True) for file in paths], axis=0)
+        data = np.concatenate([np.load(file, allow_pickle=True) for file in paths], axis=0)
+        return (data[:, :-{LINEAR_N_TARGET}], data[:, -{LINEAR_N_TARGET}:])
 
     def fake_data(self, n_samples=None, n_col={LINEAR_N_COL + LINEAR_N_TARGET}):
         return np.random.uniform(0, 1, (n_samples, n_col))

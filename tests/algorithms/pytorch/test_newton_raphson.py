@@ -22,17 +22,6 @@ from ... import assets_factory
 EXPECTED_PERFORMANCE = 0
 
 
-@pytest.fixture
-def x_y_dataset(numpy_torch_dataset):
-    class XYDataset(numpy_torch_dataset):
-        def __init__(self, datasamples, is_inference=True) -> None:
-            self.x = datasamples[0]
-            self.y = datasamples[1]
-            self.is_inference = is_inference
-
-    return XYDataset
-
-
 @pytest.fixture(scope="module")
 def perceptron():
     class Perceptron(torch.nn.Module):
@@ -73,7 +62,7 @@ def torch_algo(perceptron, numpy_torch_dataset):
 
 
 @pytest.mark.parametrize(
-    "n_samples,batch_size, expected_n_updates",
+    "n_samples,batch_size,expected_n_updates",
     [(10, 10, 1), (1, 10, 1), (10, 1, 10), (10, None, 1)],
 )
 def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
@@ -81,7 +70,7 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
     Also test the behavior for batch_size set to None (batch_size set to num_samples by the index generator and
     num_update set to 1 for Newton Raphson."""
 
-    datasamples = np.zeros([n_samples, 2])
+    datasamples = (np.zeros([n_samples, 1]), np.zeros([n_samples, 1]))
 
     my_algo = torch_algo(batch_size=batch_size)
 
@@ -96,9 +85,9 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
 @pytest.mark.parametrize(
     "datasamples,expected_gradient,expected_hessian",
     [
-        ([[2, 1]], [4, 2], [[8, 4], [4, 2]]),  # One input point
-        ([[1, 2], [2, 4]], [-5, -3], [[5, 3], [3, 2]]),  # Two input points
-        ([[-1, -10], [0, 4], [1, -8]], [0, 28 / 3], [[4 / 3, 0], [0, 2]]),  # Three input points
+        (([2], [1]), [4, 2], [[8, 4], [4, 2]]),  # One input point
+        (([1, 2], [2, 4]), [-5, -3], [[5, 3], [3, 2]]),  # Two input points
+        ([[-1, 0, 1], [-10, 4, -8]], [0, 28 / 3], [[4 / 3, 0], [0, 2]]),  # Three input points
     ],
 )
 def test_train_newton_raphson_shared_states_results(
@@ -129,7 +118,7 @@ def test_l2_coeff(torch_algo, l2_coeff):
 
     n_samples = 2
 
-    datasamples = np.zeros([n_samples, 2])
+    datasamples = (np.zeros([n_samples, 1]), np.zeros([n_samples, 1]))
 
     my_algo_l2 = torch_algo(l2_coeff=l2_coeff)
     my_algo_no_l2 = torch_algo(l2_coeff=0)
@@ -164,7 +153,7 @@ def test_wrong_reduction_criterion_value(torch_algo, reduction, raise_error):
         (10, 10),  # x_shape == y_shape
     ],
 )
-def test_train_newton_raphson_shared_states_shape(torch_algo, x_y_dataset, perceptron, x_shape, y_shape):
+def test_train_newton_raphson_shared_states_shape(torch_algo, numpy_torch_dataset, perceptron, x_shape, y_shape):
     """Test the shape of the gradients and the Hessian matrix are coherent with the linear model shape."""
     n_samples = 10
 
@@ -172,7 +161,7 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, x_y_dataset, perce
     y_train = np.ones([n_samples, y_shape])
 
     model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
-    my_algo = torch_algo(model=model, batch_size=10, dataset=x_y_dataset)
+    my_algo = torch_algo(model=model, batch_size=10, dataset=numpy_torch_dataset)
 
     shared_states = my_algo.train(datasamples=(x_train, y_train), _skip=True)
 
@@ -182,7 +171,7 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, x_y_dataset, perce
     assert shared_states.hessian.size == ((x_shape + 1) * y_shape) ** 2
 
 
-def test_train_newton_raphson_non_convex_cnn(torch_algo, x_y_dataset):
+def test_train_newton_raphson_non_convex_cnn(torch_algo, numpy_torch_dataset):
     """Test that NegativeHessianMatrixError is raised when the Hessian matrix is non positive semi definite for a
     non-convex problem."""
 
@@ -211,7 +200,7 @@ def test_train_newton_raphson_non_convex_cnn(torch_algo, x_y_dataset):
 
     criterion = torch.nn.BCEWithLogitsLoss()
 
-    my_algo = torch_algo(model=model, criterion=criterion, dataset=x_y_dataset)
+    my_algo = torch_algo(model=model, criterion=criterion, dataset=numpy_torch_dataset)
 
     with pytest.raises(NegativeHessianMatrixError):
         my_algo.train(datasamples=(x_train, y_train), _skip=True)
