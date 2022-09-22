@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- Python package depends on substra-tools v0.18.0
+
 ### Tests
 
 - Update the Client, it takes a backend type instead of debug=True + env variable to set the spawner - (#210)
