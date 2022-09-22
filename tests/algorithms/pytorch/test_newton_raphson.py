@@ -49,12 +49,12 @@ def perceptron():
 @pytest.fixture(scope="module")
 def torch_algo(perceptron, numpy_torch_dataset):
     class MyAlgo(TorchNewtonRaphsonAlgo):
-        def __init__(self, model=None, dataset=None, criterion=None, batch_size=1, l2_coeff=0):
+        def __init__(self, model=None, criterion=None, batch_size=1, l2_coeff=0):
             super().__init__(
                 model=model or perceptron(),
                 criterion=criterion or torch.nn.MSELoss(),
                 batch_size=batch_size,
-                dataset=dataset or numpy_torch_dataset,
+                dataset=numpy_torch_dataset,
                 l2_coeff=l2_coeff,
             )
 
@@ -118,7 +118,7 @@ def test_l2_coeff(torch_algo, l2_coeff):
 
     n_samples = 2
 
-    datasamples = (np.zeros([n_samples, 1]), np.zeros([n_samples, 1]))
+    datasamples = (np.zeros([n_samples, 1]), np.ones([n_samples, 1]))
 
     my_algo_l2 = torch_algo(l2_coeff=l2_coeff)
     my_algo_no_l2 = torch_algo(l2_coeff=0)
@@ -161,7 +161,7 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, numpy_torch_datase
     y_train = np.ones([n_samples, y_shape])
 
     model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
-    my_algo = torch_algo(model=model, batch_size=10, dataset=numpy_torch_dataset)
+    my_algo = torch_algo(model=model, batch_size=10)
 
     shared_states = my_algo.train(datasamples=(x_train, y_train), _skip=True)
 
@@ -200,7 +200,7 @@ def test_train_newton_raphson_non_convex_cnn(torch_algo, numpy_torch_dataset):
 
     criterion = torch.nn.BCEWithLogitsLoss()
 
-    my_algo = torch_algo(model=model, criterion=criterion, dataset=numpy_torch_dataset)
+    my_algo = torch_algo(model=model, criterion=criterion)
 
     with pytest.raises(NegativeHessianMatrixError):
         my_algo.train(datasamples=(x_train, y_train), _skip=True)

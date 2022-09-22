@@ -1,4 +1,4 @@
-# import sys
+import sys
 import tarfile
 import tempfile
 from pathlib import Path
