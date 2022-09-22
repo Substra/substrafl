@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update the Client, it takes a backend type instead of debug=True + env variable to set the spawner - (#210)
 - Do not use Model.category since this field is being removed from the SDK
+- Update the tests and benchmark with the change on Metrics from substratools (#24)
 
 ### Changed
 
