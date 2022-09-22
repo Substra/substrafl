@@ -18,8 +18,12 @@ from substra.sdk.schemas import Permissions
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 
+# TODO: revert before merge
+# DEFAULT_SUBSTRATOOLS_VERSION = (
+#     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
+# )
 DEFAULT_SUBSTRATOOLS_VERSION = (
-    f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
+    f"metrics_to_generic-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
 )
 
 DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"ghcr.io/substra/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
