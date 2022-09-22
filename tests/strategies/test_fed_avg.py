@@ -85,7 +85,8 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
                 # We predict the shared state, an array of 0.5
                 assert int((shared_state.avg_parameters_update == np.ones(1) * 0.5).all())
 
-            return FedAvgSharedState(n_samples=len(datasamples), parameters_update=[np.asarray(e) for e in datasamples])
+            x = datasamples[0]
+            return FedAvgSharedState(n_samples=len(x), parameters_update=[np.asarray(e) for e in x])
 
     # Add 0s and 1s constant to check the averaging of the function
     train_data_nodes = [
