@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The `predict` and `_local_predict` methods of the Torch Algorithms does not need to return anything anymore.
 - NOTABLE CHANGES due to breaking changes in substra-tools:
   - the opener only exposes `get_data` and `fake_data` methods
   - the results of the above method is passed under the `datasamples` keys within the `inputs` dict arg of all
@@ -150,7 +151,7 @@ class MyAlgo(TorchFedAvgAlgo):
 ### Fixed
 
 - Throw an error if `pytorch 1.12.0` is used.
-  There is a regression bug in `torch 1.12.0`, that impacts optimizers that have been pickled and unpickled. This bug occurs for Adam optimizer for example (but not for SGD). Here is a link to one issue covering it: https://github.com/pytorch/pytorch/pull/80345
+  There is a regression bug in `torch 1.12.0`, that impacts optimizers that have been pickled and unpickled. This bug occurs for Adam optimizer for example (but not for SGD). Here is a link to one issue covering it: <https://github.com/pytorch/pytorch/pull/80345>
 
 ### Changed
 

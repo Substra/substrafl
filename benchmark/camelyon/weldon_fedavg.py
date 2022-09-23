@@ -99,6 +99,4 @@ def get_weldon_fedavg(
 
             self._save_predictions(y_pred, predictions_path)
 
-            return y_pred
-
     return MyAlgo()
