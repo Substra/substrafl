@@ -18,7 +18,6 @@ from substra.sdk.schemas import Permissions
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 
-
 DEFAULT_SUBSTRATOOLS_VERSION = (
     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
 )
