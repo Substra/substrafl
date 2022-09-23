@@ -153,7 +153,7 @@ def test_wrong_reduction_criterion_value(torch_algo, reduction, raise_error):
         (10, 10),  # x_shape == y_shape
     ],
 )
-def test_train_newton_raphson_shared_states_shape(torch_algo, numpy_torch_dataset, perceptron, x_shape, y_shape):
+def test_train_newton_raphson_shared_states_shape(torch_algo, perceptron, x_shape, y_shape):
     """Test the shape of the gradients and the Hessian matrix are coherent with the linear model shape."""
     n_samples = 10
 
@@ -171,7 +171,7 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, numpy_torch_datase
     assert shared_states.hessian.size == ((x_shape + 1) * y_shape) ** 2
 
 
-def test_train_newton_raphson_non_convex_cnn(torch_algo, numpy_torch_dataset):
+def test_train_newton_raphson_non_convex_cnn(torch_algo):
     """Test that NegativeHessianMatrixError is raised when the Hessian matrix is non positive semi definite for a
     non-convex problem."""
 
