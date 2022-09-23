@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class TorchFedAvgAlgo(TorchAlgo):
-    """To be inherited. Wraps the necessary operation so a torch model can be trained in the Federated Averaging strategy.
+    """To be inherited. Wraps the necessary operation so a torch model can be trained in the Federated Averaging
+    strategy.
 
     The ``train`` method:
 

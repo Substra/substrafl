@@ -258,9 +258,6 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
-
-        Returns:
-            typing.Any: Model predictions.
         """
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=self._batch_size)
 
@@ -275,8 +272,6 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         predictions = predictions.cpu().detach()
 
         self._save_predictions(predictions, predictions_path)
-
-        return predictions
 
     @remote_data
     def train(

@@ -66,7 +66,8 @@ def torch_algo(perceptron, numpy_torch_dataset):
     [(10, 10, 1), (1, 10, 1), (10, 1, 10), (10, None, 1)],
 )
 def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
-    """Test that num update is well updated in the index generator and that num_updates = math.ceil(n_samples / batch_size).
+    """Test that num update is well updated in the index generator and that
+    num_updates = math.ceil(n_samples / batch_size).
     Also test the behavior for batch_size set to None (batch_size set to num_samples by the index generator and
     num_update set to 1 for Newton Raphson."""
 

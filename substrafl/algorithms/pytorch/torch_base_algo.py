@@ -103,18 +103,14 @@ class TorchAlgo(Algo):
         Args:
             datasamples (typing.Any): Input data
             shared_state (Any): Latest train task shared state (output of the train method)
-        Returns:
-            typing.Any: Predictions computed by the ``self._local_predict`` method.
         """
 
         # Create torch dataset
         predict_dataset = self._dataset(datasamples, is_inference=True)
-        pred = self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
-
-        return pred
+        self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
 
     def _save_predictions(self, predictions: torch.Tensor, predictions_path: os.PathLike):
-        """Save the predictions under the torch format.
+        """Save the predictions under the numpy format.
 
         Args:
             predictions (torch.Tensor): predictions to save.
@@ -129,17 +125,14 @@ class TorchAlgo(Algo):
 
             * Create the torch dataloader using the index generator batch size.
             * Sets the model to `eval` mode
-            * Returns the predictions
+            * Save the predictions using the
+              :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` function.
 
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
 
-
-        Returns:
-            typing.Any: Model prediction.
-
         Important:
-            The onus is on the user to ``save`` and ``return`` the compute predictions. Substrafl provides the
+            The onus is on the user to ``save`` the compute predictions. Substrafl provides the
             :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` to do so.
             The user can load those predictions from a metric file with the command:
             ``y_pred = np.load(inputs['predictions'])``.
@@ -166,8 +159,6 @@ class TorchAlgo(Algo):
 
         predictions = predictions.cpu().detach()
         self._save_predictions(predictions, predictions_path)
-
-        return predictions
 
     def _local_train(
         self,

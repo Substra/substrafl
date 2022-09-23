@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Removed
+
+- Return statement of both `predict` and `_local_predict` methods from Torch Algorithms.
+
 ### Tests
 
 - Update the Client, it takes a backend type instead of debug=True + env variable to set the spawner - (#210)
@@ -150,7 +154,7 @@ class MyAlgo(TorchFedAvgAlgo):
 ### Fixed
 
 - Throw an error if `pytorch 1.12.0` is used.
-  There is a regression bug in `torch 1.12.0`, that impacts optimizers that have been pickled and unpickled. This bug occurs for Adam optimizer for example (but not for SGD). Here is a link to one issue covering it: https://github.com/pytorch/pytorch/pull/80345
+  There is a regression bug in `torch 1.12.0`, that impacts optimizers that have been pickled and unpickled. This bug occurs for Adam optimizer for example (but not for SGD). Here is a link to one issue covering it: <https://github.com/pytorch/pytorch/pull/80345>
 
 ### Changed
 

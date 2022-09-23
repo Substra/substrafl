@@ -316,10 +316,13 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
 
 
 @pytest.mark.parametrize("n_samples", [1, 2])
-def test_check_predict_shapes(n_samples, test_linear_data_samples, numpy_torch_dataset, torch_linear_model):
+def test_check_predict_shapes(
+    n_samples, test_linear_data_samples, numpy_torch_dataset, torch_linear_model, session_dir
+):
     """Checks that one liner and multiple liners input can be used for inference (corner case of last batch
     shape is (1, n_cols)"""
 
+    predictions_path = session_dir / "predictions"
     num_updates = 100
     seed = 42
     torch.manual_seed(seed)
@@ -350,7 +353,8 @@ def test_check_predict_shapes(n_samples, test_linear_data_samples, numpy_torch_d
     x = test_linear_data_samples[0][:n_samples, :-LINEAR_N_TARGET]
     y = test_linear_data_samples[0][:n_samples, -LINEAR_N_TARGET:]
 
-    res = my_algo.predict(datasamples=(x, y), _skip=True)
+    my_algo.predict(datasamples=(x, y), predictions_path=predictions_path, _skip=True)
+    res = np.load(predictions_path)
     assert res.shape == (n_samples, 1)
 
 
