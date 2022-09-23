@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Removed
+
+- Return statement of both `predict` and `_local_predict` methods from Torch Algorithms.
+
 ### Tests
 
 - Update the Client, it takes a backend type instead of debug=True + env variable to set the spawner - (#210)
@@ -15,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The `predict` and `_local_predict` methods of the Torch Algorithms does not need to return anything anymore.
 - NOTABLE CHANGES due to breaking changes in substra-tools:
   - the opener only exposes `get_data` and `fake_data` methods
   - the results of the above method is passed under the `datasamples` keys within the `inputs` dict arg of all
