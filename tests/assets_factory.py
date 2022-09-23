@@ -18,8 +18,6 @@ from substra.sdk.schemas import Permissions
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 
-from .conftest import LINEAR_N_COL
-from .conftest import LINEAR_N_TARGET
 
 DEFAULT_SUBSTRATOOLS_VERSION = (
     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
@@ -52,7 +50,7 @@ if __name__ == "__main__":
     tools.metrics.execute(AccuracyMetric())
 """
 
-DEFAULT_OPENER_FILE = f"""
+DEFAULT_OPENER_FILE = """
 import os
 import numpy as np
 import substratools as tools
@@ -65,10 +63,11 @@ class NumpyOpener(tools.Opener):
                 os.path.join(folder, f) for f in os.listdir(folder) if f[-4:] == ".npy"
             ]
         data = np.concatenate([np.load(file, allow_pickle=True) for file in paths], axis=0)
-        return (data[:, :-{LINEAR_N_TARGET}], data[:, -{LINEAR_N_TARGET}:])
+        return (data[:, :-1], data[:, -1:])
 
-    def fake_data(self, n_samples=None, n_col={LINEAR_N_COL + LINEAR_N_TARGET}):
-        return np.random.uniform(0, 1, (n_samples, n_col))
+    def fake_data(self, n_samples=None):
+        # SubstraFL is never tested in hybrid mode
+        pass
 """
 
 
