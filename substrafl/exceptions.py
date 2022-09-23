@@ -18,7 +18,7 @@ class DampingFactorValueError(Exception):
 
 
 class DatasetSignatureError(Exception):
-    """The __init__() function on the given torch Dataset must have x, y and is_inference as parameters."""
+    """The __init__() function on the given torch Dataset must have datasamples and is_inference as parameters."""
 
 
 class DatasetTypeError(Exception):

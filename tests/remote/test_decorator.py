@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -23,8 +23,8 @@ class RemoteClass:
         return sum(shared_states) + extra_arg
 
     @remote_data
-    def train(self, x: int, y: int, shared_state: int, extra_arg: int = 0) -> int:
-        self.local_state = x + y + shared_state + extra_arg
+    def train(self, datasamples: Tuple[int, int], shared_state: int, extra_arg: int = 0) -> int:
+        self.local_state = sum(datasamples) + shared_state + extra_arg
         return self.local_state
 
     def save(self, path):
@@ -51,7 +51,7 @@ def test_remote_data():
     assert new_class.kwargs == {"a": 42, "b": 3}
 
     # Execute the function itself
-    result = new_class.train(x=4, y=5, _skip=True, shared_state=4)
+    result = new_class.train(datasamples=(4, 5), _skip=True, shared_state=4)
     assert result == 13
 
 
@@ -66,17 +66,18 @@ def test_remote_data_get_method_from_remote_struct(session_dir):
     new_remote_class = data_op.remote_struct.get_remote_instance()
     new_remote_class.save_trunk_model(4, session_dir / InputIdentifiers.shared)
     inputs = {
-        InputIdentifiers.X: 4,
-        InputIdentifiers.y: 5,
+        InputIdentifiers.datasamples: (4, 5),
         InputIdentifiers.local: None,
         InputIdentifiers.shared: session_dir / InputIdentifiers.shared,
-        InputIdentifiers.rank: 0,
     }
     outputs = {
         OutputIdentifiers.local: session_dir / OutputIdentifiers.local.value,
         OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared.value,
     }
-    new_remote_class.train(inputs, outputs)
+    task_properties = {
+        InputIdentifiers.rank: 0,
+    }
+    new_remote_class.train(inputs, outputs, task_properties)
 
     result = new_remote_class.load_head_model(session_dir / OutputIdentifiers.local.value)
     assert result == 13
@@ -93,17 +94,19 @@ def test_remote_data_extra_arg(session_dir):
 
     new_remote_class.save_trunk_model(4, session_dir / InputIdentifiers.shared)
     inputs = {
-        InputIdentifiers.X: 4,
-        InputIdentifiers.y: 5,
+        InputIdentifiers.datasamples: (4, 5),
         InputIdentifiers.local: None,
         InputIdentifiers.shared: session_dir / InputIdentifiers.shared,
-        InputIdentifiers.rank: 0,
     }
     outputs = {
         OutputIdentifiers.local: session_dir / OutputIdentifiers.local.value,
         OutputIdentifiers.shared: session_dir / OutputIdentifiers.shared.value,
     }
-    new_remote_class.train(inputs, outputs)
+    task_properties = {
+        InputIdentifiers.rank: 0,
+    }
+
+    new_remote_class.train(inputs, outputs, task_properties)
 
     result = new_remote_class.load_head_model(session_dir / OutputIdentifiers.local.value)
     assert result == 113

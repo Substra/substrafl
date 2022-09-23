@@ -391,12 +391,12 @@ def dummy_algo_class():
             return "model"
 
         @remote_data
-        def train(self, x, y, shared_state):
-            return dict(test=np.array([4]), x=x, y=y, shared_state=shared_state)
+        def train(self, datasamples, shared_state):
+            return dict(test=np.array([4]), datasamples=datasamples, shared_state=shared_state)
 
         @remote_data
-        def predict(self, x: np.array, shared_state):
-            return dict(x=x, shared_state=shared_state)
+        def predict(self, datasamples: np.array, shared_state):
+            return dict(datasamples=datasamples, shared_state=shared_state)
 
         def load(self, path: Path):
             return self
@@ -412,9 +412,9 @@ def dummy_algo_class():
 @pytest.fixture(scope="session")
 def numpy_torch_dataset():
     class TorchDataset(torch.utils.data.Dataset):
-        def __init__(self, x, y, is_inference=False):
-            self.x = x
-            self.y = y
+        def __init__(self, datasamples, is_inference=False):
+            self.x = datasamples[0]
+            self.y = datasamples[1]
             self.is_inference = is_inference
 
         def __getitem__(self, index):

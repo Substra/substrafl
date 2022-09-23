@@ -87,29 +87,28 @@ class TorchAlgo(Algo):
     @abc.abstractmethod
     def train(
         self,
-        x: Any,
-        y: Any,
+        datasamples: Any,
         shared_state: Any = None,
     ) -> Any:
         # Must be implemented in the child class
         raise NotImplementedError()
 
     @remote_data
-    def predict(self, x: Any, shared_state: Any, predictions_path: os.PathLike = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any, predictions_path: os.PathLike = None) -> Any:
         """Executes the following operations:
 
             * Create the test torch dataset.
             * Execute and return the results of the ``self._local_predict`` method
 
         Args:
-            x (typing.Any): Input data
+            datasamples (typing.Any): Input data
             shared_state (Any): Latest train task shared state (output of the train method)
         Returns:
             typing.Any: Predictions computed by the ``self._local_predict`` method.
         """
 
         # Create torch dataset
-        predict_dataset = self._dataset(x=x, y=None, is_inference=True)
+        predict_dataset = self._dataset(datasamples, is_inference=True)
         pred = self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
 
         return pred
@@ -348,7 +347,7 @@ class TorchAlgo(Algo):
         except TypeError:
             raise DatasetTypeError(
                 "``dataset`` should be non-instantiate torch.utils.data.Dataset class. "
-                "This means that calling ``dataset(x, y, is_inference=False)`` must "
+                "This means that calling ``dataset(datasamples, is_inference=False)`` must "
                 "returns a torch dataset object. "
                 "You might have provided an instantiate dataset or an object of the wrong type."
             )
@@ -357,10 +356,10 @@ class TorchAlgo(Algo):
         signature = inspect.signature(self._dataset.__init__)
         init_parameters = signature.parameters
 
-        if "x" not in init_parameters:
-            raise DatasetSignatureError("The __init__() function of the torch Dataset must contain x as parameter.")
-        elif "y" not in init_parameters:
-            raise DatasetSignatureError("The __init__() function of the torch Dataset must contain y as parameter.")
+        if "datasamples" not in init_parameters:
+            raise DatasetSignatureError(
+                "The __init__() function of the torch Dataset must contain datasamples as parameter."
+            )
         elif "is_inference" not in init_parameters:
             raise DatasetSignatureError(
                 "The __init__() function of the torch Dataset must contain is_inference as parameter."

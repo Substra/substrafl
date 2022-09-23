@@ -153,8 +153,7 @@ class TestLocalDependency:
             @remote_data
             def train(
                 self,
-                x: np.ndarray,
-                y: np.ndarray,
+                datasamples: np.ndarray,
                 shared_state,
             ):
                 from local_code_subfolder.local_code import add_strings
@@ -162,7 +161,7 @@ class TestLocalDependency:
                 some_strings = add_strings("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
 
-                return dict(test=np.array(x), n_samples=len(x))
+                return dict(test=np.array(datasamples), n_samples=len(datasamples))
 
         client = network.clients[0]
         my_algo = MyAlgo()
@@ -190,8 +189,7 @@ class TestLocalDependency:
             @remote_data
             def train(
                 self,
-                x: np.ndarray,
-                y: np.ndarray,
+                datasamples: np.ndarray,
                 shared_state,
             ):
                 from local_code_subfolder.local_code import add_strings
@@ -199,7 +197,7 @@ class TestLocalDependency:
                 some_strings = add_strings("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
 
-                return dict(test=np.array(x), n_samples=len(x))
+                return dict(test=np.array(datasamples), n_samples=len(datasamples))
 
         client = network.clients[0]
         my_algo = MyAlgo()
@@ -227,8 +225,7 @@ class TestLocalDependency:
             @remote_data
             def train(
                 self,
-                x: np.ndarray,
-                y: np.ndarray,
+                datasamples: np.ndarray,
                 shared_state,
             ):
                 from local_code_file import combine_strings
@@ -236,7 +233,7 @@ class TestLocalDependency:
                 some_strings = combine_strings("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
 
-                return dict(test=np.array(x), n_samples=len(x))
+                return dict(test=np.array(datasamples), n_samples=len(datasamples))
 
         client = network.clients[0]
         my_algo = MyAlgo()
@@ -272,8 +269,7 @@ class TestLocalDependency:
             @remote_data
             def train(
                 self,
-                x: np.ndarray,
-                y: np.ndarray,
+                datasamples: np.ndarray,
                 shared_state,
             ):
                 # the import is here so that we can run the test without
@@ -283,7 +279,7 @@ class TestLocalDependency:
                 some_strings = dummy_string_function("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
 
-                return dict(test=np.array(x), n_samples=len(x))
+                return dict(test=np.array(datasamples), n_samples=len(datasamples))
 
         client = network.clients[0]
         my_algo = MyAlgo()

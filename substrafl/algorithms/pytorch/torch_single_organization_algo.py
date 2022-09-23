@@ -61,8 +61,8 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
                     train_dataset: torch.utils.data.Dataset,
                 ):
                     # Create torch dataloader
-                    # ``train_dataset = self._dataset(x=x, y=y, is_inference=False)`` is executed prior the execution
-                    # of this function
+                    # ``train_dataset = self._dataset(datasamples=datasamples, is_inference=False)`` is executed
+                    # prior the execution of this function
                     train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
                     for x_batch, y_batch in train_data_loader:
@@ -105,7 +105,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             optimizer (torch.optim.Optimizer): A torch optimizer linked to the model.
             index_generator (BaseIndexGenerator): a stateful index generator.
                 Must inherit from BaseIndexGenerator. The __next__ method shall return a python object (batch_index)
-                which is used for selecting each batch from the output of the get_X and get_y methods of the opener
+                which is used for selecting each batch from the output of the the get_data method of the opener
                 during training in this way: ``x[batch_index], y[batch_index]``.
                 If overridden, the generator class must be defined either as part of a package or in a different file
                 than the one from which the ``execute_experiment`` function is called.
@@ -148,8 +148,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
     @remote_data
     def train(
         self,
-        x: Any,
-        y: Any,
+        datasamples: Any,
         shared_state=None,  # Is always None for this strategy
     ) -> Dict[str, np.ndarray]:
         """Train method of the SingleOrganization strategy implemented with torch.
@@ -166,7 +165,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         """
 
         # Create torch dataset
-        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+        train_dataset = self._dataset(datasamples, is_inference=False)
 
         # Instantiate the index_generator
         if self._index_generator.n_samples is None:

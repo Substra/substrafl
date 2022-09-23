@@ -167,7 +167,7 @@ def torch_fed_avg(
 
     train_datasets = [
         CamelyonDataset(
-            x=train_camelyon,
+            datasamples=train_camelyon,
         )
         for _ in range(n_centers)
     ]
@@ -194,7 +194,7 @@ def torch_fed_avg(
 
     test_camelyon = Data(paths=[test_folder] * nb_test_data_samples)
 
-    test_datasets = [CamelyonDataset(x=test_camelyon) for _ in range(n_centers)]
+    test_datasets = [CamelyonDataset(datasamples=test_camelyon) for _ in range(n_centers)]
 
     batch_samplers = list()
     for test_dataset in test_datasets:

@@ -38,17 +38,16 @@ class Algo(abc.ABC):
     # train function
     # @remote_data
     @abc.abstractmethod
-    def train(self, x: Any, y: Any, shared_state: Any) -> Any:
+    def train(self, datasamples, shared_state: Any) -> Any:
         """Is executed for each TrainDataOrganizations.
-        This functions takes the x, y from the opener, plus the shared state from the aggregator if there is one,
-        and returns a shared state (state to send to the aggregator). Any variable that needs to be saved and updated
-        from one round to another should be an attribute of ``self`` (e.g. ``self._my_local_state_variable``), and be
-        saved and loaded in the :py:func:`~substrafl.algorithms.algo.Algo.save` and
-        :py:func:`~substrafl.algorithms.algo.Algo.load` functions.
+        This functions takes the output of the ``get_data`` method from the opener, plus the shared state from the
+        aggregator if there is one, and returns a shared state (state to send to the aggregator). Any variable that
+        needs to be saved and updated from one round to another should be an attribute of ``self``
+        (e.g. ``self._my_local_state_variable``), and be saved and loaded in the
+        :py:func:`~substrafl.algorithms.algo.Algo.save` and :py:func:`~substrafl.algorithms.algo.Algo.load` functions.
 
         Args:
-            x (typing.Any): The output of the ``get_x`` method of the opener.
-            y (typing.Any): The output of the ``get_y`` method of the opener.
+            datasamples (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
 
@@ -65,12 +64,12 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, x: Any, shared_state: Any) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any) -> Any:
         """Is executed for each TestDataOrganizations. The returned object will be passed to the ``save_predictions``
-        function of the opener. The predictions are then loaded and used to calculate the metric.
+        function of the Algo. The predictions are then loaded and used to calculate the metric.
 
         Args:
-            x (typing.Any): The output of the ``get_X`` method of the opener.
+            datasamples (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
 

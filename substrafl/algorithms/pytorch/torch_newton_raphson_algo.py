@@ -281,8 +281,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
     @remote_data
     def train(
         self,
-        x: Any,
-        y: Any,
+        datasamples: Any,
         # Set shared_state to None per default for clarity reason as
         # the decorator will do it if the arg shared_state is not passed.
         shared_state: Optional[NewtonRaphsonAveragedStates] = None,
@@ -299,8 +298,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             * a L2 regularization can be applied to the loss by settings `l2_coeff` different to zero (default value)
 
         Args:
-            x (typing.Any): Input data.
-            y (typing.Any): Input target.
+            datasamples (typing.Any): Input data returned by the ``get_data`` method from the opener.
             shared_state (NewtonRaphsonAveragedStates, Optional): Dict containing torch parameters that
                 will be set to the model. Defaults to None.
 
@@ -312,7 +310,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         """
 
         # Create torch dataset
-        train_dataset = self._dataset(x=x, y=y, is_inference=False)
+        train_dataset = self._dataset(datasamples, is_inference=False)
 
         if shared_state is None:
             # Instantiate the index_generator
