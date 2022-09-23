@@ -26,8 +26,8 @@ from substrafl.strategies import Scaffold
 from substrafl.strategies import SingleOrganization
 from substrafl.strategies.strategy import Strategy
 from tests import utils
-from tests.conftest import LINEAR_N_TARGET
 from tests.conftest import LINEAR_N_COL
+from tests.conftest import LINEAR_N_TARGET
 
 
 @pytest.fixture(params=[None, 31, 42])
