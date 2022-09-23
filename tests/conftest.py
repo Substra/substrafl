@@ -59,11 +59,6 @@ def session_dir():
 
 
 @pytest.fixture(scope="session")
-def predictions_path(session_dir):
-    return session_dir / "predictions"
-
-
-@pytest.fixture(scope="session")
 def network(request):
     """Network fixture. Create network instance from the configuration files and the options
     passed as arguments to pytest.
