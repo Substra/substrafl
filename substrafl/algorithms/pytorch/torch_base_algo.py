@@ -126,7 +126,7 @@ class TorchAlgo(Algo):
             * Create the torch dataloader using the index generator batch size.
             * Sets the model to `eval` mode
             * Save the predictions using the
-            :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` function.
+              :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` function.
 
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
