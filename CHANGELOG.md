@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update the Client, it takes a backend type instead of debug=True + env variable to set the spawner - (#210)
 - Do not use Model.category since this field is being removed from the SDK
+- Update the tests and benchmark with the change on Metrics from substratools (#24)
 
 ### Changed
 
@@ -260,7 +261,7 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
-class AUC(tools.Metrics):
+class AUC(tools.MetricAlgo):
    def score(self, y_true, y_pred):
        """AUC"""
        metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
@@ -269,7 +270,7 @@ class AUC(tools.Metrics):
 
 
 if __name__ == "__main__":
-   tools.metrics.execute(AUC())
+   tools.algo.execute(AUC())
 ```
 
 the metric files should look like:
@@ -280,7 +281,7 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
-class AUC(tools.Metrics):
+class AUC(tools.MetricAlgo):
     def score(self, inputs, outputs):
         """AUC"""
 
@@ -293,7 +294,7 @@ class AUC(tools.Metrics):
 
 
 if __name__ == "__main__":
-    tools.metrics.execute(AUC())
+    tools.algo.execute(AUC())
 ```
 
 ## 0.26.0 - 2022-08-22
