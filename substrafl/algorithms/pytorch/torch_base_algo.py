@@ -111,8 +111,6 @@ class TorchAlgo(Algo):
         predict_dataset = self._dataset(datasamples, is_inference=True)
         pred = self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
 
-        return pred
-
     def _save_predictions(self, predictions: torch.Tensor, predictions_path: os.PathLike):
         """Save the predictions under the torch format.
 
@@ -166,8 +164,6 @@ class TorchAlgo(Algo):
 
         predictions = predictions.cpu().detach()
         self._save_predictions(predictions, predictions_path)
-
-        return predictions
 
     def _local_train(
         self,

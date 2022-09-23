@@ -276,8 +276,6 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         self._save_predictions(predictions, predictions_path)
 
-        return predictions
-
     @remote_data
     def train(
         self,
