@@ -133,6 +133,13 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/setup.py') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
 
+      - uses: actions/cache@v3.0.8
+        id: data
+        with:
+          path: /home/runner/work/substrafl/data
+          key: data
+          # The benchmark data cache has to be updated manually if the data changes
+
       - name: Install package
         run: |
           pip install --upgrade -e substra
@@ -143,4 +150,12 @@ jobs:
       - name: Run the local benchmark
         run: |
           cd substrafl
-          make benchmark-local
+          mkdir -p /home/runner/work/substrafl/data/tiles_0.5mpp
+          python benchmark/camelyon/benchmarks.py \
+            --mode subprocess \
+            --nb-train-data-samples 2 \
+            --nb-test-data-samples 2 \
+            --batch-size 4 \
+            --n-local-steps 1 \
+            --n-rounds 2 \
+            --data-path /home/runner/work/substrafl/data

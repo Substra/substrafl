@@ -106,7 +106,7 @@ def main():
         results = read_results(LOCAL_RESULTS_FILE)
 
     # Not used in remote, TODO: refactor at some point
-    data_path = Path(__file__).parent.resolve() / "data"
+    data_path = params.pop("data_path").resolve()
     exp_data_path = data_path / "tmp"
     fetch_camelyon(data_path)
     reset_data_folder(exp_data_path)
