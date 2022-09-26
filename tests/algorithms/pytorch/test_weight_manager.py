@@ -21,7 +21,7 @@ def test_get_parameters(torch_linear_model):
 
 
 def test_get_parameters_no_batch_norm(batch_norm_network):
-    # Check that batch norm layer are retrieved properly
+    # Check that batch norm parameters are ignored if with_batch_norm_parameters is False
 
     torch.manual_seed(42)
     model = batch_norm_network()
@@ -77,23 +77,10 @@ def test_get_batch_norm_layer(batch_norm_network):
     assert len(list(model_parameters)) == 4
 
     bn_1_rm = model_parameters[-2]
-    bn_1_rv = model_parameters[-2]
+    bn_1_rv = model_parameters[-1]
 
     assert torch.equal(torch.tensor([0.0]), bn_1_rm)
     assert torch.equal(torch.tensor([1.0]), bn_1_rv)
-
-
-def test_get_parameters_without_batch_norm_layer(batch_norm_network):
-    # Check that batch norm layer are retrieved properly
-
-    torch.manual_seed(42)
-    model = batch_norm_network()
-
-    model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
-
-    # The defined models has 2 "classic" parameters and 2 batch norm layers (hence 4 batch norm parameters)
-    # We should retrieve 4 parameters
-    assert len(model_parameters) == 4
 
 
 @pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_network"])
