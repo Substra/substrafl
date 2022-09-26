@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- BREAKING CHANGE: in the `TorchFedAvg`, `TorchScaffold` and `TorchNewtonRaphson` algos, `with_batch_norm_parameters` is replaced by the parameters `with_batch_norm_weights` and `with_batch_norm_running` (#30)
+
+### Fixed
+
+- torch algos: when there is a batch norm layer in the network, properly get and set the weights (#30)
+
 ## [0.31.0](https://github.com/Substra/substrafl/releases/tag/0.31.0) - 2022-10-03
 
 ### Removed
@@ -16,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - documentation of the `predict` function of Algos was not up to date (#33)
+
 
 ## [0.30.0](https://github.com/Substra/substrafl/releases/tag/0.30.0) - 2022-09-26
 

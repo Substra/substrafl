@@ -1,3 +1,5 @@
+from typing import OrderedDict
+
 import pytest
 import torch
 
@@ -18,33 +20,83 @@ def test_get_parameters(torch_linear_model):
     assert torch.equal(parameters[1].data, torch.tensor([0.0100]))
 
 
-def test_get_batch_norm_layer(batch_norm_cnn):
+def test_get_parameters_no_batch_norm(batch_norm_network):
     # Check that batch norm layer are retrieved properly
 
     torch.manual_seed(42)
-    model = batch_norm_cnn()
+    model = batch_norm_network()
+
+    state_dict = OrderedDict(
+        [
+            ("linear1.weight", torch.tensor([[0.1]])),
+            ("linear1.bias", torch.tensor([0.5])),
+            ("bn1.weight", torch.tensor([5.0])),
+            ("bn1.bias", torch.tensor([3.0])),
+            ("bn1.running_mean", torch.tensor([0.0])),
+            ("bn1.running_var", torch.tensor([1.0])),
+            ("bn1.num_batches_tracked", torch.tensor(0)),
+        ]
+    )
+    model.load_state_dict(state_dict)
+
+    model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=False))
+
+    # The defined models has one linear layer (2 parameters: weight and bias)
+    # and 1 batch norm layer (hence 2 batch norm parameters + the running mean and variance)
+    # We should retrieve 2 parameters
+    assert len(list(model_parameters)) == 2
+
+    assert torch.equal(torch.tensor([[0.1]]), model_parameters[0])
+    assert torch.equal(torch.tensor([[0.5]]), model_parameters[1])
+
+
+def test_get_batch_norm_layer(batch_norm_network):
+    # Check that batch norm layer are retrieved properly
+
+    torch.manual_seed(42)
+    model = batch_norm_network()
+
+    state_dict = OrderedDict(
+        [
+            ("linear1.weight", torch.tensor([[0.1]])),
+            ("linear1.bias", torch.tensor([0.5])),
+            ("bn1.weight", torch.tensor([5.0])),
+            ("bn1.bias", torch.tensor([3.0])),
+            ("bn1.running_mean", torch.tensor([0.0])),
+            ("bn1.running_var", torch.tensor([1.0])),
+            ("bn1.num_batches_tracked", torch.tensor(0)),
+        ]
+    )
+    model.load_state_dict(state_dict)
 
     model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
 
-    # The defined models has 12 "classic" parameters and 2 batch norm layers (hence 4 batch norm parameters)
-    # We should retrieve 16 parameters
+    # The defined models has one linear layer (2 parameters: weight and bias)
+    # and 1 batch norm layer (hence 2 batch norm parameters + the running mean and variance)
+    # We should retrieve 4 parameters
+    assert len(list(model_parameters)) == 4
 
-    assert len(model_parameters) == 16
+    bn_1_rm = model_parameters[-2]
+    bn_1_rv = model_parameters[-2]
 
-    # By default the running mean is set to 0 and the running variance to 1 :
-    # https://pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html
-    bn_1_rm = model_parameters[-4]
-    bn_1_rv = model_parameters[-3]
-    bn_2_rm = model_parameters[-2]
-    bn_2_rv = model_parameters[-1]
-
-    assert torch.equal(torch.zeros_like(bn_1_rm), bn_1_rm)
-    assert torch.equal(torch.ones_like(bn_1_rv), bn_1_rv)
-    assert torch.equal(torch.zeros_like(bn_2_rm), bn_2_rm)
-    assert torch.equal(torch.ones_like(bn_2_rv), bn_2_rv)
+    assert torch.equal(torch.tensor([0.0]), bn_1_rm)
+    assert torch.equal(torch.tensor([1.0]), bn_1_rv)
 
 
-@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_cnn"])
+def test_get_parameters_without_batch_norm_layer(batch_norm_network):
+    # Check that batch norm layer are retrieved properly
+
+    torch.manual_seed(42)
+    model = batch_norm_network()
+
+    model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
+
+    # The defined models has 2 "classic" parameters and 2 batch norm layers (hence 4 batch norm parameters)
+    # We should retrieve 4 parameters
+    assert len(model_parameters) == 4
+
+
+@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_network"])
 @pytest.mark.parametrize("with_batch_norm_parameters", [True, False])
 def test_torch_set_parameters(model, with_batch_norm_parameters, request):
     # Check that get_parameters retrieve the parameters given to set_parameters
@@ -71,7 +123,7 @@ def test_torch_set_parameters(model, with_batch_norm_parameters, request):
         assert torch.equal(parameter, retrieved_parameter)
 
 
-@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_cnn"])
+@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_network"])
 @pytest.mark.parametrize("with_batch_norm_parameters", [True, False])
 def test_subtract_parameters(model, with_batch_norm_parameters, request):
     # Test that the subtract_parameters method of two identical models returns zeros like
@@ -92,7 +144,7 @@ def test_subtract_parameters(model, with_batch_norm_parameters, request):
         assert torch.equal(parameter, torch.zeros_like(parameter))
 
 
-@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_cnn"])
+@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_network"])
 @pytest.mark.parametrize("with_batch_norm_parameters", [True, False])
 def test_increment_parameters(model, with_batch_norm_parameters, request):
     # From two identical models, check that if we add their weights, the resulting weights are the double
@@ -118,7 +170,7 @@ def test_increment_parameters(model, with_batch_norm_parameters, request):
         assert torch.equal(parameter1, 2 * parameter2)
 
 
-@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_cnn"])
+@pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_network"])
 @pytest.mark.parametrize("with_batch_norm_parameters", [True, False])
 def test_add_parameters(model, with_batch_norm_parameters, request):
     # Test that the add_parameters method of two identical models returns the first model with parameters mutiplied by 2

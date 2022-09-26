@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 import substra
 import torch
-import torch.nn.functional as functional
 from substra.sdk.schemas import Permissions
 
 from substrafl.algorithms.algo import Algo
@@ -309,33 +308,20 @@ def torch_linear_model():
 
 
 @pytest.fixture(scope="session")
-def batch_norm_cnn():
+def batch_norm_network():
     """Generates a CNN model with 1d an 2d batch normalization layers
 
     Returns:
         torch.nn.Module: A torch CNN
     """
 
-    class BatchNormCnn(torch.nn.Module):
+    class BatchNormNetwork(torch.nn.Module):
         def __init__(self):
-            super(BatchNormCnn, self).__init__()
-            torch.manual_seed(42)
-            self.conv1 = torch.nn.Conv2d(in_channels=1, out_channels=10, kernel_size=5, stride=1)
-            self.conv2 = torch.nn.Conv2d(10, 20, kernel_size=5)
-            self.conv2_bn = torch.nn.BatchNorm2d(20)
-            self.dense1 = torch.nn.Linear(in_features=320, out_features=50)
-            self.dense1_bn = torch.nn.BatchNorm1d(50)
-            self.dense2 = torch.nn.Linear(50, 1)
+            super().__init__()
+            self.linear1 = torch.nn.Linear(in_features=1, out_features=1)
+            self.bn1 = torch.nn.BatchNorm1d(num_features=1)
 
-        def forward(self, x):
-            x = functional.relu(functional.max_pool2d(self.conv1(x), 2))
-            x = functional.relu(functional.max_pool2d(self.conv2_bn(self.conv2(x)), 2))
-            x = x.view(-1, 320)  # reshape
-            x = functional.relu(self.dense1_bn(self.dense1(x)))
-            x = functional.relu(self.dense2(x))
-            return functional.sigmoid(x)
-
-    return BatchNormCnn
+    return BatchNormNetwork
 
 
 @pytest.fixture(scope="session")
