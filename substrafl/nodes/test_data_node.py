@@ -3,7 +3,6 @@ from typing import Dict
 from typing import List
 
 import substra
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AssetKind
@@ -167,7 +166,6 @@ class TestDataNode(Node):
                 # Register the predictuple algorithm
                 algo_key = register_algo(
                     client=client,
-                    category=AlgoCategory.predict,
                     remote_struct=remote_struct,
                     permissions=permissions,
                     dependencies=dependencies,

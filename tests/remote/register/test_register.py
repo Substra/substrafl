@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 import pytest
 import substra
-from substra.sdk.schemas import AlgoCategory
 
 from substrafl.dependency import Dependency
 from substrafl.remote.decorators import remote_data
@@ -45,7 +44,6 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
     algo_key = register_algo(
         client=client,
         remote_struct=remote_struct,
-        category=AlgoCategory.aggregate,
         permissions=default_permissions,
         dependencies=algo_deps,
         inputs=None,  # No need to register inputs and outputs as this algo is not actually used
@@ -101,7 +99,6 @@ def test_register_algo_name(algo_name, result, default_permissions):
     _ = register_algo(
         client=client,
         remote_struct=remote_struct,
-        category=AlgoCategory.aggregate,
         permissions=default_permissions,
         dependencies=algo_deps,
         inputs=None,  # No need to register inputs and outputs as this algo is not actually used

@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 from pydantic import ValidationError
 from substra import BackendType
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AlgoSpec
@@ -69,7 +68,6 @@ class TestLocalDependency:
         )
         algo_query = AlgoSpec(
             name="algo_test_deps",
-            category=AlgoCategory.composite,
             inputs=[
                 AlgoInputSpec(
                     identifier=InputIdentifiers.datasamples,
