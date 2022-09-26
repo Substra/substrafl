@@ -139,8 +139,8 @@ class TestDataNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
-        """Find the algorithms from the parent traintuple of each predicttuple and submit it to substra with the predict
-        algo category.
+        """Find the algorithms from the parent traintuple of each predicttuple and submit it with a dockerfile
+        specifying the ``predict`` method as ``--method-name`` to execute.
 
         Go through every operation in the predict algo cache, submit it to substra and save `RemoteStruct : algo_key`
         into the `cache` (where algo_key is the returned algo key by substra.)
