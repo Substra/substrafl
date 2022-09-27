@@ -308,23 +308,6 @@ def torch_linear_model():
 
 
 @pytest.fixture(scope="session")
-def batch_norm_network():
-    """Generates a CNN model with 1d an 2d batch normalization layers
-
-    Returns:
-        torch.nn.Module: A torch CNN
-    """
-
-    class BatchNormNetwork(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear1 = torch.nn.Linear(in_features=1, out_features=1)
-            self.bn1 = torch.nn.BatchNorm1d(num_features=1)
-
-    return BatchNormNetwork
-
-
-@pytest.fixture(scope="session")
 def rtol():
     """
     relative tolerance for pytest.approx()
