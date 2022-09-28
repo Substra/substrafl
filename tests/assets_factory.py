@@ -6,7 +6,6 @@ from typing import List
 
 import numpy as np
 from substra import Client
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AlgoSpec
@@ -259,7 +258,6 @@ def add_python_metric(
         tmp_folder=metric_folder,
     )
     metric_spec = AlgoSpec(
-        category=AlgoCategory.metric,
         name=name,
         inputs=[
             AlgoInputSpec(

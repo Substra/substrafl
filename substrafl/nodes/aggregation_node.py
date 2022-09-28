@@ -4,7 +4,6 @@ from typing import List
 from typing import TypeVar
 
 import substra
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AssetKind
@@ -135,7 +134,6 @@ class AggregationNode(Node):
                 if remote_struct not in cache:
                     algo_key = register_algo(
                         client=client,
-                        category=AlgoCategory.aggregate,
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,

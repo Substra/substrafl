@@ -3,7 +3,6 @@ from typing import Dict
 from typing import List
 
 import substra
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AssetKind
@@ -140,8 +139,8 @@ class TestDataNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
-        """Find the algorithms from the parent traintuple of each predicttuple and submit it to substra with the predict
-        algo category.
+        """Find the algorithms from the parent traintuple of each predicttuple and submit it with a dockerfile
+        specifying the ``predict`` method as ``--method-name`` to execute.
 
         Go through every operation in the predict algo cache, submit it to substra and save `RemoteStruct : algo_key`
         into the `cache` (where algo_key is the returned algo key by substra.)
@@ -167,7 +166,6 @@ class TestDataNode(Node):
                 # Register the predictuple algorithm
                 algo_key = register_algo(
                     client=client,
-                    category=AlgoCategory.predict,
                     remote_struct=remote_struct,
                     permissions=permissions,
                     dependencies=dependencies,

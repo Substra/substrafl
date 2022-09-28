@@ -5,7 +5,6 @@ from typing import Optional
 from typing import Tuple
 
 import substra
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AssetKind
@@ -188,7 +187,6 @@ class TrainDataNode(Node):
                 if remote_struct not in cache:
                     algo_key = register_algo(
                         client=client,
-                        category=AlgoCategory.composite,
                         remote_struct=remote_struct,
                         permissions=permissions,
                         inputs=[

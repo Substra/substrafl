@@ -267,7 +267,6 @@ def _create_substra_algo_files(
 def register_algo(
     client: substra.Client,
     remote_struct: RemoteStruct,
-    category: substra.sdk.schemas.AlgoCategory,
     permissions: substra.sdk.schemas.Permissions,
     inputs: typing.List[substra.sdk.schemas.AlgoInputSpec],
     outputs: typing.List[substra.sdk.schemas.AlgoOutputSpec],
@@ -278,8 +277,6 @@ def register_algo(
     Args:
         client (substra.Client): The substra client.
         remote_struct (RemoteStruct): The substra submittable algorithm representation.
-        category (substra.sdk.schemas.AlgoCategory): Register the algorithm to the platform for the composite, predict
-            or aggregate categories.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
         inputs (typing.List[substra.sdk.schemas.AlgoInputSpec]): List of algo inputs to be used.
         outputs (typing.List[substra.sdk.schemas.AlgoOutputSpec]): List of algo outputs to be used.
@@ -304,7 +301,6 @@ def register_algo(
                 outputs=outputs,
                 permissions=permissions,
                 metadata=dict(),
-                category=category,
             )
         )
         return key

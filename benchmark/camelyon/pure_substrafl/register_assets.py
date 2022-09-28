@@ -8,7 +8,6 @@ from typing import Optional
 
 import substra
 import yaml
-from substra.sdk.schemas import AlgoCategory
 from substra.sdk.schemas import AlgoInputSpec
 from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AlgoSpec
@@ -225,7 +224,6 @@ def register_metric(client: substra.Client) -> str:
         tar.add(ASSETS_DIRECTORY / "metric.py", arcname="metrics.py")
 
     metric_spec = AlgoSpec(
-        category=AlgoCategory.metric,
         inputs=[
             AlgoInputSpec(
                 identifier=InputIdentifiers.datasamples,
