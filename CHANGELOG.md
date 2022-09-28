@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
-## Removed
+### Removed
 
 - algo category from algo as it is not required by substra anymore
 
