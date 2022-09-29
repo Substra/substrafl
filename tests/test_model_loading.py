@@ -78,10 +78,10 @@ def fake_local_train_task(trunk_model):
     local_train_task.algo = algo
     local_train_task.outputs = {
         "local": substra.models.ComputeTaskOutput(
-            permissions=substra.models.Permissions(public=True), value=head_model
+            permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=head_model
         ),
         "shared": substra.models.ComputeTaskOutput(
-            permissions=substra.models.Permissions(public=True), value=trunk_model
+            permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=trunk_model
         ),
     }
     local_train_task.status = substra.models.Status.done

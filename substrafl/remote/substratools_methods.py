@@ -78,7 +78,7 @@ class RemoteMethod(substratools.AggregateAlgo):
         self.shared_state_serializer.save(model, Path(path))
 
 
-class RemoteDataMethod(substratools.GenericAlgo):
+class RemoteDataMethod(substratools.CompositeAlgo):
     """Composite algo to register to Substra"""
 
     def __init__(
@@ -106,8 +106,8 @@ class RemoteDataMethod(substratools.GenericAlgo):
         Args:
             inputs (typing.TypedDict): dictionary containing:
                 the training data samples loaded with `Opener.get_data()`;
-                the head model loaded with `GenericAlgo.load_head_model()` (may be None);
-                the trunk model loaded with `GenericAlgo.load_trunk_model()` (may be None);
+                the head model loaded with `CompositeAlgo.load_head_model()` (may be None);
+                the trunk model loaded with `CompositeAlgo.load_trunk_model()` (may be None);
                 the rank of the training task.
             outputs (typing.TypedDict): dictionary containing:
                 the output head model path to save the head model;
@@ -144,8 +144,8 @@ class RemoteDataMethod(substratools.GenericAlgo):
         Args:
             inputs (typing.TypedDict): dictionary containing:
                 the testing data samples loaded with `Opener.get_data()`;
-                the head model loaded with `GenericAlgo.load_head_model()`;
-                the trunk model loaded with `GenericAlgo.load_trunk_model()`;
+                the head model loaded with `CompositeAlgo.load_head_model()`;
+                the trunk model loaded with `CompositeAlgo.load_trunk_model()`;
             outputs (typing.TypedDict): dictionary containing:
                 the output predictions path to save the predictions.
         """
