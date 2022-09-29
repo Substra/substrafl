@@ -50,7 +50,7 @@ def _register_operations(
 
     Returns:
         typing.Tuple[typing.List[dict], typing.List[dict], typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
-        composite_traintuples, aggregation_tuples, testtuples specifications, operation_cache
+        local train, aggregation, test task specifications, operation_cache
     """
     # `register_operations` methods from the different organizations store the id of the already registered
     # algorithm so we don't add them twice
@@ -239,7 +239,7 @@ def execute_experiment(
 
     generate the static graph of operations.
 
-    Each element necessary for those operations (CompositeTrainTuples, TestTuples and Algorithms)
+    Each element necessary for those operations (Tasks and Algorithms)
     is registered to the Substra platform thanks to the specified client.
 
     Finally, the compute plan is sent and executed.

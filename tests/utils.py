@@ -11,10 +11,7 @@ FUTURE_POLLING_PERIOD = 1
 
 
 _get_methods = {
-    "Traintuple": "get_traintuple",
-    "Testtuple": "get_testtuple",
-    "Aggregatetuple": "get_aggregatetuple",
-    "CompositeTraintuple": "get_composite_traintuple",
+    "Task": "get_task",
     "ComputePlan": "get_compute_plan",
 }
 

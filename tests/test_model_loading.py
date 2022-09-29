@@ -12,12 +12,6 @@ from unittest.mock import Mock
 import pytest
 import substra
 import substratools
-from substra.sdk.models import Algo
-from substra.sdk.models import CompositeTraintuple
-from substra.sdk.models import ComputePlan
-from substra.sdk.models import OutModel
-from substra.sdk.models import Status
-from substra.sdk.models import _Composite
 
 import substrafl
 from substrafl.dependency import Dependency
@@ -43,13 +37,13 @@ class AssetKeys(str, enum.Enum):
     algo = "were"
     valid_head_model = "the"
     trunk_model = "chosen"
-    composite_traintuple = "one"
+    local_train_task = "one"
     invalid_head_model = "Anakin"
 
 
 @pytest.fixture
 def fake_compute_plan():
-    compute_plan = Mock(spec=ComputePlan)
+    compute_plan = Mock(spec=substra.models.ComputePlan)
     compute_plan.key = AssetKeys.compute_plan
     compute_plan.metadata = {
         "substrafl_version": substrafl.__version__,
@@ -64,35 +58,39 @@ def fake_compute_plan():
 
 @pytest.fixture
 def trunk_model():
-    model = Mock(spec=OutModel)
+    model = Mock(spec=substra.models.OutModel)
     model.key = AssetKeys.trunk_model
 
     return model
 
 
 @pytest.fixture
-def fake_composite_traintuple(trunk_model):
-    algo = Mock(spec=Algo)
+def fake_local_train_task(trunk_model):
+    algo = Mock(spec=substra.models.Algo)
     algo.key = AssetKeys.algo
 
-    head_model = Mock(spec=OutModel)
+    head_model = Mock(spec=substra.models.OutModel)
     head_model.key = AssetKeys.valid_head_model
 
-    composite = Mock(spec=_Composite)
-    composite.models = [head_model, trunk_model]
+    local_train_task = Mock(spec=substra.models.Task)
+    local_train_task.rank = 2
+    local_train_task.key = AssetKeys.local_train_task
+    local_train_task.algo = algo
+    local_train_task.outputs = {
+        "local": substra.models.ComputeTaskOutput(
+            permissions=substra.models.Permissions(public=True), value=head_model
+        ),
+        "shared": substra.models.ComputeTaskOutput(
+            permissions=substra.models.Permissions(public=True), value=trunk_model
+        ),
+    }
+    local_train_task.status = substra.models.Status.done
 
-    composite_traintuple = Mock(spec=CompositeTraintuple)
-    composite_traintuple.rank = 2
-    composite_traintuple.key = AssetKeys.composite_traintuple
-    composite_traintuple.algo = algo
-    composite_traintuple.composite = composite
-    composite_traintuple.status = Status.done
-
-    return composite_traintuple
+    return local_train_task
 
 
 @pytest.fixture
-def fake_client(fake_compute_plan, fake_composite_traintuple):
+def fake_client(fake_compute_plan, fake_local_train_task):
     def download_head_model_from_composite_traintuple(tuple_key, folder):
         path = Path(folder) / f"model_{AssetKeys.valid_head_model}"
         path.write_text("General Kenobi ...")
@@ -117,7 +115,7 @@ def fake_client(fake_compute_plan, fake_composite_traintuple):
             orchestrator_version="",
         )
     )
-    client.list_composite_traintuple = MagicMock(return_value=[fake_composite_traintuple])
+    client.list_composite_traintuple = MagicMock(return_value=[fake_local_train_task])
     client.download_algo = MagicMock(side_effect=lambda key, destination_folder: download_algo(key, destination_folder))
     client.download_head_model_from_composite_traintuple = MagicMock(
         side_effect=lambda tuple_key, folder: download_head_model_from_composite_traintuple(tuple_key, folder)
@@ -212,12 +210,10 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
         download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
 
-def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_composite_traintuple):
+def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_local_train_task):
     """Error if multiple train tasks are found."""
     dest_folder = session_dir / str(uuid.uuid4())
-    fake_client.list_composite_traintuple = MagicMock(
-        return_value=[fake_composite_traintuple, fake_composite_traintuple]
-    )
+    fake_client.list_composite_traintuple = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
     with pytest.raises(MultipleTrainTaskError):
         download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
@@ -321,9 +317,9 @@ def test_load_model_dependency(algo_files_with_local_dependency, is_dependency_u
         assert res == "hello world"
 
 
-@pytest.mark.parametrize("status", [e.value for e in Status if e.value != Status.done])
-def test_unfinished_task_error(fake_client, fake_compute_plan, fake_composite_traintuple, status, session_dir):
+@pytest.mark.parametrize("status", [e.value for e in substra.models.Status if e.value != substra.models.Status.done])
+def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_task, status, session_dir):
     """Raise error if the task status is not done"""
     with pytest.raises(UnfinishedTrainTaskError):
-        fake_composite_traintuple.status = status
+        fake_local_train_task.status = status
         download_algo_files(fake_client, fake_compute_plan.key, session_dir, round_idx=None)

@@ -124,9 +124,7 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
     return metadata
 
 
-def _get_composite_from_round(
-    client: substra.Client, compute_plan_key: str, round_idx: int
-) -> substra.models.CompositeTraintuple:
+def _get_composite_from_round(client: substra.Client, compute_plan_key: str, round_idx: int) -> substra.models.Task:
     """Return the composite train tuple:
 
         - hosted on the given client organization
@@ -139,7 +137,7 @@ def _get_composite_from_round(
         round_idx (int): Round of the strategy to fetch the composite from.
 
     Returns:
-        substra.models.CompositeTraintuple: The composite matching the given requirements.
+        substra.models.Task: The composite matching the given requirements.
     """
     org_id = client.organization_info().organization_id
 
@@ -148,27 +146,27 @@ def _get_composite_from_round(
         "worker": [org_id],
         "metadata": [{"key": "round_idx", "type": "is", "value": str(round_idx)}],
     }
+    # TODO: how to be remove aggregate, predict and test tasks from the search?
+    local_train_tasks = client.list_composite_traintuple(filters=filters)
 
-    composite_traintuples = client.list_composite_traintuple(filters=filters)
-
-    if len(composite_traintuples) == 0:
+    if len(local_train_tasks) == 0:
         raise TrainTaskNotFoundError(
-            f"The given compute plan `{compute_plan_key}` has no composite train tuple of round {round_idx} "
+            f"The given compute plan `{compute_plan_key}` has no train task of round {round_idx} "
             f"hosted on the organization {org_id}"
         )
 
-    elif len(composite_traintuples) > 1:
+    elif len(local_train_tasks) > 1:
         raise MultipleTrainTaskError(
-            "The given compute plan has {} composite train tuples of round_idx {}. Downloading a model "
+            "The given compute plan has {} local train tasks of round_idx {}. Downloading a model "
             "from an experiment containing multiple TrainDataNodes hosted on the same organization is "
             "not supported yet in local mode.".format(
-                str(len(composite_traintuples)),
+                str(len(local_train_tasks)),
                 str(round_idx),
             )
         )
-    composite_traintuple = composite_traintuples[0]
+    local_train_task = local_train_tasks[0]
 
-    return composite_traintuple
+    return local_train_task
 
 
 def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:

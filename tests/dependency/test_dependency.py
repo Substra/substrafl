@@ -5,16 +5,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import substra
 from pydantic import ValidationError
-from substra import BackendType
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
-from substra.sdk.schemas import AlgoSpec
-from substra.sdk.schemas import AssetKind
-from substra.sdk.schemas import CompositeTraintupleSpec
-from substra.sdk.schemas import ComputeTaskOutputSpec
-from substra.sdk.schemas import InputRef
-from substra.sdk.schemas import Permissions
 
 from substrafl.dependency import Dependency
 from substrafl.exceptions import InvalidPathError
@@ -31,7 +23,7 @@ sys.path.append(str(CURRENT_FILE.parents[1]))
 import utils  # noqa: E402
 
 ASSETS_DIR = CURRENT_FILE.parents[1] / "end_to_end" / "test_assets"
-DEFAULT_PERMISSIONS = Permissions(public=True, authorized_ids=list())
+DEFAULT_PERMISSIONS = substra.schemas.Permissions(public=True, authorized_ids=list())
 LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
 
 
@@ -63,56 +55,68 @@ class TestLocalDependency:
         archive_path, description_path = _create_substra_algo_files(
             data_op.remote_struct,
             dependencies=algo_deps,
-            install_libraries=client.backend_mode != BackendType.LOCAL_SUBPROCESS,
+            install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=operation_dir,
         )
-        algo_query = AlgoSpec(
+        algo_query = substra.schemas.AlgoSpec(
             name="algo_test_deps",
             inputs=[
-                AlgoInputSpec(
+                substra.schemas.AlgoInputSpec(
                     identifier=InputIdentifiers.datasamples,
-                    kind=AssetKind.data_sample.value,
+                    kind=substra.schemas.AssetKind.data_sample.value,
                     optional=False,
                     multiple=True,
                 ),
-                AlgoInputSpec(
+                substra.schemas.AlgoInputSpec(
                     identifier=InputIdentifiers.opener,
-                    kind=AssetKind.data_manager.value,
+                    kind=substra.schemas.AssetKind.data_manager.value,
                     optional=False,
                     multiple=False,
                 ),
-                AlgoInputSpec(
-                    identifier=InputIdentifiers.local, kind=AssetKind.model.value, optional=True, multiple=False
+                substra.schemas.AlgoInputSpec(
+                    identifier=InputIdentifiers.local,
+                    kind=substra.schemas.AssetKind.model.value,
+                    optional=True,
+                    multiple=False,
                 ),
-                AlgoInputSpec(
-                    identifier=InputIdentifiers.shared, kind=AssetKind.model.value, optional=True, multiple=False
+                substra.schemas.AlgoInputSpec(
+                    identifier=InputIdentifiers.shared,
+                    kind=substra.schemas.AssetKind.model.value,
+                    optional=True,
+                    multiple=False,
                 ),
             ],
             outputs=[
-                AlgoOutputSpec(identifier=OutputIdentifiers.local, kind=AssetKind.model.value, multiple=False),
-                AlgoOutputSpec(identifier=OutputIdentifiers.shared, kind=AssetKind.model.value, multiple=False),
+                substra.schemas.AlgoOutputSpec(
+                    identifier=OutputIdentifiers.local, kind=substra.schemas.AssetKind.model.value, multiple=False
+                ),
+                substra.schemas.AlgoOutputSpec(
+                    identifier=OutputIdentifiers.shared, kind=substra.schemas.AssetKind.model.value, multiple=False
+                ),
             ],
             description=description_path,
             file=archive_path,
-            permissions=Permissions(public=True, authorized_ids=list()),
+            permissions=substra.schemas.Permissions(public=True, authorized_ids=list()),
         )
         algo_key = client.add_algo(algo_query)
         return algo_key
 
     def _register_composite(self, algo_key, dataset_key, data_sample_key, client):
         """Register a composite traintuple"""
-        composite_traintuple_query = CompositeTraintupleSpec(
+        composite_traintuple_query = substra.schemas.TaskSpec(
             algo_key=algo_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
             inputs=[
-                InputRef(identifier=InputIdentifiers.opener, asset_key=dataset_key),
-                InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample_key),
+                substra.schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=dataset_key),
+                substra.schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample_key),
             ],
             outputs={
-                OutputIdentifiers.local: ComputeTaskOutputSpec(permissions=Permissions(public=True, authorized_ids=[])),
-                OutputIdentifiers.shared: ComputeTaskOutputSpec(
-                    permissions=Permissions(public=True, authorized_ids=[])
+                OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=True, authorized_ids=[])
+                ),
+                OutputIdentifiers.shared: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=True, authorized_ids=[])
                 ),
             },
         )
