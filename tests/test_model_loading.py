@@ -115,7 +115,7 @@ def fake_client(fake_compute_plan, fake_local_train_task):
             orchestrator_version="",
         )
     )
-    client.list_composite_traintuple = MagicMock(return_value=[fake_local_train_task])
+    client.list_task = MagicMock(return_value=[fake_local_train_task])
     client.download_algo = MagicMock(side_effect=lambda key, destination_folder: download_algo(key, destination_folder))
     client.download_head_model_from_composite_traintuple = MagicMock(
         side_effect=lambda tuple_key, folder: download_head_model_from_composite_traintuple(tuple_key, folder)
@@ -205,7 +205,7 @@ def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir
 def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
     """Error if no train task are found."""
     dest_folder = session_dir / str(uuid.uuid4())
-    fake_client.list_composite_traintuple = MagicMock(return_value=[])
+    fake_client.list_task = MagicMock(return_value=[])
     with pytest.raises(TrainTaskNotFoundError):
         download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
@@ -213,7 +213,7 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
 def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_local_train_task):
     """Error if multiple train tasks are found."""
     dest_folder = session_dir / str(uuid.uuid4())
-    fake_client.list_composite_traintuple = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
+    fake_client.list_task = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
     with pytest.raises(MultipleTrainTaskError):
         download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 

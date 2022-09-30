@@ -71,8 +71,8 @@ def wait(client, asset, timeout=FUTURE_TIMEOUT, raises=True):
 
 
 def download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
-    # Retrieve composite train tuple key
-    train_tasks = network.clients[0].list_composite_traintuple(
+    # Retrieve local train task key
+    train_tasks = network.clients[0].list_task(
         filters={
             "compute_plan_key": [compute_plan.key],
             "rank": [rank],

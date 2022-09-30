@@ -104,7 +104,7 @@ class TestDataNode(Node):
         ).dict()
 
         predicttuple.pop("algo_key")
-        predicttuple["remote_operation"] = (operation.remote_struct,)
+        predicttuple["remote_operation"] = operation.remote_struct
         self.predicttuples.append(predicttuple)
 
         for metric_key in self.metric_keys:

@@ -36,7 +36,7 @@ def _register_operations(
     aggregation_node: Optional[AggregationNode],
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
-) -> Tuple[List[dict], List[dict], List[dict], Dict[RemoteStruct, OperationKey]]:
+) -> Tuple[List[dict], Dict[RemoteStruct, OperationKey]]:
     """Register the operations in Substra: define the algorithms we need and submit them
 
     Args:
@@ -49,13 +49,14 @@ def _register_operations(
         (Dependency): dependencies of the train algo
 
     Returns:
-        typing.Tuple[typing.List[dict], typing.List[dict], typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
-        local train, aggregation, test task specifications, operation_cache
+        typing.Tuple[typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
+        tasks, operation_cache
     """
     # `register_operations` methods from the different organizations store the id of the already registered
     # algorithm so we don't add them twice
     operation_cache = dict()
     predict_algo_cache = dict()
+    tasks = list()
 
     train_data_organizations_id = {train_data_node.organization_id for train_data_node in train_data_nodes}
     aggregation_organization_id = {aggregation_node.organization_id} if aggregation_node is not None else set()
@@ -63,7 +64,6 @@ def _register_operations(
     authorized_ids = list(train_data_organizations_id | aggregation_organization_id)
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
-    composite_traintuples = []
     for train_data_node in train_data_nodes:
         operation_cache = train_data_node.register_operations(
             client,
@@ -72,10 +72,8 @@ def _register_operations(
             dependencies=dependencies,
         )
 
-        composite_traintuples += train_data_node.tuples
+        tasks += train_data_node.tuples
 
-    predicttuples = []
-    testtuples = []
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
             predict_algo_cache = test_data_node.register_predict_operations(
@@ -85,13 +83,11 @@ def _register_operations(
                 dependencies=dependencies,
             )
 
-            predicttuples += test_data_node.predicttuples
-            testtuples += test_data_node.testtuples
+            tasks += test_data_node.predicttuples
+            tasks += test_data_node.testtuples
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
-    # We still need to pass the information of the editable mode.
-    aggregation_tuples = []
     if aggregation_node is not None:
         operation_cache = aggregation_node.register_operations(
             client,
@@ -100,9 +96,9 @@ def _register_operations(
             dependencies=Dependency(editable_mode=dependencies.editable_mode),
         )
 
-        aggregation_tuples = aggregation_node.tuples
+        tasks += aggregation_node.tuples
 
-    return composite_traintuples, aggregation_tuples, predicttuples, testtuples, operation_cache
+    return tasks, operation_cache
 
 
 def _save_experiment_summary(
@@ -329,7 +325,7 @@ def execute_experiment(
 
     # Computation graph is created
     logger.info("Registering the algorithm to Substra.")
-    composite_traintuples, aggregation_tuples, predicttuples, testtuples, operation_cache = _register_operations(
+    tasks, operation_cache = _register_operations(
         client=client,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
@@ -361,10 +357,7 @@ def execute_experiment(
     compute_plan = client.add_compute_plan(
         substra.sdk.schemas.ComputePlanSpec(
             key=compute_plan_key,
-            composite_traintuples=composite_traintuples,
-            aggregatetuples=aggregation_tuples,
-            predicttuples=predicttuples,
-            testtuples=testtuples,
+            tasks=tasks,
             name=name or timestamp,
             metadata=cp_metadata,
         ),

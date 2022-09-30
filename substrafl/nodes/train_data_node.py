@@ -141,7 +141,7 @@ class TrainDataNode(Node):
         ).dict()
 
         composite_traintuple.pop("algo_key")
-        composite_traintuple["remote_operation"] = (operation.remote_struct,)
+        composite_traintuple["remote_operation"] = operation.remote_struct
 
         self.tuples.append(composite_traintuple)
 

@@ -93,7 +93,7 @@ class AggregationNode(Node):
         ).dict()
 
         aggregate_tuple.pop("algo_key")
-        aggregate_tuple["remote_operation"] = (operation.remote_struct,)
+        aggregate_tuple["remote_operation"] = operation.remote_struct
 
         self.tuples.append(aggregate_tuple)
 
@@ -102,7 +102,7 @@ class AggregationNode(Node):
     def register_operations(
         self,
         client: substra.Client,
-        permissions: substra.sdk.schemas.schemas.Permissions,
+        permissions: schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:

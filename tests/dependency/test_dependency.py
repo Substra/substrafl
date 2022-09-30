@@ -119,9 +119,10 @@ class TestLocalDependency:
                     permissions=substra.schemas.Permissions(public=True, authorized_ids=[])
                 ),
             },
+            worker=client.organization_info().organization_id,
         )
-        composite_key = client.add_composite_traintuple(composite_traintuple_query)
-        composite_traintuple = client.get_composite_traintuple(composite_key)
+        composite_key = client.add_task(composite_traintuple_query)
+        composite_traintuple = client.get_task(composite_key)
         return composite_traintuple
 
     def test_pypi_dependency(
