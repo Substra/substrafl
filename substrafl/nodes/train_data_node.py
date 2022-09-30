@@ -5,12 +5,7 @@ from typing import Optional
 from typing import Tuple
 
 import substra
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
-from substra.sdk.schemas import AssetKind
-from substra.sdk.schemas import ComputeTaskOutputSpec
-from substra.sdk.schemas import InputRef
-from substra.sdk.schemas import Permissions
+from substra import schemas
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
@@ -86,14 +81,14 @@ class TrainDataNode(Node):
             )
 
         op_id = str(uuid.uuid4())
-        data_inputs = [InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
-            InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
+        data_inputs = [schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
+            schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
             for data_sample in self.data_sample_keys
         ]
 
         local_inputs = (
             [
-                InputRef(
+                schemas.InputRef(
                     identifier=InputIdentifiers.local,
                     parent_task_key=local_state.key,
                     parent_task_output_identifier=OutputIdentifiers.local,
@@ -105,7 +100,7 @@ class TrainDataNode(Node):
 
         if operation.shared_state is not None:
             shared_inputs = [
-                InputRef(
+                schemas.InputRef(
                     identifier=InputIdentifiers.shared,
                     parent_task_key=operation.shared_state.key,
                     parent_task_output_identifier=OutputIdentifiers.model,
@@ -114,7 +109,7 @@ class TrainDataNode(Node):
 
         elif local_state is not None:
             shared_inputs = [
-                InputRef(
+                schemas.InputRef(
                     identifier=InputIdentifiers.shared,
                     parent_task_key=local_state.key,
                     parent_task_output_identifier=OutputIdentifiers.shared,
@@ -124,31 +119,29 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
-        composite_traintuple = {
-            "remote_operation": operation.remote_struct,
-            "data_manager_key": self.data_manager_key,
-            "train_data_sample_keys": operation.data_samples,
-            "in_head_model_id": local_state.key if local_state is not None else None,
-            "in_trunk_model_id": operation.shared_state.key
-            if operation.shared_state is not None
-            else None,  # user-defined id (last aggregation node task id)
-            "tag": "train",
-            "composite_traintuple_id": op_id,
-            "inputs": data_inputs + local_inputs + shared_inputs,
-            "outputs": {
-                OutputIdentifiers.shared: ComputeTaskOutputSpec(
-                    permissions=Permissions(public=False, authorized_ids=authorized_ids),
+        composite_traintuple = schemas.ComputePlanTaskSpec(
+            algo_key=str(uuid.uuid4()),  # bogus algo key
+            task_id=op_id,
+            inputs=data_inputs + local_inputs + shared_inputs,
+            outputs={
+                OutputIdentifiers.shared: schemas.ComputeTaskOutputSpec(
+                    permissions=schemas.Permissions(public=False, authorized_ids=authorized_ids),
                     transient=clean_models,
                 ),
-                OutputIdentifiers.local: ComputeTaskOutputSpec(
-                    permissions=Permissions(public=False, authorized_ids=[self.organization_id]),
+                OutputIdentifiers.local: schemas.ComputeTaskOutputSpec(
+                    permissions=schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
                     transient=clean_models,
                 ),
             },
-            "metadata": {
+            metadata={
                 "round_idx": round_idx,
             },
-        }
+            tag="train",
+            worker=self.organization_id,
+        ).dict()
+
+        composite_traintuple.pop("algo_key")
+        composite_traintuple["remote_operation"] = (operation.remote_struct,)
 
         self.tuples.append(composite_traintuple)
 
@@ -157,7 +150,7 @@ class TrainDataNode(Node):
     def register_operations(
         self,
         client: substra.Client,
-        permissions: substra.sdk.schemas.Permissions,
+        permissions: schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
@@ -171,7 +164,7 @@ class TrainDataNode(Node):
 
         Args:
             client (substra.Client): Substra client for the organization.
-            permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
+            permissions (substra.sdk.schemas.Permissions): schemas.Permissions for the algorithm.
             cache (typing.Dict[RemoteStruct, OperationKey]): Already registered algorithm identifications. The key of
                 each element is the RemoteStruct id (generated by substrafl) and the value is the key generated by
                 substra.
@@ -190,37 +183,37 @@ class TrainDataNode(Node):
                         remote_struct=remote_struct,
                         permissions=permissions,
                         inputs=[
-                            AlgoInputSpec(
+                            schemas.AlgoInputSpec(
                                 identifier=InputIdentifiers.datasamples,
-                                kind=AssetKind.data_sample.value,
+                                kind=schemas.AssetKind.data_sample.value,
                                 optional=False,
                                 multiple=True,
                             ),
-                            AlgoInputSpec(
+                            schemas.AlgoInputSpec(
                                 identifier=InputIdentifiers.opener,
-                                kind=AssetKind.data_manager.value,
+                                kind=schemas.AssetKind.data_manager.value,
                                 optional=False,
                                 multiple=False,
                             ),
-                            AlgoInputSpec(
+                            schemas.AlgoInputSpec(
                                 identifier=InputIdentifiers.local,
-                                kind=AssetKind.model.value,
+                                kind=schemas.AssetKind.model.value,
                                 optional=True,
                                 multiple=False,
                             ),
-                            AlgoInputSpec(
+                            schemas.AlgoInputSpec(
                                 identifier=InputIdentifiers.shared,
-                                kind=AssetKind.model.value,
+                                kind=schemas.AssetKind.model.value,
                                 optional=True,
                                 multiple=False,
                             ),
                         ],
                         outputs=[
-                            AlgoOutputSpec(
-                                identifier=OutputIdentifiers.local, kind=AssetKind.model.value, multiple=False
+                            schemas.AlgoOutputSpec(
+                                identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
                             ),
-                            AlgoOutputSpec(
-                                identifier=OutputIdentifiers.shared, kind=AssetKind.model.value, multiple=False
+                            schemas.AlgoOutputSpec(
+                                identifier=OutputIdentifiers.shared, kind=schemas.AssetKind.model.value, multiple=False
                             ),
                         ],
                         dependencies=dependencies,

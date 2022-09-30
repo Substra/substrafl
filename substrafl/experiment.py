@@ -81,7 +81,6 @@ def _register_operations(
             predict_algo_cache = test_data_node.register_predict_operations(
                 client,
                 permissions,
-                traintuples=composite_traintuples,
                 cache=predict_algo_cache,
                 dependencies=dependencies,
             )

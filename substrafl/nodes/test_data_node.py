@@ -3,12 +3,7 @@ from typing import Dict
 from typing import List
 
 import substra
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
-from substra.sdk.schemas import AssetKind
-from substra.sdk.schemas import ComputeTaskOutputSpec
-from substra.sdk.schemas import InputRef
-from substra.sdk.schemas import Permissions
+from substra import schemas
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
@@ -66,18 +61,18 @@ class TestDataNode(Node):
 
         predicttuple_id = str(uuid.uuid4())
 
-        data_inputs = [InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
-            InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
+        data_inputs = [schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
+            schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
             for data_sample in self.test_data_sample_keys
         ]
 
         predict_input = [
-            InputRef(
+            schemas.InputRef(
                 identifier=InputIdentifiers.local,
                 parent_task_key=traintuple_id,
                 parent_task_output_identifier=OutputIdentifiers.local,
             ),
-            InputRef(
+            schemas.InputRef(
                 identifier=InputIdentifiers.shared,
                 parent_task_key=traintuple_id,
                 parent_task_output_identifier=OutputIdentifiers.shared,
@@ -85,57 +80,55 @@ class TestDataNode(Node):
         ]
 
         test_input = [
-            InputRef(
+            schemas.InputRef(
                 identifier=InputIdentifiers.predictions,
                 parent_task_key=predicttuple_id,
                 parent_task_output_identifier=OutputIdentifiers.predictions,
             )
         ]
 
-        self.predicttuples.append(
-            {
-                "remote_operation": operation.remote_struct,
-                "predicttuple_id": predicttuple_id,
-                "traintuple_id": traintuple_id,
-                "data_manager_key": self.data_manager_key,
-                "test_data_sample_keys": self.test_data_sample_keys,
-                "inputs": data_inputs + predict_input,
-                "outputs": {
-                    OutputIdentifiers.predictions: ComputeTaskOutputSpec(
-                        permissions=Permissions(public=False, authorized_ids=[self.organization_id]),
-                        transient=True,
+        predicttuple = schemas.ComputePlanTaskSpec(
+            algo_key=str(uuid.uuid4()),  # bogus algo key
+            task_id=predicttuple_id,
+            inputs=data_inputs + predict_input,
+            outputs={
+                OutputIdentifiers.predictions: schemas.ComputeTaskOutputSpec(
+                    permissions=schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
+                    transient=True,
+                )
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            worker=self.organization_id,
+        ).dict()
+
+        predicttuple.pop("algo_key")
+        predicttuple["remote_operation"] = (operation.remote_struct,)
+        self.predicttuples.append(predicttuple)
+
+        for metric_key in self.metric_keys:
+            testtuple = schemas.ComputePlanTaskSpec(
+                algo_key=metric_key,
+                task_id=str(uuid.uuid4()),
+                inputs=data_inputs + test_input,
+                outputs={
+                    OutputIdentifiers.performance: schemas.ComputeTaskOutputSpec(
+                        permissions=schemas.Permissions(public=True, authorized_ids=[]),
+                        transient=False,
                     )
                 },
-                "metadata": {
+                metadata={
                     "round_idx": round_idx,
                 },
-            }
-        )
-        for metric_key in self.metric_keys:
-            self.testtuples.append(
-                {
-                    "algo_key": metric_key,
-                    "predicttuple_id": predicttuple_id,
-                    "data_manager_key": self.data_manager_key,
-                    "test_data_sample_keys": self.test_data_sample_keys,
-                    "inputs": data_inputs + test_input,
-                    "outputs": {
-                        OutputIdentifiers.performance: ComputeTaskOutputSpec(
-                            permissions=Permissions(public=True, authorized_ids=[]),
-                            transient=False,
-                        )
-                    },
-                    "metadata": {
-                        "round_idx": round_idx,
-                    },
-                }
-            )
+                worker=self.organization_id,
+            ).dict()
+            self.testtuples.append(testtuple)
 
     def register_predict_operations(
         self,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
-        traintuples: List[Dict],
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
@@ -150,7 +143,6 @@ class TestDataNode(Node):
         Args:
             client (substra.Client): Substra client for the organization.
             permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-            traintuples: (List[Dict]): List of traintuples on which to search for the predicttuples parents.
             cache (typing.Dict[RemoteStruct, OperationKey]): Already registered algorithm identifications. The key of
                 each element is the RemoteStruct id (generated by substrafl) and the value is the key generated by
                 substra.
@@ -170,35 +162,35 @@ class TestDataNode(Node):
                     permissions=permissions,
                     dependencies=dependencies,
                     inputs=[
-                        AlgoInputSpec(
+                        schemas.AlgoInputSpec(
                             identifier=InputIdentifiers.datasamples,
-                            kind=AssetKind.data_sample.value,
+                            kind=schemas.AssetKind.data_sample.value,
                             optional=False,
                             multiple=True,
                         ),
-                        AlgoInputSpec(
+                        schemas.AlgoInputSpec(
                             identifier=InputIdentifiers.opener,
-                            kind=AssetKind.data_manager.value,
+                            kind=schemas.AssetKind.data_manager.value,
                             optional=False,
                             multiple=False,
                         ),
-                        AlgoInputSpec(
+                        schemas.AlgoInputSpec(
                             identifier=InputIdentifiers.local,
-                            kind=AssetKind.model.value,
+                            kind=schemas.AssetKind.model.value,
                             optional=False,
                             multiple=False,
                         ),
-                        AlgoInputSpec(
+                        schemas.AlgoInputSpec(
                             identifier=InputIdentifiers.shared,
-                            kind=AssetKind.model.value,
+                            kind=schemas.AssetKind.model.value,
                             optional=False,
                             multiple=False,
                         ),
                     ],
                     outputs=[
-                        AlgoOutputSpec(
+                        schemas.AlgoOutputSpec(
                             identifier=OutputIdentifiers.predictions,
-                            kind=AssetKind.model.value,
+                            kind=schemas.AssetKind.model.value,
                             multiple=False,
                         )
                     ],
