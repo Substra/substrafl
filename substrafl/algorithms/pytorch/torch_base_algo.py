@@ -103,6 +103,7 @@ class TorchAlgo(Algo):
         Args:
             datasamples (typing.Any): Input data
             shared_state (Any): Latest train task shared state (output of the train method)
+            predictions_path (os.PathLike): Destination file to save predictions
         """
 
         # Create torch dataset
