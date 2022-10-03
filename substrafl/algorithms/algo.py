@@ -72,7 +72,7 @@ class Algo(abc.ABC):
             datasamples (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
-            predictions_path (Path): Destination file to save predictions.
+            predictions_path (pathlib.Path): Destination file to save predictions.
 
         Raises:
             NotImplementedError
