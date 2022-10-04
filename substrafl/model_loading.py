@@ -146,8 +146,8 @@ def _get_composite_from_round(client: substra.Client, compute_plan_key: str, rou
         "worker": [org_id],
         "metadata": [{"key": "round_idx", "type": "is", "value": str(round_idx)}],
     }
-    # TODO: how to be remove aggregate, predict and test tasks from the search?
     local_train_tasks = client.list_task(filters=filters)
+    local_train_tasks = [t for t in local_train_tasks if t.tag == "train"]
 
     if len(local_train_tasks) == 0:
         raise TrainTaskNotFoundError(

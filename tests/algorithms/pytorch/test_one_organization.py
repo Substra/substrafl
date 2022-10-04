@@ -10,6 +10,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.strategies import SingleOrganization
 from tests import utils
 
@@ -85,7 +86,8 @@ def test_one_organization(
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
 
-    testtuples = network.clients[0].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
+    tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key]})
+    testtuples = [t for t in tasks if t.outputs.get(OutputIdentifiers.performance) is not None]
     testtuples = sorted(testtuples, key=lambda x: x.rank)
 
     # ensure that final result is correct up to 6 decimal points

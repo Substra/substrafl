@@ -11,6 +11,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.strategies import FedAvg
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -120,9 +121,9 @@ def test_pytorch_fedavg_algo_performance(
 ):
     """End to end test for torch fed avg algorithm."""
 
-    testtuples = network.clients[0].list_testtuple(filters={"compute_plan_key": [compute_plan.key]})
-    testtuple = testtuples[0]
-    assert list(testtuple.test.perfs.values())[0] == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
+    tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key]})
+    testtuple = [t for t in tasks if t.outputs.get(OutputIdentifiers.performance) is not None][0]
+    assert testtuple.outputs[OutputIdentifiers.performance] == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
 
 
 @pytest.mark.e2e
