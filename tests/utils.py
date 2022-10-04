@@ -100,9 +100,11 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
 def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: int):
 
     aggregate_tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key], "rank": [rank]})
-    aggregate_task = [t for t in aggregate_tasks if t.tag == "aggregate"]
-    model_key = aggregate_task.aggregate.models[0].key
-    model_path = network.clients[0].download_model(model_key, session_dir)
+    aggregate_tasks = [t for t in aggregate_tasks if t.tag == "aggregate"]
+    assert len(aggregate_tasks) == 1
+    model_path = network.clients[0].download_model_from_task(
+        aggregate_tasks[0].key, identifier=OutputIdentifiers.model, folder=session_dir
+    )
     aggregate_model = pickle.loads(model_path.read_bytes())
 
     return aggregate_model

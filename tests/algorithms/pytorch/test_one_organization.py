@@ -91,7 +91,7 @@ def test_one_organization(
     testtuples = sorted(testtuples, key=lambda x: x.rank)
 
     # ensure that final result is correct up to 6 decimal points
-    assert list(testtuples[-1].test.perfs.values())[0] == pytest.approx(EXPECTED_PERFORMANCE, rel=10e-6)
+    assert testtuples[-1].outputs[OutputIdentifiers.performance].value == pytest.approx(EXPECTED_PERFORMANCE, rel=10e-6)
 
     assert local_model_perf(network, compute_plan, session_dir, test_linear_data_samples, mae) == pytest.approx(
         EXPECTED_PERFORMANCE
