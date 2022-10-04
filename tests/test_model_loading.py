@@ -91,7 +91,7 @@ def fake_local_train_task(trunk_model):
 
 @pytest.fixture
 def fake_client(fake_compute_plan, fake_local_train_task):
-    def download_head_model_from_composite_traintuple(tuple_key, folder):
+    def download_model_from_task(tuple_key, identifier, folder):
         path = Path(folder) / f"model_{AssetKeys.valid_head_model}"
         path.write_text("General Kenobi ...")
         return path
@@ -117,8 +117,10 @@ def fake_client(fake_compute_plan, fake_local_train_task):
     )
     client.list_task = MagicMock(return_value=[fake_local_train_task])
     client.download_algo = MagicMock(side_effect=lambda key, destination_folder: download_algo(key, destination_folder))
-    client.download_head_model_from_composite_traintuple = MagicMock(
-        side_effect=lambda tuple_key, folder: download_head_model_from_composite_traintuple(tuple_key, folder)
+    client.download_model_from_task = MagicMock(
+        side_effect=lambda tuple_key, folder, identifier: download_model_from_task(
+            tuple_key, folder=folder, identifier=identifier
+        )
     )
 
     return client

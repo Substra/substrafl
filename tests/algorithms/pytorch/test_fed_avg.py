@@ -123,7 +123,7 @@ def test_pytorch_fedavg_algo_performance(
 
     tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key]})
     testtuple = [t for t in tasks if t.outputs.get(OutputIdentifiers.performance) is not None][0]
-    assert testtuple.outputs[OutputIdentifiers.performance] == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
+    assert testtuple.outputs[OutputIdentifiers.performance].value == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
 
 
 @pytest.mark.e2e

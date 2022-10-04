@@ -19,6 +19,7 @@ from substrafl.exceptions import LoadAlgoMetadataError
 from substrafl.exceptions import MultipleTrainTaskError
 from substrafl.exceptions import TrainTaskNotFoundError
 from substrafl.exceptions import UnfinishedTrainTaskError
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.register import SUBSTRAFL_FOLDER
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -257,7 +258,9 @@ def download_algo_files(
     algo_file = client.download_algo(composite_traintuple.algo.key, destination_folder=folder)
 
     # Get the associated head model (local state)
-    local_state_file = client.download_head_model_from_composite_traintuple(composite_traintuple.key, folder=folder)
+    local_state_file = client.download_model_from_task(
+        composite_traintuple.key, folder=folder, identifier=OutputIdentifiers.local
+    )
 
     # Environment requirements and local state path
     metadata = {k: v for k, v in compute_plan.metadata.items() if k in REQUIRED_KEYS}
