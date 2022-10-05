@@ -9,11 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- BREAKING CHANGE: in the `TorchFedAvg`, `TorchScaffold` and `TorchNewtonRaphson` algos, `with_batch_norm_parameters` is replaced by the parameters `with_batch_norm_weights` and `with_batch_norm_running` (#30)
-
-### Fixed
-
-- torch algos: when there is a batch norm layer in the network, properly get and set the weights (#30)
+- torch algo: test and document the fact that `with_batch_norm_parameters` is only about the running mean and variance of the batch norm layers (#30)
 
 ## [0.31.0](https://github.com/Substra/substrafl/releases/tag/0.31.0) - 2022-10-03
 
