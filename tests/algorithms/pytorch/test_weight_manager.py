@@ -41,14 +41,10 @@ def test_get_parameters(layer, num_parameters):
             pass
 
     model = Network()
-    # torch.nn.init.zeros_(model.linear1.weight)
-    # model.linear1.bias.data.fill_(0.01)
 
-    parameters = weight_manager.get_parameters(model=model, with_batch_norm_parameters=True)
+    parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
 
     assert len(parameters) == num_parameters
-    # assert torch.equal(parameters[0].data, torch.tensor([[0.0, 0.0]]))
-    # assert torch.equal(parameters[1].data, torch.tensor([0.0100]))
 
 
 def test_get_parameters_no_batch_norm(batch_norm_network):
@@ -71,8 +67,8 @@ def test_get_parameters_no_batch_norm(batch_norm_network):
     model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=False))
 
     assert len(model_parameters) == 2
-    assert torch.equal(model_parameters[0], torch.Tensor([5.0]))
-    assert torch.equal(model_parameters[1], torch.Tensor([3.0]))
+    assert torch.equal(model_parameters[0], torch.tensor([5.0]))
+    assert torch.equal(model_parameters[1], torch.tensor([3.0]))
 
 
 def test_get_batch_norm_layer(batch_norm_network):
@@ -99,8 +95,8 @@ def test_get_batch_norm_layer(batch_norm_network):
     bn_1_rm = model_parameters[-2]
     bn_1_rv = model_parameters[-1]
 
-    assert torch.equal(torch.tensor([0.0]), bn_1_rm)
-    assert torch.equal(torch.tensor([1.0]), bn_1_rv)
+    assert torch.equal(torch.Tensor([0.0]), bn_1_rm)
+    assert torch.equal(torch.Tensor([1.0]), bn_1_rv)
 
 
 @pytest.mark.parametrize("model", ["torch_linear_model", "batch_norm_network"])
