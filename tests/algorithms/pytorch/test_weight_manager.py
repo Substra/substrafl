@@ -16,7 +16,7 @@ def batch_norm_network():
         def forward(self, x):
             pass
 
-    return BatchNormNetwork()
+    return BatchNormNetwork
 
 
 @pytest.mark.parametrize(
@@ -36,6 +36,9 @@ def test_get_parameters(layer, num_parameters):
         def __init__(self):
             super().__init__()
             self.layer = layer
+
+        def forward(self, x):
+            pass
 
     model = Network()
     # torch.nn.init.zeros_(model.linear1.weight)
@@ -67,7 +70,9 @@ def test_get_parameters_no_batch_norm(batch_norm_network):
 
     model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=False))
 
-    assert len(list(model_parameters)) == 0
+    assert len(model_parameters) == 2
+    assert torch.equal(model_parameters[0], torch.Tensor([5.0]))
+    assert torch.equal(model_parameters[1], torch.Tensor([3.0]))
 
 
 def test_get_batch_norm_layer(batch_norm_network):
@@ -89,7 +94,7 @@ def test_get_batch_norm_layer(batch_norm_network):
 
     model_parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
 
-    assert len(list(model_parameters)) == 2
+    assert len(list(model_parameters)) == 4
 
     bn_1_rm = model_parameters[-2]
     bn_1_rv = model_parameters[-1]
