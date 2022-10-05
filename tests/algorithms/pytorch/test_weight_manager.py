@@ -20,27 +20,24 @@ def batch_norm_network():
 
 
 @pytest.mark.parametrize(
-    "layer, num_parameters",
+    "model, num_parameters, init_tensor",
     [
-        (torch.nn.Linear(1, 1), 2),
-        (torch.nn.Conv1d(in_channels=1, out_channels=1, kernel_size=1), 2),
-        (torch.nn.BatchNorm1d(num_features=1), 4),
-        (torch.nn.BatchNorm2d(num_features=1), 4),
-        (torch.nn.BatchNorm3d(num_features=1), 4),
+        (torch.nn.Linear(1, 1), 2, torch.ones(10, 1)),
+        (torch.nn.Conv1d(in_channels=1, out_channels=1, kernel_size=1), 2, torch.ones(1, 1)),
+        (torch.nn.BatchNorm1d(num_features=1), 4, torch.ones(2, 1, 1)),
+        (torch.nn.BatchNorm2d(num_features=1), 4, torch.ones(2, 1, 1, 1)),
+        (torch.nn.BatchNorm3d(num_features=1), 4, torch.ones(2, 1, 1, 1, 1)),
+        (torch.nn.LazyBatchNorm1d(), 4, torch.ones(1, 2, 3)),
+        (torch.nn.LazyBatchNorm2d(), 4, torch.ones(1, 2, 3, 4)),
+        (torch.nn.LazyBatchNorm3d(), 4, torch.ones(1, 2, 3, 4, 5)),
     ],
 )
-def test_get_parameters(layer, num_parameters):
+def test_get_parameters(model, num_parameters, init_tensor):
     # test that the correct parameters are returned
 
-    class Network(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.layer = layer
-
-        def forward(self, x):
-            pass
-
-    model = Network()
+    # for lazy layers, initialize the parameters
+    model(init_tensor)
+    print(model)
 
     parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
 
