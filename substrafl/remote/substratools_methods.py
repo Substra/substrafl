@@ -1,13 +1,8 @@
-"""
-Methods inherited from substratools.
-"""
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import Type
 from typing import TypedDict
-
-import substratools
 
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
@@ -15,7 +10,7 @@ from substrafl.remote.serializers.pickle_serializer import PickleSerializer
 from substrafl.remote.serializers.serializer import Serializer
 
 
-class RemoteMethod(substratools.AggregateAlgo):
+class RemoteMethod:
     """Aggregate algo to register to Substra."""
 
     def __init__(
@@ -58,9 +53,9 @@ class RemoteMethod(substratools.AggregateAlgo):
         self.save_model(next_shared_state, outputs[OutputIdentifiers.model])
         # return next_shared_state
 
-    def predict(self, inputs, outputs, task_properties):
-        """This predict method is required by substratools"""
-        pass
+    # def predict(self, inputs, outputs, task_properties):
+    #     """This predict method is required by substratools"""
+    #     pass
 
     def load_model(self, path: str) -> Any:
         """Load the model from disk, may be a in model of the aggregate
@@ -77,8 +72,11 @@ class RemoteMethod(substratools.AggregateAlgo):
     def save_model(self, model, path: str):
         self.shared_state_serializer.save(model, Path(path))
 
+    def list_tools_methods(self):
+        return list((self.aggregate,))
 
-class RemoteDataMethod(substratools.CompositeAlgo):
+
+class RemoteDataMethod:
     """Composite algo to register to Substra"""
 
     def __init__(
@@ -206,3 +204,6 @@ class RemoteDataMethod(substratools.CompositeAlgo):
             path (str): Path where to save the model
         """
         model.save(Path(path))
+
+    def list_tools_methods(self):
+        return list((self.train, self.predict))

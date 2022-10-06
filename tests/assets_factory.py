@@ -1,4 +1,3 @@
-import sys
 import tarfile
 import tempfile
 from pathlib import Path
@@ -17,16 +16,16 @@ from substra.sdk.schemas import Permissions
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 
-DEFAULT_SUBSTRATOOLS_VERSION = (
-    f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
-)
+DEFAULT_SUBSTRATOOLS_VERSION = "class-to-function"  # TODO: change before merge
+#     f"latest-nvidiacuda11.6.0-base-ubuntu20.04-python{sys.version_info.major}.{sys.version_info.minor}"
+# )
 
 DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"ghcr.io/substra/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
 
 DEFAULT_METRICS_DOCKERFILE = f"""
 FROM {DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE}
 COPY metrics.py .
-ENTRYPOINT ["python3", "metrics.py", "--method-name", "score"]
+ENTRYPOINT ["python3", "metrics.py", "--function-name", "score"]
 """
 
 DEFAULT_METRICS_FILE = f"""
@@ -34,19 +33,18 @@ import substratools as tools
 import math
 import numpy as np
 
-class AccuracyMetric(tools.MetricAlgo):
-    def score(self, inputs, outputs, task_properties):
-        # Datasamples are passed as a tuple of two elements: x and y
-        y_true = inputs['{InputIdentifiers.datasamples}'][1]
-        y_pred = self.load_predictions(inputs['{InputIdentifiers.predictions}'])
-        tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
+def score(inputs, outputs, task_properties):
+    # Datasamples are passed as a tuple of two elements: x and y
+    y_true = inputs['{InputIdentifiers.datasamples}'][1]
+    y_pred = load_predictions(inputs['{InputIdentifiers.predictions}'])
+    tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
 
-    def load_predictions(self, path):
-        return np.load(path)
+def load_predictions(path):
+    return np.load(path)
 
 
 if __name__ == "__main__":
-    tools.algo.execute(AccuracyMetric())
+    tools.function.execute_cli([score])
 """
 
 DEFAULT_OPENER_FILE = """
