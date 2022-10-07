@@ -70,9 +70,20 @@ class RemoteMethod:
         return self.shared_state_serializer.load(Path(path))
 
     def save_model(self, model, path: str):
+        """Save the model
+
+        Args:
+            model (typing.Any): Model to save
+            path (str): Path where to save the model
+        """
         self.shared_state_serializer.save(model, Path(path))
 
     def list_tools_functions(self):
+        """List the functions that can be accessed and executed by substratools.
+
+        Returns:
+            list: list of functions that can be accessed by substratools
+        """
         return list((self.aggregate,))
 
 
@@ -206,4 +217,9 @@ class RemoteDataMethod:
         model.save(Path(path))
 
     def list_tools_functions(self):
+        """List the functions that can be accessed and executed by substratools.
+
+        Returns:
+            list: list of functions that can be accessed by substratools
+        """
         return list((self.train, self.predict))
