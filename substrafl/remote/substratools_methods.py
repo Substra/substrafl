@@ -79,7 +79,7 @@ class RemoteMethod:
         Returns:
             tuple: list of functions that can be accessed by substratools
         """
-        return self.aggregate
+        return (self.aggregate,)
 
 
 class RemoteDataMethod:
