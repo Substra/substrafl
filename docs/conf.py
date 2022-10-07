@@ -193,6 +193,7 @@ nitpick_ignore = [
     ("py:class", "substra.sdk.schemas.AlgoInputSpec"),
     ("py:class", "ComputePlan"),
     ("py:class", "substratools.algo.GenericAlgo"),
+    ("py:class", "substratools.algo.CompositeAlgo"),
 ]
 
 html_css_files = [
