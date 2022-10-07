@@ -73,13 +73,13 @@ class RemoteMethod:
         """
         self.shared_state_serializer.save(model, Path(path))
 
-    def list_tools_functions(self):
+    def tools_functions(self):
         """List the functions that can be accessed and executed by substratools.
 
         Returns:
-            list: list of functions that can be accessed by substratools
+            tuple: list of functions that can be accessed by substratools
         """
-        return list((self.aggregate,))
+        return self.aggregate
 
 
 class RemoteDataMethod:
@@ -211,10 +211,10 @@ class RemoteDataMethod:
         """
         model.save(Path(path))
 
-    def list_tools_functions(self):
+    def tools_functions(self):
         """List the functions that can be accessed and executed by substratools.
 
         Returns:
-            list: list of functions that can be accessed by substratools
+            tuple: list of functions that can be accessed by substratools
         """
-        return list((self.train, self.predict))
+        return self.train, self.predict

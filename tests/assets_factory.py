@@ -44,7 +44,7 @@ def load_predictions(path):
 
 
 if __name__ == "__main__":
-    tools.execute([score])
+    tools.execute(score)
 """
 
 DEFAULT_OPENER_FILE = """
