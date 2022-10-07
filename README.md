@@ -1,3 +1,7 @@
+<div align="left">
+<a href="https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA"><img src="https://img.shields.io/badge/chat-on%20slack-blue?logo=slack" /></a> <a href="https://docs.substra.org/"><img src="https://img.shields.io/badge/read-docs-purple?logo=mdbook" /></a>
+<br /><br /></div>
+
 # Substrafl
 
 Substrafl is a high-level federated learning Python library.
@@ -5,9 +9,10 @@ Substrafl is used to run complex federated learning experiments on a Substra dep
 
 Note that substrafl will be soon merged with the [substra](https://github.com/substra/substra) library.
 
-For more information on what is substrafl and how to use it, please refer to the [user documentation](https://connect-docs.owkin.com/en/stable/).
+For more information on what is substrafl and how to use it, please refer to the [user documentation](https://docs.substra.org).
 
-To discuss on Slack, please join the [substra-general](https://lfaifoundation.slack.com/#substra-general) channel and the [substra-help](https://lfaifoundation.slack.com/#substra-help) channel.
+Join the discussion on [Slack](https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA)!
+
 
 ## Building the documentation
 
