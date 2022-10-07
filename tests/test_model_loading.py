@@ -76,6 +76,7 @@ def fake_local_train_task(trunk_model):
     local_train_task.rank = 2
     local_train_task.key = AssetKeys.local_train_task
     local_train_task.algo = algo
+    local_train_task.tag = "train"
     local_train_task.outputs = {
         "local": substra.models.ComputeTaskOutput(
             permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=head_model
