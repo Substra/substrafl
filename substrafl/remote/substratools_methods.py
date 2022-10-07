@@ -51,11 +51,6 @@ class RemoteMethod:
         next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
         self.save_model(next_shared_state, outputs[OutputIdentifiers.model])
-        # return next_shared_state
-
-    # def predict(self, inputs, outputs, task_properties):
-    #     """This predict method is required by substratools"""
-    #     pass
 
     def load_model(self, path: str) -> Any:
         """Load the model from disk, may be a in model of the aggregate
