@@ -19,4 +19,4 @@ def get_predictions(path):
 
 
 if __name__ == "__main__":
-    tools.function.execute_cli([score])
+    tools.execute([score])

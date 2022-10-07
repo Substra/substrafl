@@ -72,7 +72,7 @@ if __name__ == "__main__":
     remote_instance = remote_struct.get_remote_instance()
 
     # Execute the algo using substra-tools
-    tools.function.execute_cli(remote_instance.list_tools_methods())
+    tools.execute(remote_instance.list_tools_methods())
 """
 
 
