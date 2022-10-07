@@ -72,7 +72,7 @@ class RemoteMethod:
     def save_model(self, model, path: str):
         self.shared_state_serializer.save(model, Path(path))
 
-    def list_tools_methods(self):
+    def list_tools_functions(self):
         return list((self.aggregate,))
 
 
@@ -205,5 +205,5 @@ class RemoteDataMethod:
         """
         model.save(Path(path))
 
-    def list_tools_methods(self):
+    def list_tools_functions(self):
         return list((self.train, self.predict))
