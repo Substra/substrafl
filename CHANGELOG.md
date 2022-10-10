@@ -9,16 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 - chore: use the generic task (#31)
-=======
-- Apply changes from algo to function in substratools <https://github.com/Substra/substra/pull/303>
-=======
 - Apply changes from algo to function in substratools (#34)
->>>>>>> 10f31c5 (update changelog)
   - add `list_tools_functions` to `RemoteDataMethod` and `RemoteMethod` to list the function to send to the `tools.execute` function.
->>>>>>> c8b99ac (update changelog)
 
 ## [0.31.0](https://github.com/Substra/substrafl/releases/tag/0.31.0) - 2022-10-03
 
