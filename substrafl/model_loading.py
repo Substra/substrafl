@@ -19,6 +19,7 @@ from substrafl.exceptions import LoadAlgoMetadataError
 from substrafl.exceptions import MultipleTrainTaskError
 from substrafl.exceptions import TrainTaskNotFoundError
 from substrafl.exceptions import UnfinishedTrainTaskError
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.register import SUBSTRAFL_FOLDER
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -124,9 +125,7 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
     return metadata
 
 
-def _get_composite_from_round(
-    client: substra.Client, compute_plan_key: str, round_idx: int
-) -> substra.models.CompositeTraintuple:
+def _get_composite_from_round(client: substra.Client, compute_plan_key: str, round_idx: int) -> substra.models.Task:
     """Return the composite train tuple:
 
         - hosted on the given client organization
@@ -139,7 +138,7 @@ def _get_composite_from_round(
         round_idx (int): Round of the strategy to fetch the composite from.
 
     Returns:
-        substra.models.CompositeTraintuple: The composite matching the given requirements.
+        substra.models.Task: The composite matching the given requirements.
     """
     org_id = client.organization_info().organization_id
 
@@ -148,27 +147,27 @@ def _get_composite_from_round(
         "worker": [org_id],
         "metadata": [{"key": "round_idx", "type": "is", "value": str(round_idx)}],
     }
+    local_train_tasks = client.list_task(filters=filters)
+    local_train_tasks = [t for t in local_train_tasks if t.tag == "train"]
 
-    composite_traintuples = client.list_composite_traintuple(filters=filters)
-
-    if len(composite_traintuples) == 0:
+    if len(local_train_tasks) == 0:
         raise TrainTaskNotFoundError(
-            f"The given compute plan `{compute_plan_key}` has no composite train tuple of round {round_idx} "
+            f"The given compute plan `{compute_plan_key}` has no train task of round {round_idx} "
             f"hosted on the organization {org_id}"
         )
 
-    elif len(composite_traintuples) > 1:
+    elif len(local_train_tasks) > 1:
         raise MultipleTrainTaskError(
-            "The given compute plan has {} composite train tuples of round_idx {}. Downloading a model "
+            "The given compute plan has {} local train tasks of round_idx {}. Downloading a model "
             "from an experiment containing multiple TrainDataNodes hosted on the same organization is "
             "not supported yet in local mode.".format(
-                str(len(composite_traintuples)),
+                str(len(local_train_tasks)),
                 str(round_idx),
             )
         )
-    composite_traintuple = composite_traintuples[0]
+    local_train_task = local_train_tasks[0]
 
-    return composite_traintuple
+    return local_train_task
 
 
 def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:
@@ -259,7 +258,9 @@ def download_algo_files(
     algo_file = client.download_algo(composite_traintuple.algo.key, destination_folder=folder)
 
     # Get the associated head model (local state)
-    local_state_file = client.download_head_model_from_composite_traintuple(composite_traintuple.key, folder=folder)
+    local_state_file = client.download_model_from_task(
+        composite_traintuple.key, folder=folder, identifier=OutputIdentifiers.local
+    )
 
     # Environment requirements and local state path
     metadata = {k: v for k, v in compute_plan.metadata.items() if k in REQUIRED_KEYS}

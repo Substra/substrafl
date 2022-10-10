@@ -4,12 +4,7 @@ from typing import List
 from typing import TypeVar
 
 import substra
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
-from substra.sdk.schemas import AssetKind
-from substra.sdk.schemas import ComputeTaskOutputSpec
-from substra.sdk.schemas import InputRef
-from substra.sdk.schemas import Permissions
+from substra import schemas
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
@@ -69,7 +64,7 @@ class AggregationNode(Node):
 
         inputs = (
             [
-                InputRef(
+                schemas.InputRef(
                     identifier=InputIdentifiers.models,
                     parent_task_key=ref.key,
                     parent_task_output_identifier=OutputIdentifiers.shared,
@@ -80,23 +75,26 @@ class AggregationNode(Node):
             else None
         )
 
-        aggregate_tuple = {
-            "remote_operation": operation.remote_struct,
-            "worker": self.organization_id,
-            "in_models_ids": [_input.parent_task_key for _input in inputs] if inputs is not None else None,
-            "tag": "aggregate",
-            "aggregatetuple_id": op_id,
-            "metadata": {
-                "round_idx": round_idx,
-            },
-            "inputs": inputs,
-            "outputs": {
-                OutputIdentifiers.model: ComputeTaskOutputSpec(
-                    permissions=Permissions(public=False, authorized_ids=authorized_ids),
+        aggregate_tuple = schemas.ComputePlanTaskSpec(
+            algo_key=str(uuid.uuid4()),  # bogus algo key
+            task_id=op_id,
+            inputs=inputs,
+            outputs={
+                OutputIdentifiers.model: schemas.ComputeTaskOutputSpec(
+                    permissions=schemas.Permissions(public=False, authorized_ids=authorized_ids),
                     transient=clean_models,
                 )
             },
-        }
+            metadata={
+                "round_idx": round_idx,
+            },
+            tag="aggregate",
+            worker=self.organization_id,
+        ).dict()
+
+        aggregate_tuple.pop("algo_key")
+        aggregate_tuple["remote_operation"] = operation.remote_struct
+
         self.tuples.append(aggregate_tuple)
 
         return SharedStateRef(key=op_id)
@@ -104,7 +102,7 @@ class AggregationNode(Node):
     def register_operations(
         self,
         client: substra.Client,
-        permissions: substra.sdk.schemas.Permissions,
+        permissions: schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
@@ -138,16 +136,16 @@ class AggregationNode(Node):
                         permissions=permissions,
                         dependencies=dependencies,
                         inputs=[
-                            AlgoInputSpec(
+                            schemas.AlgoInputSpec(
                                 identifier=InputIdentifiers.models,
-                                kind=AssetKind.model.value,
+                                kind=schemas.AssetKind.model.value,
                                 optional=False,
                                 multiple=True,
                             )
                         ],
                         outputs=[
-                            AlgoOutputSpec(
-                                identifier=OutputIdentifiers.model, kind=AssetKind.model.value, multiple=False
+                            schemas.AlgoOutputSpec(
+                                identifier=OutputIdentifiers.model, kind=schemas.AssetKind.model.value, multiple=False
                             )
                         ],
                     )

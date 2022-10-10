@@ -86,7 +86,7 @@ class TorchScaffoldAlgoParametersUpdateError(Exception):
 
 class TrainTaskNotFoundError(Exception):
     """When using the :func:`~substrafl.model_loading.download_algo_files` function. The provided compute plan must
-    contain a composite train tuple:
+    contain a task:
 
         - hosted by the worker associated to the given client
         - tagged with the given round_idx
