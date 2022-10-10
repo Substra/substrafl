@@ -13,7 +13,14 @@ def is_batchnorm_layer(layer: torch.nn.Module) -> bool:
     Returns:
         bool: Whether the given module is a batch norm one.
     """
-    list_bn_layers = [torch.nn.BatchNorm1d, torch.nn.BatchNorm2d, torch.nn.BatchNorm3d]
+    list_bn_layers = [
+        torch.nn.BatchNorm1d,
+        torch.nn.BatchNorm2d,
+        torch.nn.BatchNorm3d,
+        torch.nn.LazyBatchNorm1d,
+        torch.nn.LazyBatchNorm2d,
+        torch.nn.LazyBatchNorm3d,
+    ]
     for bn_layer_class in list_bn_layers:
         if isinstance(layer, bn_layer_class):
             return True
