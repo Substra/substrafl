@@ -37,7 +37,6 @@ def test_get_parameters(model, num_parameters, init_tensor):
 
     # for lazy layers, initialize the parameters
     model(init_tensor)
-    print(model)
 
     parameters = list(weight_manager.get_parameters(model=model, with_batch_norm_parameters=True))
 
