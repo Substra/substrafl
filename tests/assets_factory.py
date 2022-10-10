@@ -36,10 +36,10 @@ import numpy as np
 def score(inputs, outputs, task_properties):
     # Datasamples are passed as a tuple of two elements: x and y
     y_true = inputs['{InputIdentifiers.datasamples}'][1]
-    y_pred = load_predictions(inputs['{InputIdentifiers.predictions}'])
+    y_pred = _load_predictions(inputs['{InputIdentifiers.predictions}'])
     tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
 
-def load_predictions(path):
+def _load_predictions(path):
     return np.load(path)
 
 
