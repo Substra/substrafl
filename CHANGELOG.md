@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: use the generic task (#31)
 - Apply changes from algo to function in substratools (#34)
   - add `tools_functions` method to `RemoteDataMethod` and `RemoteMethod` to return the function(s) to send to `tools.execute`.
+- Register function in substratools using decorator `@tools.register` (#37)
 
 ### Fixed
 
