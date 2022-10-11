@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - torch algo: test that `with_batch_norm_parameters` is only about the running mean and variance of the batch norm layers (#30)
 - torch algo: `with_batch_norm_parameters` - also take into account the `torch.nn.LazyBatchNorm{x}d` layers (#30)
 - chore: use the generic task (#31)
+- Apply changes from algo to function in substratools (#34)
+  - add `tools_functions` method to `RemoteDataMethod` and `RemoteMethod` to return the function(s) to send to `tools.execute`.
 
 
 ## [0.31.0](https://github.com/Substra/substrafl/releases/tag/0.31.0) - 2022-10-03

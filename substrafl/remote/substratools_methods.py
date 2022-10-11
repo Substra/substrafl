@@ -1,13 +1,8 @@
-"""
-Methods inherited from substratools.
-"""
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import Type
 from typing import TypedDict
-
-import substratools
 
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
@@ -15,7 +10,7 @@ from substrafl.remote.serializers.pickle_serializer import PickleSerializer
 from substrafl.remote.serializers.serializer import Serializer
 
 
-class RemoteMethod(substratools.AggregateAlgo):
+class RemoteMethod:
     """Aggregate algo to register to Substra."""
 
     def __init__(
@@ -56,11 +51,6 @@ class RemoteMethod(substratools.AggregateAlgo):
         next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
         self.save_model(next_shared_state, outputs[OutputIdentifiers.model])
-        # return next_shared_state
-
-    def predict(self, inputs, outputs, task_properties):
-        """This predict method is required by substratools"""
-        pass
 
     def load_model(self, path: str) -> Any:
         """Load the model from disk, may be a in model of the aggregate
@@ -75,10 +65,24 @@ class RemoteMethod(substratools.AggregateAlgo):
         return self.shared_state_serializer.load(Path(path))
 
     def save_model(self, model, path: str):
+        """Save the model
+
+        Args:
+            model (typing.Any): Model to save
+            path (str): Path where to save the model
+        """
         self.shared_state_serializer.save(model, Path(path))
 
+    def tools_functions(self):
+        """List the functions that can be accessed and executed by substratools.
 
-class RemoteDataMethod(substratools.CompositeAlgo):
+        Returns:
+            tuple: list of functions that can be accessed by substratools
+        """
+        return (self.aggregate,)
+
+
+class RemoteDataMethod:
     """Composite algo to register to Substra"""
 
     def __init__(
@@ -206,3 +210,11 @@ class RemoteDataMethod(substratools.CompositeAlgo):
             path (str): Path where to save the model
         """
         model.save(Path(path))
+
+    def tools_functions(self):
+        """List the functions that can be accessed and executed by substratools.
+
+        Returns:
+            tuple: list of functions that can be accessed by substratools
+        """
+        return self.train, self.predict

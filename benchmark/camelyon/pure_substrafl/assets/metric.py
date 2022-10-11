@@ -3,20 +3,20 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
-class AUC(tools.MetricAlgo):
-    def score(self, inputs, outputs, task_properties):
-        """AUC"""
+def score(inputs, outputs, task_properties):
+    """AUC"""
 
-        y_pred = self.get_predictions(inputs["predictions"])
-        y_true = inputs["datasamples"].y_true
+    y_pred = _load_predictions(inputs["predictions"])
+    y_true = inputs["datasamples"].y_true
 
-        metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
+    metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
 
-        tools.save_performance(float(metric), outputs["performance"])
+    tools.save_performance(float(metric), outputs["performance"])
 
-    def get_predictions(self, path):
-        return np.load(path)
+
+def _load_predictions(path):
+    return np.load(path)
 
 
 if __name__ == "__main__":
-    tools.algo.execute(AUC())
+    tools.execute(score)

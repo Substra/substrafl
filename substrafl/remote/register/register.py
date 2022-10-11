@@ -51,7 +51,7 @@ RUN python{python_version} -m pip install -U pip
 # Install local dependencies
 {local_dependencies}
 
-ENTRYPOINT ["python{python_version}", "algo.py", "--method-name", "{method_name}"]
+ENTRYPOINT ["python{python_version}", "algo.py", "--function-name", "{method_name}"]
 """
 
 ALGO = """
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     remote_instance = remote_struct.get_remote_instance()
 
     # Execute the algo using substra-tools
-    tools.algo.execute(remote_instance)
+    tools.execute(*remote_instance.tools_functions())
 """
 
 
