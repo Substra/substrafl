@@ -74,7 +74,7 @@ if __name__ == "__main__":
     remote_instance = remote_struct.get_remote_instance()
 
     # Register the functions to substra-tools
-    remote_instance.tools_registering()
+    remote_instance.register_substratools_functions()
 
     # Execute the algo using substra-tools
     tools.execute()

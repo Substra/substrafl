@@ -75,7 +75,7 @@ class RemoteMethod:
         """
         self.shared_state_serializer.save(model, Path(path))
 
-    def tools_registering(self):
+    def register_substratools_functions(self):
         """Register the functions that can be accessed and executed by substratools."""
 
         tools.register(self.aggregate)
@@ -210,7 +210,7 @@ class RemoteDataMethod:
         """
         model.save(Path(path))
 
-    def tools_registering(self):
+    def register_substratools_functions(self):
         """Register the functions that can be accessed and executed by substratools."""
 
         tools.register(self.train)
