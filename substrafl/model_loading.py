@@ -205,7 +205,7 @@ def download_algo_files(
 
         - hosted on the client organization
         - being part of the given compute plan
-        - being the result of the associated strategy ofter `round_idx` steps
+        - being the result of the associated strategy after `round_idx` steps
 
     into memory.
 
