@@ -91,10 +91,8 @@ def _copy_local_packages(
         else:
             raise ValueError(f"Does not exist {dependency_path}")
 
-        local_dependencies_cmd.append(
-            f"RUN python{python_major_minor} -m pip install " f"--no-cache-dir {dest_path.relative_to(operation_dir)}"
-        )
-    return "\n".join(local_dependencies_cmd)
+        local_dependencies_cmd.append(f"{dest_path.relative_to(operation_dir)}")
+    return f"RUN python{python_major_minor} -m pip install --no-cache-dir " + " ".join(local_dependencies_cmd)
 
 
 def _copy_local_code(path: Path, algo_file_path: Path, operation_dir: Path):
