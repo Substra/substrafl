@@ -86,7 +86,7 @@ def _copy_local_packages(
         dest_path = path / dependency_path.name
         if dependency_path.is_dir():
             shutil.copytree(
-                dependency_path, dest_path, ignore=shutil.ignore_patterns("local_worker*", "tmp_substrafl*")
+                dependency_path, dest_path, ignore=shutil.ignore_patterns("local-worker*", "tmp_substrafl*")
             )
         elif dependency_path.is_file():
             shutil.copy(dependency_path, dest_path)
