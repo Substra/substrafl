@@ -85,7 +85,9 @@ def _copy_local_packages(path: Path, local_dependencies: List[Path], python_majo
     for dependency_path in local_dependencies:
         dest_path = path / dependency_path.name
         if dependency_path.is_dir():
-            shutil.copytree(dependency_path, dest_path)
+            shutil.copytree(
+                dependency_path, dest_path, ignore=shutil.ignore_patterns("local_worker*", "tmp_connectlib*")
+            )
         elif dependency_path.is_file():
             shutil.copy(dependency_path, dest_path)
         else:
@@ -282,7 +284,7 @@ def register_algo(
         AlgoCategoryError: The given algo category does not match any allowed substra AlgoCategory.
 
     """
-    with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix="connectlib_") as operation_dir:
+    with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix="tmp_connectlib_") as operation_dir:
         archive_path, description_path = _create_substra_algo_files(
             remote_struct,
             dependencies=dependencies,
