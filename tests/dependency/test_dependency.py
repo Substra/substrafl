@@ -24,7 +24,7 @@ import utils  # noqa: E402
 
 ASSETS_DIR = CURRENT_FILE.parents[1] / "end_to_end" / "test_assets"
 DEFAULT_PERMISSIONS = substra.schemas.Permissions(public=True, authorized_ids=list())
-LOCAL_WORKER_PATH = Path.cwd() / "local-worker"
+LOCAL_WORKER_PATH = Path.cwd() / substra.sdk.backends.local.LOCAL_WORKER_DIR
 
 
 def test_dependency_validators_file_not_exist():
