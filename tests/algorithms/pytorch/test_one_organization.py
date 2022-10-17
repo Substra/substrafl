@@ -16,10 +16,9 @@ from tests import utils
 
 logger = logging.getLogger(__name__)
 
-EXPECTED_PERFORMANCE = 0.2774176577698596
+EXPECTED_PERFORMANCE = 0.19318486194940426
 
 
-@pytest.mark.parametrize("n_updates, n_rounds", [(1, 1), (1, 1)])  # slow test so checking only two possibilities
 @pytest.mark.substra
 @pytest.mark.slow
 def test_one_organization(
@@ -28,8 +27,6 @@ def test_one_organization(
     train_linear_nodes,
     test_linear_nodes,
     session_dir,
-    n_updates,
-    n_rounds,
     test_linear_data_samples,
     mae,
     numpy_torch_dataset,
@@ -39,6 +36,7 @@ def test_one_organization(
      The expected result was calculated to be the same for the local mode and for the in pure Substra. For the
      details of the implementation of the latter ones please go to PR #109
     """
+
     # Common definition
     seed = 42
     algo_deps = Dependency(
@@ -46,6 +44,8 @@ def test_one_organization(
         editable_mode=True,
     )
     BATCH_SIZE = 32
+    N_UPDATES = 1
+    N_ROUND = 2
 
     strategy = SingleOrganization()
 
@@ -54,7 +54,7 @@ def test_one_organization(
     optimizer = torch.optim.SGD(perceptron.parameters(), lr=0.1)
     nig = NpIndexGenerator(
         batch_size=BATCH_SIZE,
-        num_updates=n_updates,
+        num_updates=N_UPDATES,
     )
 
     class MyOneOrganizationAlgo(TorchSingleOrganizationAlgo):
@@ -78,7 +78,7 @@ def test_one_organization(
         strategy=strategy,
         train_data_nodes=train_linear_nodes[:1],
         evaluation_strategy=my_eval_strategy,
-        num_rounds=n_rounds,
+        num_rounds=N_ROUND,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
     )
