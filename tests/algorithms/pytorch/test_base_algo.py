@@ -293,7 +293,7 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         train_data_nodes=[train_linear_nodes[0]],
         evaluation_strategy=None,
         aggregation_node=None,
-        num_rounds=2,
+        num_rounds=1,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
     )
@@ -310,11 +310,11 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         output_model[task.metadata["round_idx"]] = PickleSerializer().load(download_path)
 
     if test_seed is not None:
-        assert all(output_model["1"] == expected_output_round_1)
-        assert all(output_model["2"] == expected_output_round_2)
+        assert all(output_model["0"] == expected_output_round_1)
+        assert all(output_model["1"] == expected_output_round_2)
     else:
-        assert not all(output_model["1"] == expected_output_round_1)
-        assert not all(output_model["2"] == expected_output_round_2)
+        assert not all(output_model["0"] == expected_output_round_1)
+        assert not all(output_model["1"] == expected_output_round_2)
 
 
 @pytest.mark.parametrize("n_samples", [1, 2])
