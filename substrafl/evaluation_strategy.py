@@ -123,7 +123,7 @@ class EvaluationStrategy:
 
     def restart_rounds(self):
         """reinitializes current round to 0 (generator will start from the beginning)"""
-        self._current_round = -1
+        self._current_round = 0
 
     def _check_rounds_consistency(self, num_rounds: Optional[int] = None):
         """Checks if the EvaluationStrategy is consistent with the number of rounds (num_rounds). If num_rounds was
@@ -162,12 +162,12 @@ class EvaluationStrategy:
         test_it = False
         if isinstance(self._rounds, int):
             # checks if _current_round is divisible by rounds or it's a last round
-            test_it = (self._current_round % self._rounds == 0) or (self._current_round + 1 == self.num_rounds)
+            test_it = (self._current_round % self._rounds == 0) or (self._current_round == self.num_rounds)
         else:
             # rounds is a list of round indices
-            test_it = self._current_round + 1 in self._rounds
+            test_it = self._current_round in self._rounds
 
-        if self.num_rounds and self._current_round + 1 > self.num_rounds:
+        if self.num_rounds and self._current_round > self.num_rounds:
             # raise an error if number of call to next() exceeded num_rounds
             raise StopIteration(f"Call to the iterator exceeded num_rounds set as {self.num_rounds}")
 

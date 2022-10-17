@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 EXPECTED_PERFORMANCE = 0.2774176577698596
 
 
-@pytest.mark.parametrize("n_updates, n_rounds", [(1, 2), (2, 1)])  # slow test so checking only two possibilities
+@pytest.mark.parametrize("n_updates, n_rounds", [(1, 1), (1, 1)])  # slow test so checking only two possibilities
 @pytest.mark.substra
 @pytest.mark.slow
 def test_one_organization(
