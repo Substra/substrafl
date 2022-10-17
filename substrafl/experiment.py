@@ -306,7 +306,7 @@ def execute_experiment(
     logger.info("Building the compute plan.")
 
     # create computation graph
-    for round_idx in range(1, num_rounds + 1):
+    for round_idx in range(0, num_rounds + 1):
         strategy.perform_round(
             algo=algo,
             train_data_nodes=train_data_nodes,

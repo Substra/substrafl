@@ -123,7 +123,7 @@ class EvaluationStrategy:
 
     def restart_rounds(self):
         """reinitializes current round to 0 (generator will start from the beginning)"""
-        self._current_round = 0
+        self._current_round = -1
 
     def _check_rounds_consistency(self, num_rounds: Optional[int] = None):
         """Checks if the EvaluationStrategy is consistent with the number of rounds (num_rounds). If num_rounds was
