@@ -12,6 +12,10 @@ from substrafl.exceptions import InvalidPathError
 class Dependency(BaseModel):
     """Dependency pydantic class.
 
+
+    .. note:: If you are using your current package as a local dependencies, be aware that folders named
+        **local-worker** or with **tmp_substrafl** as prefix are ignored during the installation.
+
     Args:
         editable_mode (bool): If set to False, substra, substrafl and substratools used in the
             Dockerfiles submitted to Substra platform will be taken from owkin pypi. Be sure to have
