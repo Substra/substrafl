@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apply changes from algo to function in substratools (#34)
   - add `tools_functions` method to `RemoteDataMethod` and `RemoteMethod` to return the function(s) to send to `tools.execute`.
 
+### Fixed
+
+- local dependencies are installed in one `pip` command to optimize the installation and avoid incompatibilities error
 
 ## [0.31.0](https://github.com/Substra/substrafl/releases/tag/0.31.0) - 2022-10-03
 
