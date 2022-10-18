@@ -86,19 +86,34 @@ def rng_strategy():
             next_local_states = []
             next_shared_states = []
 
-            for i, node in enumerate(train_data_nodes):
-                next_local_state, next_shared_state = node.update_states(
-                    algo.train(
-                        node.data_sample_keys,
-                    ),
-                    round_idx=round_idx,
-                    authorized_ids=[node.organization_id],
-                    local_state=self._local_states[i] if self._local_states is not None else None,
-                )
+            if round_idx == 0:
+                for i, node in enumerate(train_data_nodes):
+                    next_local_state, next_shared_state = node.update_states(
+                        algo.initialisation(
+                            node.data_sample_keys,
+                        ),
+                        round_idx=round_idx,
+                        authorized_ids=[node.organization_id],
+                        local_state=self._local_states[i] if self._local_states is not None else None,
+                    )
+                    # keep the states in a list: one/organization
+                    next_local_states.append(next_local_state)
+                    next_shared_states.append(next_shared_state)
 
-                # keep the states in a list: one/organization
-                next_local_states.append(next_local_state)
-                next_shared_states.append(next_shared_state)
+            else:
+                for i, node in enumerate(train_data_nodes):
+                    next_local_state, next_shared_state = node.update_states(
+                        algo.train(
+                            node.data_sample_keys,
+                        ),
+                        round_idx=round_idx,
+                        authorized_ids=[node.organization_id],
+                        local_state=self._local_states[i] if self._local_states is not None else None,
+                    )
+
+                    # keep the states in a list: one/organization
+                    next_local_states.append(next_local_state)
+                    next_shared_states.append(next_shared_state)
 
             self._local_states = next_local_states
             self._shared_states = next_shared_states
@@ -293,7 +308,7 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         train_data_nodes=[train_linear_nodes[0]],
         evaluation_strategy=None,
         aggregation_node=None,
-        num_rounds=1,
+        num_rounds=2,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
     )
@@ -310,11 +325,11 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         output_model[task.metadata["round_idx"]] = PickleSerializer().load(download_path)
 
     if test_seed is not None:
-        assert all(output_model["0"] == expected_output_round_1)
-        assert all(output_model["1"] == expected_output_round_2)
+        assert all(output_model["1"] == expected_output_round_1)
+        assert all(output_model["2"] == expected_output_round_2)
     else:
-        assert not all(output_model["0"] == expected_output_round_1)
-        assert not all(output_model["1"] == expected_output_round_2)
+        assert not all(output_model["1"] == expected_output_round_1)
+        assert not all(output_model["2"] == expected_output_round_2)
 
 
 @pytest.mark.parametrize("n_samples", [1, 2])
