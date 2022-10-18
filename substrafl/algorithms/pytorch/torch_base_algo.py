@@ -84,6 +84,14 @@ class TorchAlgo(Algo):
         """
         return self._model
 
+    @remote_data
+    def initialisation(
+        self,
+        datasamples: Any,
+        shared_state: Any = None,
+    ) -> Any:
+        pass
+
     @abc.abstractmethod
     def train(
         self,

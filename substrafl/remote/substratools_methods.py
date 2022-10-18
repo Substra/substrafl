@@ -170,6 +170,21 @@ class RemoteDataMethod:
             **self.method_parameters,
         )
 
+    def initialisation(
+        self,
+        inputs: TypedDict,
+        outputs: TypedDict,
+        task_properties: TypedDict,
+    ) -> None:
+
+        instance = self.instance
+
+        method_to_call = instance.initialisation
+        next_shared_state = method_to_call(datasamples=None, shared_state=None, _skip=True, **self.method_parameters)
+
+        self.save_head_model(instance, outputs[OutputIdentifiers.local])
+        self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.shared])
+
     def load_trunk_model(self, path: str) -> Any:
         """Load the trunk model from disk
 
