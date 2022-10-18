@@ -108,7 +108,7 @@ def test_one_organization_algo_performance(
     y_true = test_linear_data_samples[0][:, -1]
 
     performance_at_init = mae.compute(y_pred, y_true)
-    assert performance_at_init == perfs.performance[0]
+    assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
 def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):

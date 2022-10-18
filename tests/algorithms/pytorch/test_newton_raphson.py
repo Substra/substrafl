@@ -314,15 +314,15 @@ def test_pytorch_nr_algo_performance(
     nr_test_data,
     perceptron,
     mae,
+    rtol,
 ):
 
     perfs = network.clients[0].get_performances(compute_plan.key)
 
-    rel = 1e-5
     # This abs_ative error is due to the l2 regularization, mandatory to reach numerical stability.
     # This fails on mac M1 pro with 1e-5
     # TODO investigate
-    assert pytest.approx(EXPECTED_PERFORMANCE, abs=rel) == perfs.performance[1]
+    assert pytest.approx(EXPECTED_PERFORMANCE, abs=rtol) == perfs.performance[1]
 
     seed = 42
     torch.manual_seed(seed)
@@ -337,7 +337,7 @@ def test_pytorch_nr_algo_performance(
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, mae):
+def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, mae, rtol):
     download_algo_files(
         client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
     )
@@ -349,5 +349,4 @@ def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, ma
 
     # This test fails with default approx parameters
     # TODO: investigate
-    rel = 1e-5
-    assert performance == pytest.approx(EXPECTED_PERFORMANCE, abs=rel)
+    assert performance == pytest.approx(EXPECTED_PERFORMANCE, abs=rtol)
