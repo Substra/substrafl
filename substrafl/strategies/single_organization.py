@@ -71,7 +71,7 @@ class SingleOrganization(Strategy):
 
         if round_idx == 0:
             next_local_state, _ = train_data_nodes[0].update_states(
-                algo.initialisation(
+                algo.initialization(
                     "None",
                     shared_state=None,
                 ),

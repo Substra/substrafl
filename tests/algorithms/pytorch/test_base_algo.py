@@ -89,7 +89,7 @@ def rng_strategy():
             if round_idx == 0:
                 for i, node in enumerate(train_data_nodes):
                     next_local_state, next_shared_state = node.update_states(
-                        algo.initialisation(
+                        algo.initialization(
                             "None",
                         ),
                         round_idx=round_idx,

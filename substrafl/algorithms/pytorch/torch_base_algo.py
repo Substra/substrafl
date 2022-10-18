@@ -85,7 +85,7 @@ class TorchAlgo(Algo):
         return self._model
 
     @remote_data
-    def initialisation(
+    def initialization(
         self,
         datasamples: Any,
         shared_state: Any = None,

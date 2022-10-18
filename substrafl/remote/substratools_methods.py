@@ -170,7 +170,7 @@ class RemoteDataMethod:
             **self.method_parameters,
         )
 
-    def initialisation(
+    def initialization(
         self,
         inputs: TypedDict,
         outputs: TypedDict,
@@ -179,7 +179,7 @@ class RemoteDataMethod:
 
         instance = self.instance
 
-        method_to_call = instance.initialisation
+        method_to_call = instance.initialization
         next_shared_state = method_to_call(datasamples=None, shared_state=None, _skip=True, **self.method_parameters)
 
         self.save_head_model(instance, outputs[OutputIdentifiers.local])

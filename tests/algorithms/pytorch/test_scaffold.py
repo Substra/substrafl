@@ -113,7 +113,7 @@ def test_pytorch_scaffold_algo_weights(
     torch_algo,
     session_dir,
 ):
-    """Check the weight initialisation, aggregation and set weights.
+    """Check the weight initialization, aggregation and set weights.
     The aggregation itself is tested at the strategy level, here we test
     the pytorch layer.
     """
