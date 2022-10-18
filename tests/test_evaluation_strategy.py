@@ -38,12 +38,10 @@ def test_rounds(rounds):
 @pytest.mark.parametrize(
     "rounds, e",
     [
-        [0, ValueError],
         [-2, ValueError],
         [[], ValueError],
         [4.5, TypeError],
         [[4.5], TypeError],
-        [[0, 2], ValueError],
         [[4, -1, 5], ValueError],
     ],
 )
