@@ -94,7 +94,7 @@ class EvaluationStrategy:
                 raise ValueError(f"rounds cannot be empty, rounds={rounds} found")
             elif not all(isinstance(r, int) for r in rounds):
                 raise TypeError(f"rounds must be of type list of ints or int, {type(rounds)} found")
-            elif not all(r > 0 for r in rounds):
+            elif not all(r >= 0 for r in rounds):
                 raise ValueError(f"rounds can be only positive, rounds={rounds} found")
 
     @property

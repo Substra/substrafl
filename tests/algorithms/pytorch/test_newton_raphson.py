@@ -286,7 +286,7 @@ def compute_plan(
     )
 
     strategy = NewtonRaphson(damping_factor=damping_factor)
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=[num_rounds])
+    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=[0, num_rounds])
 
     compute_plan = execute_experiment(
         client=network.clients[0],
@@ -311,6 +311,9 @@ def compute_plan(
 def test_pytorch_nr_algo_performance(
     network,
     compute_plan,
+    nr_test_data,
+    perceptron,
+    mae,
 ):
 
     perfs = network.clients[0].get_performances(compute_plan.key)
@@ -319,7 +322,17 @@ def test_pytorch_nr_algo_performance(
     # This abs_ative error is due to the l2 regularization, mandatory to reach numerical stability.
     # This fails on mac M1 pro with 1e-5
     # TODO investigate
-    assert pytest.approx(EXPECTED_PERFORMANCE, abs=rel) == perfs.performance[0]
+    assert pytest.approx(EXPECTED_PERFORMANCE, abs=rel) == perfs.performance[1]
+
+    seed = 42
+    torch.manual_seed(seed)
+
+    model = perceptron(linear_n_col=2, linear_n_target=1)
+    y_pred = model(torch.from_numpy(nr_test_data[0][:, :-1]).float()).detach().numpy().reshape(-1)
+    y_true = nr_test_data[0][:, -1]
+
+    performance_at_init = mae.compute(y_pred, y_true)
+    assert performance_at_init == perfs.performance[0]
 
 
 @pytest.mark.slow
