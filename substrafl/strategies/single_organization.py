@@ -69,19 +69,33 @@ class SingleOrganization(Strategy):
                 f" but {n_train_data_nodes} were passed."
             )
 
-        # define composite tuples (do not submit yet)
-        # for each composite tuple give description of Algo instead of a key for an algo
-        next_local_state, _ = train_data_nodes[0].update_states(
-            algo.train(  # type: ignore
-                train_data_nodes[0].data_sample_keys,
-                shared_state=None,
-                _algo_name=f"Training with {algo.__class__.__name__}",
-            ),
-            local_state=self.local_state,
-            round_idx=round_idx,
-            authorized_ids=[train_data_nodes[0].organization_id],
-            clean_models=clean_models,
-        )
+        if round_idx == 0:
+            next_local_state, _ = train_data_nodes[0].update_states(
+                algo.train(
+                    train_data_nodes[0].data_sample_keys,
+                    shared_state=None,
+                    skip_training=True,
+                ),
+                local_state=self.local_state,
+                round_idx=round_idx,
+                authorized_ids=[train_data_nodes[0].organization_id],
+                clean_models=clean_models,
+            )
+
+        else:
+            # define composite tuples (do not submit yet)
+            # for each composite tuple give description of Algo instead of a key for an algo
+            next_local_state, _ = train_data_nodes[0].update_states(
+                algo.train(  # type: ignore
+                    train_data_nodes[0].data_sample_keys,
+                    shared_state=None,
+                    _algo_name=f"Training with {algo.__class__.__name__}",
+                ),
+                local_state=self.local_state,
+                round_idx=round_idx,
+                authorized_ids=[train_data_nodes[0].organization_id],
+                clean_models=clean_models,
+            )
 
         # keep the states in a list: one/organization
         self.local_state = next_local_state

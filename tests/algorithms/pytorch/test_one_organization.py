@@ -16,7 +16,7 @@ from tests import utils
 
 logger = logging.getLogger(__name__)
 
-EXPECTED_PERFORMANCE = 0.19318486194940426
+EXPECTED_PERFORMANCE = 0.2774176577698596
 
 
 @pytest.mark.substra

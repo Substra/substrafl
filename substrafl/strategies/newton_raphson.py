@@ -105,7 +105,7 @@ class NewtonRaphson(Strategy):
                 algo=algo,
                 train_data_nodes=train_data_nodes,
                 current_aggregation=None,
-                round_idx=0,
+                round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
                 clean_models=clean_models,
             )

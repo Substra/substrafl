@@ -150,6 +150,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         self,
         datasamples: Any,
         shared_state=None,  # Is always None for this strategy
+        skip_training=False,
     ) -> Dict[str, np.ndarray]:
         """Train method of the SingleOrganization strategy implemented with torch.
 
@@ -164,27 +165,28 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             shared state and this return is only for consistency.
         """
 
-        # Create torch dataset
-        train_dataset = self._dataset(datasamples, is_inference=False)
+        if not skip_training:
+            # Create torch dataset
+            train_dataset = self._dataset(datasamples, is_inference=False)
 
-        # Instantiate the index_generator
-        if self._index_generator.n_samples is None:
-            self._index_generator.n_samples = len(train_dataset)
+            # Instantiate the index_generator
+            if self._index_generator.n_samples is None:
+                self._index_generator.n_samples = len(train_dataset)
 
-        self._index_generator.reset_counter()
+            self._index_generator.reset_counter()
 
-        # Create torch dataloader
-        self._torch_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
+            # Create torch dataloader
+            self._torch_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
-        # Train mode for torch model
-        self._model.train()
+            # Train mode for torch model
+            self._model.train()
 
-        # Train the model
-        self._local_train(train_dataset)
+            # Train the model
+            self._local_train(train_dataset)
 
-        self._index_generator.check_num_updates()
+            self._index_generator.check_num_updates()
 
-        self._model.eval()
+            self._model.eval()
 
         # Return empty shared state
         return {"None": np.array([])}
