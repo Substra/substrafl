@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Possibility to evaluate strategies before any training. The initialization is done at round 0.
+- Possibility to evaluate strategies before any training. The initialization is done at round 0 (#46)
+
 ### Changed
 
 - torch algo: test that `with_batch_norm_parameters` is only about the running mean and variance of the batch norm layers (#30)

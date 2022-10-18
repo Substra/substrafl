@@ -332,7 +332,7 @@ def test_pytorch_nr_algo_performance(
     y_true = nr_test_data[0][:, -1]
 
     performance_at_init = mae.compute(y_pred, y_true)
-    assert performance_at_init == perfs.performance[0]
+    assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
 @pytest.mark.slow
