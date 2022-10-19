@@ -172,11 +172,10 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, perceptron, x_shap
     assert shared_states.hessian.size == ((x_shape + 1) * y_shape) ** 2
 
 
-def test_train_newton_raphson_non_convex_cnn(torch_algo):
+def test_train_newton_raphson_non_convex_cnn(torch_algo, seed):
     """Test that NegativeHessianMatrixError is raised when the Hessian matrix is non positive semi definite for a
     non-convex problem."""
 
-    seed = 42
     np.random.seed(seed)
 
     x_train = np.random.randn(1, 3, 9, 9)
@@ -222,14 +221,14 @@ def compute_plan(
     mae,
     session_dir,
     numpy_torch_dataset,
+    seed,
 ):
     """Compute plan for e2e test"""
 
-    damping_factor = 1
-    num_rounds = 1
-    batch_size = 1
+    DAMPING_FACTOR = 1
+    NUM_ROUNDS = 1
+    BATCH_SIZE = 1
 
-    seed = 42
     torch.manual_seed(seed)
 
     # We define several sample without noises to be sure to reach the global optimum.
@@ -274,7 +273,7 @@ def compute_plan(
             super().__init__(
                 model=model,
                 criterion=criterion,
-                batch_size=batch_size,
+                batch_size=BATCH_SIZE,
                 dataset=numpy_torch_dataset,
                 l2_coeff=0,
             )
@@ -285,8 +284,10 @@ def compute_plan(
         editable_mode=True,
     )
 
-    strategy = NewtonRaphson(damping_factor=damping_factor)
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=[0, num_rounds])
+    strategy = NewtonRaphson(damping_factor=DAMPING_FACTOR)
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_data_nodes, rounds=[0, NUM_ROUNDS]  # test the initialization and the last round
+    )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
@@ -295,7 +296,7 @@ def compute_plan(
         train_data_nodes=train_data_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
-        num_rounds=num_rounds,
+        num_rounds=NUM_ROUNDS,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
     )
@@ -315,6 +316,7 @@ def test_pytorch_nr_algo_performance(
     perceptron,
     mae,
     rtol,
+    seed,
 ):
 
     perfs = network.clients[0].get_performances(compute_plan.key)
@@ -324,7 +326,6 @@ def test_pytorch_nr_algo_performance(
     # TODO investigate
     assert pytest.approx(EXPECTED_PERFORMANCE, abs=rtol) == perfs.performance[1]
 
-    seed = 42
     torch.manual_seed(seed)
 
     model = perceptron(linear_n_col=2, linear_n_target=1)

@@ -27,9 +27,8 @@ current_folder = Path(__file__).parent
 EXPECTED_PERFORMANCE = 0.0127768706
 
 
-def _torch_algo(torch_linear_model, numpy_torch_dataset, lr=0.1, use_scheduler=False):
+def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_scheduler=False):
     num_updates = 100
-    seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
     nig = NpIndexGenerator(
@@ -74,7 +73,7 @@ def torch_algo(torch_linear_model, numpy_torch_dataset):
 @pytest.fixture(scope="module")
 def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
 
-    num_rounds = 3
+    NUM_ROUNDS = 3
 
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
@@ -83,7 +82,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
 
     strategy = Scaffold()
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_linear_nodes, rounds=[0, num_rounds]  # test only at the last round
+        test_data_nodes=test_linear_nodes, rounds=[0, NUM_ROUNDS]  # test the initialization and the last round
     )
 
     compute_plan = execute_experiment(
@@ -93,7 +92,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
-        num_rounds=num_rounds,
+        num_rounds=NUM_ROUNDS,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
@@ -159,13 +158,13 @@ def test_pytorch_scaffold_algo_performance(
     test_linear_data_samples,
     mae,
     rtol,
+    seed,
 ):
     """End to end test for torch scaffold algorithm."""
 
     perfs = network.clients[0].get_performances(compute_plan.key)
     assert pytest.approx(EXPECTED_PERFORMANCE, rel=rtol) == perfs.performance[1]
 
-    seed = 42
     torch.manual_seed(seed)
 
     model = torch_linear_model()

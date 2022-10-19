@@ -26,9 +26,9 @@ def compute_plan(
     test_linear_nodes,
     session_dir,
     numpy_torch_dataset,
+    seed,
 ):
     # Common definition
-    seed = 42
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
@@ -88,6 +88,7 @@ def test_one_organization_algo_performance(
     test_linear_data_samples,
     mae,
     rtol,
+    seed,
 ):
     """End to end test for torch one organization algorithm. Checking that the perf are the same for :
     different combinations of n_updates and n_rounds
@@ -100,7 +101,6 @@ def test_one_organization_algo_performance(
     perfs = network.clients[0].get_performances(compute_plan.key)
     assert pytest.approx(EXPECTED_PERFORMANCE, rel=rtol) == perfs.performance[1]
 
-    seed = 42
     torch.manual_seed(seed)
 
     model = torch_linear_model()

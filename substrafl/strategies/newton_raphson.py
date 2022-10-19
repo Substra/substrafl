@@ -172,6 +172,7 @@ class NewtonRaphson(Strategy):
         Returns:
             NewtonRaphsonAveragedStates: A dict containing the parameters updates of each input parameters.
         """
+
         self._check_shared_states(shared_states)
 
         n_all_samples = sum([state.n_samples for state in shared_states])

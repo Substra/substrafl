@@ -90,6 +90,18 @@ class TorchAlgo(Algo):
         datasamples: Any,
         shared_state: Any = None,
     ) -> Any:
+        """This function does nothing and is useful to load the algorithm on the platform for initialization,
+        without applying any operation.
+        It is possible to overwrite this function in the algorithm and to call it within the perform round of
+        the associated strategy.
+
+        The signature of the function is constraint by the @remote_data decorator, used to load the object of
+        the algorithm on the platform.
+
+        Args:
+            datasamples (typing.Any): Input data
+            shared_state (typing.Any, optional): Defaults to None.
+        """
         pass
 
     @abc.abstractmethod
@@ -110,7 +122,7 @@ class TorchAlgo(Algo):
 
         Args:
             datasamples (typing.Any): Input data
-            shared_state (Any): Latest train task shared state (output of the train method)
+            shared_state (typing.Any): Latest train task shared state (output of the train method)
             predictions_path (os.PathLike): Destination file to save predictions
         """
 
