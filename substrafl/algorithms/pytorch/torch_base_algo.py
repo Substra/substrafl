@@ -100,7 +100,7 @@ class TorchAlgo(Algo):
 
         Args:
             datasamples (typing.Any): Input data
-            shared_state (typing.Any, optional): Defaults to None.
+            shared_state (typing.Any): Defaults to None.
         """
         pass
 

@@ -56,7 +56,7 @@ def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_sched
 
 
 @pytest.fixture(scope="module")
-def torch_algo(torch_linear_model, numpy_torch_dataset):
+def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
     """This closure allows to parametrize the torch algo fixture"""
 
     def inner_torch_algo(lr=0.1, use_scheduler=False):
@@ -65,6 +65,7 @@ def torch_algo(torch_linear_model, numpy_torch_dataset):
             numpy_torch_dataset=numpy_torch_dataset,
             lr=lr,
             use_scheduler=use_scheduler,
+            seed=seed,
         )()
 
     return inner_torch_algo
@@ -176,9 +177,9 @@ def test_pytorch_scaffold_algo_performance(
 
 
 @pytest.mark.parametrize("use_scheduler", [True, False])
-def test_update_current_lr(rtol, torch_algo, use_scheduler):
+def test_update_current_lr(rtol, torch_algo, use_scheduler, seed):
     # test the update_current_lr() fct with optimizer only and optimizer+scheduler
-    torch.manual_seed(42)
+    torch.manual_seed(seed)
     initial_lr = 0.5
     my_algo = torch_algo(lr=initial_lr, use_scheduler=use_scheduler)
 
