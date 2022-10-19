@@ -95,7 +95,7 @@ class TorchAlgo(Algo):
         It is possible to overwrite this function in the algorithm and to call it within the perform round of
         the associated strategy.
 
-        The signature of the function is constraint by the @remote_data decorator, used to load the object of
+        The signature of the function is constrained by the @remote_data decorator, used to load the object of
         the algorithm on the platform.
 
         Args:
