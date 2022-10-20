@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 # Substra tools version for which the image naming scheme changed
 MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
 
+TMP_SUBSTRAFL_PREFIX = "tmp_substrafl"
+
 _DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
 {substratools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
 
@@ -85,7 +87,14 @@ def _copy_local_packages(
     for dependency_path in local_dependencies:
         dest_path = path / dependency_path.name
         if dependency_path.is_dir():
-            shutil.copytree(dependency_path, dest_path)
+            shutil.copytree(
+                dependency_path,
+                dest_path,
+                ignore=shutil.ignore_patterns(
+                    "local-worker",
+                    TMP_SUBSTRAFL_PREFIX + "*",
+                ),
+            )
         elif dependency_path.is_file():
             shutil.copy(dependency_path, dest_path)
         else:
@@ -289,7 +298,7 @@ def register_algo(
     Returns:
         str: Substra algorithm key.
     """
-    with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix="substrafl_") as operation_dir:
+    with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix=TMP_SUBSTRAFL_PREFIX) as operation_dir:
         archive_path, description_path = _create_substra_algo_files(
             remote_struct,
             dependencies=dependencies,
