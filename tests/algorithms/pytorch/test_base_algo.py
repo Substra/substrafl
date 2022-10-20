@@ -75,6 +75,33 @@ def rng_strategy():
         def name(self) -> StrategyName:
             return "rng_strategy"
 
+        def init_round(
+            self,
+            algo,
+            train_data_nodes,
+            aggregation_node,
+            round_idx,
+            clean_models: bool,
+        ):
+            next_local_states = []
+            next_shared_states = []
+
+            for i, node in enumerate(train_data_nodes):
+                next_local_state, next_shared_state = node.update_states(
+                    algo.initialization(
+                        "None",
+                    ),
+                    round_idx=round_idx,
+                    authorized_ids=[node.organization_id],
+                    local_state=self._local_states[i] if self._local_states is not None else None,
+                )
+                # keep the states in a list: one/organization
+                next_local_states.append(next_local_state)
+                next_shared_states.append(next_shared_state)
+
+            self._local_states = next_local_states
+            self._shared_states = next_shared_states
+
         def perform_round(
             self,
             algo,
@@ -86,34 +113,19 @@ def rng_strategy():
             next_local_states = []
             next_shared_states = []
 
-            if round_idx == 0:
-                for i, node in enumerate(train_data_nodes):
-                    next_local_state, next_shared_state = node.update_states(
-                        algo.initialization(
-                            "None",
-                        ),
-                        round_idx=round_idx,
-                        authorized_ids=[node.organization_id],
-                        local_state=self._local_states[i] if self._local_states is not None else None,
-                    )
-                    # keep the states in a list: one/organization
-                    next_local_states.append(next_local_state)
-                    next_shared_states.append(next_shared_state)
+            for i, node in enumerate(train_data_nodes):
+                next_local_state, next_shared_state = node.update_states(
+                    algo.train(
+                        node.data_sample_keys,
+                    ),
+                    round_idx=round_idx,
+                    authorized_ids=[node.organization_id],
+                    local_state=self._local_states[i] if self._local_states is not None else None,
+                )
 
-            else:
-                for i, node in enumerate(train_data_nodes):
-                    next_local_state, next_shared_state = node.update_states(
-                        algo.train(
-                            node.data_sample_keys,
-                        ),
-                        round_idx=round_idx,
-                        authorized_ids=[node.organization_id],
-                        local_state=self._local_states[i] if self._local_states is not None else None,
-                    )
-
-                    # keep the states in a list: one/organization
-                    next_local_states.append(next_local_state)
-                    next_shared_states.append(next_shared_state)
+                # keep the states in a list: one/organization
+                next_local_states.append(next_local_state)
+                next_shared_states.append(next_shared_state)
 
             self._local_states = next_local_states
             self._shared_states = next_shared_states

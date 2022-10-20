@@ -69,32 +69,52 @@ class SingleOrganization(Strategy):
                 f" but {n_train_data_nodes} were passed."
             )
 
-        if round_idx == 0:
-            next_local_state, _ = train_data_nodes[0].update_states(
-                algo.initialization(
-                    "None",
-                    shared_state=None,
-                ),
-                local_state=self.local_state,
-                round_idx=round_idx,
-                authorized_ids=[train_data_nodes[0].organization_id],
-                clean_models=clean_models,
+        # define composite tuples (do not submit yet)
+        # for each composite tuple give description of Algo instead of a key for an algo
+        next_local_state, _ = train_data_nodes[0].update_states(
+            algo.train(  # type: ignore
+                train_data_nodes[0].data_sample_keys,
+                shared_state=None,
+                _algo_name=f"Training with {algo.__class__.__name__}",
+            ),
+            local_state=self.local_state,
+            round_idx=round_idx,
+            authorized_ids=[train_data_nodes[0].organization_id],
+            clean_models=clean_models,
+        )
+
+        # keep the states in a list: one/organization
+        self.local_state = next_local_state
+
+    def init_round(
+        self,
+        algo: Algo,
+        train_data_nodes: List[TrainDataNode],
+        round_idx: int,
+        clean_models: bool,
+        aggregation_node: Optional[AggregationNode] = None,
+    ):
+
+        if aggregation_node is not None:
+            logger.info("Aggregation nodes are ignored for decentralized strategies.")
+
+        n_train_data_nodes = len(train_data_nodes)
+        if n_train_data_nodes != 1:
+            raise ValueError(
+                "One organization strategy can only be used with one train_data_node"
+                f" but {n_train_data_nodes} were passed."
             )
 
-        else:
-            # define composite tuples (do not submit yet)
-            # for each composite tuple give description of Algo instead of a key for an algo
-            next_local_state, _ = train_data_nodes[0].update_states(
-                algo.train(  # type: ignore
-                    train_data_nodes[0].data_sample_keys,
-                    shared_state=None,
-                    _algo_name=f"Training with {algo.__class__.__name__}",
-                ),
-                local_state=self.local_state,
-                round_idx=round_idx,
-                authorized_ids=[train_data_nodes[0].organization_id],
-                clean_models=clean_models,
-            )
+        next_local_state, _ = train_data_nodes[0].update_states(
+            algo.initialization(
+                "None",
+                shared_state=None,
+            ),
+            local_state=self.local_state,
+            round_idx=round_idx,
+            authorized_ids=[train_data_nodes[0].organization_id],
+            clean_models=clean_models,
+        )
 
         # keep the states in a list: one/organization
         self.local_state = next_local_state
