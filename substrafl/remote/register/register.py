@@ -91,7 +91,7 @@ def _copy_local_packages(
                 dependency_path,
                 dest_path,
                 ignore=shutil.ignore_patterns(
-                    substra.sdk.backends.local.LOCAL_WORKER_DIR,
+                    "local-worker",
                     TMP_SUBSTRAFL_PREFIX + "*",
                 ),
             )
