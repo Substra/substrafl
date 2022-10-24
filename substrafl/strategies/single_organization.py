@@ -60,6 +60,9 @@ class SingleOrganization(Strategy):
                 space to fill quickly so should be set to True unless needed.
         """
 
+        if round_idx == 0:
+            return
+
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
 

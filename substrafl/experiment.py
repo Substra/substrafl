@@ -317,11 +317,8 @@ def execute_experiment(
 
     logger.info("Building the compute plan.")
 
-    # check if initialization round is compatible with the strategy
-    starting_roung = _check_initialization_compatibility(strategy)
-
     # create computation graph
-    for round_idx in range(starting_roung, num_rounds + 1):
+    for round_idx in range(0, num_rounds + 1):
         strategy.perform_round(
             algo=algo,
             train_data_nodes=train_data_nodes,

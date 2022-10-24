@@ -86,6 +86,9 @@ def rng_strategy():
             next_local_states = []
             next_shared_states = []
 
+            if round_idx == 0:
+                return
+
             for i, node in enumerate(train_data_nodes):
                 next_local_state, next_shared_state = node.update_states(
                     algo.train(
