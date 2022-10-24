@@ -84,11 +84,7 @@ def compute_plan(
 def test_one_organization_algo_performance(
     network,
     compute_plan,
-    torch_linear_model,
-    test_linear_data_samples,
-    mae,
     rtol,
-    seed,
 ):
     """End to end test for torch one organization algorithm. Checking that the perf are the same for :
     different combinations of n_updates and n_rounds

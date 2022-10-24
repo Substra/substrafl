@@ -25,6 +25,7 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
@@ -206,6 +207,17 @@ def _get_packages_versions() -> dict:
     }
 
 
+def _check_initialization_compatibility(strategy) -> int:
+    if strategy.name in [
+        StrategyName.FEDERATED_AVERAGING,
+        StrategyName.NEWTON_RAPHSON,
+        StrategyName.SCAFFOLD,
+    ]:
+        return 0
+    else:
+        return 1
+
+
 def execute_experiment(
     client: substra.Client,
     algo: Algo,
@@ -305,8 +317,11 @@ def execute_experiment(
 
     logger.info("Building the compute plan.")
 
+    # check if initialization round is compatible with the strategy
+    starting_roung = _check_initialization_compatibility(strategy)
+
     # create computation graph
-    for round_idx in range(0, num_rounds + 1):
+    for round_idx in range(starting_roung, num_rounds + 1):
         strategy.perform_round(
             algo=algo,
             train_data_nodes=train_data_nodes,
