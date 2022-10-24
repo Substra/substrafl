@@ -98,6 +98,7 @@ class NewtonRaphson(Strategy):
             raise ValueError("In Newton-Raphson strategy aggregation node cannot be None")
 
         if round_idx == 0:
+            # Initialization of the strategy by performing a local update on each train data node
             assert self._local_states is None
             assert self._shared_states is None
 
