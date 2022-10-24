@@ -172,31 +172,6 @@ class RemoteDataMethod:
             **self.method_parameters,
         )
 
-    def initialization(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
-        """Save the head and trunk model from the instance, and call the initialization
-        function from it (that does nothing by default).
-
-        Args:
-            inputs (TypedDict): Unused.
-            outputs (TypedDict): dictionary containing:
-                the output head model path to save the head model;
-                the output trunk model path to save the trunk model.
-            task_properties (TypedDict): Unused.
-        """
-
-        instance = self.instance
-
-        method_to_call = instance.initialization
-        next_shared_state = method_to_call(datasamples=None, shared_state=None, _skip=True, **self.method_parameters)
-
-        self.save_head_model(instance, outputs[OutputIdentifiers.local])
-        self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.shared])
-
     def load_trunk_model(self, path: str) -> Any:
         """Load the trunk model from disk
 

@@ -84,26 +84,6 @@ class TorchAlgo(Algo):
         """
         return self._model
 
-    @remote_data
-    def initialization(
-        self,
-        datasamples: Any,
-        shared_state: Any = None,
-    ) -> Any:
-        """This function does nothing and is useful to load the algorithm on the platform for initialization,
-        without applying any operation.
-        It is possible to overwrite this function in the algorithm and to call it within the perform round of
-        the associated strategy.
-
-        The signature of the function is constrained by the @remote_data decorator, used to load the object of
-        the algorithm on the platform.
-
-        Args:
-            datasamples (typing.Any): Input data
-            shared_state (typing.Any): Defaults to None.
-        """
-        pass
-
     @abc.abstractmethod
     def train(
         self,
