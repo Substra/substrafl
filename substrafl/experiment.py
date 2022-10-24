@@ -25,7 +25,6 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
@@ -205,17 +204,6 @@ def _get_packages_versions() -> dict:
         "substratools_version": substratools.__version__,
         "python_version": python_version(),
     }
-
-
-def _check_initialization_compatibility(strategy) -> int:
-    if strategy.name in [
-        StrategyName.FEDERATED_AVERAGING,
-        StrategyName.NEWTON_RAPHSON,
-        StrategyName.SCAFFOLD,
-    ]:
-        return 0
-    else:
-        return 1
 
 
 def execute_experiment(
