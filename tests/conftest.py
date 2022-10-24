@@ -336,16 +336,6 @@ def dummy_strategy_class():
         def name(self) -> StrategyName:
             return "dummy"
 
-        def init_round(
-            self,
-            algo: Algo,
-            train_data_nodes: List[TrainDataNode],
-            aggregation_node: Optional[AggregationNode],
-            round_idx: int,
-            clean_models: bool,
-        ):
-            pass
-
         def perform_round(
             self,
             algo: Algo,

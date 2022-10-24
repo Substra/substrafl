@@ -59,6 +59,10 @@ class SingleOrganization(Strategy):
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
         """
+
+        if round_idx == 0:
+            return
+
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
 
@@ -76,39 +80,6 @@ class SingleOrganization(Strategy):
                 train_data_nodes[0].data_sample_keys,
                 shared_state=None,
                 _algo_name=f"Training with {algo.__class__.__name__}",
-            ),
-            local_state=self.local_state,
-            round_idx=round_idx,
-            authorized_ids=[train_data_nodes[0].organization_id],
-            clean_models=clean_models,
-        )
-
-        # keep the states in a list: one/organization
-        self.local_state = next_local_state
-
-    def init_round(
-        self,
-        algo: Algo,
-        train_data_nodes: List[TrainDataNode],
-        round_idx: int,
-        clean_models: bool,
-        aggregation_node: Optional[AggregationNode] = None,
-    ):
-
-        if aggregation_node is not None:
-            logger.info("Aggregation nodes are ignored for decentralized strategies.")
-
-        n_train_data_nodes = len(train_data_nodes)
-        if n_train_data_nodes != 1:
-            raise ValueError(
-                "One organization strategy can only be used with one train_data_node"
-                f" but {n_train_data_nodes} were passed."
-            )
-
-        next_local_state, _ = train_data_nodes[0].update_states(
-            algo.initialization(
-                "None",
-                shared_state=None,
             ),
             local_state=self.local_state,
             round_idx=round_idx,
