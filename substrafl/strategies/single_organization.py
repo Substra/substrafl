@@ -97,6 +97,9 @@ class SingleOrganization(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
+        if round_idx == 0:
+            return
+
         if len(train_data_nodes) != 1:
             raise ValueError(
                 "Single organization strategy can only be used with one train_data_node but"
