@@ -4,6 +4,8 @@ from typing import Dict
 from typing import Type
 from typing import TypedDict
 
+import substratools as tools
+
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.serializers.pickle_serializer import PickleSerializer
@@ -73,13 +75,10 @@ class RemoteMethod:
         """
         self.shared_state_serializer.save(model, Path(path))
 
-    def tools_functions(self):
-        """List the functions that can be accessed and executed by substratools.
+    def register_substratools_functions(self):
+        """Register the functions that can be accessed and executed by substratools."""
 
-        Returns:
-            tuple: list of functions that can be accessed by substratools
-        """
-        return (self.aggregate,)
+        tools.register(self.aggregate)
 
 
 class RemoteDataMethod:
@@ -211,10 +210,8 @@ class RemoteDataMethod:
         """
         model.save(Path(path))
 
-    def tools_functions(self):
-        """List the functions that can be accessed and executed by substratools.
+    def register_substratools_functions(self):
+        """Register the functions that can be accessed and executed by substratools."""
 
-        Returns:
-            tuple: list of functions that can be accessed by substratools
-        """
-        return self.train, self.predict
+        tools.register(self.train)
+        tools.register(self.predict)

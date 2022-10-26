@@ -34,6 +34,7 @@ import substratools as tools
 import math
 import numpy as np
 
+@tools.register
 def score(inputs, outputs, task_properties):
     # Datasamples are passed as a tuple of two elements: x and y
     y_true = inputs['{InputIdentifiers.datasamples}'][1]
@@ -45,7 +46,7 @@ def _load_predictions(path):
 
 
 if __name__ == "__main__":
-    tools.execute(score)
+    tools.execute()
 """
 
 DEFAULT_OPENER_FILE = """

@@ -3,6 +3,7 @@ import substratools as tools
 from sklearn.metrics import roc_auc_score
 
 
+@tools.register
 def score(inputs, outputs, task_properties):
     """AUC"""
 
@@ -19,4 +20,4 @@ def _load_predictions(path):
 
 
 if __name__ == "__main__":
-    tools.execute(score)
+    tools.execute()
