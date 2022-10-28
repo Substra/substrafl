@@ -98,6 +98,7 @@ class SingleOrganization(Strategy):
         round_idx: int,
     ):
         if round_idx == 0:
+            logger.warning(f"The evaluation at round zero for {self.name} will be ignored as it is not supported yet.")
             return
 
         if len(train_data_nodes) != 1:
