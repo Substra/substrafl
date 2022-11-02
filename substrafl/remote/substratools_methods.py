@@ -128,7 +128,7 @@ class RemoteDataMethod:
         trunk_model = self.load_trunk_model(trunk_model_path) if trunk_model_path else None
         datasamples = inputs[InputIdentifiers.datasamples]
 
-        method_to_call = instance.train
+        method_to_call = getattr(self.instance, self.method_name)
         next_shared_state = method_to_call(
             datasamples=datasamples, shared_state=trunk_model, _skip=True, **self.method_parameters
         )
