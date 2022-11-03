@@ -353,11 +353,7 @@ def register_metric(
         )
     ]
 
-    class Metric:
-        def score(self, y_pred, y_true):
-            return metric(y_pred, y_true)
-
-    remote_struct = RemoteStruct(Metric, [], {}, RemoteDataMethod, "score")
+    remote_struct = RemoteStruct(metric, [], {}, RemoteDataMethod, "score", {}, algo_name=None)
 
     key = register_algo(
         client=client,
