@@ -320,3 +320,52 @@ def register_algo(
             )
         )
         return key
+
+
+def register_metric(
+    client: substra.Client,
+    metric: callable,
+    permissions: substra.sdk.schemas.Permissions,
+    dependencies: Dependency,
+) -> str:
+
+    inputs_metrics = [
+        substra.sdk.schemas.AlgoInputSpec(
+            identifier="datasamples",
+            kind=substra.sdk.schemas.AssetKind.data_sample,
+            optional=False,
+            multiple=True,
+        ),
+        substra.sdk.schemas.AlgoInputSpec(
+            identifier="opener",
+            kind=substra.sdk.schemas.AssetKind.data_manager,
+            optional=False,
+            multiple=False,
+        ),
+        substra.sdk.schemas.AlgoInputSpec(
+            identifier="predictions", kind=substra.sdk.schemas.AssetKind.model, optional=False, multiple=False
+        ),
+    ]
+
+    outputs_metrics = [
+        substra.sdk.schemas.AlgoOutputSpec(
+            identifier="performance", kind=substra.sdk.schemas.AssetKind.performance, multiple=False
+        )
+    ]
+
+    class Metric:
+        def score(self, y_pred, y_true):
+            return metric(y_pred, y_true)
+
+    remote_struct = RemoteStruct(Metric, [], {}, RemoteDataMethod, "score")
+
+    key = register_algo(
+        client=client,
+        remote_struct=remote_struct,
+        permissions=permissions,
+        inputs=inputs_metrics,
+        outputs=outputs_metrics,
+        dependencies=dependencies,
+    )
+
+    return key
