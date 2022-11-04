@@ -19,6 +19,8 @@ from packaging import version
 import substrafl
 from substrafl.dependency import Dependency
 from substrafl.exceptions import SubstraToolsDeprecationWarning
+from substrafl.nodes.node import InputIdentifiers
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
@@ -324,36 +326,49 @@ def register_algo(
 
 def register_metric(
     client: substra.Client,
-    metric: callable,
+    metric_cls: callable,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
 ) -> str:
 
     inputs_metrics = [
         substra.sdk.schemas.AlgoInputSpec(
-            identifier="datasamples",
+            identifier=InputIdentifiers.datasamples,
             kind=substra.sdk.schemas.AssetKind.data_sample,
             optional=False,
             multiple=True,
         ),
         substra.sdk.schemas.AlgoInputSpec(
-            identifier="opener",
+            identifier=InputIdentifiers.opener,
             kind=substra.sdk.schemas.AssetKind.data_manager,
             optional=False,
             multiple=False,
         ),
         substra.sdk.schemas.AlgoInputSpec(
-            identifier="predictions", kind=substra.sdk.schemas.AssetKind.model, optional=False, multiple=False
+            identifier=InputIdentifiers.predictions,
+            kind=substra.sdk.schemas.AssetKind.model,
+            optional=False,
+            multiple=False,
         ),
     ]
 
     outputs_metrics = [
         substra.sdk.schemas.AlgoOutputSpec(
-            identifier="performance", kind=substra.sdk.schemas.AssetKind.performance, multiple=False
+            identifier=OutputIdentifiers.performance,
+            kind=substra.sdk.schemas.AssetKind.performance,
+            multiple=False,
         )
     ]
 
-    remote_struct = RemoteStruct(metric, [], {}, RemoteDataMethod, "score", {}, algo_name=None)
+    remote_struct = RemoteStruct(
+        cls=metric_cls,
+        cls_args=[],
+        cls_kwargs={},
+        remote_cls=RemoteDataMethod,
+        method_name="score",
+        method_parameters={},
+        algo_name=None,
+    )
 
     key = register_algo(
         client=client,
