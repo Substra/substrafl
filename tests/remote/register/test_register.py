@@ -7,7 +7,7 @@ import substra
 
 from substrafl.dependency import Dependency
 from substrafl.remote.decorators import remote_data
-from substrafl.remote.register.register import register_algo
+from substrafl.remote.register import register
 
 
 class RemoteClass:
@@ -41,7 +41,7 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
 
     algo_deps = Dependency()
 
-    algo_key = register_algo(
+    algo_key = register.register_algo(
         client=client,
         remote_struct=remote_struct,
         permissions=default_permissions,
@@ -96,7 +96,7 @@ def test_register_algo_name(algo_name, result, default_permissions):
 
     algo_deps = Dependency()
 
-    _ = register_algo(
+    _ = register.register_algo(
         client=client,
         remote_struct=remote_struct,
         permissions=default_permissions,

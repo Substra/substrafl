@@ -218,7 +218,7 @@ def compute_plan(
     numpy_datasets,
     perceptron,
     aggregation_node,
-    mae,
+    mae_metric,
     session_dir,
     numpy_torch_dataset,
     seed,
@@ -261,7 +261,7 @@ def compute_plan(
             network.msp_ids[0],
             numpy_datasets[0],
             [test_sample_nodes[0]],
-            metric_keys=[mae.key],
+            metric_keys=[mae_metric],
         )
     ]
 
@@ -346,7 +346,7 @@ def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, ma
 
     y_pred = model(torch.from_numpy(nr_test_data[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = nr_test_data[0][:, -1:].reshape(-1)
-    performance = mae.compute(y_pred, y_true)
+    performance = mae(y_pred, y_true)
 
     # This test fails with default approx parameters
     # TODO: investigate

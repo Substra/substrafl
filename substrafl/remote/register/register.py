@@ -324,9 +324,9 @@ def register_algo(
         return key
 
 
-def register_metric(
+def add_metric(
     client: substra.Client,
-    metric_cls: callable,
+    score_function: callable,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
 ) -> str:
@@ -360,8 +360,12 @@ def register_metric(
         )
     ]
 
+    class Metric:
+        def score(self, datasamples, prediction_path):
+            return score_function(datasamples, prediction_path)
+
     remote_struct = RemoteStruct(
-        cls=metric_cls,
+        cls=Metric,
         cls_args=[],
         cls_kwargs={},
         remote_cls=RemoteDataMethod,

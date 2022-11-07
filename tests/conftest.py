@@ -11,10 +11,12 @@ import torch
 from substra.sdk.schemas import Permissions
 
 from substrafl.algorithms.algo import Algo
+from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.decorators import remote_data
+from substrafl.remote.register import register
 from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
@@ -95,7 +97,7 @@ def default_permissions() -> Permissions:
 
 
 @pytest.fixture(scope="session")
-def mae(network, default_permissions, session_dir):
+def old_mae(network, default_permissions, session_dir):
     class CustomMetric:
         def __init__(self, python_formula, name) -> None:
             self.name = name
@@ -119,6 +121,30 @@ def mae(network, default_permissions, session_dir):
     mae.add_to_substra(permissions=default_permissions, client=network.clients[0], tmp_folder=session_dir)
 
     return mae
+
+
+@pytest.fixture(scope="session")
+def mae():
+    return lambda y_pred, y_true: abs(y_pred - y_true).mean()
+
+
+@pytest.fixture(scope="session")
+def mae_metric(network, default_permissions, mae):
+
+    metric_deps = Dependency(pypi_dependencies=["numpy"])
+
+    def mae_score(datasamples, prediction_path):
+
+        y_true = datasamples[1]
+        y_pred = np.load(prediction_path)
+
+        return mae(y_pred, y_true)
+
+    metric_key = register.add_metric(
+        client=network.clients[0], score_function=mae_score, permissions=default_permissions, dependencies=metric_deps
+    )
+
+    return metric_key
 
 
 @pytest.fixture(scope="session")
@@ -241,7 +267,7 @@ def test_linear_data_samples():
 def test_linear_nodes(
     network,
     numpy_datasets,
-    mae,
+    mae_metric,
     test_linear_data_samples,
     session_dir,
 ):
@@ -267,7 +293,7 @@ def test_linear_nodes(
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae.key])]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae_metric])]
 
     return test_data_nodes
 

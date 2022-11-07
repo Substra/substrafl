@@ -150,6 +150,6 @@ def test_download_load_algo(network, compute_plan, session_dir, test_linear_data
 
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1]
-    performance = mae.compute(y_pred, y_true)
+    performance = mae(y_pred, y_true)
 
     assert performance == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
