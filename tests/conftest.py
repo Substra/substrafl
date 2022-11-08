@@ -15,8 +15,8 @@ from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.remote import register
 from substrafl.remote.decorators import remote_data
-from substrafl.remote.register import register
 from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
