@@ -1,6 +1,3 @@
-# Alphabetically ordered
-
-
 class BatchSizeNotFoundError(Exception):
     """No batch size found."""
 
@@ -120,3 +117,12 @@ class LoadAlgoLocalDependencyError(Exception):
 
 class UnsupportedPytorchVersionError(Exception):
     """Unsupported Pytorch version"""
+
+
+class ScoreFunctionSignatureError(Exception):
+    """The score_function() function on the given torch Dataset must have datasamples and
+    predictions_path as parameters."""
+
+
+class ScoreFunctionTypeError(Exception):
+    """The score_function() must be of type function."""

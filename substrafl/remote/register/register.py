@@ -1,6 +1,7 @@
 """
 Create the Substra algo assets and register them to the platform.
 """
+import inspect
 import logging
 import os
 import shutil
@@ -17,8 +18,8 @@ import substratools
 from packaging import version
 
 import substrafl
+from substrafl import exceptions
 from substrafl.dependency import Dependency
-from substrafl.exceptions import SubstraToolsDeprecationWarning
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels
@@ -146,7 +147,7 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
             warnings.warn(
                 f"Your environment uses substra-tools={substratools_image_version}. Version \
                 {MINIMAL_DOCKER_SUBSTRATOOLS_VERSION} will be used on Docker.",
-                SubstraToolsDeprecationWarning,
+                exceptions.SubstraToolsDeprecationWarning,
             )
         substratools_image_version = MINIMAL_DOCKER_SUBSTRATOOLS_VERSION
     substratools_image = _DEFAULT_SUBSTRATOOLS_IMAGE.format(
@@ -324,15 +325,34 @@ def register_algo(
         return key
 
 
+def _check_score_function_signature(score_function):
+
+    if not inspect.isfunction(score_function):
+        raise exceptions.ScoreFunctionTypeError("The score_function() must be of type function.")
+
+    signature = inspect.signature(score_function)
+    parameters = signature.parameters
+
+    if "datasamples" not in parameters:
+        raise exceptions.ScoreFunctionSignatureError(
+            "The score_function() function of the torch Dataset must contain datasamples as parameter."
+        )
+    elif "prediction_path" not in parameters:
+        raise exceptions.ScoreFunctionSignatureError(
+            "The score_function() function of the torch Dataset must contain prediction_path as parameter."
+        )
+
+
 def add_metric(
     client: substra.Client,
-    score_function: callable,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
+    score_function: callable,
+    score_function_parameters: typing.Optional[typing.Dict],
 ) -> str:
     class Metric:
-        def score(self, datasamples, prediction_path):
-            return score_function(datasamples, prediction_path)
+        def score(self, datasamples, prediction_path, **function_parameters):
+            return score_function(datasample=datasamples, prediction_path=prediction_path, **function_parameters)
 
     inputs_metrics = [
         substra.sdk.schemas.AlgoInputSpec(
@@ -369,7 +389,7 @@ def add_metric(
         cls_kwargs={},
         remote_cls=RemoteDataMethod,
         method_name="score",
-        method_parameters={},
+        method_parameters=score_function_parameters,
         algo_name=None,
     )
 
