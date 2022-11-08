@@ -330,6 +330,9 @@ def add_metric(
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
 ) -> str:
+    class Metric:
+        def score(self, datasamples, prediction_path):
+            return score_function(datasamples, prediction_path)
 
     inputs_metrics = [
         substra.sdk.schemas.AlgoInputSpec(
@@ -359,10 +362,6 @@ def add_metric(
             multiple=False,
         )
     ]
-
-    class Metric:
-        def score(self, datasamples, prediction_path):
-            return score_function(datasamples, prediction_path)
 
     remote_struct = RemoteStruct(
         cls=Metric,
