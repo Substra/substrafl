@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- doc on the model loading page (#40)
 - The round 0 is now exposed.
   Possibility to evaluate centralized strategies before any training (FedAvg, NR, Scaffold).
   The round 0 is skipped for single org strategy and cannot be evaluated before training (#46)
