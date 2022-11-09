@@ -70,7 +70,7 @@ class FedAvg(Strategy):
         clean_models: bool,
     ):
         """One round of the Federated Averaging strategy consists in:
-            - if ``round_idx==1``: initialize the strategy by performing a local update
+            - if ``round_idx==0``: initialize the strategy by performing a local update
                 (train on n mini-batches) of the models on each train data node
             - aggregate the model shared_states
             - set the model weights to the aggregated weights on each train data nodes
@@ -82,7 +82,7 @@ class FedAvg(Strategy):
                 local updates.
             aggregation_node (AggregationNode): Node without data, used to perform
                 operations on the shared states of the models
-            round_idx (int): Round number, it starts at 1.
+            round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.

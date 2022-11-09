@@ -77,7 +77,7 @@ class NewtonRaphson(Strategy):
     ):
         """One round of the Newton-Raphson strategy consists in:
 
-            - if ``round_ids==1``: initialize the strategy by performing a local update
+            - if ``round_ids==0``: initialize the strategy by performing a local update
               of the models on each train data nodes
             - aggregate the model shared_states
             - set the model weights to the aggregated weights on each train data nodes
@@ -89,7 +89,7 @@ class NewtonRaphson(Strategy):
                 local updates
             aggregation_node (AggregationNode): node without data, used to perform operations
                 on the shared states of the models
-            round_idx (int): Round number, it starts at 1.
+            round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.

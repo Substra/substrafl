@@ -54,7 +54,7 @@ class SingleOrganization(Strategy):
             train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local
                 updates, there should be exactly one item in the list.
             aggregation_node (AggregationNode): Should be None otherwise it will be ignored
-            round_idx (int): Round number, it starts at 1.
+            round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
