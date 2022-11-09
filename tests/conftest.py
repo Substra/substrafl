@@ -315,7 +315,18 @@ def rtol():
     Returns:
         float: rtol
     """
-    return 10e-6
+    return 1e-5
+
+
+@pytest.fixture(scope="session")
+def seed():
+    """
+    Seed to apply.
+
+    Returns:
+        int: seed
+    """
+    return 42
 
 
 @pytest.fixture

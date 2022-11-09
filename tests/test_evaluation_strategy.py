@@ -20,13 +20,13 @@ def test_rounds(rounds):
     evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=rounds)
     evaluation_strategy.num_rounds = num_rounds
 
-    for i in range(num_rounds):
+    for i in range(num_rounds + 1):
         response = next(evaluation_strategy)
         if isinstance(rounds, int):
-            true_rounds = range(1, num_rounds, rounds)
+            true_rounds = range(0, num_rounds, rounds)
         else:
             true_rounds = rounds
-        if i + 1 in true_rounds or (isinstance(rounds, int) and i + 1 == num_rounds):
+        if i in true_rounds or (isinstance(rounds, int) and i == num_rounds):
             assert response
         else:
             assert not response
@@ -38,12 +38,10 @@ def test_rounds(rounds):
 @pytest.mark.parametrize(
     "rounds, e",
     [
-        [0, ValueError],
         [-2, ValueError],
         [[], ValueError],
         [4.5, TypeError],
         [[4.5], TypeError],
-        [[0, 2], ValueError],
         [[4, -1, 5], ValueError],
     ],
 )
@@ -107,7 +105,10 @@ def test_error_on_wrong_node_instance(test_data_nodes, e):
 
 @pytest.mark.parametrize(
     "rounds, num_rounds, result",
-    [[[1, 2], 5, [True, True, False, False, False, StopIteration]], [2, 4, [True, False, True, True, StopIteration]]],
+    [
+        [[1, 2], 5, [False, True, True, False, False, False, StopIteration]],
+        [2, 4, [True, False, True, False, True, StopIteration]],
+    ],
 )
 def test_docstring_examples(rounds, num_rounds, result):
     """tests that the examples given in the docstring of EvaluationStrategy indeed give the correct result"""

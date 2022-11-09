@@ -94,7 +94,7 @@ class EvaluationStrategy:
                 raise ValueError(f"rounds cannot be empty, rounds={rounds} found")
             elif not all(isinstance(r, int) for r in rounds):
                 raise TypeError(f"rounds must be of type list of ints or int, {type(rounds)} found")
-            elif not all(r > 0 for r in rounds):
+            elif not all(r >= 0 for r in rounds):
                 raise ValueError(f"rounds can be only positive, rounds={rounds} found")
 
     @property
@@ -162,12 +162,12 @@ class EvaluationStrategy:
         test_it = False
         if isinstance(self._rounds, int):
             # checks if _current_round is divisible by rounds or it's a last round
-            test_it = (self._current_round % self._rounds == 0) or (self._current_round + 1 == self.num_rounds)
+            test_it = (self._current_round % self._rounds == 0) or (self._current_round == self.num_rounds)
         else:
             # rounds is a list of round indices
-            test_it = self._current_round + 1 in self._rounds
+            test_it = self._current_round in self._rounds
 
-        if self.num_rounds and self._current_round + 1 > self.num_rounds:
+        if self.num_rounds and self._current_round > self.num_rounds:
             # raise an error if number of call to next() exceeded num_rounds
             raise StopIteration(f"Call to the iterator exceeded num_rounds set as {self.num_rounds}")
 

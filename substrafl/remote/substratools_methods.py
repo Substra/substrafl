@@ -115,6 +115,7 @@ class RemoteDataMethod:
             outputs (typing.TypedDict): dictionary containing:
                 the output head model path to save the head model;
                 the output trunk model path to save the trunk model.
+            task_properties (TypedDict): Unused.
         """
         # head_model should be None only at initialization
         head_model_path = inputs.get(InputIdentifiers.local)
@@ -151,6 +152,7 @@ class RemoteDataMethod:
                 the trunk model loaded with `CompositeAlgo.load_trunk_model()`;
             outputs (typing.TypedDict): dictionary containing:
                 the output predictions path to save the predictions.
+            task_properties (TypedDict): Unused.
         """
         head_model_path = inputs.get(InputIdentifiers.local)
         assert head_model_path is not None, "head model is None. Possibly you did not train() before running predict()"

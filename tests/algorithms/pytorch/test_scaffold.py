@@ -15,7 +15,6 @@ from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
-from substrafl.nodes.node import OutputIdentifiers
 from substrafl.strategies import Scaffold
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -28,9 +27,8 @@ current_folder = Path(__file__).parent
 EXPECTED_PERFORMANCE = 0.0127768706
 
 
-def _torch_algo(torch_linear_model, numpy_torch_dataset, lr=0.1, use_scheduler=False):
+def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_scheduler=False):
     num_updates = 100
-    seed = 42
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
     nig = NpIndexGenerator(
@@ -58,7 +56,7 @@ def _torch_algo(torch_linear_model, numpy_torch_dataset, lr=0.1, use_scheduler=F
 
 
 @pytest.fixture(scope="module")
-def torch_algo(torch_linear_model, numpy_torch_dataset):
+def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
     """This closure allows to parametrize the torch algo fixture"""
 
     def inner_torch_algo(lr=0.1, use_scheduler=False):
@@ -67,6 +65,7 @@ def torch_algo(torch_linear_model, numpy_torch_dataset):
             numpy_torch_dataset=numpy_torch_dataset,
             lr=lr,
             use_scheduler=use_scheduler,
+            seed=seed,
         )()
 
     return inner_torch_algo
@@ -75,7 +74,7 @@ def torch_algo(torch_linear_model, numpy_torch_dataset):
 @pytest.fixture(scope="module")
 def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
 
-    num_rounds = 3
+    NUM_ROUNDS = 3
 
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
@@ -84,7 +83,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
 
     strategy = Scaffold()
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_linear_nodes, rounds=[num_rounds]  # test only at the last round
+        test_data_nodes=test_linear_nodes, rounds=[0, NUM_ROUNDS]  # test the initialization and the last round
     )
 
     compute_plan = execute_experiment(
@@ -94,7 +93,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
-        num_rounds=num_rounds,
+        num_rounds=NUM_ROUNDS,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
@@ -114,7 +113,7 @@ def test_pytorch_scaffold_algo_weights(
     torch_algo,
     session_dir,
 ):
-    """Check the weight initialisation, aggregation and set weights.
+    """Check the weight initialization, aggregation and set weights.
     The aggregation itself is tested at the strategy level, here we test
     the pytorch layer.
     """
@@ -156,19 +155,31 @@ def test_pytorch_scaffold_algo_weights(
 def test_pytorch_scaffold_algo_performance(
     network,
     compute_plan,
+    torch_linear_model,
+    test_linear_data_samples,
+    mae,
     rtol,
+    seed,
 ):
-    """End to end test for torch fed avg algorithm."""
+    """End to end test for torch scaffold algorithm."""
 
-    tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key]})
-    testtuple = [t for t in tasks if t.outputs.get(OutputIdentifiers.performance) is not None][0]
-    assert testtuple.outputs[OutputIdentifiers.performance].value == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
+    perfs = network.clients[0].get_performances(compute_plan.key)
+    assert pytest.approx(EXPECTED_PERFORMANCE, rel=rtol) == perfs.performance[1]
+
+    torch.manual_seed(seed)
+
+    model = torch_linear_model()
+    y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
+    y_true = test_linear_data_samples[0][:, -1]
+
+    performance_at_init = mae.compute(y_pred, y_true)
+    assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
 @pytest.mark.parametrize("use_scheduler", [True, False])
-def test_update_current_lr(rtol, torch_algo, use_scheduler):
+def test_update_current_lr(rtol, torch_algo, use_scheduler, seed):
     # test the update_current_lr() fct with optimizer only and optimizer+scheduler
-    torch.manual_seed(42)
+    torch.manual_seed(seed)
     initial_lr = 0.5
     my_algo = torch_algo(lr=initial_lr, use_scheduler=use_scheduler)
 

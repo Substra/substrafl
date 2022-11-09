@@ -70,7 +70,7 @@ class FedAvg(Strategy):
         clean_models: bool,
     ):
         """One round of the Federated Averaging strategy consists in:
-            - if ``round_idx==1``: initialize the strategy by performing a local update
+            - if ``round_idx==0``: initialize the strategy by performing a local update
                 (train on n mini-batches) of the models on each train data node
             - aggregate the model shared_states
             - set the model weights to the aggregated weights on each train data nodes
@@ -82,7 +82,7 @@ class FedAvg(Strategy):
                 local updates.
             aggregation_node (AggregationNode): Node without data, used to perform
                 operations on the shared states of the models
-            round_idx (int): Round number, it starts at 1.
+            round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
@@ -90,7 +90,7 @@ class FedAvg(Strategy):
         if aggregation_node is None:
             raise ValueError("In FedAvg strategy aggregation node cannot be None")
 
-        if round_idx == 1:
+        if round_idx == 0:
             # Initialization of the strategy by performing a local update on each train data organization
             assert self._local_states is None
             assert self._shared_states is None
@@ -98,26 +98,27 @@ class FedAvg(Strategy):
                 algo=algo,
                 train_data_nodes=train_data_nodes,
                 current_aggregation=None,
-                round_idx=0,
+                round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
                 clean_models=clean_models,
             )
 
-        current_aggregation = aggregation_node.update_states(
-            self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
-            round_idx=round_idx,
-            authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
-            clean_models=clean_models,
-        )
+        else:
+            current_aggregation = aggregation_node.update_states(
+                self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
+                round_idx=round_idx,
+                authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
+                clean_models=clean_models,
+            )
 
-        self._perform_local_updates(
-            algo=algo,
-            train_data_nodes=train_data_nodes,
-            current_aggregation=current_aggregation,
-            round_idx=round_idx,
-            aggregation_id=aggregation_node.organization_id,
-            clean_models=clean_models,
-        )
+            self._perform_local_updates(
+                algo=algo,
+                train_data_nodes=train_data_nodes,
+                current_aggregation=current_aggregation,
+                round_idx=round_idx,
+                aggregation_id=aggregation_node.organization_id,
+                clean_models=clean_models,
+            )
 
     def predict(
         self,

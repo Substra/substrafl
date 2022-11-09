@@ -54,11 +54,15 @@ class SingleOrganization(Strategy):
             train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local
                 updates, there should be exactly one item in the list.
             aggregation_node (AggregationNode): Should be None otherwise it will be ignored
-            round_idx (int): Round number, it starts at 1.
+            round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
         """
+
+        if round_idx == 0:
+            return
+
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
 
@@ -93,6 +97,10 @@ class SingleOrganization(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
+        if round_idx == 0:
+            logger.warning(f"The evaluation at round zero for {self.name} will be ignored as it is not supported yet.")
+            return
+
         if len(train_data_nodes) != 1:
             raise ValueError(
                 "Single organization strategy can only be used with one train_data_node but"
