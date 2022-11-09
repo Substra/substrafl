@@ -325,7 +325,17 @@ def register_algo(
         return key
 
 
-def _check_score_function_signature(score_function):
+def _check_score_function(score_function: typing.Callable):
+    """Function to check the type and the signature of a given score function.
+
+    Args:
+        score_function (typing.Callable): function to check.
+
+    Raises:
+        exceptions.ScoreFunctionTypeError: score_function must be of type "function"
+        exceptions.ScoreFunctionSignatureError: score_function must ONLY contains
+            datasamples and prediction_path as parameters
+    """
 
     if not inspect.isfunction(score_function):
         raise exceptions.ScoreFunctionTypeError("The score_function() must be of type function.")
@@ -335,11 +345,16 @@ def _check_score_function_signature(score_function):
 
     if "datasamples" not in parameters:
         raise exceptions.ScoreFunctionSignatureError(
-            "The score_function() function of the torch Dataset must contain datasamples as parameter."
+            "The score_function() function must contain datasamples as parameter."
         )
     elif "prediction_path" not in parameters:
         raise exceptions.ScoreFunctionSignatureError(
-            "The score_function() function of the torch Dataset must contain prediction_path as parameter."
+            "The score_function() function must contain prediction_path as parameter."
+        )
+    elif len(parameters) != 2:
+        raise exceptions.ScoreFunctionSignatureError(
+            """The score_function() function must ONLY contains datasamples and prediction_path as
+            parameters."""
         )
 
 
@@ -347,8 +362,26 @@ def add_metric(
     client: substra.Client,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
-    score_function: callable,
+    score_function: typing.Callable,
 ) -> str:
+    """This function add a metric to the Substra platform using the given score function as the
+    algorithm to execute.
+    The score function must be of type function, and its signature must ONLY contains
+    datasamples and prediction_path as parameters. Errors will be raised otherwise.
+
+    Args:
+        client (substra.Client): The substra client.
+        permissions (substra.sdk.schemas.Permissions): Permissions for the score function.
+        dependencies (Dependency): Score function dependencies.
+        score_function (typing.Callable): function to compute the score from the datasamples and the predictions.
+            This function is registered in substra as a metric.
+
+    Returns:
+        str: The metric key of the metric created from the score function.
+    """
+
+    _check_score_function(score_function=score_function)
+
     class Metric:
         def score(self, datasamples, prediction_path):
             return score_function(datasamples=datasamples, prediction_path=prediction_path)
