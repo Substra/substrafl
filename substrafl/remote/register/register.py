@@ -348,11 +348,10 @@ def add_metric(
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
     score_function: callable,
-    score_function_parameters: typing.Optional[typing.Dict],
 ) -> str:
     class Metric:
-        def score(self, datasamples, prediction_path, **function_parameters):
-            return score_function(datasample=datasamples, prediction_path=prediction_path, **function_parameters)
+        def score(self, datasamples, prediction_path):
+            return score_function(datasamples=datasamples, prediction_path=prediction_path)
 
     inputs_metrics = [
         substra.sdk.schemas.AlgoInputSpec(
@@ -389,8 +388,8 @@ def add_metric(
         cls_kwargs={},
         remote_cls=RemoteDataMethod,
         method_name="score",
-        method_parameters=score_function_parameters,
-        algo_name=None,
+        method_parameters={},
+        algo_name="metric_" + score_function.__name__,
     )
 
     key = register_algo(
