@@ -120,7 +120,7 @@ class UnsupportedPytorchVersionError(Exception):
 
 
 class ScoreFunctionSignatureError(Exception):
-    """The score_function() function on the given torch Dataset must have datasamples and
+    """The score_function() function on the given torch Dataset must ONLY have datasamples and
     predictions_path as parameters."""
 
 

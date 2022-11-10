@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The metric registration is simplified. The user can now directly write a score function within
   its script, and directly register it by specifying the right dependencies and permissions.
-  The score function must have `(datasamples, prediction_path)` as signature. (#47)
+  The score function must have `(datasamples, predictions_path)` as signature. (#47)
 
   Example of new metric registration:
 
@@ -19,9 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   metric_deps = Dependency(pypi_dependencies=["numpy==1.23.1"])
   permissions_metric = Permissions(public=True)
 
-  def MSE(datasamples, prediction_path):
+  def MSE(datasamples, predictions_path):
       y_true = datasamples["target"]
-      y_pred = np.load(prediction_path)
+      y_pred = np.load(predictions_path)
       return np.mean((y_true - y_pred)**2)
 
 

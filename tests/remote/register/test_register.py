@@ -114,10 +114,10 @@ def test_register_algo_name(algo_name, result, default_permissions):
     [
         (lambda wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
         (lambda datasamples: 1, exceptions.ScoreFunctionSignatureError),
-        (lambda prediction_path: 1, exceptions.ScoreFunctionSignatureError),
-        (lambda datasamples, prediction_path, wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
+        (lambda predictions_path: 1, exceptions.ScoreFunctionSignatureError),
+        (lambda datasamples, predictions_path, wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
         ("not a function", exceptions.ScoreFunctionTypeError),
-        (lambda datasamples, prediction_path: 1, None),
+        (lambda datasamples, predictions_path: 1, None),
     ],
 )
 def test_add_metric_wrong_score_function(score_function, error, default_permissions):

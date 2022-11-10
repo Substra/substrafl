@@ -334,7 +334,7 @@ def _check_score_function(score_function: typing.Callable):
     Raises:
         exceptions.ScoreFunctionTypeError: score_function must be of type "function"
         exceptions.ScoreFunctionSignatureError: score_function must ONLY contains
-            datasamples and prediction_path as parameters
+            datasamples and predictions_path as parameters
     """
 
     if not inspect.isfunction(score_function):
@@ -347,13 +347,13 @@ def _check_score_function(score_function: typing.Callable):
         raise exceptions.ScoreFunctionSignatureError(
             "The score_function() function must contain datasamples as parameter."
         )
-    elif "prediction_path" not in parameters:
+    elif "predictions_path" not in parameters:
         raise exceptions.ScoreFunctionSignatureError(
-            "The score_function() function must contain prediction_path as parameter."
+            "The score_function() function must contain predictions_path as parameter."
         )
     elif len(parameters) != 2:
         raise exceptions.ScoreFunctionSignatureError(
-            """The score_function() function must ONLY contains datasamples and prediction_path as
+            """The score_function() function must ONLY contains datasamples and predictions_path as
             parameters."""
         )
 
@@ -367,7 +367,7 @@ def add_metric(
     """This function add a metric to the Substra platform using the given score function as the
     algorithm to execute.
     The score function must be of type function, and its signature must ONLY contains
-    `datasamples` and `prediction_path` as parameters. Errors will be raised otherwise.
+    `datasamples` and `predictions_path` as parameters. Errors will be raised otherwise.
 
     Args:
         client (substra.Client): The substra client.
@@ -383,8 +383,8 @@ def add_metric(
     _check_score_function(score_function=score_function)
 
     class Metric:
-        def score(self, datasamples, prediction_path):
-            return score_function(datasamples=datasamples, prediction_path=prediction_path)
+        def score(self, datasamples, predictions_path):
+            return score_function(datasamples=datasamples, predictions_path=predictions_path)
 
     inputs_metrics = [
         substra.sdk.schemas.AlgoInputSpec(

@@ -106,10 +106,10 @@ def mae_metric(network, default_permissions, mae):
 
     metric_deps = Dependency(pypi_dependencies=["numpy"], editable_mode=True)
 
-    def mae_score(datasamples, prediction_path):
+    def mae_score(datasamples, predictions_path):
 
         y_true = datasamples[1]
-        y_pred = np.load(prediction_path)
+        y_pred = np.load(predictions_path)
 
         return mae(y_pred, y_true)
 

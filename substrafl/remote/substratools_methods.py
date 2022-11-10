@@ -183,7 +183,7 @@ class RemoteDataMethod:
         predictions_path = inputs[InputIdentifiers.predictions]
 
         method_to_call = self.instance.score
-        perf = method_to_call(datasamples, predictions_path)
+        perf = method_to_call(datasamples=datasamples, predictions_path=predictions_path)
 
         tools.save_performance(perf, outputs[OutputIdentifiers.performance])
 
