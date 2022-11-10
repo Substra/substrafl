@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The metric registration is simplified. The user can now directly write a score function within
+  its script, and directly register it by specifying the right dependencies and permission.
+  The score function must have `(datasamples, prediction_path)` as signature. (#47)
+
+  Example of new metric registration:
+
+  ```py
+  metric_deps = Dependency(pypi_dependencies=["numpy==1.23.1"])
+  permissions_metric = Permissions(public=True)
+
+  def MSE(datasamples, prediction_path):
+      y_true = datasamples["target"]
+      y_pred = np.load(prediction_path)
+      return np.mean((y_true - y_pred)**2)
+
+
+  metric_key = add_metric(
+      client=substra_client,
+      permissions=permissions_metric,
+      dependencies=metric_deps,
+      score_function=MSE,
+  )
+  ```
+
 - doc on the model loading page (#40)
 - The round 0 is now exposed.
   Possibility to evaluate centralized strategies before any training (FedAvg, NR, Scaffold).
