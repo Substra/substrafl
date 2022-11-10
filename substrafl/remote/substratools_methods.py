@@ -179,13 +179,13 @@ class RemoteDataMethod:
         task_properties: TypedDict,
     ) -> None:
 
-        datasamples = inputs["datasamples"]
-        predictions_path = inputs["predictions"]
+        datasamples = inputs[InputIdentifiers.datasamples]
+        predictions_path = inputs[InputIdentifiers.predictions]
 
         method_to_call = self.instance.score
         perf = method_to_call(datasamples, predictions_path)
 
-        tools.save_performance(perf, outputs["performance"])
+        tools.save_performance(perf, outputs[OutputIdentifiers.performance])
 
     def load_trunk_model(self, path: str) -> Any:
         """Load the trunk model from disk
