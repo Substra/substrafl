@@ -22,6 +22,14 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Free disk space
+        run: |
+          # Based on https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
         with:
