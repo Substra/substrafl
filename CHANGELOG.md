@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Free disk space in main github action to run the CI (#48)
 - local dependencies are installed in one `pip` command to optimize the installation and avoid incompatibilities error (#39)
 - Fix error when installing current package as local dependency (#41)
 
