@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 import substra
 
+from substrafl import exceptions
 from substrafl.dependency import Dependency
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.register import register
@@ -106,3 +107,36 @@ def test_register_algo_name(algo_name, result, default_permissions):
     )
 
     assert substra.sdk.schemas.AlgoSpec.call_args[1]["name"] == result
+
+
+@pytest.mark.parametrize(
+    "score_function, error",
+    [
+        (lambda wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
+        (lambda datasamples: 1, exceptions.ScoreFunctionSignatureError),
+        (lambda prediction_path: 1, exceptions.ScoreFunctionSignatureError),
+        (lambda datasamples, prediction_path, wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
+        ("not a function", exceptions.ScoreFunctionTypeError),
+        (lambda datasamples, prediction_path: 1, None),
+    ],
+)
+def test_add_metric_wrong_score_function(score_function, error, default_permissions):
+    client = DummyClient()
+
+    metric_deps = Dependency()
+
+    if error is not None:
+        with pytest.raises(error):
+            register.add_metric(
+                client,
+                default_permissions,
+                metric_deps,
+                score_function,
+            )
+    else:
+        register.add_metric(
+            client,
+            default_permissions,
+            metric_deps,
+            score_function,
+        )
