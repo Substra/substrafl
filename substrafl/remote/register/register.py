@@ -367,7 +367,7 @@ def add_metric(
     """This function add a metric to the Substra platform using the given score function as the
     algorithm to execute.
     The score function must be of type function, and its signature must ONLY contains
-    datasamples and prediction_path as parameters. Errors will be raised otherwise.
+    `datasamples` and `prediction_path` as parameters. Errors will be raised otherwise.
 
     Args:
         client (substra.Client): The substra client.
