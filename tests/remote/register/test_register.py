@@ -110,17 +110,17 @@ def test_register_algo_name(algo_name, result, default_permissions):
 
 
 @pytest.mark.parametrize(
-    "score_function, error",
+    "metric_function, error",
     [
-        (lambda wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
-        (lambda datasamples: 1, exceptions.ScoreFunctionSignatureError),
-        (lambda predictions_path: 1, exceptions.ScoreFunctionSignatureError),
-        (lambda datasamples, predictions_path, wrong_arg: 1, exceptions.ScoreFunctionSignatureError),
-        ("not a function", exceptions.ScoreFunctionTypeError),
+        (lambda wrong_arg: 1, exceptions.MetricFunctionSignatureError),
+        (lambda datasamples: 1, exceptions.MetricFunctionSignatureError),
+        (lambda predictions_path: 1, exceptions.MetricFunctionSignatureError),
+        (lambda datasamples, predictions_path, wrong_arg: 1, exceptions.MetricFunctionSignatureError),
+        ("not a function", exceptions.MetricFunctionTypeError),
         (lambda datasamples, predictions_path: 1, None),
     ],
 )
-def test_add_metric_wrong_score_function(score_function, error, default_permissions):
+def test_add_metric_wrong_metric_function(metric_function, error, default_permissions):
     client = DummyClient()
 
     metric_deps = Dependency()
@@ -131,12 +131,12 @@ def test_add_metric_wrong_score_function(score_function, error, default_permissi
                 client,
                 default_permissions,
                 metric_deps,
-                score_function,
+                metric_function,
             )
     else:
         register.add_metric(
             client,
             default_permissions,
             metric_deps,
-            score_function,
+            metric_function,
         )

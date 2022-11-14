@@ -119,10 +119,10 @@ class UnsupportedPytorchVersionError(Exception):
     """Unsupported Pytorch version"""
 
 
-class ScoreFunctionSignatureError(Exception):
-    """The score_function() function on the given torch Dataset must ONLY have datasamples and
+class MetricFunctionSignatureError(Exception):
+    """The metric_function() function on the given torch Dataset must ONLY have datasamples and
     predictions_path as parameters."""
 
 
-class ScoreFunctionTypeError(Exception):
-    """The score_function() must be of type function."""
+class MetricFunctionTypeError(Exception):
+    """The metric_function() must be of type function."""

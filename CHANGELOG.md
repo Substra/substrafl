@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       client=substra_client,
       permissions=permissions_metric,
       dependencies=metric_deps,
-      score_function=MSE,
+      metric_function=MSE,
   )
   ```
 

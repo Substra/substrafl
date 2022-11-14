@@ -114,7 +114,7 @@ def mae_metric(network, default_permissions, mae):
         return mae(y_pred, y_true)
 
     metric_key = register.add_metric(
-        client=network.clients[0], score_function=mae_score, permissions=default_permissions, dependencies=metric_deps
+        client=network.clients[0], metric_function=mae_score, permissions=default_permissions, dependencies=metric_deps
     )
 
     return metric_key
