@@ -112,12 +112,12 @@ def test_register_algo_name(algo_name, result, default_permissions):
 @pytest.mark.parametrize(
     "metric_function, error",
     [
-        (lambda wrong_arg: 1, exceptions.MetricFunctionSignatureError),
-        (lambda datasamples: 1, exceptions.MetricFunctionSignatureError),
-        (lambda predictions_path: 1, exceptions.MetricFunctionSignatureError),
-        (lambda datasamples, predictions_path, wrong_arg: 1, exceptions.MetricFunctionSignatureError),
+        (lambda wrong_arg: "any_str", exceptions.MetricFunctionSignatureError),
+        (lambda datasamples: "any_str", exceptions.MetricFunctionSignatureError),
+        (lambda predictions_path: "any_str", exceptions.MetricFunctionSignatureError),
+        (lambda datasamples, predictions_path, wrong_arg: "any_str", exceptions.MetricFunctionSignatureError),
         ("not a function", exceptions.MetricFunctionTypeError),
-        (lambda datasamples, predictions_path: 1, None),
+        (lambda datasamples, predictions_path: "any_str", None),
     ],
 )
 def test_add_metric_wrong_metric_function(metric_function, error, default_permissions):
