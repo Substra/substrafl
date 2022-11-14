@@ -19,7 +19,7 @@ Being able to compare substrafl local speed to a full torch example with a varia
 
 **All the commands should be run from `benchmark/camelyon`**
 
-In a new python 3.9 environment :
+In a new python 3.10 environment :
 
 ```sh
 pip install -r requirements.txt
@@ -33,13 +33,13 @@ Please ensure that your python installation is complete. For Mac users if you ge
 UserWarning: Could not import the lzma module. Your installed Python is incomplete. Attempting to use lzma compression will result in a RuntimeError.
 ```
 
-You'll need to uninstall python 3.9, and install the `xz` package :
+You'll need to uninstall python 3.10, and install the `xz` package :
 
 ```sh
 brew install xz
 ```
 
-then reinstall python 3.9.
+then reinstall python 3.10.
 
 ### Getting Started
 
