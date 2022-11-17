@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   metric_deps = Dependency(pypi_dependencies=["numpy==1.23.1"])
   permissions_metric = Permissions(public=True)
 
-  def MSE(datasamples, predictions_path):
+  def mse(datasamples, predictions_path):
       y_true = datasamples["target"]
       y_pred = np.load(predictions_path)
       return np.mean((y_true - y_pred)**2)
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       client=substra_client,
       permissions=permissions_metric,
       dependencies=metric_deps,
-      metric_function=MSE,
+      metric_function=mse,
   )
   ```
 
