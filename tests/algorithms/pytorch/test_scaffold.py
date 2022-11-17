@@ -172,7 +172,7 @@ def test_pytorch_scaffold_algo_performance(
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1]
 
-    performance_at_init = mae.compute(y_pred, y_true)
+    performance_at_init = mae(y_pred, y_true)
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
