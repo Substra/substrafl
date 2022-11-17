@@ -13,7 +13,6 @@ For more information on what is substrafl and how to use it, please refer to the
 
 Join the discussion on [Slack](https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA)!
 
-
 ## Building the documentation
 
 The API documentation is generated from the substrafl repository thanks to the auto doc module.
@@ -26,7 +25,7 @@ You can build the API documentation locally to see the changes made by your PR.
 You need to have substrafl.dev installed on your machine and some extra requirements. From the substrafl repo:
 
 ```sh
-pip install -e .[dev]
+pip install -e '.[dev]'
 cd docs
 pip install -r requirements.txt
 ```
