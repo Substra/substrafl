@@ -137,7 +137,8 @@ class RemoteStruct:
         try:
             algo_file_path = Path(inspect.getfile(self._cls)).resolve().parent
         except (TypeError, OSError):
-            # In a notebook, we get the TypeError (OSError on Windows): <class '__main__.MyAlgo'> is a built-in class
+            # In a notebook, we get the TypeError (OSError on python 3.10): <class '__main__.MyAlgo'> is a built-in
+            # class.
             # To fix it, we use the cwd of the notebook and assume local dependencies are there
             algo_file_path = Path.cwd().resolve()
         return algo_file_path
