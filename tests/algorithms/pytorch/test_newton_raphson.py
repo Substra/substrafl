@@ -332,7 +332,7 @@ def test_pytorch_nr_algo_performance(
     y_pred = model(torch.from_numpy(nr_test_data[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = nr_test_data[0][:, -1]
 
-    performance_at_init = mae.compute(y_pred, y_true)
+    performance_at_init = mae(y_pred, y_true)
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
