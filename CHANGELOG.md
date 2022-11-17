@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The metric registration is simplified. The user can now directly write a score function within
-  its script, and directly register it by specifying the right dependencies and permissions.
+  their script, and directly register it by specifying the right dependencies and permissions.
   The score function must have `(datasamples, predictions_path)` as signature. (#47)
 
   Example of new metric registration:

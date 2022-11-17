@@ -365,7 +365,7 @@ def add_metric(
     metric_function: typing.Callable,
     metric_name: typing.Optional[str] = None,
 ) -> str:
-    """This function add a metric to the Substra platform using the given score function as the
+    """Adds a metric to the Substra platform using the given score function as the
     algorithm to execute.
     The score function must be of type function, and its signature must ONLY contains
     `datasamples` and `predictions_path` as parameters. Errors will be raised otherwise.
