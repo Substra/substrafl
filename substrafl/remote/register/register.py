@@ -32,7 +32,7 @@ MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
 TMP_SUBSTRAFL_PREFIX = "tmp_substrafl"
 
 _DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
-{substratools_version}-nvidiacuda11.6.0-base-ubuntu20.04-python{python_version}"
+{substratools_version}-nvidiacuda11.8.0-base-ubuntu22.04-python{python_version}"
 
 SUBSTRAFL_FOLDER = "substrafl_internal"
 

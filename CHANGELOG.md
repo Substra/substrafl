@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Apply changes from algo to function in substratools (#34)
   - add `tools_functions` method to `RemoteDataMethod` and `RemoteMethod` to return the function(s) to send to `tools.execute`.
 - Register functions in substratools using decorator `@tools.register` (#37)
+- Update substratools Docker image (#49)
 
 ### Fixed
 
