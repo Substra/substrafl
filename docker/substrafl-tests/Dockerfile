@@ -14,11 +14,11 @@ COPY  substra-tools/ substra-tools/
 COPY  substra/ substra/
 COPY  substrafl/ substrafl/
 
-RUN cd substra-tools && python -m pip install --no-cache-dir -e .
+RUN cd substra-tools && sudo python -m pip install --no-cache-dir -e .
 
-RUN cd substra && python -m pip install --no-cache-dir -e .
+RUN cd substra && sudo python -m pip install --no-cache-dir -e .
 
-RUN cd substrafl && python -m pip install --no-cache-dir -e .[dev]
+RUN cd substrafl && sudo python -m pip install --no-cache-dir -e .[dev]
 
 RUN cd substrafl/benchmark/camelyon && python -m pip install -r requirements.txt
 
