@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   pr-validation:
@@ -50,7 +53,7 @@ jobs:
 
       - name: Install package
         run: |
-          pip install --upgrade -e substratools
+          sudo pip install --upgrade -e substratools
           cd substra && pip install --upgrade -e . && cd ..
           cd substrafl && pip install --upgrade -e '.[dev]' && cd ..
 
