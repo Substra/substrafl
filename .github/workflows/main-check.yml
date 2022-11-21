@@ -53,9 +53,9 @@ jobs:
 
       - name: Install package
         run: |
-          sudo pip install --upgrade -e substratools
-          cd substra && sudo pip install --upgrade -e . && cd ..
-          cd substrafl && sudo pip install --upgrade -e '.[dev]' && cd ..
+          pip install --user --upgrade -e substratools
+          cd substra && pip install --user --upgrade -e . && cd ..
+          cd substrafl && pip install --user --upgrade -e '.[dev]' && cd ..
 
       - name: Run the slow local tests
         env:
