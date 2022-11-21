@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix main_check compatibility with Python 3.10 (#52)
 - Fix python 3.10 compatibility by catching OSError for Notebooks (#51)
 - Free disk space in main github action to run the CI (#48)
 - local dependencies are installed in one `pip` command to optimize the installation and avoid incompatibilities error (#39)
