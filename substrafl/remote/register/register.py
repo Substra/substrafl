@@ -326,7 +326,7 @@ def register_algo(
 
 
 def _check_metric_function(metric_function: typing.Callable):
-    """Function to check the type and the signature of a given score function.
+    """Function to check the type and the signature of a given metric function.
 
     Args:
         metric_function (typing.Callable): function to check.
@@ -365,22 +365,22 @@ def add_metric(
     metric_function: typing.Callable,
     metric_name: typing.Optional[str] = None,
 ) -> str:
-    """Adds a metric to the Substra platform using the given score function as the
+    """Adds a metric to the Substra platform using the given metric function as the
     algorithm to execute.
-    The score function must be of type function, and its signature must ONLY contains
-    `datasamples` and `predictions_path` as parameters. Errors will be raised otherwise.
+    The metric function must be of type function, and its signature must ONLY contains
+    `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
 
     Args:
         client (substra.Client): The substra client.
-        permissions (substra.sdk.schemas.Permissions): Permissions for the score function.
-        dependencies (Dependency): Score function dependencies.
+        permissions (substra.sdk.schemas.Permissions): Permissions for the metric function.
+        dependencies (Dependency): Metric function dependencies.
         metric_function (typing.Callable): function to compute the score from the datasamples and the predictions.
             This function is registered in substra as a metric.
         metric_name (str, Optional): Optional name chosen by the user to identify the metric. If None,
             the metric name is set to the 'metric_{metric_function.__name__}'.
 
     Returns:
-        str: The metric key of the metric created from the score function.
+        str: The metric key of the metric created from the metric function.
     """
 
     _check_metric_function(metric_function=metric_function)
