@@ -6,7 +6,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -15,8 +15,7 @@ jobs:
       - name: Install tools
         run: pip install wheel
       - name: Build
-        run:
-          python setup.py sdist bdist_wheel
+        run: python setup.py sdist bdist_wheel
       - name: Publish
         uses: pypa/gh-action-pypi-publish@v1.5.1
         with:

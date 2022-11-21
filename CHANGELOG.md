@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Github actions on Ubuntu 22.04 (#52)
 - torch algo: test that `with_batch_norm_parameters` is only about the running mean and variance of the batch norm layers (#30)
 - torch algo: `with_batch_norm_parameters` - also take into account the `torch.nn.LazyBatchNorm{x}d` layers (#30)
 - chore: use the generic task (#31)

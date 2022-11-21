@@ -70,7 +70,7 @@ jobs:
           path: substrafl/htmlcov
 
   pr-validation-docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
@@ -107,7 +107,7 @@ jobs:
           make clean html
 
   benchmark:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/setup-python@v3
         with:
