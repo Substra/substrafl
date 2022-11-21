@@ -1,53 +1,19 @@
 import sys
-import tarfile
 import tempfile
 from pathlib import Path
 from typing import List
 
 import numpy as np
 from substra import Client
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
-from substra.sdk.schemas import AlgoSpec
-from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import Permissions
-
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import OutputIdentifiers
 
 DEFAULT_SUBSTRATOOLS_VERSION = (
     f"latest-nvidiacuda11.8.0-base-ubuntu22.04-python{sys.version_info.major}.{sys.version_info.minor}"
 )
 
 DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"ghcr.io/substra/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
-
-DEFAULT_METRICS_DOCKERFILE = f"""
-FROM {DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE}
-COPY metrics.py .
-ENTRYPOINT ["python3", "metrics.py", "--function-name", "score"]
-"""
-
-DEFAULT_METRICS_FILE = f"""
-import substratools as tools
-import math
-import numpy as np
-
-@tools.register
-def score(inputs, outputs, task_properties):
-    # Datasamples are passed as a tuple of two elements: x and y
-    y_true = inputs['{InputIdentifiers.datasamples}'][1]
-    y_pred = _load_predictions(inputs['{InputIdentifiers.predictions}'])
-    tools.save_performance({{}}, outputs['{OutputIdentifiers.performance}'])
-
-def _load_predictions(path):
-    return np.load(path)
-
-
-if __name__ == "__main__":
-    tools.execute()
-"""
 
 DEFAULT_OPENER_FILE = """
 import os
@@ -180,108 +146,6 @@ def add_numpy_samples(
         )
 
     return keys
-
-
-def metric_archive(metric_path: Path, dockerfile_path: Path, tmp_folder: Path) -> Path:
-    """Creates a tar.gz archive in the tmp_folder folder from the metric_path and the dockerfile_path.
-    Whatever the named of the passed files, they will be named metric.py and Dockerfile in the archive.
-
-    Args:
-        metric_path (Path): The path to a python file where a substra compatible class is written.
-        dockerfile_path (Path): The dockerfile associated to the metric.
-        tmp_folder (Path): The folder where the archive will be written.
-
-    Returns:
-        Path: the archive path (ends with /metric.tar.gz)
-    """
-
-    archive_path = tmp_folder / "metric.tar.gz"
-
-    with tarfile.open(archive_path, "w:gz") as tar:
-        tar.add(dockerfile_path, arcname="Dockerfile")
-        tar.add(metric_path, arcname="metrics.py")
-    return archive_path
-
-
-def metric_dockerfile(tmp_folder: Path) -> Path:
-    """Creates a generic python dockerfile from DEFAULT_SUBSTRATOOLS_VERSION docker image.
-    The entry point runs a metric.py file.
-
-    Args:
-        tmp_folder (Path): The folder where the dockerfile will be written.
-
-    Returns:
-        Path: The path of the dockerfile (ends with /Dockerfile)
-    """
-    dockerfile_path = tmp_folder / "Dockerfile"
-    dockerfile_path.write_text(DEFAULT_METRICS_DOCKERFILE)
-    return dockerfile_path
-
-
-def add_python_metric(
-    python_formula: str,
-    name: str,
-    permissions: Permissions,
-    client: Client,
-    tmp_folder: Path,
-):
-    """Add the given numpy formula as a substra metric with the given name and permissions
-    thanks to the specified client.
-    All the necessary files will be created in the tmp_folder.
-
-    Args:
-        python_formula (str): A pure python formula passed in a string.
-            This formula must be based on y_pred and y_true variable which are both numpy array.
-            The formula must return a float python object.
-            E.g.: The Accuracy formula would be: (y_pred==y_true).sum()/y_true.shape[0] as no numpy function
-            is used there.
-            The math module is also imported as is. So all math.cos, math.sqrt functions can be called.
-        name (str): The name of your metric.
-        permissions (Permissions): The substra permissions for your metric.
-        client (Client): The substra client that will add the metric.
-        tmp_folder (Path): The folder used to create all the needed intermediate files.
-
-    Returns:
-        str: The metric key returned by substra to the client.
-    """
-    metric_folder = Path(tempfile.mkdtemp(dir=tmp_folder))
-
-    description = generic_description(name=name, tmp_folder=metric_folder)
-
-    metric_file = metric_folder / "metric.py"
-    metric_file.write_text(DEFAULT_METRICS_FILE.format(python_formula))
-
-    dockerfile_file = metric_dockerfile(tmp_folder)
-    archive = metric_archive(
-        metric_path=metric_file,
-        dockerfile_path=dockerfile_file,
-        tmp_folder=metric_folder,
-    )
-    metric_spec = AlgoSpec(
-        name=name,
-        inputs=[
-            AlgoInputSpec(
-                identifier=InputIdentifiers.datasamples,
-                kind=AssetKind.data_sample.value,
-                optional=False,
-                multiple=True,
-            ),
-            AlgoInputSpec(
-                identifier=InputIdentifiers.opener, kind=AssetKind.data_manager.value, optional=False, multiple=False
-            ),
-            AlgoInputSpec(
-                identifier=InputIdentifiers.predictions, kind=AssetKind.model.value, optional=False, multiple=False
-            ),
-        ],
-        outputs=[
-            AlgoOutputSpec(identifier=OutputIdentifiers.performance, kind=AssetKind.performance.value, multiple=False)
-        ],
-        description=description,
-        file=archive,
-        permissions=permissions,
-    )
-    key = client.add_algo(metric_spec)
-    return key
 
 
 def linear_data(n_col: int = 3, n_samples: int = 11, weights_seed: int = 42, noise_seed: int = 12) -> np.ndarray:

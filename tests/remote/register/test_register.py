@@ -5,9 +5,10 @@ from unittest.mock import patch
 import pytest
 import substra
 
+from substrafl import exceptions
 from substrafl.dependency import Dependency
 from substrafl.remote.decorators import remote_data
-from substrafl.remote.register.register import register_algo
+from substrafl.remote.register import register
 
 
 class RemoteClass:
@@ -41,7 +42,7 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
 
     algo_deps = Dependency()
 
-    algo_key = register_algo(
+    algo_key = register.register_algo(
         client=client,
         remote_struct=remote_struct,
         permissions=default_permissions,
@@ -96,7 +97,7 @@ def test_register_algo_name(algo_name, result, default_permissions):
 
     algo_deps = Dependency()
 
-    _ = register_algo(
+    _ = register.register_algo(
         client=client,
         remote_struct=remote_struct,
         permissions=default_permissions,
@@ -106,3 +107,36 @@ def test_register_algo_name(algo_name, result, default_permissions):
     )
 
     assert substra.sdk.schemas.AlgoSpec.call_args[1]["name"] == result
+
+
+@pytest.mark.parametrize(
+    "metric_function, error",
+    [
+        (lambda wrong_arg: "any_str", exceptions.MetricFunctionSignatureError),
+        (lambda datasamples: "any_str", exceptions.MetricFunctionSignatureError),
+        (lambda predictions_path: "any_str", exceptions.MetricFunctionSignatureError),
+        (lambda datasamples, predictions_path, wrong_arg: "any_str", exceptions.MetricFunctionSignatureError),
+        ("not a function", exceptions.MetricFunctionTypeError),
+        (lambda datasamples, predictions_path: "any_str", None),
+    ],
+)
+def test_add_metric_wrong_metric_function(metric_function, error, default_permissions):
+    client = DummyClient()
+
+    metric_deps = Dependency()
+
+    if error is not None:
+        with pytest.raises(error):
+            register.add_metric(
+                client,
+                default_permissions,
+                metric_deps,
+                metric_function,
+            )
+    else:
+        register.add_metric(
+            client,
+            default_permissions,
+            metric_deps,
+            metric_function,
+        )

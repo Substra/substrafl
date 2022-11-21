@@ -11,9 +11,11 @@ import torch
 from substra.sdk.schemas import Permissions
 
 from substrafl.algorithms.algo import Algo
+from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.remote import register
 from substrafl.remote.decorators import remote_data
 from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
@@ -95,30 +97,27 @@ def default_permissions() -> Permissions:
 
 
 @pytest.fixture(scope="session")
-def mae(network, default_permissions, session_dir):
-    class CustomMetric:
-        def __init__(self, python_formula, name) -> None:
-            self.name = name
-            self.python_formula = python_formula
-            self.key = None
+def mae():
+    return lambda y_pred, y_true: abs(y_pred - y_true).mean()
 
-        def compute(self, y_true, y_pred):
-            return eval(self.python_formula)
 
-        def add_to_substra(self, permissions, client, tmp_folder):
-            key = assets_factory.add_python_metric(
-                python_formula=self.python_formula,
-                name=self.name,
-                permissions=permissions,
-                client=client,
-                tmp_folder=tmp_folder,
-            )
-            self.key = key
+@pytest.fixture(scope="session")
+def mae_metric(network, default_permissions, mae):
 
-    mae = CustomMetric(python_formula="abs(y_pred-y_true).mean()", name="MAE")
-    mae.add_to_substra(permissions=default_permissions, client=network.clients[0], tmp_folder=session_dir)
+    metric_deps = Dependency(pypi_dependencies=["numpy"], editable_mode=True)
 
-    return mae
+    def mae_score(datasamples, predictions_path):
+
+        y_true = datasamples[1]
+        y_pred = np.load(predictions_path)
+
+        return mae(y_pred, y_true)
+
+    metric_key = register.add_metric(
+        client=network.clients[0], metric_function=mae_score, permissions=default_permissions, dependencies=metric_deps
+    )
+
+    return metric_key
 
 
 @pytest.fixture(scope="session")
@@ -241,7 +240,7 @@ def test_linear_data_samples():
 def test_linear_nodes(
     network,
     numpy_datasets,
-    mae,
+    mae_metric,
     test_linear_data_samples,
     session_dir,
 ):
@@ -267,7 +266,7 @@ def test_linear_nodes(
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae.key])]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae_metric])]
 
     return test_data_nodes
 
