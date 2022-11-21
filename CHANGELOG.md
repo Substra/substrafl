@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Github actions on Ubuntu 22.04 (#52)
 - torch algo: test that `with_batch_norm_parameters` is only about the running mean and variance of the batch norm layers (#30)
 - torch algo: `with_batch_norm_parameters` - also take into account the `torch.nn.LazyBatchNorm{x}d` layers (#30)
 - chore: use the generic task (#31)
@@ -26,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fix main_check compatibility with Python 3.10 (#52)
 - Fix python 3.10 compatibility by catching OSError for Notebooks (#51)
 - Free disk space in main github action to run the CI (#48)
 - local dependencies are installed in one `pip` command to optimize the installation and avoid incompatibilities error (#39)
