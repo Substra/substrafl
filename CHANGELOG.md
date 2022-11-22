@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.32.0](https://github.com/Substra/substrafl/releases/tag/0.32.0) - 2022-11-22
+
 ### Added
 
 - The metric registration is simplified. The user can now directly write a score function within
