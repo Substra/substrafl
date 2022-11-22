@@ -32,7 +32,7 @@ test-local-slow: pyclean test-subprocess-slow
 	pytest tests ${COV_OPTIONS} --mode=docker -m "slow and not gpu"
 
 test-ci: pyclean
-	pytest tests --ci -m "e2e and not gpu"
+	USE_LATEST_SUBSTRATOOLS=True pytest tests --ci -m "e2e and not gpu"
 
 benchmark: pyclean
 	python benchmark/camelyon/benchmarks.py \
