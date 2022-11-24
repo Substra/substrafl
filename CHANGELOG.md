@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- test: pass the CI e2e tests on Python 3.10
+- test: pass the CI e2e tests on Python 3.10 (#56)
 
 ## [0.32.0](https://github.com/Substra/substrafl/releases/tag/0.32.0) - 2022-11-22
 
