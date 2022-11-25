@@ -43,14 +43,14 @@ Substra warmly welcomes any contribution. Feel free to fork the repo and create 
 
 ## Building the documentation
 
-The API documentation is generated from the substrafl repository thanks to the auto doc module.
+The API documentation is generated from the SubstraFL repository thanks to the auto doc module.
 It is automatically built by <https://github.com/Substra/substra-documentation> and integrated into the general documentation [here](https://docs.substra.org/).
 
 You can build the API documentation locally to see the changes made by your PR.
 
 ### Requirements
 
-You need to have substrafl.dev installed on your machine and some extra requirements. From the substrafl repo:
+You need to have substrafl.dev installed on your machine and some extra requirements. From the SubstraFL repo:
 
 ```sh
 pip install -e '.[dev]'
