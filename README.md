@@ -2,21 +2,49 @@
 <a href="https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA"><img src="https://img.shields.io/badge/chat-on%20slack-blue?logo=slack" /></a> <a href="https://docs.substra.org/"><img src="https://img.shields.io/badge/read-docs-purple?logo=mdbook" /></a>
 <br /><br /></div>
 
-# Substrafl
+<div align="center">
+<picture>
+  <object-position: center>
+  <source media="(prefers-color-scheme: dark)" srcset="Substra-logo-white.svg">
+  <source media="(prefers-color-scheme: light)" srcset="Substra-logo-colour.svg">
+  <img alt="Substra" src="Substra-logo-colour.svg" width="500">
+</picture>
+</div>
+<br>
+<br>
 
-Substrafl is a high-level federated learning Python library.
-Substrafl is used to run complex federated learning experiments on a Substra deployed platform. It can also be used locally to run federated learning simulations.
+Substra is an open source federated learning (FL) software. It enables the training and validation of machine learning models on distributed datasets. It provides a flexible Python interface and a web application to run federated learning training at scale. This specifc reposity is the low-level Python library used to interact with a Substra network.
 
-Note that substrafl will be soon merged with the [substra](https://github.com/substra/substra) library.
+Substra's main usage is in production environments. It has already been deployed and used by hospitals and biotech companies (see the [MELLODDY](https://www.melloddy.eu/) project for instance). Substra can also be used on a single machine to perform FL simulations and debug code.
 
-For more information on what is substrafl and how to use it, please refer to the [user documentation](https://docs.substra.org).
+Substra was originally developed by [Owkin](https://owkin.com/) and is now hosted by the [Linux Foundation for AI and Data](https://lfaidata.foundation/). Today Owkin is the main contributor to Substra.
 
-Join the discussion on [Slack](https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA)!
+Join the discussion on [Slack](https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA) and [subscribe here](https://lists.lfaidata.foundation/g/substra-announce/join) to our newsletter.
+
+
+## To start using Substra
+
+Have a look at our [documentation](https://docs.substra.org/).
+
+Try out our [MNIST example](https://docs.substra.org/en/stable/substrafl_doc/examples/index.html#example-to-get-started-using-the-pytorch-interface).
+
+## Support
+
+If you need support, please either raise an issue on Github or ask on [Slack](https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA).
+
+
+
+## Contributing
+
+Substra warmly welcomes any contribution. Feel free to fork the repo and create a pull request.
+
+
+# Appendix
 
 ## Building the documentation
 
 The API documentation is generated from the substrafl repository thanks to the auto doc module.
-It is automatically built by <https://github.com/Substra/substra-documentation> and integrated into the general documentation [here](https://connect-docs.owkin.com/).
+It is automatically built by <https://github.com/Substra/substra-documentation> and integrated into the general documentation [here](https://docs.substra.org/).
 
 You can build the API documentation locally to see the changes made by your PR.
 
