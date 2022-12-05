@@ -4,11 +4,9 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Type
-from typing import Union
 
 import cloudpickle
 
-from substrafl.remote.substratools_methods import RemoteDataMethod
 from substrafl.remote.substratools_methods import RemoteMethod
 
 
@@ -32,7 +30,7 @@ class RemoteStruct:
         cls: Type,
         cls_args: list,
         cls_kwargs: dict,
-        remote_cls: Union[Type[RemoteDataMethod], Type[RemoteMethod]],
+        remote_cls: Type[RemoteMethod],
         method_name: str,
         method_parameters: dict,
         algo_name: Optional[str],
@@ -42,7 +40,7 @@ class RemoteStruct:
             cls (Type): Locally defined class
             cls_args (list): Arguments (args) to instantiate the class
             cls_kwargs (dict): Arguments (kwargs) to instantiate the class
-            remote_cls (Union[Type[RemoteDataMethod], Type[RemoteMethod]]): Remote class to create from the user code
+            remote_cls (Type[RemoteMethod]): Remote class to create from the user code
             method_name (str): Name of the method from the local class to execute
             method_parameters (dict): Parameters to pass to the method
             algo_name(str, Optional): opportunity to set a custom algo name.
@@ -116,11 +114,11 @@ class RemoteStruct:
         """
         return self._cls(*self._cls_args, **self._cls_kwargs)
 
-    def get_remote_instance(self) -> Union[RemoteMethod, RemoteDataMethod]:
+    def get_remote_instance(self) -> RemoteMethod:
         """Get the remote class (ie Substra algo) instance.
 
         Returns:
-            typing.Union[RemoteMethod, RemoteDataMethod]: instance of the remote Substra class
+            RemoteMethod: instance of the remote Substra class
         """
         return self._remote_cls(
             self.get_instance(),
