@@ -232,7 +232,7 @@ def test_base_algo_custom_init_arg_default_value(session_dir, dummy_algo_custom_
     task_properties = {
         InputIdentifiers.rank: 0,
     }
-    remote_struct.train(inputs, outputs, task_properties)
+    remote_struct.generic_function(inputs, outputs, task_properties)
 
     result = remote_struct.load_model(outputs[OutputIdentifiers.shared])
 
@@ -261,7 +261,7 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
     task_properties = {
         InputIdentifiers.rank: 0,
     }
-    remote_struct.train(inputs, outputs, task_properties)
+    remote_struct.generic_function(inputs, outputs, task_properties)
 
     result = remote_struct.load_model(outputs[OutputIdentifiers.shared])
     assert result == arg_value
