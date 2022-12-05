@@ -1,6 +1,7 @@
 """
 Create the Substra algo assets and register them to the platform.
 """
+import inspect
 import logging
 import os
 import shutil
@@ -17,11 +18,14 @@ import substratools
 from packaging import version
 
 import substrafl
+from substrafl import exceptions
 from substrafl.dependency import Dependency
-from substrafl.exceptions import SubstraToolsDeprecationWarning
+from substrafl.nodes.node import InputIdentifiers
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.remote.substratools_methods import RemoteMethod
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +147,7 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
             warnings.warn(
                 f"Your environment uses substra-tools={substratools_image_version}. Version \
                 {MINIMAL_DOCKER_SUBSTRATOOLS_VERSION} will be used on Docker.",
-                SubstraToolsDeprecationWarning,
+                exceptions.SubstraToolsDeprecationWarning,
             )
         substratools_image_version = MINIMAL_DOCKER_SUBSTRATOOLS_VERSION
     substratools_image = _DEFAULT_SUBSTRATOOLS_IMAGE.format(
@@ -317,3 +321,118 @@ def register_algo(
             )
         )
         return key
+
+
+def _check_metric_function(metric_function: typing.Callable):
+    """Function to check the type and the signature of a given metric function.
+
+    Args:
+        metric_function (typing.Callable): function to check.
+
+    Raises:
+        exceptions.MetricFunctionTypeError: metric_function must be of type "function"
+        exceptions.MetricFunctionSignatureError: metric_function must ONLY contains
+            datasamples and predictions_path as parameters
+    """
+
+    if not inspect.isfunction(metric_function):
+        raise exceptions.MetricFunctionTypeError("The metric_function() must be of type function.")
+
+    signature = inspect.signature(metric_function)
+    parameters = signature.parameters
+
+    if "datasamples" not in parameters:
+        raise exceptions.MetricFunctionSignatureError(
+            "The metric_function() function must contain datasamples as parameter."
+        )
+    elif "predictions_path" not in parameters:
+        raise exceptions.MetricFunctionSignatureError(
+            "The metric_function() function must contain predictions_path as parameter."
+        )
+    elif len(parameters) != 2:
+        raise exceptions.MetricFunctionSignatureError(
+            """The metric_function() function must ONLY contains datasamples and predictions_path as
+            parameters."""
+        )
+
+
+def add_metric(
+    client: substra.Client,
+    permissions: substra.sdk.schemas.Permissions,
+    dependencies: Dependency,
+    metric_function: typing.Callable,
+    metric_name: typing.Optional[str] = None,
+) -> str:
+    """Adds a metric to the Substra platform using the given metric function as the
+    algorithm to execute.
+    The metric function must be of type function, and its signature must ONLY contains
+    `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
+
+    Args:
+        client (substra.Client): The substra client.
+        permissions (substra.sdk.schemas.Permissions): Permissions for the metric function.
+        dependencies (Dependency): Metric function dependencies.
+        metric_function (typing.Callable): function to compute the score from the datasamples and the predictions.
+            This function is registered in substra as a metric.
+        metric_name (str, Optional): Optional name chosen by the user to identify the metric. If None,
+            the metric name is set to the 'metric_{metric_function.__name__}'.
+
+    Returns:
+        str: The metric key of the metric created from the metric function.
+    """
+
+    _check_metric_function(metric_function=metric_function)
+
+    class Metric:
+        def score(self, datasamples, predictions_path):
+            return metric_function(datasamples=datasamples, predictions_path=predictions_path)
+
+    inputs_metrics = [
+        substra.sdk.schemas.AlgoInputSpec(
+            identifier=InputIdentifiers.datasamples,
+            kind=substra.sdk.schemas.AssetKind.data_sample,
+            optional=False,
+            multiple=True,
+        ),
+        substra.sdk.schemas.AlgoInputSpec(
+            identifier=InputIdentifiers.opener,
+            kind=substra.sdk.schemas.AssetKind.data_manager,
+            optional=False,
+            multiple=False,
+        ),
+        substra.sdk.schemas.AlgoInputSpec(
+            identifier=InputIdentifiers.predictions,
+            kind=substra.sdk.schemas.AssetKind.model,
+            optional=False,
+            multiple=False,
+        ),
+    ]
+
+    outputs_metrics = [
+        substra.sdk.schemas.AlgoOutputSpec(
+            identifier=OutputIdentifiers.performance,
+            kind=substra.sdk.schemas.AssetKind.performance,
+            multiple=False,
+        )
+    ]
+
+    remote_struct = RemoteStruct(
+        cls=Metric,
+        cls_args=[],
+        cls_kwargs={},
+        remote_cls=RemoteMethod,
+        method_name="score",
+        method_parameters={},
+        algo_name=metric_name or "metric_" + metric_function.__name__,
+    )
+
+    key = register_algo(
+        client=client,
+        remote_struct=remote_struct,
+        permissions=permissions,
+        inputs=inputs_metrics,
+        outputs=outputs_metrics,
+        dependencies=dependencies,
+    )
+
+    return key
