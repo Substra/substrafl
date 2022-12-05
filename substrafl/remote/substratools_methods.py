@@ -13,7 +13,7 @@ from substrafl.remote.serializers.serializer import Serializer
 
 
 class RemoteMethod:
-    """Aggregate algo to register to Substra."""
+    """Composite algo to register to Substra"""
 
     def __init__(
         self,
@@ -47,56 +47,13 @@ class RemoteMethod:
         """
         models = []
         for m_path in inputs[InputIdentifiers.models]:
-            models.append(self.load_model(m_path))
+            models.append(self.load_trunk_model(m_path))
 
         method_to_call = getattr(self.instance, self.method_name)
         next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
-        self.save_model(next_shared_state, outputs[OutputIdentifiers.model])
-
-    def load_model(self, path: str) -> Any:
-        """Load the model from disk, may be a in model of the aggregate
-        or the out aggregated model.
-
-        Args:
-            path (str): Path where the model is saved
-
-        Returns:
-            Any: Loaded model
-        """
-        return self.shared_state_serializer.load(Path(path))
-
-    def save_model(self, model, path: str):
-        """Save the model
-
-        Args:
-            model (typing.Any): Model to save
-            path (str): Path where to save the model
-        """
-        self.shared_state_serializer.save(model, Path(path))
-
-    def register_substratools_functions(self):
-        """Register the functions that can be accessed and executed by substratools."""
-
-        tools.register(self.aggregate)
-
-
-class RemoteDataMethod:
-    """Composite algo to register to Substra"""
-
-    def __init__(
-        self,
-        instance,
-        method_name: str,
-        method_parameters: Dict,
-        shared_state_serializer: Type[Serializer] = PickleSerializer,
-    ):
-        self.instance = instance
-
-        self.method_name = method_name
-        self.method_parameters = method_parameters
-
-        self.shared_state_serializer = shared_state_serializer
+        self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.model])
+        globals()[self.method_name] = self.aggregate
 
     def train(
         self,
@@ -233,3 +190,4 @@ class RemoteDataMethod:
         tools.register(self.train)
         tools.register(self.predict)
         tools.register(self.score)
+        tools.register(self.aggregate)
