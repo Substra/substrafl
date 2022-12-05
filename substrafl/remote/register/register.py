@@ -384,7 +384,7 @@ def add_metric(
     _check_metric_function(metric_function=metric_function)
 
     class Metric:
-        def score(self, datasamples, predictions_path):
+        def score(self, datasamples, predictions_path, _skip=None):
             return metric_function(datasamples=datasamples, predictions_path=predictions_path)
 
     inputs_metrics = [

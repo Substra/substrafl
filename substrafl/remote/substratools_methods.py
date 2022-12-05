@@ -30,124 +30,66 @@ class RemoteMethod:
         self.shared_state_serializer = shared_state_serializer
         self.method = None
 
-    def aggregate(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
-        """Aggregation operation
+    def load_method_inputs(self, inputs: TypedDict, outputs: TypedDict):
 
-        Args:
-            inputs (typing.TypedDict): dictionary containing:
-                the list of models path loaded with `AggregateAlgo.load_model()`;
-            outputs (typing.TypedDict):dictionary containing:
-                the output model path to save the aggregated model.
-            task_properties (typing.TypedDict): dictionary containing:
-                the rank of the aggregate task.
-        """
-        models = []
-        for m_path in inputs[InputIdentifiers.models]:
-            models.append(self.load_trunk_model(m_path))
+        loaded_inputs = {}
 
-        method_to_call = getattr(self.instance, self.method_name)
-        next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
+        if InputIdentifiers.local in inputs:
+            instance_path = inputs[InputIdentifiers.local]
+            instance = self.load_instance(instance_path)
+        else:
+            instance = self.instance
 
-        self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.model])
+        if InputIdentifiers.models in inputs:
+            models = []
+            for m_path in inputs[InputIdentifiers.models]:
+                models.append(self.load_model(m_path))
+            loaded_inputs["shared_states"] = models
 
-        self.aggregate.__name__ = self.method_name
-        self.method = self.aggregate
+        if InputIdentifiers.datasamples in inputs:
+            loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
 
-    def train(
+        if InputIdentifiers.shared in inputs:
+            loaded_inputs["shared_state"] = self.load_model(inputs[InputIdentifiers.shared])
+
+        if InputIdentifiers.predictions in inputs:
+            loaded_inputs["predictions_path"] = inputs[InputIdentifiers.predictions]
+
+        if OutputIdentifiers.predictions in outputs:
+            loaded_inputs["predictions_path"] = outputs[OutputIdentifiers.predictions]
+
+        return instance, loaded_inputs
+
+    def save_outputs(self, outputs, instance, method_output):
+
+        if OutputIdentifiers.local in outputs:
+            self.save_instance(instance, outputs[OutputIdentifiers.local])
+
+        if OutputIdentifiers.model in outputs:
+            self.save_model(method_output, outputs[OutputIdentifiers.model])
+
+        elif OutputIdentifiers.shared in outputs:
+            self.save_model(method_output, outputs[OutputIdentifiers.shared])
+
+        elif OutputIdentifiers.performance in outputs:
+            tools.save_performance(method_output, outputs[OutputIdentifiers.performance])
+
+    def generic_function(
         self,
         inputs: TypedDict,
         outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
         task_properties: TypedDict,
     ) -> None:
-        """train method
 
-        Args:
-            inputs (typing.TypedDict): dictionary containing:
-                the training data samples loaded with `Opener.get_data()`;
-                the head model loaded with `CompositeAlgo.load_head_model()` (may be None);
-                the trunk model loaded with `CompositeAlgo.load_trunk_model()` (may be None);
-                the rank of the training task.
-            outputs (typing.TypedDict): dictionary containing:
-                the output head model path to save the head model;
-                the output trunk model path to save the trunk model.
-            task_properties (TypedDict): Unused.
-        """
-        # head_model should be None only at initialization
-        head_model_path = inputs.get(InputIdentifiers.local)
-        trunk_model_path = inputs.get(InputIdentifiers.shared)
+        instance, method_inputs = self.load_method_inputs(inputs, outputs)
+        method_to_call = getattr(instance, self.method_name)
 
-        if head_model_path is not None:
-            instance = self.load_head_model(head_model_path)
-        else:
-            instance = self.instance
+        method_inputs["_skip"] = True
+        method_output = method_to_call(**{**method_inputs, **self.method_parameters})
 
-        trunk_model = self.load_trunk_model(trunk_model_path) if trunk_model_path else None
-        datasamples = inputs[InputIdentifiers.datasamples]
+        self.save_outputs(outputs, instance, method_output)
 
-        method_to_call = instance.train
-        next_shared_state = method_to_call(
-            datasamples=datasamples, shared_state=trunk_model, _skip=True, **self.method_parameters
-        )
-
-        self.save_head_model(instance, outputs[OutputIdentifiers.local])
-        self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.shared])
-
-    def predict(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
-        """predict function
-
-        Args:
-            inputs (typing.TypedDict): dictionary containing:
-                the testing data samples loaded with `Opener.get_data()`;
-                the head model loaded with `CompositeAlgo.load_head_model()`;
-                the trunk model loaded with `CompositeAlgo.load_trunk_model()`;
-            outputs (typing.TypedDict): dictionary containing:
-                the output predictions path to save the predictions.
-            task_properties (TypedDict): Unused.
-        """
-        head_model_path = inputs.get(InputIdentifiers.local)
-        assert head_model_path is not None, "head model is None. Possibly you did not train() before running predict()"
-        instance = self.load_head_model(head_model_path)
-
-        method_to_call = instance.predict
-        trunk_model = self.load_trunk_model(inputs.get(InputIdentifiers.shared))
-        datasamples = inputs[InputIdentifiers.datasamples]
-
-        predictions_path = outputs[OutputIdentifiers.predictions]
-
-        method_to_call(
-            datasamples=datasamples,
-            shared_state=trunk_model,
-            predictions_path=predictions_path,
-            _skip=True,
-            **self.method_parameters,
-        )
-
-    def score(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
-
-        datasamples = inputs[InputIdentifiers.datasamples]
-        predictions_path = inputs[InputIdentifiers.predictions]
-
-        method_to_call = self.instance.score
-        perf = method_to_call(datasamples=datasamples, predictions_path=predictions_path)
-
-        tools.save_performance(perf, outputs[OutputIdentifiers.performance])
-
-    def load_trunk_model(self, path: str) -> Any:
+    def load_model(self, path: str) -> Any:
         """Load the trunk model from disk
 
         Args:
@@ -158,7 +100,7 @@ class RemoteMethod:
         """
         return self.shared_state_serializer.load(Path(path))
 
-    def save_trunk_model(self, model, path: str) -> None:
+    def save_model(self, model, path: str) -> None:
         """Save the trunk model
 
         Args:
@@ -167,7 +109,7 @@ class RemoteMethod:
         """
         self.shared_state_serializer.save(model, Path(path))
 
-    def load_head_model(self, path: str) -> Any:
+    def load_instance(self, path: str) -> Any:
         """Load the head model from disk
 
         Args:
@@ -178,7 +120,7 @@ class RemoteMethod:
         """
         return self.instance.load(Path(path))
 
-    def save_head_model(self, model, path: str) -> None:
+    def save_instance(self, model, path: str) -> None:
         """Save the head model
 
         Args:
@@ -190,8 +132,4 @@ class RemoteMethod:
     def register_substratools_functions(self):
         """Register the functions that can be accessed and executed by substratools."""
 
-        tools.register(self.train)
-        tools.register(self.predict)
-        tools.register(self.score)
-        if self.method is not None:
-            tools.register(self.method)
+        tools.register(self.generic_function, self.method_name)
