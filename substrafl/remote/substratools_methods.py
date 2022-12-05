@@ -28,6 +28,7 @@ class RemoteMethod:
         self.method_parameters = method_parameters
 
         self.shared_state_serializer = shared_state_serializer
+        self.method = None
 
     def aggregate(
         self,
@@ -53,7 +54,9 @@ class RemoteMethod:
         next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
         self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.model])
-        # globals()[self.method_name] = self.aggregate
+
+        self.aggregate.__name__ = self.method_name
+        self.method = self.aggregate
 
     def train(
         self,
@@ -190,4 +193,5 @@ class RemoteMethod:
         tools.register(self.train)
         tools.register(self.predict)
         tools.register(self.score)
-        tools.register(self.aggregate)
+        if self.method is not None:
+            tools.register(self.method)
