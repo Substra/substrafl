@@ -53,7 +53,7 @@ class RemoteMethod:
         next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
 
         self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.model])
-        globals()[self.method_name] = self.aggregate
+        # globals()[self.method_name] = self.aggregate
 
     def train(
         self,
