@@ -81,7 +81,13 @@ class RemoteMethod:
         outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
         task_properties: TypedDict,
     ) -> None:
+        """Generic function to execute a method on the Substra platform.
 
+        Args:
+            inputs (typing.TypedDict): dictionary containing the paths where to load the arguments for the method.
+            outputs (typing.TypedDict): dictionary containing the paths where to save the output of the method.
+            task_properties (TypedDict): Unused.
+        """
         instance, method_inputs = self.load_method_inputs(inputs, outputs)
         method_to_call = getattr(instance, self.method_name)
 
