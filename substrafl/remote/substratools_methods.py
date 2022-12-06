@@ -79,7 +79,7 @@ class RemoteMethod:
         outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
         task_properties: TypedDict,
     ) -> None:
-        """Generic function to execute a method on the Substra platform.
+        """Generic function to be registered and executed on the Substra platform using substra-tools.
 
         Args:
             inputs (typing.TypedDict): dictionary containing the paths where to load the arguments for the method.
@@ -137,4 +137,7 @@ class RemoteMethod:
     def register_substratools_functions(self):
         """Register the functions that can be accessed and executed by substratools."""
 
-        tools.register(self.generic_function, self.method_name)
+        tools.register(
+            function=self.generic_function,
+            function_name=self.method_name,
+        )
