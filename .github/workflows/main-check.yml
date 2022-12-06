@@ -35,7 +35,7 @@ jobs:
 
       - if: startsWith(matrix.os, 'windows') == true
         name: Switch Daemon
-        run: .\DockerCli.exe -SwitchDaemon
+        run: ./DockerCli.exe -SwitchDaemon
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
