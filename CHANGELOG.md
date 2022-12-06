@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+- chore: remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name (#59)
+
 ## [0.33.0](https://github.com/Substra/substrafl/releases/tag/0.33.0) - 2022-12-19
 
 ### Changed
