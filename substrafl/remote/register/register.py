@@ -381,9 +381,9 @@ def add_metric(
     _check_metric_function(metric_function=metric_function)
 
     class Metric:
-        def score(
-            self, datasamples, predictions_path, _skip=True
-        ):  # The _skip argument is needed to match the default signature of method used by SubstraFL.
+        def score(self, datasamples, predictions_path, _skip=True):
+            # The _skip argument is needed to match the default signature of methods executed
+            # on substratools_methods.py.
             return metric_function(datasamples=datasamples, predictions_path=predictions_path)
 
     inputs_metrics = [
