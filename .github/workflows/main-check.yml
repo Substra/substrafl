@@ -8,7 +8,7 @@ on:
       - main
 jobs:
   pr-validation:
-    name: test-py-${{ matrix.python }}
+    name: test-${{ matrix.os }}-py-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
