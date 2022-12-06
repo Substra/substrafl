@@ -47,7 +47,7 @@ def pytest_addoption(parser):
 def set_multiprocessing_variable():
     # https://github.com/pytest-dev/pytest-flask/issues/104
     # necessary on OS X to run multiprocessing
-    multiprocessing.set_start_method("fork", force=True)
+    multiprocessing.set_start_method("spawn")
 
 
 @pytest.fixture(scope="session")
