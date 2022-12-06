@@ -35,9 +35,7 @@ class RemoteMethod:
 
         instance_path = inputs.get(InputIdentifiers.local)
         if instance_path is not None:
-            instance = self.load_instance(instance_path)
-        else:
-            instance = self.instance
+            self.instance = self.load_instance(instance_path)
 
         if InputIdentifiers.models in inputs:
             models = []
@@ -59,12 +57,12 @@ class RemoteMethod:
         if OutputIdentifiers.predictions in outputs:
             loaded_inputs["predictions_path"] = outputs[OutputIdentifiers.predictions]
 
-        return instance, loaded_inputs
+        return loaded_inputs
 
-    def save_outputs(self, outputs, instance, method_output):
+    def save_outputs(self, outputs, method_output):
 
         if OutputIdentifiers.local in outputs:
-            self.save_instance(instance, outputs[OutputIdentifiers.local])
+            self.save_instance(outputs[OutputIdentifiers.local])
 
         if OutputIdentifiers.model in outputs:
             self.save_model(method_output, outputs[OutputIdentifiers.model])
@@ -88,13 +86,13 @@ class RemoteMethod:
             outputs (typing.TypedDict): dictionary containing the paths where to save the output of the method.
             task_properties (TypedDict): Unused.
         """
-        instance, method_inputs = self.load_method_inputs(inputs, outputs)
-        method_to_call = getattr(instance, self.method_name)
+        method_inputs = self.load_method_inputs(inputs, outputs)
+        method_to_call = getattr(self.instance, self.method_name)
 
         method_inputs["_skip"] = True
         method_output = method_to_call(**{**method_inputs, **self.method_parameters})
 
-        self.save_outputs(outputs, instance, method_output)
+        self.save_outputs(outputs, method_output)
 
     def load_model(self, path: str) -> Any:
         """Load the model from disk
@@ -127,14 +125,14 @@ class RemoteMethod:
         """
         return self.instance.load(Path(path))
 
-    def save_instance(self, model, path: str) -> None:
+    def save_instance(self, path: str) -> None:
         """Save the instance
 
         Args:
             model (typing.Any): Instance to save
             path (str): Path where to save the instance
         """
-        model.save(Path(path))
+        self.instance.save(Path(path))
 
     def register_substratools_functions(self):
         """Register the functions that can be accessed and executed by substratools."""
