@@ -39,7 +39,7 @@ def test_generate_pypi_lib_wheel(session_dir):
 
     # We check that we have access to the pypi repo not the specific packages version otherwise this test will fail
     # when trying to creates a new version of substrafl as the running dev version on the ci and on a local computer
-    # (0.x.0) won't have been released yet (it is not in owkin pypi).
+    # (0.x.0) won't have been released yet.
 
     # save the current versions the libs to set them back later
     substratools_version = substratools.__version__

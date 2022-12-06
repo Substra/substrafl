@@ -93,7 +93,7 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
 
 
 def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
-    """Retrieves lib_modules' wheels from Owkin private repo (if needed) to be installed in a Docker image and generates
+    """Retrieves lib_modules' wheels to be installed in a Docker image and generates
     the appropriated install command for a dockerfile.
 
     Args:

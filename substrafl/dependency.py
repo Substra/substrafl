@@ -18,8 +18,7 @@ class Dependency(BaseModel):
 
     Args:
         editable_mode (bool): If set to False, substra, substrafl and substratools used in the
-            Dockerfiles submitted to Substra platform will be taken from owkin pypi. Be sure to have
-            access to owkin's pypi and configure accordingly your pip.conf.
+            Dockerfiles submitted to Substra platform will be taken from pypi.
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.
         dependencies (List[str]): Python packages installable from pypi.
