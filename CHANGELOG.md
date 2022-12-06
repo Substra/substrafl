@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
-- chore: remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name (#59)
+- feat: remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name.
+  The substra-tools methods is now generic, and load the inputs depending on the inputs dictionary content (#59)
 
 ### Changed
 
