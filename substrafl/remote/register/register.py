@@ -267,9 +267,6 @@ def _create_substra_algo_files(
             cl_deps=install_cmd,
             pypi_dependencies=pypi_dependencies_cmd,
             local_dependencies=local_dependencies_cmd,
-            # INFO: this is a temporary solution
-            # At the moment the method name is the one from the former Melody
-            # schemas, this will be variabilized soon
             method_name=remote_struct._method_name,
         )
     )
