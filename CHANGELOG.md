@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+- chore: remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name (#59)
+
 ### Changed
 
 - test: pass the CI e2e tests on Python 3.10 (#56)
