@@ -34,8 +34,8 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - if: startsWith(matrix.os, 'windows') == true
-        name: Run "wsl --install Ubuntu"
-        run: wsl --install --distribution Ubuntu
+        name: Switch Daemon
+        run: & $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchDaemon
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
