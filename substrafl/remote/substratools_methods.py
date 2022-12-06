@@ -13,7 +13,7 @@ from substrafl.remote.serializers.serializer import Serializer
 
 
 class RemoteMethod:
-    """Composite algo to register to Substra"""
+    """Methods to register to Substra"""
 
     def __init__(
         self,
@@ -28,14 +28,13 @@ class RemoteMethod:
         self.method_parameters = method_parameters
 
         self.shared_state_serializer = shared_state_serializer
-        self.method = None
 
     def load_method_inputs(self, inputs: TypedDict, outputs: TypedDict):
 
         loaded_inputs = {}
 
-        if InputIdentifiers.local in inputs:
-            instance_path = inputs[InputIdentifiers.local]
+        instance_path = inputs.get(InputIdentifiers.local)
+        if instance_path is not None:
             instance = self.load_instance(instance_path)
         else:
             instance = self.instance
@@ -50,7 +49,9 @@ class RemoteMethod:
             loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
 
         if InputIdentifiers.shared in inputs:
-            loaded_inputs["shared_state"] = self.load_model(inputs[InputIdentifiers.shared])
+            loaded_inputs["shared_state"] = (
+                self.load_model(inputs[InputIdentifiers.shared]) if inputs[InputIdentifiers.shared] else None
+            )
 
         if InputIdentifiers.predictions in inputs:
             loaded_inputs["predictions_path"] = inputs[InputIdentifiers.predictions]
@@ -90,42 +91,42 @@ class RemoteMethod:
         self.save_outputs(outputs, instance, method_output)
 
     def load_model(self, path: str) -> Any:
-        """Load the trunk model from disk
+        """Load the model from disk
 
         Args:
-            path (str): path to the saved trunk model
+            path (str): path to the saved model
 
         Returns:
-            Any: loaded trunk model
+            Any: loaded model
         """
         return self.shared_state_serializer.load(Path(path))
 
     def save_model(self, model, path: str) -> None:
-        """Save the trunk model
+        """Save the model
 
         Args:
-            model (typing.Any): Trunk model to save
+            model (typing.Any): Model to save
             path (str): Path where to save the model
         """
         self.shared_state_serializer.save(model, Path(path))
 
     def load_instance(self, path: str) -> Any:
-        """Load the head model from disk
+        """Load the instance from disk
 
         Args:
-            path (str): path to the saved head model
+            path (str): path to the saved instance
 
         Returns:
-            Any: loaded head model
+            Any: loaded instance
         """
         return self.instance.load(Path(path))
 
     def save_instance(self, model, path: str) -> None:
-        """Save the head model
+        """Save the instance
 
         Args:
-            model (typing.Any): Head model to save
-            path (str): Path where to save the model
+            model (typing.Any): Instance to save
+            path (str): Path where to save the instance
         """
         model.save(Path(path))
 
