@@ -36,8 +36,8 @@ jobs:
       - if: startsWith(matrix.os, 'windows') == true
         name: Switch Daemon
         run: |
-          wsl --install --distribution Ubuntu
-          wsl --set-default Ubuntu
+          wsl --install --distribution ubuntu
+          wsl --set-default ubuntu
           docker restart
 
       - name: Checkout pyconfig from a private repos
