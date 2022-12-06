@@ -35,7 +35,7 @@ jobs:
 
       - if: startsWith(matrix.os, 'windows') == true
         name: Switch Daemon
-        run: cd C:\"Program Files"\Docker\Docker
+        run: wsl --set-default ubuntu
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
