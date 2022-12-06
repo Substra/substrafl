@@ -35,8 +35,7 @@ jobs:
 
       - if: startsWith(matrix.os, 'windows') == true
         name: Switch Daemon
-        shell: pwsh
-        run: .\DockerCli.exe -SwitchLinuxEngine
+        run: docker run --rm --platform linux
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
