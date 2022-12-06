@@ -37,7 +37,8 @@ jobs:
         name: Switch Daemon
         run: |
           wsl --install --distribution Ubuntu
-          wsl --set-default ubuntu
+          wsl.exe --set-version (Ubuntu) 2
+          wsl --set-default Ubuntu
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
