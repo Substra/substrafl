@@ -35,7 +35,9 @@ jobs:
 
       - if: startsWith(matrix.os, 'windows') == true
         name: Switch Daemon
-        run: wsl --set-default ubuntu
+        run: |
+          wsl --install --distribution Ubuntu
+          wsl --set-default ubuntu
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
