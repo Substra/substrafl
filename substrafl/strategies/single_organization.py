@@ -60,9 +60,6 @@ class SingleOrganization(Strategy):
                 space to fill quickly so should be set to True unless needed.
         """
 
-        if round_idx == 0:
-            return
-
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
 
@@ -73,19 +70,32 @@ class SingleOrganization(Strategy):
                 f" but {n_train_data_nodes} were passed."
             )
 
-        # define composite tuples (do not submit yet)
-        # for each composite tuple give description of Algo instead of a key for an algo
-        next_local_state, _ = train_data_nodes[0].update_states(
-            algo.train(  # type: ignore
-                train_data_nodes[0].data_sample_keys,
-                shared_state=None,
-                _algo_name=f"Training with {algo.__class__.__name__}",
-            ),
-            local_state=self.local_state,
-            round_idx=round_idx,
-            authorized_ids=[train_data_nodes[0].organization_id],
-            clean_models=clean_models,
-        )
+        if round_idx == 0:
+            next_local_state, _ = train_data_nodes[0].update_states(
+                algo.initialization(  # type: ignore
+                    train_data_nodes[0].data_sample_keys,
+                    shared_state=None,
+                    _algo_name=f"Training with {algo.__class__.__name__}",
+                ),
+                local_state=self.local_state,
+                round_idx=round_idx,
+                authorized_ids=[train_data_nodes[0].organization_id],
+                clean_models=clean_models,
+            )
+        else:
+            # define composite tuples (do not submit yet)
+            # for each composite tuple give description of Algo instead of a key for an algo
+            next_local_state, _ = train_data_nodes[0].update_states(
+                algo.train(  # type: ignore
+                    train_data_nodes[0].data_sample_keys,
+                    shared_state=None,
+                    _algo_name=f"Training with {algo.__class__.__name__}",
+                ),
+                local_state=self.local_state,
+                round_idx=round_idx,
+                authorized_ids=[train_data_nodes[0].organization_id],
+                clean_models=clean_models,
+            )
 
         # keep the states in a list: one/organization
         self.local_state = next_local_state
@@ -97,9 +107,6 @@ class SingleOrganization(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        if round_idx == 0:
-            logger.warning(f"The evaluation at round zero for {self.name} will be ignored as it is not supported yet.")
-            return
 
         if len(train_data_nodes) != 1:
             raise ValueError(

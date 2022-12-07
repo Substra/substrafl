@@ -9,6 +9,7 @@ import torch
 
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
 from substrafl.index_generator import BaseIndexGenerator
+from substrafl.remote import remote
 from substrafl.remote import remote_data
 from substrafl.schemas import StrategyName
 
@@ -144,6 +145,13 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             typing.List: typing.List[StrategyName]
         """
         return [StrategyName.ONE_ORGANIZATION]
+
+    @remote
+    def initialization(
+        self,
+        shared_states=None,
+    ):
+        return {"None": np.array([])}
 
     @remote_data
     def train(
