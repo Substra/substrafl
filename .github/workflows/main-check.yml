@@ -36,23 +36,7 @@ jobs:
       - if: startsWith(matrix.os, 'windows') == true
         name: Switch Daemon
         run: |
-          Install-WindowsFeature -Name Hyper-V,Containers -IncludeAllSubFeature -IncludeManagementTools
-          [Environment]::SetEnvironmentVariable("LCOW_SUPPORTED", "1", "Machine")
-          cd C:\Windows\system32
-          $configfile = @"
-
-          {
-
-            "experimental": true
-
-          }
-
-          "@
-          $configfile|Out-File -FilePath C:\ProgramData\docker\config\daemon.json -Encoding ascii -Force
-          C:\Program Files\Linux Containers
-          Invoke-WebRequest -Uri "https://github.com/linuxkit/lcow/releases/download/v4.14.35-v0.3.9/release.zip" -UseBasicParsing -OutFile release.zip
-          Expand-Archive release.zip -DestinationPath “$Env:ProgramFiles\Linux Containers\.”
-          Restart-Service docker
+          wsl --install
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
