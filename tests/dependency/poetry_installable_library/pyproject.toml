@@ -1,5 +1,5 @@
 [tool.poetry]
-authors = ["Louis Hulot <louis.hulot@owkin.com>"]
+authors = ["Substra dev team"]
 description = "Test packages for substrafl."
 name = "substrafltestlibrary"
 version = "0.1.0"
