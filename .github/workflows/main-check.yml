@@ -33,12 +33,6 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-      - if: startsWith(matrix.os, 'windows') == true
-        name: Switch Daemon
-        run: |
-          wsl --install --distribution ubuntu
-          wsl --set-default ubuntu
-
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
         with:
