@@ -30,6 +30,17 @@ class RemoteMethod:
         self.shared_state_serializer = shared_state_serializer
 
     def load_method_inputs(self, inputs: TypedDict, outputs: TypedDict):
+        """Load the different parameters needed from the inputs and outputs dictionaries
+        and increment a loaded_inputs dictionary depending on the InputIdentifiers or
+        OutputIdentifiers of the parameter.
+
+        Args:
+            inputs (TypedDict):  dictionary containing the paths where to load the arguments for the method.
+            outputs (TypedDict):  dictionary containing the paths where to save the output for the method.
+
+        Returns:
+            TypeDict: dictionary containing the kwargs of the method to call.
+        """
 
         loaded_inputs = {}
 
@@ -59,7 +70,14 @@ class RemoteMethod:
 
         return loaded_inputs
 
-    def save_outputs(self, outputs, method_output):
+    def save_method_output(self, method_output, outputs):
+        """Save the method output on the path given in outputs,
+        depending on the value of the OutputIdentifiers.
+
+        Args:
+            outputs (_type_): dictionary containing the paths where to save the output for the method.
+            method_output (_type_): return value from the called method.
+        """
 
         if OutputIdentifiers.local in outputs:
             self.save_instance(outputs[OutputIdentifiers.local])
@@ -92,7 +110,7 @@ class RemoteMethod:
         method_inputs["_skip"] = True
         method_output = method_to_call(**{**method_inputs, **self.method_parameters})
 
-        self.save_outputs(outputs, method_output)
+        self.save_method_output(method_output, outputs)
 
     def load_model(self, path: str) -> Any:
         """Load the model from disk
@@ -134,8 +152,8 @@ class RemoteMethod:
         """
         self.instance.save(Path(path))
 
-    def register_substratools_functions(self):
-        """Register the functions that can be accessed and executed by substratools."""
+    def register_substratools_function(self):
+        """Register the function that can be accessed and executed by substratools."""
 
         tools.register(
             function=self.generic_function,
