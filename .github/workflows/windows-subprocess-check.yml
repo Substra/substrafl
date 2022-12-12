@@ -1,4 +1,4 @@
-name: main
+name: windows subprocess
 on:
   push:
     branches:
