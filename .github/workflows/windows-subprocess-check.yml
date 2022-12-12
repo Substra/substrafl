@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         python: ["3.8", "3.9", "3.10"]
 
     steps:
@@ -23,20 +23,6 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
-
-      - if: startsWith(matrix.os, 'ubuntu') == true
-        name: Free disk space
-        run: |
-          # Based on https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-      - if: startsWith(matrix.os, 'windows') == true
-        name: Switch Daemon
-        run: |
-          wsl --install
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
@@ -67,7 +53,7 @@ jobs:
           USE_LATEST_SUBSTRATOOLS: True
         run: |
           cd substrafl
-          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-local-slow
+          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-subprocess
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
