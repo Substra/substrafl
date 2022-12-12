@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
         python: ["3.8", "3.9", "3.10"]
 
     steps:
@@ -32,6 +32,11 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - if: startsWith(matrix.os, 'windows') == true
+        name: Switch Daemon
+        run: |
+          wsl --install
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
@@ -53,9 +58,9 @@ jobs:
 
       - name: Install package
         run: |
-          pip install --upgrade -e substrafl[dev]
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
+          pip install --upgrade -e substrafl[dev]
 
       - name: Run the slow local tests
         env:
