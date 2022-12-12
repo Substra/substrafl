@@ -1,4 +1,4 @@
-name: windows subprocess
+name: windows-subprocess-check
 on:
   push:
     branches:
@@ -48,7 +48,7 @@ jobs:
           pip install --upgrade -e substratools
           pip install --upgrade -e substrafl[dev]
 
-      - name: Run the slow local tests
+      - name: Run the subprocess tests
         env:
           USE_LATEST_SUBSTRATOOLS: True
         run: |
