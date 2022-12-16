@@ -35,11 +35,11 @@ class RemoteMethod:
         OutputIdentifiers of the parameter.
 
         Args:
-            inputs (typing.TypedDict):  dictionary containing the paths where to load the arguments for the method.
-            outputs (typing.TypedDict):  dictionary containing the paths where to save the output for the method.
+            inputs (TypedDict):  dictionary containing the paths where to load the arguments for the method.
+            outputs (TypedDict):  dictionary containing the paths where to save the output for the method.
 
         Returns:
-            TypeDict: dictionary containing the kwargs of the method to call.
+            TypedDict: dictionary containing the kwargs of the method to call.
         """
 
         loaded_inputs = {}
@@ -75,8 +75,8 @@ class RemoteMethod:
         depending on the value of the OutputIdentifiers.
 
         Args:
-        method_output (typing.Any): return value from the called method.
-            outputs (typing.TypedDict): dictionary containing the paths where to save the output for the method.
+        method_output (Any): return value from the called method.
+            outputs (TypedDict): dictionary containing the paths where to save the output for the method.
         """
 
         if OutputIdentifiers.local in outputs:
@@ -100,9 +100,9 @@ class RemoteMethod:
         """Generic function to be registered and executed on the Substra platform using substra-tools.
 
         Args:
-            inputs (typing.TypedDict): dictionary containing the paths where to load the arguments for the method.
-            outputs (typing.TypedDict): dictionary containing the paths where to save the output of the method.
-            task_properties (typing.TypedDict): Unused.
+            inputs (TypedDict): dictionary containing the paths where to load the arguments for the method.
+            outputs (TypedDict): dictionary containing the paths where to save the output of the method.
+            task_properties (TypedDict): Unused.
         """
 
         method_inputs = self.load_method_inputs(inputs, outputs)
@@ -131,7 +131,7 @@ class RemoteMethod:
         """Save the model
 
         Args:
-            model (typing.Any): Model to save
+            model (Any): Model to save
             path (str): Path where to save the model
         """
         self.shared_state_serializer.save(model, Path(path))
@@ -151,7 +151,7 @@ class RemoteMethod:
         """Save the instance
 
         Args:
-            model (typing.Any): Instance to save
+            model (Any): Instance to save
             path (str): Path where to save the instance
         """
         self.instance.save(Path(path))
