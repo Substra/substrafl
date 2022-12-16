@@ -75,7 +75,7 @@ class RemoteMethod:
         depending on the value of the OutputIdentifiers.
 
         Args:
-        method_output (Any): return value from the called method.
+        method_output (typing.Any): return value from the called method.
             outputs (typing.TypedDict): dictionary containing the paths where to save the output for the method.
         """
 
