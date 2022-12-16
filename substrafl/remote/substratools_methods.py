@@ -35,8 +35,8 @@ class RemoteMethod:
         OutputIdentifiers of the parameter.
 
         Args:
-            inputs (TypedDict):  dictionary containing the paths where to load the arguments for the method.
-            outputs (TypedDict):  dictionary containing the paths where to save the output for the method.
+            inputs (typing.TypedDict):  dictionary containing the paths where to load the arguments for the method.
+            outputs (typing.TypedDict):  dictionary containing the paths where to save the output for the method.
 
         Returns:
             TypeDict: dictionary containing the kwargs of the method to call.
@@ -76,7 +76,7 @@ class RemoteMethod:
 
         Args:
         method_output (Any): return value from the called method.
-            outputs (TypedDict): dictionary containing the paths where to save the output for the method.
+            outputs (typing.TypedDict): dictionary containing the paths where to save the output for the method.
         """
 
         if OutputIdentifiers.local in outputs:
@@ -102,7 +102,7 @@ class RemoteMethod:
         Args:
             inputs (typing.TypedDict): dictionary containing the paths where to load the arguments for the method.
             outputs (typing.TypedDict): dictionary containing the paths where to save the output of the method.
-            task_properties (TypedDict): Unused.
+            task_properties (typing.TypedDict): Unused.
         """
 
         method_inputs = self.load_method_inputs(inputs, outputs)
