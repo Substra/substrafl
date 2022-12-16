@@ -70,13 +70,13 @@ class RemoteMethod:
 
         return loaded_inputs
 
-    def save_method_output(self, method_output, outputs):
+    def save_method_output(self, method_output: Any, outputs: TypedDict):
         """Save the method output on the path given in outputs,
         depending on the value of the OutputIdentifiers.
 
         Args:
-            outputs (_type_): dictionary containing the paths where to save the output for the method.
-            method_output (_type_): return value from the called method.
+        method_output (Any): return value from the called method.
+            outputs (TypedDict): dictionary containing the paths where to save the output for the method.
         """
 
         if OutputIdentifiers.local in outputs:
