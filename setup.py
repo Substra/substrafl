@@ -37,7 +37,7 @@ setup(
     packages=find_packages(exclude=["tests*", "benchmark*"]),
     # Not compatible with substratools 0.8.0 because
     # that release is private and in the Docker container
-    # it has access only to the public PyPi
+    # it has access only to the public PyP
     install_requires=[
         "numpy>=1.20.3",
         "cloudpickle>=1.6.0",
