@@ -10,7 +10,7 @@ from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import Permissions
 
 DEFAULT_SUBSTRATOOLS_VERSION = (
-    f"latest-nvidiacuda11.8.0-base-ubuntu22.04-python{sys.version_info.major}.{sys.version_info.minor}"
+    f"0.20.0rc1-nvidiacuda11.8.0-base-ubuntu22.04-python{sys.version_info.major}.{sys.version_info.minor}"
 )
 
 DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"ghcr.io/substra/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
