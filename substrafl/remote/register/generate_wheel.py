@@ -34,8 +34,6 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
     wheels_dir = operation_dir / dest_dir
     wheels_dir.mkdir(exist_ok=True, parents=True)
     for lib_module in lib_modules:
-        wheel_name = f"{lib_module.__name__}-{lib_module.__version__}-py3-none-any.whl"
-
         if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
             msg = ", ".join([lib.__name__ for lib in lib_modules])
             raise NotImplementedError(
