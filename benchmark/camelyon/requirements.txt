@@ -1,4 +1,3 @@
-substrafl
 tqdm==4.62.3
 numpy==1.23.1
 scikit-learn==1.1.1

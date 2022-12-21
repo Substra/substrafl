@@ -52,9 +52,9 @@ jobs:
 
       - name: Install package
         run: |
+          pip install --upgrade -e substrafl[dev]
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
-          pip install --upgrade -e substrafl[dev]
 
       - name: Run the fast local tests
         env:
@@ -142,9 +142,9 @@ jobs:
 
       - name: Install package
         run: |
+          pip install --upgrade -e substrafl[dev]
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
-          pip install --upgrade -e substrafl[dev]
           pip install --upgrade -r substrafl/benchmark/camelyon/requirements.txt
 
       - name: Run the local benchmark
