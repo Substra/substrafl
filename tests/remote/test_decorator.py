@@ -65,7 +65,7 @@ def test_remote_data_get_method_from_remote_struct(session_dir):
     assert isinstance(data_op, DataOperation)
 
     new_remote_class = data_op.remote_struct.get_remote_instance()
-    new_remote_class.save_trunk_model(4, session_dir / InputIdentifiers.shared)
+    new_remote_class.save_model(4, session_dir / InputIdentifiers.shared)
     inputs = {
         InputIdentifiers.datasamples: (4, 5),
         InputIdentifiers.local: None,
@@ -78,9 +78,9 @@ def test_remote_data_get_method_from_remote_struct(session_dir):
     task_properties = {
         InputIdentifiers.rank: 0,
     }
-    new_remote_class.train(inputs, outputs, task_properties)
+    new_remote_class.generic_function(inputs, outputs, task_properties)
 
-    result = new_remote_class.load_head_model(session_dir / OutputIdentifiers.local.value)
+    result = new_remote_class.load_instance(session_dir / OutputIdentifiers.local.value)
     assert result == 13
 
 
@@ -93,7 +93,7 @@ def test_remote_data_extra_arg(session_dir):
 
     new_remote_class = data_op.remote_struct.get_remote_instance()
 
-    new_remote_class.save_trunk_model(4, session_dir / InputIdentifiers.shared)
+    new_remote_class.save_model(4, session_dir / InputIdentifiers.shared)
     inputs = {
         InputIdentifiers.datasamples: (4, 5),
         InputIdentifiers.local: None,
@@ -107,9 +107,9 @@ def test_remote_data_extra_arg(session_dir):
         InputIdentifiers.rank: 0,
     }
 
-    new_remote_class.train(inputs, outputs, task_properties)
+    new_remote_class.generic_function(inputs, outputs, task_properties)
 
-    result = new_remote_class.load_head_model(session_dir / OutputIdentifiers.local.value)
+    result = new_remote_class.load_instance(session_dir / OutputIdentifiers.local.value)
     assert result == 113
 
 

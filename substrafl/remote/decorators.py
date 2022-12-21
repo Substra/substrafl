@@ -11,7 +11,6 @@ from typing import Optional
 from substrafl.remote.operations import AggregateOperation
 from substrafl.remote.operations import DataOperation
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.remote.substratools_methods import RemoteDataMethod
 from substrafl.remote.substratools_methods import RemoteMethod
 
 
@@ -78,7 +77,7 @@ def remote_data(method: Callable):
                 method_name=method.__name__,
                 method_parameters=method_parameters,
                 algo_name=_algo_name,
-                remote_cls=RemoteDataMethod,
+                remote_cls=RemoteMethod,
             ),
             data_samples,
             shared_state,

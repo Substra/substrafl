@@ -25,7 +25,7 @@ from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.remote.substratools_methods import RemoteDataMethod
+from substrafl.remote.substratools_methods import RemoteMethod
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     remote_instance = remote_struct.get_remote_instance()
 
     # Register the functions to substra-tools
-    remote_instance.register_substratools_functions()
+    remote_instance.register_substratools_function()
 
     # Execute the algo using substra-tools
     tools.execute()
@@ -267,12 +267,7 @@ def _create_substra_algo_files(
             cl_deps=install_cmd,
             pypi_dependencies=pypi_dependencies_cmd,
             local_dependencies=local_dependencies_cmd,
-            # INFO: this is a temporary solution
-            # At the moment the method name is the one from the former Melody
-            # schemas, this will be variabilized soon
-            method_name=remote_struct._method_name
-            if remote_struct._remote_cls.__name__ == RemoteDataMethod.__name__
-            else "aggregate",
+            method_name=remote_struct._method_name,
         )
     )
 
@@ -386,7 +381,9 @@ def add_metric(
     _check_metric_function(metric_function=metric_function)
 
     class Metric:
-        def score(self, datasamples, predictions_path):
+        def score(self, datasamples, predictions_path, _skip=True):
+            # The _skip argument is needed to match the default signature of methods executed
+            # on substratools_methods.py.
             return metric_function(datasamples=datasamples, predictions_path=predictions_path)
 
     inputs_metrics = [
@@ -422,7 +419,7 @@ def add_metric(
         cls=Metric,
         cls_args=[],
         cls_kwargs={},
-        remote_cls=RemoteDataMethod,
+        remote_cls=RemoteMethod,
         method_name="score",
         method_parameters={},
         algo_name=metric_name or "metric_" + metric_function.__name__,
