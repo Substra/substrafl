@@ -202,9 +202,9 @@ def _create_substra_algo_files(
         if dependencies.editable_mode:
             install_cmd = local_lib_wheels(
                 lib_modules=[
-                    substratools,
-                    substra,
                     substrafl,
+                    substra,
+                    substratools,
                 ],  # We reinstall substratools in editable mode to overwrite the installed version
                 operation_dir=operation_dir,
                 python_major_minor=python_major_minor,
@@ -212,7 +212,7 @@ def _create_substra_algo_files(
             )
         else:
             install_cmd = pypi_lib_wheels(
-                lib_modules=[substra, substrafl],
+                lib_modules=[substrafl, substra],
                 operation_dir=operation_dir,
                 python_major_minor=python_major_minor,
                 dest_dir=f"{SUBSTRAFL_FOLDER}/dist",
