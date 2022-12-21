@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         python: ["3.8", "3.9", "3.10"]
 
     steps:
@@ -50,9 +50,9 @@ jobs:
 
       - name: Install package
         run: |
+          pip install --upgrade -e substrafl[dev]
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
-          pip install --upgrade -e substrafl[dev]
 
       - name: Run the slow local tests
         env:
