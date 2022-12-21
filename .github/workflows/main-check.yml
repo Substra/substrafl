@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         python: ["3.8", "3.9", "3.10"]
 
     steps:
@@ -21,8 +21,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - if: startsWith(matrix.os, 'ubuntu') == true
-        name: Free disk space
+      - name: Free disk space
         run: |
           # Based on https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
           sudo rm -rf /usr/share/dotnet
