@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main # TO REMOVE AFTER REVIEW
 jobs:
   pr-validation:
     name: test-${{ matrix.os }}-py-${{ matrix.python }}
