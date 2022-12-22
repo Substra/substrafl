@@ -3,13 +3,16 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 jobs:
   pr-validation:
     name: test-py-${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04, windows-latest]
         python: ["3.8", "3.9", "3.10"]
 
     steps:
