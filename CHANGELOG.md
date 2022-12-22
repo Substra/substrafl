@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+- fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: __generator_ctor(). Remove version from requirements.
+
 ### Changed
 
 - test: pass the CI e2e tests on Python 3.10 (#56)
