@@ -96,6 +96,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
 def main():
     # https://github.com/pytest-dev/pytest-flask/issues/104
     # necessary on OS X, Python >= 3.8 to run multiprocessing
+    # Not supported on Windows. Change to "spawn" if needed.
     multiprocessing.set_start_method("fork")
 
     # Parse experiment params from the cli and system configuration
