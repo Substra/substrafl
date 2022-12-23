@@ -136,7 +136,6 @@ def add_duplicated_dataset(
 
     data_sample = DataSampleSpec(
         data_manager_keys=[dataset_key],
-        test_only=kind == "test",
         path=data_sample_folder,
     )
 
