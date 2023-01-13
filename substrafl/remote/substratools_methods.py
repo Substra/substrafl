@@ -108,11 +108,17 @@ class RemoteMethod:
         method_inputs = self.load_method_inputs(inputs, outputs)
         method_to_call = getattr(self.instance, self.method_name)
 
-        method_inputs["_skip"] = True
-        method_output = method_to_call(
-            **method_inputs,
-            **self.method_parameters,
-        )
+        try:
+            method_output = method_to_call(
+                **method_inputs,
+                **self.method_parameters,
+                _skip=True,
+            )
+        except TypeError:
+            method_output = method_to_call(
+                **method_inputs,
+                **self.method_parameters,
+            )
 
         self.save_method_output(method_output, outputs)
 
