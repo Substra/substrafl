@@ -240,7 +240,8 @@ def test_np_index_generator_reset():
         next(nig)
 
 
-def test_np_index_generator_torch_dataloader():
+@pytest.mark.parametrize("num_workers", list(range(6)))
+def test_np_index_generator_torch_dataloader(num_workers):
     """Test that the index generator works with a torch dataloader"""
     n_samples = 100
     num_updates = 10
@@ -262,6 +263,7 @@ def test_np_index_generator_torch_dataloader():
     dataloader = torch.utils.data.DataLoader(
         dataset=DummyDataset(),
         batch_sampler=nig,
+        num_workers=num_workers,
     )
     for _, expected, batch in zip(range(num_updates), nig_copy, dataloader):
         assert np.array_equal(expected, batch.numpy())

@@ -1,5 +1,6 @@
 import multiprocessing
 import shutil
+import sys
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -47,7 +48,10 @@ def pytest_addoption(parser):
 def set_multiprocessing_variable():
     # https://github.com/pytest-dev/pytest-flask/issues/104
     # necessary on OS X to run multiprocessing
-    multiprocessing.set_start_method("spawn")
+    if sys.platform == "win32":
+        multiprocessing.set_start_method("spawn")
+    else:
+        multiprocessing.set_start_method("fork")
 
 
 @pytest.fixture(scope="session")
