@@ -1,4 +1,5 @@
 import pickle
+import sys
 import tempfile
 from pathlib import Path
 
@@ -240,6 +241,7 @@ def test_np_index_generator_reset():
         next(nig)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="requires multiprocessing.set_start_method to fork, only for unix")
 @pytest.mark.parametrize("num_workers", list(range(6)))
 def test_np_index_generator_torch_dataloader(num_workers):
     """Test that the index generator works with a torch dataloader"""

@@ -1,6 +1,7 @@
 import json
 import multiprocessing
 import shutil
+import sys
 import time
 from pathlib import Path
 
@@ -96,7 +97,10 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
 def main():
     # https://github.com/pytest-dev/pytest-flask/issues/104
     # necessary on OS X, Python >= 3.8 to run multiprocessing
-    multiprocessing.set_start_method("fork")
+    if sys.platform == "win32":
+        multiprocessing.set_start_method("spawn")
+    else:
+        multiprocessing.set_start_method("fork")
 
     # Parse experiment params from the cli and system configuration
     params = parse_params()

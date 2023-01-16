@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- test: add Github Action to run subprocess tests on Windows after each merge (#60)
 - test: pass the CI e2e tests on Python 3.10 (#56)
 
 ### Fixed

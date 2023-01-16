@@ -1,4 +1,4 @@
-name: main
+name: windows-subprocess-check
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [windows-latest]
         python: ["3.8", "3.9", "3.10"]
 
     steps:
@@ -21,14 +21,6 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
-
-      - name: Free disk space
-        run: |
-          # Based on https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3
@@ -50,17 +42,16 @@ jobs:
 
       - name: Install package
         run: |
-          pip install --upgrade pip
           pip install --upgrade -e substrafl[dev]
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
 
-      - name: Run the slow local tests
+      - name: Run the subprocess tests
         env:
           USE_LATEST_SUBSTRATOOLS: True
         run: |
           cd substrafl
-          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-local-slow
+          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-subprocess
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
