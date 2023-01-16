@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Added
+
+- chore: Add contributing, contributors & code of conduct files (#68)
+
 ### Removed
 
 - Test only field for datasamples (#67)
@@ -25,7 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: __generator_ctor(). Remove version from requirements. ([Issue open](https://github.com/cloudpipe/cloudpickle/issues/493))
+<<<<<<< HEAD
+
+- # fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: \_\_generator_ctor(). Remove version from requirements. ([Issue open](https://github.com/cloudpipe/cloudpickle/issues/493))
+- fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: \_\_generator_ctor(). Remove version from requirements.
+  > > > > > > > 6cc1489 (Update changelog)
 
 ## [0.32.0](https://github.com/Substra/substrafl/releases/tag/0.32.0) - 2022-11-22
 
