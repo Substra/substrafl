@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+- feat: remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name.
+  The substra-tools methods is now generic, and load the inputs depending on the inputs dictionary content (#59)
+
 ## [0.33.0](https://github.com/Substra/substrafl/releases/tag/0.33.0) - 2022-12-19
 
 ### Changed

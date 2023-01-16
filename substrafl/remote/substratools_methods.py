@@ -13,7 +13,7 @@ from substrafl.remote.serializers.serializer import Serializer
 
 
 class RemoteMethod:
-    """Aggregate algo to register to Substra."""
+    """Methods to register to Substra"""
 
     def __init__(
         self,
@@ -29,207 +29,138 @@ class RemoteMethod:
 
         self.shared_state_serializer = shared_state_serializer
 
-    def aggregate(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
-        """Aggregation operation
+    def load_method_inputs(self, inputs: TypedDict, outputs: TypedDict):
+        """Load the different parameters needed from the inputs and outputs dictionaries
+        and increment a loaded_inputs dictionary depending on the InputIdentifiers or
+        OutputIdentifiers of the parameter.
 
         Args:
-            inputs (typing.TypedDict): dictionary containing:
-                the list of models path loaded with `AggregateAlgo.load_model()`;
-            outputs (typing.TypedDict):dictionary containing:
-                the output model path to save the aggregated model.
-            task_properties (typing.TypedDict): dictionary containing:
-                the rank of the aggregate task.
-        """
-        models = []
-        for m_path in inputs[InputIdentifiers.models]:
-            models.append(self.load_model(m_path))
-
-        method_to_call = getattr(self.instance, self.method_name)
-        next_shared_state = method_to_call(shared_states=models, _skip=True, **self.method_parameters)
-
-        self.save_model(next_shared_state, outputs[OutputIdentifiers.model])
-
-    def load_model(self, path: str) -> Any:
-        """Load the model from disk, may be a in model of the aggregate
-        or the out aggregated model.
-
-        Args:
-            path (str): Path where the model is saved
+            inputs (TypedDict):  dictionary containing the paths where to load the arguments for the method.
+            outputs (TypedDict):  dictionary containing the paths where to save the output for the method.
 
         Returns:
-            Any: Loaded model
+            TypedDict: dictionary containing the kwargs of the method to call.
         """
-        return self.shared_state_serializer.load(Path(path))
 
-    def save_model(self, model, path: str):
-        """Save the model
+        loaded_inputs = {}
+
+        instance_path = inputs.get(InputIdentifiers.local)
+        if instance_path is not None:
+            self.instance = self.load_instance(instance_path)
+
+        if InputIdentifiers.models in inputs:
+            models = []
+            for m_path in inputs[InputIdentifiers.models]:
+                models.append(self.load_model(m_path))
+            loaded_inputs["shared_states"] = models
+
+        if InputIdentifiers.datasamples in inputs:
+            loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
+
+        if InputIdentifiers.shared in inputs:
+            loaded_inputs["shared_state"] = (
+                self.load_model(inputs[InputIdentifiers.shared]) if inputs[InputIdentifiers.shared] else None
+            )
+
+        if InputIdentifiers.predictions in inputs:
+            loaded_inputs["predictions_path"] = inputs[InputIdentifiers.predictions]
+
+        if OutputIdentifiers.predictions in outputs:
+            loaded_inputs["predictions_path"] = outputs[OutputIdentifiers.predictions]
+
+        return loaded_inputs
+
+    def save_method_output(self, method_output: Any, outputs: TypedDict):
+        """Save the method output on the path given in outputs,
+        depending on the value of the OutputIdentifiers.
 
         Args:
-            model (typing.Any): Model to save
-            path (str): Path where to save the model
+            method_output (Any): return value from the called method.
+            outputs (TypedDict): dictionary containing the paths where to save the output for the method.
         """
-        self.shared_state_serializer.save(model, Path(path))
 
-    def register_substratools_functions(self):
-        """Register the functions that can be accessed and executed by substratools."""
+        if OutputIdentifiers.local in outputs:
+            self.save_instance(outputs[OutputIdentifiers.local])
 
-        tools.register(self.aggregate)
+        if OutputIdentifiers.model in outputs:
+            self.save_model(method_output, outputs[OutputIdentifiers.model])
 
+        elif OutputIdentifiers.shared in outputs:
+            self.save_model(method_output, outputs[OutputIdentifiers.shared])
 
-class RemoteDataMethod:
-    """Composite algo to register to Substra"""
+        elif OutputIdentifiers.performance in outputs:
+            tools.save_performance(method_output, outputs[OutputIdentifiers.performance])
 
-    def __init__(
-        self,
-        instance,
-        method_name: str,
-        method_parameters: Dict,
-        shared_state_serializer: Type[Serializer] = PickleSerializer,
-    ):
-        self.instance = instance
-
-        self.method_name = method_name
-        self.method_parameters = method_parameters
-
-        self.shared_state_serializer = shared_state_serializer
-
-    def train(
+    def generic_function(
         self,
         inputs: TypedDict,
         outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
         task_properties: TypedDict,
     ) -> None:
-        """train method
+        """Generic function to be registered and executed on the Substra platform using substra-tools.
 
         Args:
-            inputs (typing.TypedDict): dictionary containing:
-                the training data samples loaded with `Opener.get_data()`;
-                the head model loaded with `CompositeAlgo.load_head_model()` (may be None);
-                the trunk model loaded with `CompositeAlgo.load_trunk_model()` (may be None);
-                the rank of the training task.
-            outputs (typing.TypedDict): dictionary containing:
-                the output head model path to save the head model;
-                the output trunk model path to save the trunk model.
+            inputs (TypedDict): dictionary containing the paths where to load the arguments for the method.
+            outputs (TypedDict): dictionary containing the paths where to save the output of the method.
             task_properties (TypedDict): Unused.
         """
-        # head_model should be None only at initialization
-        head_model_path = inputs.get(InputIdentifiers.local)
-        trunk_model_path = inputs.get(InputIdentifiers.shared)
 
-        if head_model_path is not None:
-            instance = self.load_head_model(head_model_path)
-        else:
-            instance = self.instance
+        method_inputs = self.load_method_inputs(inputs, outputs)
+        method_to_call = getattr(self.instance, self.method_name)
 
-        trunk_model = self.load_trunk_model(trunk_model_path) if trunk_model_path else None
-        datasamples = inputs[InputIdentifiers.datasamples]
+        method_inputs["_skip"] = True
 
-        method_to_call = instance.train
-        next_shared_state = method_to_call(
-            datasamples=datasamples, shared_state=trunk_model, _skip=True, **self.method_parameters
-        )
-
-        self.save_head_model(instance, outputs[OutputIdentifiers.local])
-        self.save_trunk_model(next_shared_state, outputs[OutputIdentifiers.shared])
-
-    def predict(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
-        """predict function
-
-        Args:
-            inputs (typing.TypedDict): dictionary containing:
-                the testing data samples loaded with `Opener.get_data()`;
-                the head model loaded with `CompositeAlgo.load_head_model()`;
-                the trunk model loaded with `CompositeAlgo.load_trunk_model()`;
-            outputs (typing.TypedDict): dictionary containing:
-                the output predictions path to save the predictions.
-            task_properties (TypedDict): Unused.
-        """
-        head_model_path = inputs.get(InputIdentifiers.local)
-        assert head_model_path is not None, "head model is None. Possibly you did not train() before running predict()"
-        instance = self.load_head_model(head_model_path)
-
-        method_to_call = instance.predict
-        trunk_model = self.load_trunk_model(inputs.get(InputIdentifiers.shared))
-        datasamples = inputs[InputIdentifiers.datasamples]
-
-        predictions_path = outputs[OutputIdentifiers.predictions]
-
-        method_to_call(
-            datasamples=datasamples,
-            shared_state=trunk_model,
-            predictions_path=predictions_path,
-            _skip=True,
+        method_output = method_to_call(
+            **method_inputs,
             **self.method_parameters,
         )
 
-    def score(
-        self,
-        inputs: TypedDict,
-        outputs: TypedDict,
-        task_properties: TypedDict,
-    ) -> None:
+        self.save_method_output(method_output, outputs)
 
-        datasamples = inputs[InputIdentifiers.datasamples]
-        predictions_path = inputs[InputIdentifiers.predictions]
-
-        method_to_call = self.instance.score
-        perf = method_to_call(datasamples=datasamples, predictions_path=predictions_path)
-
-        tools.save_performance(perf, outputs[OutputIdentifiers.performance])
-
-    def load_trunk_model(self, path: str) -> Any:
-        """Load the trunk model from disk
+    def load_model(self, path: str) -> Any:
+        """Load the model from disk
 
         Args:
-            path (str): path to the saved trunk model
+            path (str): path to the saved model
 
         Returns:
-            Any: loaded trunk model
+            Any: loaded model
         """
         return self.shared_state_serializer.load(Path(path))
 
-    def save_trunk_model(self, model, path: str) -> None:
-        """Save the trunk model
+    def save_model(self, model, path: str) -> None:
+        """Save the model
 
         Args:
-            model (typing.Any): Trunk model to save
+            model (Any): Model to save
             path (str): Path where to save the model
         """
         self.shared_state_serializer.save(model, Path(path))
 
-    def load_head_model(self, path: str) -> Any:
-        """Load the head model from disk
+    def load_instance(self, path: str) -> Any:
+        """Load the instance from disk
 
         Args:
-            path (str): path to the saved head model
+            path (str): path to the saved instance
 
         Returns:
-            Any: loaded head model
+            Any: loaded instance
         """
         return self.instance.load(Path(path))
 
-    def save_head_model(self, model, path: str) -> None:
-        """Save the head model
+    def save_instance(self, path: str) -> None:
+        """Save the instance
 
         Args:
-            model (typing.Any): Head model to save
-            path (str): Path where to save the model
+            model (Any): Instance to save
+            path (str): Path where to save the instance
         """
-        model.save(Path(path))
+        self.instance.save(Path(path))
 
-    def register_substratools_functions(self):
-        """Register the functions that can be accessed and executed by substratools."""
+    def register_substratools_function(self):
+        """Register the function that can be accessed and executed by substratools."""
 
-        tools.register(self.train)
-        tools.register(self.predict)
-        tools.register(self.score)
+        tools.register(
+            function=self.generic_function,
+            function_name=self.method_name,
+        )
