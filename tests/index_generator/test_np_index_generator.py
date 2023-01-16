@@ -250,7 +250,7 @@ def test_np_index_generator_torch_dataloader(num_workers):
     nig = NpIndexGenerator(batch_size=3, shuffle=True, drop_last=True, seed=10, num_updates=num_updates)
     nig.n_samples = n_samples
     nig_copy = NpIndexGenerator(batch_size=3, shuffle=True, drop_last=True, seed=10, num_updates=num_updates)
-    nig_copy.n_samples = n_samples + 1
+    nig_copy.n_samples = n_samples
 
     class DummyDataset(torch.utils.data.Dataset):
         def __init__(self):
