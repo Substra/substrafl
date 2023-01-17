@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: __generator_ctor(). Remove version from requirements.
+- fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: __generator_ctor(). Remove version from requirements. ([Issue open](https://github.com/cloudpipe/cloudpickle/issues/493))
 
 ## [0.32.0](https://github.com/Substra/substrafl/releases/tag/0.32.0) - 2022-11-22
 
