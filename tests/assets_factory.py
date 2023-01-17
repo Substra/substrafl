@@ -105,7 +105,7 @@ def add_numpy_samples(
 ) -> List[str]:
     """Each client will associated one element of the contents list (pairs are made according to their respective index)
     with the corresponding dataset key and submit it to substra. The content will be stored in the tmp_folder in the
-    process. All the samples will be added with the argument `test_only=False`
+    process.
 
     Args:
         contents (List[np.ndarray]): Numpy contents to add to each organization.
@@ -134,7 +134,6 @@ def add_numpy_samples(
 
         data_sample_spec = DataSampleSpec(
             data_manager_keys=[dataset_key],
-            test_only=False,
             path=data_sample_folder,
         )
 
