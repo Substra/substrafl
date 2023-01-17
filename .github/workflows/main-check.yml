@@ -3,9 +3,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main # TO REMOVE
+
 jobs:
   pr-validation:
     name: test-${{ matrix.os }}-py-${{ matrix.python }}
