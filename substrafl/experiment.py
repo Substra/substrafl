@@ -61,7 +61,9 @@ def _register_operations(
     train_data_organizations_id = {train_data_node.organization_id for train_data_node in train_data_nodes}
     aggregation_organization_id = {aggregation_node.organization_id} if aggregation_node is not None else set()
 
-    authorized_ids = list(train_data_organizations_id | aggregation_organization_id)
+    authorized_ids = list(
+        train_data_organizations_id | aggregation_organization_id | evaluation_strategy.test_data_nodes_org_ids
+    )
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
     for train_data_node in train_data_nodes:

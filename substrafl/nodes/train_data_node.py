@@ -45,7 +45,8 @@ class TrainDataNode(Node):
         self,
         operation: DataOperation,
         round_idx: int,
-        authorized_ids: List[str],
+        authorized_ids: set[str],
+        aggregation_id: Optional[str] = None,
         clean_models: bool = False,
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
@@ -61,7 +62,8 @@ class TrainDataNode(Node):
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
                 it is preceded by an initialization round tagged: 0.
-            authorized_ids (List[str]): Authorized org to access the output model.
+            authorized_ids (set[str]): Authorized org to access the output model.
+            aggregation_id (str): Aggregation node id to authorize access to the shared model. Default to None.
             clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.
@@ -125,11 +127,13 @@ class TrainDataNode(Node):
             inputs=data_inputs + local_inputs + shared_inputs,
             outputs={
                 OutputIdentifiers.shared: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=authorized_ids),
+                    permissions=schemas.Permissions(
+                        public=False, authorized_ids=list(authorized_ids | set(aggregation_id or ()))
+                    ),
                     transient=clean_models,
                 ),
                 OutputIdentifiers.local: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
+                    permissions=schemas.Permissions(public=False, authorized_ids=authorized_ids),
                     transient=clean_models,
                 ),
             },

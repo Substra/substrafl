@@ -109,7 +109,7 @@ class FedAvg(Strategy):
             current_aggregation = aggregation_node.update_states(
                 self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
                 round_idx=round_idx,
-                authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
+                authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
                 clean_models=clean_models,
             )
 
@@ -132,15 +132,8 @@ class FedAvg(Strategy):
     ):
 
         for test_data_node in test_data_nodes:
-            matching_train_nodes = [
-                train_data_node
-                for train_data_node in train_data_nodes
-                if train_data_node.organization_id == test_data_node.organization_id
-            ]
-            if len(matching_train_nodes) == 0:
-                raise NotImplementedError("Cannot test on a organization we did not train on for now.")
 
-            train_data_node = matching_train_nodes[0]
+            train_data_node = train_data_nodes[0]  # How to choose on which node we take the local state????
             organization_index = train_data_nodes.index(train_data_node)
             assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
             local_state = self._local_states[organization_index]
@@ -241,6 +234,7 @@ class FedAvg(Strategy):
         for i, node in enumerate(train_data_nodes):
             # define composite tuples (do not submit yet)
             # for each composite tuple give description of Algo instead of a key for an algo
+
             next_local_state, next_shared_state = node.update_states(
                 algo.train(  # type: ignore
                     node.data_sample_keys,
@@ -249,7 +243,8 @@ class FedAvg(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=list(set([node.organization_id, aggregation_id]) | additional_orgs_permissions),
+                authorized_ids=list(set(node.organization_id) | additional_orgs_permissions),
+                aggregation_id=aggregation_id,
                 clean_models=clean_models,
             )
             # keep the states in a list: one/organization

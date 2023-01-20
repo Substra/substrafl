@@ -359,7 +359,8 @@ class Scaffold(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=list(set([node.organization_id, aggregation_id]) | additional_orgs_permissions),
+                authorized_ids=list(set(node.organization_id) | additional_orgs_permissions),
+                aggregation_id=aggregation_id,
                 clean_models=clean_models,
             )
             # keep the states in a list: one/organization
