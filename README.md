@@ -45,7 +45,8 @@ Substra warmly welcomes any contribution. Feel free to fork the repo and create 
 
 ## How to test
 
-You need to install `substrafl`, `substra` and `substra-tools` locally.
+Install `substrafl` in editable mode with developper dependencies.
+In addition, install `substra` and `substra-tools` in editable mode.
 Clone this repo, then at the top level run in your virtual env:
 
 ```sh
@@ -55,31 +56,39 @@ pip install -e ".[dev]"
 Clone [`substra`](https://github.com/Substra/substra) locally, go to the top level directory of `substra` and run (still in your virtual env):
 
 ```sh
-pip install -e ".[dev]"
+cd ..
+git clone git@github.com:Substra/substra.git
+cd substra
+pip install -e .
 ```
 
 Then clone [`substra-tools`](https://github.com/Substra/substra-tools) locally, go to the top level directory of `substra-tools` and run (still in your virtual env):
 
 ```sh
-pip install -e ".[test]"
+cd ..
+git clone git@github.com:Substra/substra-tools.git
+cd substra-tools
+pip install -e .
 ```
 
 Now you can use the following command from `subtrafl` top level directory to run tests:
 
 ```sh
+cd ../substrafl
 make test-subprocess
 ```
 
 ### Running advanced test suites
 
-Substra can be used in three different modes: using subprocesses, using Docker and using Kubernetes.
+Substra can be used in three different modes: using Python subprocesses (`subprocess`),
+ using Docker (`docker`) and using Kubernetes (`remote`).
 
 The command `make test-subprocess` runs the test suite in subprocess mode. It's lightweight and perfect to start.
 
-If you want to test with the Docker mode, you will need Docker installed and running on your machine.
-If necessary, you can install it using [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+To test with the Docker mode, you will need Docker installed and running on your machine.
+If necessary, install it using [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
-Then you can run the test suites in subprocess and Docker mode:
+The following command runs the test suites in subprocess and Docker mode:
 
 ```sh
 make test-local
@@ -87,8 +96,8 @@ make test-local
 
 Please be warned that some of these tests are slow and the whole test suite might require a couple hours to complete.
 
-If you want to try out a local deployment with Kubernetes, please follow the [installation instructions](https://docs.substra.org/en/stable/contributing/getting-started.html) provided in the doc.
-Then you should be able to run the remote tests:
+To try out a local deployment with Kubernetes, please follow the [installation instructions](https://docs.substra.org/en/stable/contributing/getting-started.html) provided in the doc.
+The following command runs the remote tests:
 
 ```sh
 make test-remote
