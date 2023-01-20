@@ -74,6 +74,7 @@ class NewtonRaphson(Strategy):
         aggregation_node: AggregationNode,
         round_idx: int,
         clean_models: bool,
+        additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the Newton-Raphson strategy consists in:
 
@@ -108,6 +109,7 @@ class NewtonRaphson(Strategy):
                 current_aggregation=None,
                 round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
+                additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
 
@@ -128,6 +130,7 @@ class NewtonRaphson(Strategy):
                 current_aggregation=current_aggregation,
                 round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
+                additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
 
@@ -235,6 +238,7 @@ class NewtonRaphson(Strategy):
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
+        additional_orgs_permissions: set,
         clean_models: bool,
     ):
         """Perform a local update of the model on each train data nodes.
@@ -266,7 +270,7 @@ class NewtonRaphson(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=list(set([node.organization_id, aggregation_id])),
+                authorized_ids=list(set([node.organization_id, aggregation_id]) | additional_orgs_permissions),
                 clean_models=clean_models,
             )
             # keep the states in a list: one/node

@@ -346,6 +346,7 @@ def dummy_strategy_class():
             aggregation_node: Optional[AggregationNode],
             round_idx: int,
             clean_models: bool,
+            additional_orgs_permissions: Optional[set] = None,
         ):
             pass
 

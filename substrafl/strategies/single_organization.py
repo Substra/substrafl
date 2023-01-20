@@ -45,6 +45,7 @@ class SingleOrganization(Strategy):
         round_idx: int,
         clean_models: bool,
         aggregation_node: Optional[AggregationNode] = None,
+        additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the SingleOrganization strategy: perform a local update (train on n mini-batches) of the models
         on a given data node
@@ -83,7 +84,7 @@ class SingleOrganization(Strategy):
             ),
             local_state=self.local_state,
             round_idx=round_idx,
-            authorized_ids=[train_data_nodes[0].organization_id],
+            authorized_ids=list(set([train_data_nodes[0].organization_id]) | additional_orgs_permissions or set()),
             clean_models=clean_models,
         )
 

@@ -311,6 +311,7 @@ def execute_experiment(
             algo=algo,
             train_data_nodes=train_data_nodes,
             aggregation_node=aggregation_node,
+            additional_orgs_permissions=evaluation_strategy.test_data_nodes_org_ids,
             round_idx=round_idx,
             clean_models=clean_models,
         )

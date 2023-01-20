@@ -98,6 +98,15 @@ class EvaluationStrategy:
                 raise ValueError(f"rounds can be only positive, rounds={rounds} found")
 
     @property
+    def test_data_nodes_org_ids(self):
+        """Property to get the ids or test data nodes organizations.
+
+        Returns:
+             set: set of organization ids
+        """
+        return {test_data_node.organization_id for test_data_node in self.test_data_nodes}
+
+    @property
     def num_rounds(self):
         """Property to get the num_rounds.
 

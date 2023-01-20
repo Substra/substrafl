@@ -68,6 +68,7 @@ class FedAvg(Strategy):
         aggregation_node: AggregationNode,
         round_idx: int,
         clean_models: bool,
+        additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the Federated Averaging strategy consists in:
             - if ``round_idx==0``: initialize the strategy by performing a local update
@@ -100,6 +101,7 @@ class FedAvg(Strategy):
                 current_aggregation=None,
                 round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
+                additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
 
@@ -117,6 +119,7 @@ class FedAvg(Strategy):
                 current_aggregation=current_aggregation,
                 round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
+                additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
 
@@ -214,6 +217,7 @@ class FedAvg(Strategy):
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
+        additional_orgs_permissions: set,
         clean_models: bool,
     ):
         """Perform a local update (train on n mini-batches) of the models
@@ -245,7 +249,7 @@ class FedAvg(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=list(set([node.organization_id, aggregation_id])),
+                authorized_ids=list(set([node.organization_id, aggregation_id]) | additional_orgs_permissions),
                 clean_models=clean_models,
             )
             # keep the states in a list: one/organization
