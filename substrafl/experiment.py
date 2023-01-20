@@ -305,13 +305,17 @@ def execute_experiment(
 
     logger.info("Building the compute plan.")
 
+    additional_orgs_permissions = (
+        evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
+    )
+
     # create computation graph
     for round_idx in range(0, num_rounds + 1):
         strategy.perform_round(
             algo=algo,
             train_data_nodes=train_data_nodes,
             aggregation_node=aggregation_node,
-            additional_orgs_permissions=evaluation_strategy.test_data_nodes_org_ids or set(),
+            additional_orgs_permissions=additional_orgs_permissions,
             round_idx=round_idx,
             clean_models=clean_models,
         )
