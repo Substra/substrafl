@@ -82,6 +82,7 @@ def rng_strategy():
             aggregation_node,
             round_idx,
             clean_models: bool,
+            additional_orgs_permissions=None,
         ):
             next_local_states = []
             next_shared_states = []
