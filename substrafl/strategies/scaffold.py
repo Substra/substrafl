@@ -131,12 +131,12 @@ class Scaffold(Strategy):
                 if train_data_node.organization_id == test_data_node.organization_id
             ]
             if len(matching_train_nodes) == 0:
-                raise NotImplementedError("Cannot test on a organization we did not train on for now.")
+                node_index = 0
+            else:
+                node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            train_data_node = matching_train_nodes[0]
-            organization_index = train_data_nodes.index(train_data_node)
             assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
-            local_state = self._local_states[organization_index]
+            local_state = self._local_states[node_index]
 
             test_data_node.update_states(
                 operation=algo.predict(

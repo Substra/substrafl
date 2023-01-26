@@ -132,11 +132,18 @@ class FedAvg(Strategy):
     ):
 
         for test_data_node in test_data_nodes:
+            matching_train_nodes = [
+                train_data_node
+                for train_data_node in train_data_nodes
+                if train_data_node.organization_id == test_data_node.organization_id
+            ]
+            if len(matching_train_nodes) == 0:
+                node_index = 0
+            else:
+                node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            train_data_node = train_data_nodes[0]  # How to choose on which node we take the local state????
-            organization_index = train_data_nodes.index(train_data_node)
             assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
-            local_state = self._local_states[organization_index]
+            local_state = self._local_states[node_index]
 
             test_data_node.update_states(
                 traintuple_id=local_state.key,
