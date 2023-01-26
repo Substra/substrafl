@@ -55,7 +55,7 @@ pip install -e "substrafl[dev]"
 git clone git@github.com:Substra/substra.git
 pip install -e substra
 git clone git@github.com:Substra/substra-tools.git
-pip install -e "substra-tools"
+pip install -e substra-tools
 ```
 
 Now you can use the following command from `subtrafl` top level directory to run tests:
@@ -83,7 +83,7 @@ make test-local
 
 Please be warned that some of these tests are slow and the whole test suite might require a couple hours to complete.
 
-To try out a local deployment with Kubernetes, please follow the [installation instructions](https://docs.substra.org/en/stable/contributing/local-deployment.html) provided in the doc.
+To try out a local deployment with Kubernetes, please follow the [installation instructions](https://docs.substra.org/en/stable/contributing/local-deployment.html) provided in the documentation.
 The following command runs the remote tests:
 
 ```sh
