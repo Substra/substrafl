@@ -1,6 +1,6 @@
 import uuid
 from typing import Dict
-from typing import List
+from typing import Set
 from typing import TypeVar
 
 import substra
@@ -29,7 +29,7 @@ class AggregationNode(Node):
         self,
         operation: AggregateOperation,
         round_idx: int,
-        authorized_ids: List[str],
+        authorized_ids: Set[str],
         clean_models: bool = False,
     ) -> SharedStateRef:
         """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
@@ -42,7 +42,7 @@ class AggregationNode(Node):
                 the :py:func:`~substrafl.remote.decorators.remote` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1.
-            authorized_ids (List[str]): Authorized org to access the output model.
+            authorized_ids (Set[str]): Authorized org to access the output model.
             clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
 
@@ -81,7 +81,7 @@ class AggregationNode(Node):
             inputs=inputs,
             outputs={
                 OutputIdentifiers.model: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=authorized_ids),
+                    permissions=schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
                     transient=clean_models,
                 )
             },

@@ -63,7 +63,7 @@ class TrainDataNode(Node):
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
                 it is preceded by an initialization round tagged: 0.
-            authorized_ids (set[str]): Authorized org to access the output model.
+            authorized_ids (typing.Set[str]): Authorized org to access the output model.
             aggregation_id (str): Aggregation node id to authorize access to the shared model. Default to None.
             clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
@@ -129,12 +129,13 @@ class TrainDataNode(Node):
             outputs={
                 OutputIdentifiers.shared: schemas.ComputeTaskOutputSpec(
                     permissions=schemas.Permissions(
-                        public=False, authorized_ids=list(authorized_ids | set(aggregation_id or ()))
+                        public=False,
+                        authorized_ids=list(authorized_ids | set([aggregation_id] if aggregation_id else [])),
                     ),
                     transient=clean_models,
                 ),
                 OutputIdentifiers.local: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=authorized_ids),
+                    permissions=schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
                     transient=clean_models,
                 ),
             },

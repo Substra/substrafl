@@ -245,7 +245,6 @@ class FedAvg(Strategy):
         for i, node in enumerate(train_data_nodes):
             # define composite tuples (do not submit yet)
             # for each composite tuple give description of Algo instead of a key for an algo
-
             next_local_state, next_shared_state = node.update_states(
                 algo.train(  # type: ignore
                     node.data_sample_keys,
@@ -254,7 +253,7 @@ class FedAvg(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=set(node.organization_id) | additional_orgs_permissions,
+                authorized_ids=set([node.organization_id]) | additional_orgs_permissions,
                 aggregation_id=aggregation_id,
                 clean_models=clean_models,
             )

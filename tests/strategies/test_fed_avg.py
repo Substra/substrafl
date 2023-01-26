@@ -67,7 +67,7 @@ def test_avg_shared_states_different_length():
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default_permissions, dummy_algo_class):
+def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, dummy_algo_class):
     # makes sure that federated average strategy leads to the averaging output of the models from both partners.
     # The data for the two partners consists of only 0s or 1s respectively. The train() returns the data.
     # predict() returns the data, score returned by AccuracyMetric (in the metric) is the mean of all the y_pred
@@ -111,3 +111,45 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, default
     )
     # Wait for the compute plan to be finished
     utils.wait(network.clients[0], compute_plan)
+
+
+@pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])
+def test_fed_avg_train_tuples_output_permissions(dummy_algo_class, additional_orgs_permissions):
+    """Test that perform round updates the strategy._local_states and strategy._shared_states"""
+
+    train_data_nodes = [
+        TrainDataNode("DummyNode0", "dummy_key", ["dummy_key"]),
+        TrainDataNode("DummyNode1", "dummy_key", ["dummy_key"]),
+    ]
+
+    aggregation_node = AggregationNode("DummyNode0")
+    strategy = FedAvg()
+
+    strategy.perform_round(
+        algo=dummy_algo_class(),
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        round_idx=1,
+        clean_models=False,
+        additional_orgs_permissions=additional_orgs_permissions,
+    )
+
+    for train_data_node in train_data_nodes:
+        assert all(
+            [
+                additional_orgs_permissions.intersection(
+                    set(tuple["outputs"]["local"]["permissions"]["authorized_ids"])
+                )
+                == additional_orgs_permissions
+                for tuple in train_data_node.tuples
+            ]
+        )
+        assert all(
+            [
+                additional_orgs_permissions.intersection(
+                    set(tuple["outputs"]["shared"]["permissions"]["authorized_ids"])
+                )
+                == additional_orgs_permissions
+                for tuple in train_data_node.tuples
+            ]
+        )

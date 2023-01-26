@@ -122,7 +122,7 @@ class NewtonRaphson(Strategy):
                     _algo_name="Aggregating",
                 ),  # type: ignore
                 round_idx=round_idx,
-                authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
+                authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
                 clean_models=clean_models,
             )
 
@@ -274,7 +274,7 @@ class NewtonRaphson(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=set(node.organization_id) | additional_orgs_permissions,
+                authorized_ids=set([node.organization_id]) | additional_orgs_permissions,
                 aggregation_id=aggregation_id,
                 clean_models=clean_models,
             )
