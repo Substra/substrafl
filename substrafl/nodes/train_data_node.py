@@ -2,6 +2,7 @@ import uuid
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Set
 from typing import Tuple
 
 import substra
@@ -45,7 +46,7 @@ class TrainDataNode(Node):
         self,
         operation: DataOperation,
         round_idx: int,
-        authorized_ids: set[str],
+        authorized_ids: Set[str],
         aggregation_id: Optional[str] = None,
         clean_models: bool = False,
         local_state: Optional[LocalStateRef] = None,
