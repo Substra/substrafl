@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- chore: Add contributing, contributors & code of conduct files (#68)
+- Possibility to test on an organization where no training have been performed (#74)
+- Add contributing, contributors & code of conduct files (#68)
 
 ### Removed
 
@@ -17,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- feat: remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name.
+- Remove RemoteDataMethod and change RemoteMethod class to be fully flexible regarding function name.
   The substra-tools methods is now generic, and load the inputs depending on the inputs dictionary content (#59)
 
 ## [0.33.0](https://github.com/Substra/substrafl/releases/tag/0.33.0) - 2022-12-19
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - # fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: \_\_generator_ctor(). Remove version from requirements. ([Issue open](https://github.com/cloudpipe/cloudpickle/issues/493))
+
 - fix: bug introduced with numpy 1.24 and cloudpickle: TypeError: \_\_generator_ctor(). Remove version from requirements.
 
 ## [0.32.0](https://github.com/Substra/substrafl/releases/tag/0.32.0) - 2022-11-22
