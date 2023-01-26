@@ -84,7 +84,7 @@ class SingleOrganization(Strategy):
             ),
             local_state=self.local_state,
             round_idx=round_idx,
-            authorized_ids=list(set([train_data_nodes[0].organization_id]) | additional_orgs_permissions or set()),
+            authorized_ids=set([train_data_nodes[0].organization_id]) | additional_orgs_permissions or set(),
             clean_models=clean_models,
         )
 
