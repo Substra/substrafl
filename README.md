@@ -47,34 +47,21 @@ Substra warmly welcomes any contribution. Feel free to fork the repo and create 
 
 Install `substrafl` in editable mode with developper dependencies.
 In addition, install `substra` and `substra-tools` in editable mode.
-Clone this repo, then at the top level run in your virtual env:
+It is recommended to install all the libraries in a Python virtual env.
 
 ```sh
-pip install -e ".[dev]"
-``
-
-Clone [`substra`](https://github.com/Substra/substra) locally, go to the top level directory of `substra` and run (still in your virtual env):
-
-```sh
-cd ..
+git clone git@github.com:Substra/substrafl.git
+pip install -e "substrafl[dev]"
 git clone git@github.com:Substra/substra.git
-cd substra
-pip install -e .
-```
-
-Then clone [`substra-tools`](https://github.com/Substra/substra-tools) locally, go to the top level directory of `substra-tools` and run (still in your virtual env):
-
-```sh
-cd ..
+pip install -e substra
 git clone git@github.com:Substra/substra-tools.git
-cd substra-tools
-pip install -e .
+pip install -e "substra-tools"
 ```
 
 Now you can use the following command from `subtrafl` top level directory to run tests:
 
 ```sh
-cd ../substrafl
+cd substrafl
 make test-subprocess
 ```
 
@@ -96,7 +83,7 @@ make test-local
 
 Please be warned that some of these tests are slow and the whole test suite might require a couple hours to complete.
 
-To try out a local deployment with Kubernetes, please follow the [installation instructions](https://docs.substra.org/en/stable/contributing/getting-started.html) provided in the doc.
+To try out a local deployment with Kubernetes, please follow the [installation instructions](https://docs.substra.org/en/stable/contributing/local-deployment.html) provided in the doc.
 The following command runs the remote tests:
 
 ```sh
