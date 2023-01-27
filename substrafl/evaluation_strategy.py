@@ -1,5 +1,6 @@
 from typing import List
 from typing import Optional
+from typing import Set
 from typing import Union
 
 from substrafl.nodes.test_data_node import TestDataNode
@@ -98,11 +99,11 @@ class EvaluationStrategy:
                 raise ValueError(f"rounds can be only positive, rounds={rounds} found")
 
     @property
-    def test_data_nodes_org_ids(self):
+    def test_data_nodes_org_ids(self) -> Set:
         """Property to get the ids or test data nodes organizations.
 
         Returns:
-             set: set of organization ids
+             Set: set of organization ids
         """
         return {test_data_node.organization_id for test_data_node in self.test_data_nodes}
 
