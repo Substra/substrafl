@@ -31,10 +31,13 @@ class TestDataNode(Node):
         organization_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        metric_keys: List[str],  # key to the metric, use substra.Client().add_algo()
+        metric_keys: List[str],
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys
+
+        if not isinstance(metric_keys, list):
+            raise TypeError("metric keys must be of type list")
         self.metric_keys = metric_keys
 
         self.testtuples: List[Dict] = []
