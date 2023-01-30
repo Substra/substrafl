@@ -32,7 +32,7 @@ class AggregationNode(Node):
         authorized_ids: Set[str],
         clean_models: bool = False,
     ) -> SharedStateRef:
-        """Adding an aggregated tuple to the list of operations to be executed by the node during the compute plan.
+        """Adding an aggregated task to the list of operations to be executed by the node during the compute plan.
         This is done in a static way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (substrafl local reference of the algorithm)
         and not a substra algo_key as nothing has been submitted yet.
@@ -75,7 +75,7 @@ class AggregationNode(Node):
             else None
         )
 
-        aggregate_tuple = schemas.ComputePlanTaskSpec(
+        aggregate_task = schemas.ComputePlanTaskSpec(
             algo_key=str(uuid.uuid4()),  # bogus algo key
             task_id=op_id,
             inputs=inputs,
@@ -92,10 +92,10 @@ class AggregationNode(Node):
             worker=self.organization_id,
         ).dict()
 
-        aggregate_tuple.pop("algo_key")
-        aggregate_tuple["remote_operation"] = operation.remote_struct
+        aggregate_task.pop("algo_key")
+        aggregate_task["remote_operation"] = operation.remote_struct
 
-        self.tuples.append(aggregate_tuple)
+        self.tasks.append(aggregate_task)
 
         return SharedStateRef(key=op_id)
 
@@ -106,12 +106,12 @@ class AggregationNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
-        """Define the algorithms for each operation and submit the aggregated tuple to substra.
+        """Define the algorithms for each operation and submit the aggregated task to substra.
 
         Go through every operation in the computation graph, check what algorithm they use (identified by their
         RemoteStruct id), submit it to substra and save `RemoteStruct : algo_key` into the `cache` (where algo_key
         is the returned algo key per substra.)
-        If two tuples depend on the same algorithm, the algorithm won't be added twice to substra as this method check
+        If two tasks depend on the same algorithm, the algorithm won't be added twice to substra as this method check
         if an algo has already been submitted to substra before adding it.
 
         Args:
@@ -125,9 +125,9 @@ class AggregationNode(Node):
         Returns:
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
-        for tuple in self.tuples:
-            if isinstance(tuple["remote_operation"], RemoteStruct):
-                remote_struct: RemoteStruct = tuple["remote_operation"]
+        for task in self.tasks:
+            if isinstance(task["remote_operation"], RemoteStruct):
+                remote_struct: RemoteStruct = task["remote_operation"]
 
                 if remote_struct not in cache:
                     algo_key = register_algo(
@@ -153,7 +153,7 @@ class AggregationNode(Node):
                 else:
                     algo_key = cache[remote_struct]
 
-                del tuple["remote_operation"]
-                tuple["algo_key"] = algo_key
+                del task["remote_operation"]
+                task["algo_key"] = algo_key
 
         return cache

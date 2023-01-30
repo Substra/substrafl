@@ -51,7 +51,7 @@ class TrainDataNode(Node):
         clean_models: bool = False,
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
-        """Adding a composite train tuple to the list of operations to
+        """Adding a composite train task to the list of operations to
         be executed by the node during the compute plan. This is done in a static
         way, nothing is submitted to substra.
         This is why the algo key is a RemoteStruct (substrafl local reference of the algorithm)
@@ -122,7 +122,7 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
-        composite_traintuple = schemas.ComputePlanTaskSpec(
+        composite_traintask = schemas.ComputePlanTaskSpec(
             algo_key=str(uuid.uuid4()),  # bogus algo key
             task_id=op_id,
             inputs=data_inputs + local_inputs + shared_inputs,
@@ -146,10 +146,10 @@ class TrainDataNode(Node):
             worker=self.organization_id,
         ).dict()
 
-        composite_traintuple.pop("algo_key")
-        composite_traintuple["remote_operation"] = operation.remote_struct
+        composite_traintask.pop("algo_key")
+        composite_traintask["remote_operation"] = operation.remote_struct
 
-        self.tuples.append(composite_traintuple)
+        self.tasks.append(composite_traintask)
 
         return LocalStateRef(op_id), SharedStateRef(op_id)
 
@@ -160,12 +160,12 @@ class TrainDataNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
-        """Define the algorithms for each operation and submit the composite traintuple to substra.
+        """Define the algorithms for each operation and submit the composite traintask to substra.
 
         Go through every operation in the computation graph, check what algorithm they use (identified by their
         RemoteStruct id), submit it to substra and save `RemoteStruct : algo_key` into the `cache` (where algo_key
         is the returned algo key by substra.)
-        If two tuples depend on the same algorithm, the algorithm won't be added twice to substra as this method check
+        If two tasks depend on the same algorithm, the algorithm won't be added twice to substra as this method check
         if an algo has already been submitted to substra before adding it.
 
         Args:
@@ -179,9 +179,9 @@ class TrainDataNode(Node):
         Returns:
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
-        for tuple in self.tuples:
-            if isinstance(tuple["remote_operation"], RemoteStruct):
-                remote_struct: RemoteStruct = tuple["remote_operation"]
+        for task in self.tasks:
+            if isinstance(task["remote_operation"], RemoteStruct):
+                remote_struct: RemoteStruct = task["remote_operation"]
 
                 if remote_struct not in cache:
                     algo_key = register_algo(
@@ -228,7 +228,7 @@ class TrainDataNode(Node):
                 else:
                     algo_key = cache[remote_struct]
 
-                tuple["algo_key"] = algo_key
+                task["algo_key"] = algo_key
 
         return cache
 

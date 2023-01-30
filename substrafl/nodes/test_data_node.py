@@ -40,21 +40,21 @@ class TestDataNode(Node):
             raise TypeError("metric keys must be of type list")
         self.metric_keys = metric_keys
 
-        self.testtuples: List[Dict] = []
-        self.predicttuples: List[Dict] = []
+        self.testtasks: List[Dict] = []
+        self.predicttasks: List[Dict] = []
 
         super(TestDataNode, self).__init__(organization_id)
 
     def update_states(
         self,
-        traintuple_id: str,
+        traintask_id: str,
         operation: DataOperation,
         round_idx: int,
     ):
-        """Creating a test tuple based on the node characteristic.
+        """Creating a test task based on the node characteristic.
 
         Args:
-            traintuple_id (str): The substra parent id
+            traintask_id (str): The substra parent id
             operation (DataOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote_data` decorator. This allows to register an
                 operation and execute it later on.
@@ -62,7 +62,7 @@ class TestDataNode(Node):
 
         """
 
-        predicttuple_id = str(uuid.uuid4())
+        predicttask_id = str(uuid.uuid4())
 
         data_inputs = [schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
             schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
@@ -72,12 +72,12 @@ class TestDataNode(Node):
         predict_input = [
             schemas.InputRef(
                 identifier=InputIdentifiers.local,
-                parent_task_key=traintuple_id,
+                parent_task_key=traintask_id,
                 parent_task_output_identifier=OutputIdentifiers.local,
             ),
             schemas.InputRef(
                 identifier=InputIdentifiers.shared,
-                parent_task_key=traintuple_id,
+                parent_task_key=traintask_id,
                 parent_task_output_identifier=OutputIdentifiers.shared,
             ),
         ]
@@ -85,14 +85,14 @@ class TestDataNode(Node):
         test_input = [
             schemas.InputRef(
                 identifier=InputIdentifiers.predictions,
-                parent_task_key=predicttuple_id,
+                parent_task_key=predicttask_id,
                 parent_task_output_identifier=OutputIdentifiers.predictions,
             )
         ]
 
-        predicttuple = schemas.ComputePlanTaskSpec(
+        predicttask = schemas.ComputePlanTaskSpec(
             algo_key=str(uuid.uuid4()),  # bogus algo key
-            task_id=predicttuple_id,
+            task_id=predicttask_id,
             inputs=data_inputs + predict_input,
             outputs={
                 OutputIdentifiers.predictions: schemas.ComputeTaskOutputSpec(
@@ -106,12 +106,12 @@ class TestDataNode(Node):
             worker=self.organization_id,
         ).dict()
 
-        predicttuple.pop("algo_key")
-        predicttuple["remote_operation"] = operation.remote_struct
-        self.predicttuples.append(predicttuple)
+        predicttask.pop("algo_key")
+        predicttask["remote_operation"] = operation.remote_struct
+        self.predicttasks.append(predicttask)
 
         for metric_key in self.metric_keys:
-            testtuple = schemas.ComputePlanTaskSpec(
+            testtask = schemas.ComputePlanTaskSpec(
                 algo_key=metric_key,
                 task_id=str(uuid.uuid4()),
                 inputs=data_inputs + test_input,
@@ -126,7 +126,7 @@ class TestDataNode(Node):
                 },
                 worker=self.organization_id,
             ).dict()
-            self.testtuples.append(testtuple)
+            self.testtasks.append(testtask)
 
     def register_predict_operations(
         self,
@@ -135,13 +135,13 @@ class TestDataNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
-        """Find the algorithms from the parent traintuple of each predicttuple and submit it with a dockerfile
+        """Find the algorithms from the parent traintask of each predicttask and submit it with a dockerfile
         specifying the ``predict`` method as ``--function-name`` to execute.
 
         Go through every operation in the predict algo cache, submit it to substra and save `RemoteStruct : algo_key`
         into the `cache` (where algo_key is the returned algo key by substra.)
-        If two predicttuples depend on the same algorithm, the algorithm won't be added twice to substra as this method
-        check if an algo has already been submitted as a predicttuple to substra before adding it.
+        If two predicttasks depend on the same algorithm, the algorithm won't be added twice to substra as this method
+        check if an algo has already been submitted as a predicttask to substra before adding it.
 
         Args:
             client (substra.Client): Substra client for the organization.
@@ -155,10 +155,10 @@ class TestDataNode(Node):
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
 
-        for predicttuple in self.predicttuples:
-            remote_struct: RemoteStruct = predicttuple["remote_operation"]
+        for predicttask in self.predicttasks:
+            remote_struct: RemoteStruct = predicttask["remote_operation"]
             if remote_struct not in cache:
-                # Register the predictuple algorithm
+                # Register the predictask algorithm
                 algo_key = register_algo(
                     client=client,
                     remote_struct=remote_struct,
@@ -198,11 +198,11 @@ class TestDataNode(Node):
                         )
                     ],
                 )
-                predicttuple["algo_key"] = algo_key
+                predicttask["algo_key"] = algo_key
                 cache[remote_struct] = algo_key
             else:
                 algo_key = cache[remote_struct]
-                predicttuple["algo_key"] = algo_key
+                predicttask["algo_key"] = algo_key
 
         return cache
 

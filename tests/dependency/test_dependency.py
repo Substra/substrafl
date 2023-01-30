@@ -101,8 +101,8 @@ class TestLocalDependency:
         return algo_key
 
     def _register_composite(self, algo_key, dataset_key, data_sample_key, client):
-        """Register a composite traintuple"""
-        composite_traintuple_query = substra.schemas.TaskSpec(
+        """Register a composite traintask"""
+        composite_traintask_query = substra.schemas.TaskSpec(
             algo_key=algo_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
@@ -120,9 +120,9 @@ class TestLocalDependency:
             },
             worker=client.organization_info().organization_id,
         )
-        composite_key = client.add_task(composite_traintuple_query)
-        composite_traintuple = client.get_task(composite_key)
-        return composite_traintuple
+        composite_key = client.add_task(composite_traintask_query)
+        composite_traintask = client.get_task(composite_key)
+        return composite_traintask
 
     def test_pypi_dependency(
         self,
@@ -138,8 +138,8 @@ class TestLocalDependency:
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
         algo_key = self._register_algo(dummy_algo_class(), algo_deps, client, session_dir)
 
-        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintuple)
+        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, composite_traintask)
 
     def test_local_dependencies_directory(
         self,
@@ -174,8 +174,8 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
-        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintuple)
+        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, composite_traintask)
 
     def test_local_dependencies_file_in_directory(
         self,
@@ -210,8 +210,8 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
-        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintuple)
+        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, composite_traintask)
 
     def test_local_dependencies_file(
         self,
@@ -246,8 +246,8 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
-        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintuple)
+        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, composite_traintask)
 
     @pytest.mark.docker_only
     @pytest.mark.parametrize(
@@ -292,5 +292,5 @@ class TestLocalDependency:
         )
         algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
 
-        composite_traintuple = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintuple)
+        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, composite_traintask)

@@ -111,12 +111,12 @@ def test_newton_raphson_perform_round(dummy_algo_class):
         round_idx=1,
         clean_models=False,
     )
-    assert len(aggregation_node.tuples) == 1
-    assert all([len(train_data_node.tuples) == 1 for train_data_node in train_data_nodes])
+    assert len(aggregation_node.tasks) == 1
+    assert all([len(train_data_node.tasks) == 1 for train_data_node in train_data_nodes])
 
 
 def test_newton_raphson_predict(dummy_algo_class):
-    """Test that the predict function updates the TestDataNode.tuples."""
+    """Test that the predict function updates the TestDataNode.tasks."""
 
     train_data_nodes = [
         TrainDataNode("DummyNode0", "dummy_key", ["dummy_key"]),
