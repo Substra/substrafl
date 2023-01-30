@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.34.0](https://github.com/Substra/substrafl/releases/tag/0.34.0) - 2022-12-30
+
 ### Added
 
 - Possibility to test on an organization where no training have been performed (#74)
