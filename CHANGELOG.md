@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
-## [0.34.0](https://github.com/Substra/substrafl/releases/tag/0.34.0) - 2022-12-30
+## [0.34.0](https://github.com/Substra/substrafl/releases/tag/0.34.0) - 2023-01-30
 
 ### Added
 
@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Test only field for datasamples (#67)
+- chore: Test only field for datasamples (#67)
 
 ### Changed
 
