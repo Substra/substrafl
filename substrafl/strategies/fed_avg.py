@@ -68,6 +68,7 @@ class FedAvg(Strategy):
         aggregation_node: AggregationNode,
         round_idx: int,
         clean_models: bool,
+        additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the Federated Averaging strategy consists in:
             - if ``round_idx==0``: initialize the strategy by performing a local update
@@ -86,6 +87,8 @@ class FedAvg(Strategy):
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
         """
         if aggregation_node is None:
             raise ValueError("In FedAvg strategy aggregation node cannot be None")
@@ -100,6 +103,7 @@ class FedAvg(Strategy):
                 current_aggregation=None,
                 round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
+                additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
 
@@ -107,7 +111,7 @@ class FedAvg(Strategy):
             current_aggregation = aggregation_node.update_states(
                 self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
                 round_idx=round_idx,
-                authorized_ids=list(set([train_data_node.organization_id for train_data_node in train_data_nodes])),
+                authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
                 clean_models=clean_models,
             )
 
@@ -117,6 +121,7 @@ class FedAvg(Strategy):
                 current_aggregation=current_aggregation,
                 round_idx=round_idx,
                 aggregation_id=aggregation_node.organization_id,
+                additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
 
@@ -135,12 +140,12 @@ class FedAvg(Strategy):
                 if train_data_node.organization_id == test_data_node.organization_id
             ]
             if len(matching_train_nodes) == 0:
-                raise NotImplementedError("Cannot test on a organization we did not train on for now.")
+                node_index = 0
+            else:
+                node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            train_data_node = matching_train_nodes[0]
-            organization_index = train_data_nodes.index(train_data_node)
             assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
-            local_state = self._local_states[organization_index]
+            local_state = self._local_states[node_index]
 
             test_data_node.update_states(
                 traintuple_id=local_state.key,
@@ -214,6 +219,7 @@ class FedAvg(Strategy):
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
+        additional_orgs_permissions: set,
         clean_models: bool,
     ):
         """Perform a local update (train on n mini-batches) of the models
@@ -226,6 +232,8 @@ class FedAvg(Strategy):
                 be passed as input to each local training
             round_idx (int): Round number, it starts at 1.
             aggregation_id (str): Id of the aggregation node the shared state is given to.
+            additional_orgs_permissions (set): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
@@ -245,7 +253,8 @@ class FedAvg(Strategy):
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
-                authorized_ids=list(set([node.organization_id, aggregation_id])),
+                authorized_ids=set([node.organization_id]) | additional_orgs_permissions,
+                aggregation_id=aggregation_id,
                 clean_models=clean_models,
             )
             # keep the states in a list: one/organization

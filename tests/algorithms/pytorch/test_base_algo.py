@@ -82,6 +82,7 @@ def rng_strategy():
             aggregation_node,
             round_idx,
             clean_models: bool,
+            additional_orgs_permissions=None,
         ):
             next_local_states = []
             next_shared_states = []
@@ -95,7 +96,7 @@ def rng_strategy():
                         node.data_sample_keys,
                     ),
                     round_idx=round_idx,
-                    authorized_ids=[node.organization_id],
+                    authorized_ids={node.organization_id},
                     local_state=self._local_states[i] if self._local_states is not None else None,
                 )
 

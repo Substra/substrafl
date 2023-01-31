@@ -45,6 +45,7 @@ class SingleOrganization(Strategy):
         round_idx: int,
         clean_models: bool,
         aggregation_node: Optional[AggregationNode] = None,
+        additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the SingleOrganization strategy: perform a local update (train on n mini-batches) of the models
         on a given data node
@@ -58,6 +59,8 @@ class SingleOrganization(Strategy):
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
         """
 
         if round_idx == 0:
@@ -83,7 +86,7 @@ class SingleOrganization(Strategy):
             ),
             local_state=self.local_state,
             round_idx=round_idx,
-            authorized_ids=[train_data_nodes[0].organization_id],
+            authorized_ids=set([train_data_nodes[0].organization_id]) | additional_orgs_permissions or set(),
             clean_models=clean_models,
         )
 

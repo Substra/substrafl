@@ -38,6 +38,7 @@ class Strategy(ABC):
         aggregation_node: Optional[AggregationNode],
         round_idx: int,
         clean_models: bool,
+        additional_orgs_permissions: Optional[set] = None,
     ):
         """Perform one round of the strategy
 
@@ -50,6 +51,8 @@ class Strategy(ABC):
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
         """
         raise NotImplementedError
 

@@ -1,5 +1,6 @@
 from typing import List
 from typing import Optional
+from typing import Set
 from typing import Union
 
 from substrafl.nodes.test_data_node import TestDataNode
@@ -96,6 +97,15 @@ class EvaluationStrategy:
                 raise TypeError(f"rounds must be of type list of ints or int, {type(rounds)} found")
             elif not all(r >= 0 for r in rounds):
                 raise ValueError(f"rounds can be only positive, rounds={rounds} found")
+
+    @property
+    def test_data_nodes_org_ids(self) -> Set:
+        """Property to get the ids or test data nodes organizations.
+
+        Returns:
+             Set: set of organization ids
+        """
+        return {test_data_node.organization_id for test_data_node in self.test_data_nodes}
 
     @property
     def num_rounds(self):

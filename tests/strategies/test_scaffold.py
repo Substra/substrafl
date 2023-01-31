@@ -3,6 +3,8 @@ from logging import getLogger
 import numpy as np
 import pytest
 
+from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.schemas import ScaffoldAveragedStates
 from substrafl.schemas import ScaffoldSharedState
 from substrafl.strategies import Scaffold
@@ -192,3 +194,45 @@ def test_scaffold_avg_shared_states_server_control_variate(server_control_variat
     ]
     averaged_states = strategy.avg_shared_states(shared_states=shared_states, _skip=True)
     assert_array_list_allclose(expected_result, averaged_states.server_control_variate)
+
+
+@pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])
+def test_scaffold_train_tuples_output_permissions(dummy_algo_class, additional_orgs_permissions):
+    """Test that perform round updates the strategy._local_states and strategy._shared_states"""
+
+    train_data_nodes = [
+        TrainDataNode("DummyNode0", "dummy_key", ["dummy_key"]),
+        TrainDataNode("DummyNode1", "dummy_key", ["dummy_key"]),
+    ]
+
+    aggregation_node = AggregationNode("DummyNode0")
+    strategy = Scaffold()
+
+    strategy.perform_round(
+        algo=dummy_algo_class(),
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        round_idx=1,
+        clean_models=False,
+        additional_orgs_permissions=additional_orgs_permissions,
+    )
+
+    for train_data_node in train_data_nodes:
+        assert all(
+            [
+                additional_orgs_permissions.intersection(
+                    set(tuple["outputs"]["local"]["permissions"]["authorized_ids"])
+                )
+                == additional_orgs_permissions
+                for tuple in train_data_node.tuples
+            ]
+        )
+        assert all(
+            [
+                additional_orgs_permissions.intersection(
+                    set(tuple["outputs"]["shared"]["permissions"]["authorized_ids"])
+                )
+                == additional_orgs_permissions
+                for tuple in train_data_node.tuples
+            ]
+        )

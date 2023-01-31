@@ -60,8 +60,11 @@ def _register_operations(
 
     train_data_organizations_id = {train_data_node.organization_id for train_data_node in train_data_nodes}
     aggregation_organization_id = {aggregation_node.organization_id} if aggregation_node is not None else set()
+    test_data_organizations_ids = (
+        evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
+    )
 
-    authorized_ids = list(train_data_organizations_id | aggregation_organization_id)
+    authorized_ids = list(train_data_organizations_id | aggregation_organization_id | test_data_organizations_ids)
     permissions = substra.sdk.schemas.Permissions(public=False, authorized_ids=authorized_ids)
 
     for train_data_node in train_data_nodes:
@@ -305,12 +308,17 @@ def execute_experiment(
 
     logger.info("Building the compute plan.")
 
+    additional_orgs_permissions = (
+        evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
+    )
+
     # create computation graph
     for round_idx in range(0, num_rounds + 1):
         strategy.perform_round(
             algo=algo,
             train_data_nodes=train_data_nodes,
             aggregation_node=aggregation_node,
+            additional_orgs_permissions=additional_orgs_permissions,
             round_idx=round_idx,
             clean_models=clean_models,
         )
