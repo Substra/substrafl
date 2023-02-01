@@ -8,12 +8,12 @@ from typing import Optional
 
 import substra
 import yaml
-from substra.sdk.schemas import AlgoInputSpec
-from substra.sdk.schemas import AlgoOutputSpec
 from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
+from substra.sdk.schemas import FunctionInputSpec
+from substra.sdk.schemas import FunctionOutputSpec
 from substra.sdk.schemas import Permissions
 from tqdm import tqdm
 
@@ -224,21 +224,23 @@ def register_metric(client: substra.Client) -> str:
 
     metric_spec = AlgoSpec(
         inputs=[
-            AlgoInputSpec(
+            FunctionInputSpec(
                 identifier=InputIdentifiers.datasamples,
                 kind=AssetKind.data_sample.value,
                 optional=False,
                 multiple=True,
             ),
-            AlgoInputSpec(
+            FunctionInputSpec(
                 identifier=InputIdentifiers.opener, kind=AssetKind.data_manager.value, optional=False, multiple=False
             ),
-            AlgoInputSpec(
+            FunctionInputSpec(
                 identifier=InputIdentifiers.predictions, kind=AssetKind.model.value, optional=False, multiple=False
             ),
         ],
         outputs=[
-            AlgoOutputSpec(identifier=OutputIdentifiers.performance, kind=AssetKind.performance.value, multiple=False)
+            FunctionOutputSpec(
+                identifier=OutputIdentifiers.performance, kind=AssetKind.performance.value, multiple=False
+            )
         ],
         name="ROC",
         description=ASSETS_DIRECTORY / "description.md",
@@ -246,7 +248,7 @@ def register_metric(client: substra.Client) -> str:
         permissions=PUBLIC_PERMISSIONS,
     )
 
-    metric_key = client.add_algo(metric_spec)
+    metric_key = client.add_function(metric_spec)
 
     return metric_key
 
@@ -256,7 +258,7 @@ def get_test_data_nodes(
 ) -> TestDataNode:
     """Generate a test data node for the data within the passed folder with the client.
     The associated metric only returns the float(y_pred) where y_pred is the results of the
-    predict method of the used algorithm.
+    predict method of the used function.
 
     Args:
         client (substra.Client): Substra client to register the asset with.

@@ -189,25 +189,25 @@ class TrainDataNode(Node):
                         remote_struct=remote_struct,
                         permissions=permissions,
                         inputs=[
-                            schemas.AlgoInputSpec(
+                            schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.datasamples,
                                 kind=schemas.AssetKind.data_sample.value,
                                 optional=False,
                                 multiple=True,
                             ),
-                            schemas.AlgoInputSpec(
+                            schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.opener,
                                 kind=schemas.AssetKind.data_manager.value,
                                 optional=False,
                                 multiple=False,
                             ),
-                            schemas.AlgoInputSpec(
+                            schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.local,
                                 kind=schemas.AssetKind.model.value,
                                 optional=True,
                                 multiple=False,
                             ),
-                            schemas.AlgoInputSpec(
+                            schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.shared,
                                 kind=schemas.AssetKind.model.value,
                                 optional=True,

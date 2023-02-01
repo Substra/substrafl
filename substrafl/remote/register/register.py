@@ -282,8 +282,8 @@ def register_algo(
     client: substra.Client,
     remote_struct: RemoteStruct,
     permissions: substra.sdk.schemas.Permissions,
-    inputs: typing.List[substra.sdk.schemas.AlgoInputSpec],
-    outputs: typing.List[substra.sdk.schemas.AlgoOutputSpec],
+    inputs: typing.List[substra.sdk.schemas.FunctionInputSpec],
+    outputs: typing.List[substra.sdk.schemas.FunctionOutputSpec],
     dependencies: Dependency,
 ) -> str:
     """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
@@ -292,8 +292,8 @@ def register_algo(
         client (substra.Client): The substra client.
         remote_struct (RemoteStruct): The substra submittable algorithm representation.
         permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-        inputs (typing.List[substra.sdk.schemas.AlgoInputSpec]): List of algo inputs to be used.
-        outputs (typing.List[substra.sdk.schemas.AlgoOutputSpec]): List of algo outputs to be used.
+        inputs (typing.List[substra.sdk.schemas.FunctionInputSpec]): List of algo inputs to be used.
+        outputs (typing.List[substra.sdk.schemas.FunctionOutputSpec]): List of algo outputs to be used.
         dependencies (Dependency): Algorithm dependencies.
 
     Returns:
@@ -306,7 +306,7 @@ def register_algo(
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=Path(operation_dir),
         )
-        key = client.add_algo(
+        key = client.add_function(
             substra.sdk.schemas.AlgoSpec(
                 name=remote_struct.algo_name,
                 description=description_path,
@@ -387,19 +387,19 @@ def add_metric(
             return metric_function(datasamples=datasamples, predictions_path=predictions_path)
 
     inputs_metrics = [
-        substra.sdk.schemas.AlgoInputSpec(
+        substra.sdk.schemas.FunctionInputSpec(
             identifier=InputIdentifiers.datasamples,
             kind=substra.sdk.schemas.AssetKind.data_sample,
             optional=False,
             multiple=True,
         ),
-        substra.sdk.schemas.AlgoInputSpec(
+        substra.sdk.schemas.FunctionInputSpec(
             identifier=InputIdentifiers.opener,
             kind=substra.sdk.schemas.AssetKind.data_manager,
             optional=False,
             multiple=False,
         ),
-        substra.sdk.schemas.AlgoInputSpec(
+        substra.sdk.schemas.FunctionInputSpec(
             identifier=InputIdentifiers.predictions,
             kind=substra.sdk.schemas.AssetKind.model,
             optional=False,
@@ -408,7 +408,7 @@ def add_metric(
     ]
 
     outputs_metrics = [
-        substra.sdk.schemas.AlgoOutputSpec(
+        substra.sdk.schemas.FunctionOutputSpec(
             identifier=OutputIdentifiers.performance,
             kind=substra.sdk.schemas.AssetKind.performance,
             multiple=False,

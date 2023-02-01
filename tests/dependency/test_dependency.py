@@ -60,25 +60,25 @@ class TestLocalDependency:
         algo_query = substra.schemas.AlgoSpec(
             name="algo_test_deps",
             inputs=[
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.datasamples,
                     kind=substra.schemas.AssetKind.data_sample.value,
                     optional=False,
                     multiple=True,
                 ),
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.opener,
                     kind=substra.schemas.AssetKind.data_manager.value,
                     optional=False,
                     multiple=False,
                 ),
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.local,
                     kind=substra.schemas.AssetKind.model.value,
                     optional=True,
                     multiple=False,
                 ),
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.shared,
                     kind=substra.schemas.AssetKind.model.value,
                     optional=True,
@@ -86,10 +86,10 @@ class TestLocalDependency:
                 ),
             ],
             outputs=[
-                substra.schemas.AlgoOutputSpec(
+                substra.schemas.FunctionOutputSpec(
                     identifier=OutputIdentifiers.local, kind=substra.schemas.AssetKind.model.value, multiple=False
                 ),
-                substra.schemas.AlgoOutputSpec(
+                substra.schemas.FunctionOutputSpec(
                     identifier=OutputIdentifiers.shared, kind=substra.schemas.AssetKind.model.value, multiple=False
                 ),
             ],
@@ -97,7 +97,7 @@ class TestLocalDependency:
             file=archive_path,
             permissions=substra.schemas.Permissions(public=True, authorized_ids=list()),
         )
-        algo_key = client.add_algo(algo_query)
+        algo_key = client.add_function(algo_query)
         return algo_key
 
     def _register_composite(self, algo_key, dataset_key, data_sample_key, client):

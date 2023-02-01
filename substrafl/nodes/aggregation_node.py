@@ -136,7 +136,7 @@ class AggregationNode(Node):
                         permissions=permissions,
                         dependencies=dependencies,
                         inputs=[
-                            schemas.AlgoInputSpec(
+                            schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.models,
                                 kind=schemas.AssetKind.model.value,
                                 optional=False,
@@ -144,7 +144,7 @@ class AggregationNode(Node):
                             )
                         ],
                         outputs=[
-                            schemas.AlgoOutputSpec(
+                            schemas.FunctionOutputSpec(
                                 identifier=OutputIdentifiers.model, kind=schemas.AssetKind.model.value, multiple=False
                             )
                         ],
