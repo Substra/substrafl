@@ -264,8 +264,8 @@ class NewtonRaphson(Strategy):
         next_shared_states = []
 
         for i, node in enumerate(train_data_nodes):
-            # define composite tuples (do not submit yet)
-            # for each composite tuple give description of Algo instead of a key for an algo
+            # define composite tasks (do not submit yet)
+            # for each composite task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
                 algo.train(  # type: ignore
                     node.data_sample_keys,
@@ -326,9 +326,9 @@ class NewtonRaphson(Strategy):
                     shared_state=None,
                     _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
-                traintuple_id=local_state.key,
+                traintask_id=local_state.key,
                 round_idx=round_idx,
-            )  # Init state for testtuple
+            )  # Init state for testtask
 
     def _check_shared_states(self, shared_states: List[NewtonRaphsonSharedState]):
         """Check the Newton Raphson assumptions.

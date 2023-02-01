@@ -148,14 +148,14 @@ class FedAvg(Strategy):
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(
-                traintuple_id=local_state.key,
+                traintask_id=local_state.key,
                 operation=algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
                     shared_state=None,
                     _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
                 round_idx=round_idx,
-            )  # Init state for testtuple
+            )  # Init state for testtask
 
     @remote
     def avg_shared_states(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
@@ -243,8 +243,8 @@ class FedAvg(Strategy):
         next_shared_states = []
 
         for i, node in enumerate(train_data_nodes):
-            # define composite tuples (do not submit yet)
-            # for each composite tuple give description of Algo instead of a key for an algo
+            # define composite tasks (do not submit yet)
+            # for each composite task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
                 algo.train(  # type: ignore
                     node.data_sample_keys,

@@ -31,7 +31,7 @@ class OutputIdentifiers(str, Enum):
 class Node:
     def __init__(self, organization_id: str):
         self.organization_id = organization_id
-        self.tuples: List[Dict] = []
+        self.tasks: List[Dict] = []
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file

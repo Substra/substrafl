@@ -76,8 +76,8 @@ class SingleOrganization(Strategy):
                 f" but {n_train_data_nodes} were passed."
             )
 
-        # define composite tuples (do not submit yet)
-        # for each composite tuple give description of Algo instead of a key for an algo
+        # define composite tasks (do not submit yet)
+        # for each composite task give description of Algo instead of a key for an algo
         next_local_state, _ = train_data_nodes[0].update_states(
             algo.train(  # type: ignore
                 train_data_nodes[0].data_sample_keys,
@@ -114,13 +114,13 @@ class SingleOrganization(Strategy):
 
             if train_data_nodes[0].organization_id != test_data_node.organization_id:
                 raise NotImplementedError("Cannot test on a organization we did not train on for now.")
-            # Init state for testtuple
+            # Init state for testtask
             test_data_node.update_states(
-                traintuple_id=self.local_state.key,
+                traintask_id=self.local_state.key,
                 operation=algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
                     shared_state=None,
                     _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
                 round_idx=round_idx,
-            )  # Init state for testtuple
+            )  # Init state for testtask

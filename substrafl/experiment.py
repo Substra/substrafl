@@ -75,7 +75,7 @@ def _register_operations(
             dependencies=dependencies,
         )
 
-        tasks += train_data_node.tuples
+        tasks += train_data_node.tasks
 
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
@@ -86,8 +86,8 @@ def _register_operations(
                 dependencies=dependencies,
             )
 
-            tasks += test_data_node.predicttuples
-            tasks += test_data_node.testtuples
+            tasks += test_data_node.predicttasks
+            tasks += test_data_node.testtasks
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies
@@ -99,7 +99,7 @@ def _register_operations(
             dependencies=Dependency(editable_mode=dependencies.editable_mode),
         )
 
-        tasks += aggregation_node.tuples
+        tasks += aggregation_node.tasks
 
     return tasks, operation_cache
 

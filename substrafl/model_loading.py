@@ -126,14 +126,14 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
 
 
 def _get_composite_from_round(client: substra.Client, compute_plan_key: str, round_idx: int) -> substra.models.Task:
-    """Return the composite train tuple:
+    """Return the composite train task:
 
         - hosted on the given client organization
         - belonging to the given compute plan
         - of the given round_idx
 
     Args:
-        client (substra.Client): Substra client where to fetch the composite train tuple from.
+        client (substra.Client): Substra client where to fetch the composite train task from.
         compute_plan_key (str): Compute plan key to fetch the composite from.
         round_idx (int): Round of the strategy to fetch the composite from.
 
@@ -173,7 +173,7 @@ def _get_composite_from_round(client: substra.Client, compute_plan_key: str, rou
 def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:
     """Load into memory a serialized (and compressed (.tar.gz)) substrafl algo within the given algo_path.
     This kind of file is usually the result of the ``substra.Client.download_algo`` function applied to
-    a composite train tuple being part of a Substrafl experiment.
+    a composite train task being part of a Substrafl experiment.
 
     Args:
         algo_path (Path): A file being the tar.gz compression of a substrafl RemoteStruct algorithm
@@ -216,7 +216,7 @@ def download_algo_files(
         - a metadata.json
 
     Important:
-        This function supports only strategies with one composite traintuple for a given organization and round.
+        This function supports only strategies with one composite traintask for a given organization and round.
 
     Args:
         client (substra.Client): Substra client where to fetch the model from.
@@ -231,7 +231,7 @@ def download_algo_files(
         TrainTaskNotFoundError: If no composite matches the given requirements.
         MultipleTrainTaskError: The experiment to get the model from can't have multiple
             TrainDataNodes hosted on the same organization. In practice this means the presence of multiple
-            composite train tuples with the same round number on the same rank.
+            composite train tasks with the same round number on the same rank.
         UnfinishedTrainTaskError: The task from which the files are trying to be downloaded is not done.
     """
     compute_plan = client.get_compute_plan(compute_plan_key)
@@ -245,21 +245,21 @@ def download_algo_files(
         round_idx = compute_plan.metadata["num_rounds"]
 
     # Get the composite associated to user inputs
-    composite_traintuple = _get_composite_from_round(
+    composite_traintask = _get_composite_from_round(
         client=client, compute_plan_key=compute_plan_key, round_idx=round_idx
     )
 
-    if composite_traintuple.status is not Status.done:
+    if composite_traintask.status is not Status.done:
         raise UnfinishedTrainTaskError(
-            f"Can't download algo files form task {composite_traintuple.key} as it is "
-            f"in status {composite_traintuple.status}"
+            f"Can't download algo files form task {composite_traintask.key} as it is "
+            f"in status {composite_traintask.status}"
         )
 
-    algo_file = client.download_algo(composite_traintuple.algo.key, destination_folder=folder)
+    algo_file = client.download_algo(composite_traintask.algo.key, destination_folder=folder)
 
     # Get the associated head model (local state)
     local_state_file = client.download_model_from_task(
-        composite_traintuple.key, folder=folder, identifier=OutputIdentifiers.local
+        composite_traintask.key, folder=folder, identifier=OutputIdentifiers.local
     )
 
     # Environment requirements and local state path
