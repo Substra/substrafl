@@ -152,12 +152,12 @@ def test_newton_raphson_predict(dummy_algo_class):
         round_idx=0,
     )
 
-    assert all([len(test_data_node.testtuples) == 1 for test_data_node in test_data_nodes])
-    assert all([len(test_data_node.predicttuples) == 1 for test_data_node in test_data_nodes])
+    assert all([len(test_data_node.testtasks) == 1 for test_data_node in test_data_nodes])
+    assert all([len(test_data_node.predicttasks) == 1 for test_data_node in test_data_nodes])
 
 
 @pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])
-def test_newton_raphson_train_tuples_output_permissions(dummy_algo_class, additional_orgs_permissions):
+def test_newton_raphson_train_tasks_output_permissions(dummy_algo_class, additional_orgs_permissions):
     """Test that perform round updates the strategy._local_states and strategy._shared_states"""
 
     train_data_nodes = [
@@ -180,19 +180,17 @@ def test_newton_raphson_train_tuples_output_permissions(dummy_algo_class, additi
     for train_data_node in train_data_nodes:
         assert all(
             [
-                additional_orgs_permissions.intersection(
-                    set(tuple["outputs"]["local"]["permissions"]["authorized_ids"])
-                )
+                additional_orgs_permissions.intersection(set(task["outputs"]["local"]["permissions"]["authorized_ids"]))
                 == additional_orgs_permissions
-                for tuple in train_data_node.tuples
+                for task in train_data_node.tasks
             ]
         )
         assert all(
             [
                 additional_orgs_permissions.intersection(
-                    set(tuple["outputs"]["shared"]["permissions"]["authorized_ids"])
+                    set(task["outputs"]["shared"]["permissions"]["authorized_ids"])
                 )
                 == additional_orgs_permissions
-                for tuple in train_data_node.tuples
+                for task in train_data_node.tasks
             ]
         )

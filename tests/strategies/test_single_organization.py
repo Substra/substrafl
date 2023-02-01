@@ -5,7 +5,7 @@ from substrafl.strategies import SingleOrganization
 
 
 @pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])
-def test_single_organization_train_tuples_output_permissions(dummy_algo_class, additional_orgs_permissions):
+def test_single_organization_train_tasks_output_permissions(dummy_algo_class, additional_orgs_permissions):
     """Test that perform round updates the strategy._local_states and strategy._shared_states"""
 
     train_data_node = TrainDataNode("DummyNode0", "dummy_key", ["dummy_key"])
@@ -22,15 +22,15 @@ def test_single_organization_train_tuples_output_permissions(dummy_algo_class, a
 
     assert all(
         [
-            additional_orgs_permissions.intersection(set(tuple["outputs"]["local"]["permissions"]["authorized_ids"]))
+            additional_orgs_permissions.intersection(set(task["outputs"]["local"]["permissions"]["authorized_ids"]))
             == additional_orgs_permissions
-            for tuple in train_data_node.tuples
+            for task in train_data_node.tasks
         ]
     )
     assert all(
         [
-            additional_orgs_permissions.intersection(set(tuple["outputs"]["shared"]["permissions"]["authorized_ids"]))
+            additional_orgs_permissions.intersection(set(task["outputs"]["shared"]["permissions"]["authorized_ids"]))
             == additional_orgs_permissions
-            for tuple in train_data_node.tuples
+            for task in train_data_node.tasks
         ]
     )
