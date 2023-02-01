@@ -27,7 +27,7 @@ from substrafl.model_loading import METADATA_FILE
 from substrafl.model_loading import REQUIRED_KEYS
 from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
-from substrafl.remote.register.register import _create_substra_algo_files
+from substrafl.remote.register.register import _create_substra_function_files
 
 FILE_PATH = Path(__file__).resolve().parent
 
@@ -235,7 +235,7 @@ def _create_algo_files(input_folder, algo, metadata):
 
     data_operation = algo.train(data_samples=[])
 
-    _create_substra_algo_files(
+    _create_substra_function_files(
         remote_struct=data_operation.remote_struct,
         install_libraries=True,
         dependencies=Dependency(local_dependencies=[str(FILE_PATH / "installable_library")], editable_mode=True),

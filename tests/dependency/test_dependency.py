@@ -13,7 +13,7 @@ from substrafl.exceptions import InvalidPathError
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote import remote_data
-from substrafl.remote.register.register import _create_substra_algo_files
+from substrafl.remote.register.register import _create_substra_function_files
 
 CURRENT_FILE = Path(__file__)
 
@@ -51,7 +51,7 @@ class TestLocalDependency:
         """Register a composite algo"""
         data_op = my_algo.train(data_samples=list(), shared_state=None)
         operation_dir = Path(tempfile.mkdtemp(dir=session_dir))
-        archive_path, description_path = _create_substra_algo_files(
+        archive_path, description_path = _create_substra_function_files(
             data_op.remote_struct,
             dependencies=algo_deps,
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
