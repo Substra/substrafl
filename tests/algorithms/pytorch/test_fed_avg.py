@@ -9,7 +9,7 @@ from substrafl.algorithms.pytorch.weight_manager import increment_parameters
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import download_function_files
 from substrafl.model_loading import load_algo
 from substrafl.strategies import FedAvg
 from tests import utils
@@ -139,7 +139,7 @@ def test_pytorch_fedavg_algo_performance(
 @pytest.mark.slow
 @pytest.mark.substra
 def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
-    download_algo_files(
+    download_function_files(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         round_idx=None,

@@ -123,7 +123,7 @@ class TrainDataNode(Node):
             shared_inputs = []
 
         composite_traintask = schemas.ComputePlanTaskSpec(
-            algo_key=str(uuid.uuid4()),  # bogus algo key
+            function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=data_inputs + local_inputs + shared_inputs,
             outputs={

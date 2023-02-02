@@ -56,7 +56,7 @@ RUN python{python_version} -m pip install -U pip
 # Install local dependencies
 {local_dependencies}
 
-ENTRYPOINT ["python{python_version}", "algo.py", "--function-name", "{method_name}"]
+ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
 """
 
 ALGO = """
@@ -307,7 +307,7 @@ def register_algo(
             operation_dir=Path(operation_dir),
         )
         key = client.add_function(
-            substra.sdk.schemas.AlgoSpec(
+            substra.sdk.schemas.FunctionSpec(
                 name=remote_struct.algo_name,
                 description=description_path,
                 file=archive_path,

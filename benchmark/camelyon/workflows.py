@@ -93,7 +93,7 @@ def substrafl_fed_avg(
         editable_mode=False,
     )
 
-    # Custom Strategy used for the data loading (from custom_torch_algo.py file)
+    # Custom Strategy used for the data loading (from custom_torch_function.py file)
     strategy = FedAvg()
 
     # Evaluation strategy

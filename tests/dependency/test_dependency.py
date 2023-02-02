@@ -57,7 +57,7 @@ class TestLocalDependency:
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=operation_dir,
         )
-        algo_query = substra.schemas.AlgoSpec(
+        algo_query = substra.schemas.FunctionSpec(
             name="algo_test_deps",
             inputs=[
                 substra.schemas.FunctionInputSpec(

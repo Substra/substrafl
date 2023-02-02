@@ -76,7 +76,7 @@ class AggregationNode(Node):
         )
 
         aggregate_task = schemas.ComputePlanTaskSpec(
-            algo_key=str(uuid.uuid4()),  # bogus algo key
+            function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=inputs,
             outputs={

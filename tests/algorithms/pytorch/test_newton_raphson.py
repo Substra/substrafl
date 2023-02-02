@@ -8,7 +8,7 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import CriterionReductionError
 from substrafl.exceptions import NegativeHessianMatrixError
-from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import download_function_files
 from substrafl.model_loading import load_algo
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
@@ -357,7 +357,7 @@ def test_pytorch_nr_algo_performance(
 @pytest.mark.slow
 @pytest.mark.substra
 def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, mae, rtol):
-    download_algo_files(
+    download_function_files(
         client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
     )
     model = load_algo(input_folder=session_dir)._model

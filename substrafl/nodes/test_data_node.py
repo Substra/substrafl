@@ -91,7 +91,7 @@ class TestDataNode(Node):
         ]
 
         predicttask = schemas.ComputePlanTaskSpec(
-            algo_key=str(uuid.uuid4()),  # bogus algo key
+            function_key=str(uuid.uuid4()),  # bogus function key
             task_id=predicttask_id,
             inputs=data_inputs + predict_input,
             outputs={
@@ -112,7 +112,7 @@ class TestDataNode(Node):
 
         for metric_key in self.metric_keys:
             testtask = schemas.ComputePlanTaskSpec(
-                algo_key=metric_key,
+                function_key=metric_key,
                 task_id=str(uuid.uuid4()),
                 inputs=data_inputs + test_input,
                 outputs={

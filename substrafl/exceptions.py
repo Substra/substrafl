@@ -82,7 +82,7 @@ class TorchScaffoldAlgoParametersUpdateError(Exception):
 
 
 class TrainTaskNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The provided compute plan must
+    """When using the :func:`~substrafl.model_loading.download_function_files` function. The provided compute plan must
     contain a task:
 
         - hosted by the worker associated to the given client
@@ -91,12 +91,12 @@ class TrainTaskNotFoundError(Exception):
 
 
 class MultipleTrainTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function in remote mode. The experiment to
+    """When using the :func:`~substrafl.model_loading.download_function_files` function in remote mode. The experiment to
     get the algo files from can't have multiple TrainDataNodes hosted on the same organization."""
 
 
 class UnfinishedTrainTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The task to get the algo files
+    """When using the :func:`~substrafl.model_loading.download_function_files` function. The task to get the algo files
     from shall be in status ``STATUS_DONE``."""
 
 
@@ -107,7 +107,7 @@ class LoadAlgoMetadataError(Exception):
 
 class LoadAlgoFileNotFoundError(Exception):
     """When using the :func:`~substrafl.model_loading.load_algo`, the given folder must contains the following files:
-    algo.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
+    function.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
 
 
 class LoadAlgoLocalDependencyError(Exception):

@@ -8,12 +8,12 @@ from typing import Optional
 
 import substra
 import yaml
-from substra.sdk.schemas import AlgoSpec
 from substra.sdk.schemas import AssetKind
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import FunctionInputSpec
 from substra.sdk.schemas import FunctionOutputSpec
+from substra.sdk.schemas import FunctionSpec
 from substra.sdk.schemas import Permissions
 from tqdm import tqdm
 
@@ -222,7 +222,7 @@ def register_metric(client: substra.Client) -> str:
         tar.add(ASSETS_DIRECTORY / "Dockerfile", arcname="Dockerfile")
         tar.add(ASSETS_DIRECTORY / "metric.py", arcname="metrics.py")
 
-    metric_spec = AlgoSpec(
+    metric_spec = FunctionSpec(
         inputs=[
             FunctionInputSpec(
                 identifier=InputIdentifiers.datasamples,

@@ -78,7 +78,7 @@ def test_algo_name(algo_name, result):
     assert remote_struct.algo_name == result
 
 
-@patch("substra.sdk.schemas.AlgoSpec", MagicMock(return_value=None))
+@patch("substra.sdk.schemas.FunctionSpec", MagicMock(return_value=None))
 @pytest.mark.parametrize("algo_name, result", [("Dummy Algo Name", "Dummy Algo Name"), (None, "foo_RemoteClass")])
 def test_register_algo_name(algo_name, result, default_permissions):
     client = DummyClient()
@@ -104,7 +104,7 @@ def test_register_algo_name(algo_name, result, default_permissions):
         outputs=None,
     )
 
-    assert substra.sdk.schemas.AlgoSpec.call_args[1]["name"] == result
+    assert substra.sdk.schemas.FunctionSpec.call_args[1]["name"] == result
 
 
 @pytest.mark.parametrize(
