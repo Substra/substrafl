@@ -142,7 +142,7 @@ def _save_experiment_summary(
     experiment_summary["strategy"] = type(strategy).__name__
     experiment_summary["num_rounds"] = num_rounds
     experiment_summary["algo"] = algo.summary()
-    experiment_summary["algo_keys"] = {
+    experiment_summary["function_keys"] = {
         operation_cache[remote_struct]: remote_struct.summary() for remote_struct in operation_cache
     }
     experiment_summary["train_data_nodes"] = [train_data_node.summary() for train_data_node in train_data_nodes]

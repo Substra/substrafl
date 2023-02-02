@@ -278,7 +278,7 @@ def _create_substra_function_files(
     return archive_path, description_path
 
 
-def register_algo(
+def register_function(
     client: substra.Client,
     remote_struct: RemoteStruct,
     permissions: substra.sdk.schemas.Permissions,
@@ -425,7 +425,7 @@ def add_metric(
         algo_name=metric_name or "metric_" + metric_function.__name__,
     )
 
-    key = register_algo(
+    key = register_function(
         client=client,
         remote_struct=remote_struct,
         permissions=permissions,
