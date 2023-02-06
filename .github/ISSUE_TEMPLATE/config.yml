@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a question
+    url: https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA
+    about: Don't hesitate to join the Substra community on Slack to ask all your questions!
+  - name: User Documentation Improvement
+    url: https://github.com/Substra/substra-documentation/issues
+    about: For issues related to the User Documentation, please open an issue on the substra-documentation repository
+  - name: Feature request
+    url: https://github.com/Substra/substra/issues
+    about: We centralize feature requests in the substra repository, please open an issue there
