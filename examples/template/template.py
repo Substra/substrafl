@@ -215,7 +215,7 @@ aggregation_org = AggregationNode(ALGO_NODE_ID)
 # ======================
 
 test_data_nodes = list()
-my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=1)
+my_eval_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, eval_frequency=1)
 
 # %%
 # Running the experiment

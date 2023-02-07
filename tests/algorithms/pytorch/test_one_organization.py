@@ -60,7 +60,9 @@ def compute_plan(
             )
 
     my_algo = MyOneOrganizationAlgo()
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes[:1], rounds=[N_ROUND])
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_linear_nodes[:1], eval_frequency=None, eval_rounds=[N_ROUND]
+    )
 
     compute_plan = execute_experiment(
         client=network.clients[0],
