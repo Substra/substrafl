@@ -189,8 +189,8 @@ nitpick_ignore = [
     ("py:class", "substra.Client"),
     ("py:class", "substra.sdk.client.Client"),
     ("py:class", "substra.sdk.models.ComputePlan"),
-    ("py:class", "substra.sdk.schemas.AlgoOutputSpec"),
-    ("py:class", "substra.sdk.schemas.AlgoInputSpec"),
+    ("py:class", "substra.sdk.schemas.FunctionOutputSpec"),
+    ("py:class", "substra.sdk.schemas.FunctionInputSpec"),
     ("py:class", "ComputePlan"),
 ]
 
