@@ -65,7 +65,6 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
 
 @pytest.mark.parametrize("algo_name, result", [("Dummy Algo Name", "Dummy Algo Name"), (None, "foo_RemoteClass")])
 def test_algo_name(algo_name, result):
-
     my_class = RemoteClass()
 
     data_op = my_class.foo(
@@ -82,7 +81,6 @@ def test_algo_name(algo_name, result):
 @patch("substra.sdk.schemas.AlgoSpec", MagicMock(return_value=None))
 @pytest.mark.parametrize("algo_name, result", [("Dummy Algo Name", "Dummy Algo Name"), (None, "foo_RemoteClass")])
 def test_register_algo_name(algo_name, result, default_permissions):
-
     client = DummyClient()
 
     my_class = RemoteClass()

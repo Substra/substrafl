@@ -233,7 +233,7 @@ def set_parameters(
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
         n_parameters = len(list(iter_params()))
         assert n_parameters == len(parameters), "Length of model parameters and provided parameters are unequal."
-        for (p, w) in zip(iter_params(), parameters):
+        for p, w in zip(iter_params(), parameters):
             p.data = w.data
 
 

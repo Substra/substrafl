@@ -63,7 +63,6 @@ def get_weldon_fedavg(
 
             # Train the model
             for x_batch, y_batch in dataloader:
-
                 # Forward pass
                 y_pred = self._model(x_batch).reshape(-1)
 
@@ -77,7 +76,6 @@ def get_weldon_fedavg(
                     self._scheduler.step()
 
         def _local_predict(self, predict_dataset, predictions_path):
-
             multiprocessing_context = None
             if num_workers != 0:
                 multiprocessing_context = torch.multiprocessing.get_context("spawn")

@@ -147,7 +147,6 @@ def test_np_index_generator_check_epoch_consitency(n_samples, batch_size, drop_l
     for _ in range(30):
         generated_epoch_indexes = np.concatenate((generated_epoch_indexes, nig.__next__()), axis=0)
         if n_epoch != nig.n_epoch_generated:
-
             # Check that there is no duplicates for the epoch
             assert len(set(generated_epoch_indexes)) == generated_epoch_indexes.shape[0]
 

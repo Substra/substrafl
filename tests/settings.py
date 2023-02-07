@@ -77,7 +77,6 @@ class Network(BaseModel):
 
 
 def network(backend_type: substra.BackendType, is_ci: bool = False):
-
     cfg_file = DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE
     if is_ci:
         cfg_file = CI_REMOTE_NETWORK_CONFIGURATION_FILE

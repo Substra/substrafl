@@ -32,7 +32,6 @@ from tests.conftest import LINEAR_N_TARGET
 
 @pytest.fixture(params=[None, 31, 42])
 def rng_algo(request, torch_linear_model, numpy_torch_dataset):
-
     test_seed = request.param
     n_rng_sample = 10
 
@@ -67,7 +66,6 @@ def rng_algo(request, torch_linear_model, numpy_torch_dataset):
 @pytest.fixture
 def rng_strategy():
     class RngStrategy(Strategy):
-
         _local_states = None
         _shared_states = None
 

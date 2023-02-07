@@ -110,7 +110,6 @@ def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: 
     LOCAL_WHEELS_FOLDER.mkdir(exist_ok=True)
 
     for lib_module in lib_modules:
-
         wheel_name = f"{lib_module.__name__}-{lib_module.__version__}-py3-none-any.whl"
 
         # Download only if exists
