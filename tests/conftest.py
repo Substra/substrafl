@@ -107,11 +107,9 @@ def mae():
 
 @pytest.fixture(scope="session")
 def mae_metric(network, default_permissions, mae):
-
     metric_deps = Dependency(pypi_dependencies=["numpy"], editable_mode=True)
 
     def mae_score(datasamples, predictions_path):
-
         y_true = datasamples[1]
         y_pred = np.load(predictions_path)
 

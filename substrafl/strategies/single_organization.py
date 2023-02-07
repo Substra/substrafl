@@ -111,7 +111,6 @@ class SingleOrganization(Strategy):
             )
 
         for test_data_node in test_data_nodes:
-
             if train_data_nodes[0].organization_id != test_data_node.organization_id:
                 raise NotImplementedError("Cannot test on a organization we did not train on for now.")
             # Init state for testtask

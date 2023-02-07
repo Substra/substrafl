@@ -185,7 +185,6 @@ class NewtonRaphson(Strategy):
 
         total_hessians, total_gradient_one_d = None, None
         for idx, state in enumerate(shared_states):
-
             # Compute average coefficient of the hessian and of the gradients
             sample_coefficient = state.n_samples / n_all_samples
 
@@ -344,7 +343,6 @@ class NewtonRaphson(Strategy):
             )
 
         for shared_state in shared_states:
-
             if not isinstance(shared_state, NewtonRaphsonSharedState):
                 raise SharedStatesError("Shared_state should be an instance of NewtonRaphsonSharedState")
             if not len(shared_state.hessian) == sum([grad.size for grad in shared_state.gradients]):

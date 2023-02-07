@@ -210,7 +210,6 @@ class TorchAlgo(Algo):
         train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
         for x_batch, y_batch in train_data_loader:
-
             x_batch = x_batch.to(self._device)
             y_batch = y_batch.to(self._device)
 

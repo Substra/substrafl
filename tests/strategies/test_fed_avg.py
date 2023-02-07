@@ -25,7 +25,6 @@ logger = getLogger("tests")
     ],
 )
 def test_avg_shared_states(n_samples, results):
-
     shared_states = [
         FedAvgSharedState(parameters_update=[np.ones((5, 10))], n_samples=n_samples[0]),
         FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=n_samples[1]),

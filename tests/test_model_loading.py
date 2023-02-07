@@ -222,7 +222,6 @@ def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, 
 
 
 def _create_algo_files(input_folder, algo, metadata):
-
     # model file
     if metadata.get(LOCAL_STATE_DICT_KEY):
         (input_folder / metadata.get(LOCAL_STATE_DICT_KEY)).write_text("True")

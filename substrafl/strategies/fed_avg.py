@@ -132,7 +132,6 @@ class FedAvg(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-
         for test_data_node in test_data_nodes:
             matching_train_nodes = [
                 train_data_node

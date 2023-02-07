@@ -318,7 +318,6 @@ def test_pytorch_nr_algo_performance(
     rtol,
     seed,
 ):
-
     perfs = network.clients[0].get_performances(compute_plan.key)
 
     # This abs_ative error is due to the l2 regularization, mandatory to reach numerical stability.

@@ -98,7 +98,6 @@ def download_composite_models_by_rank(network, session_dir, my_algo, compute_pla
 
 
 def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: int):
-
     aggregate_tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key], "rank": [rank]})
     aggregate_tasks = [t for t in aggregate_tasks if t.tag == "aggregate"]
     assert len(aggregate_tasks) == 1

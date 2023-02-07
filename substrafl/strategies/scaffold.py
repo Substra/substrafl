@@ -125,7 +125,6 @@ class Scaffold(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-
         for test_data_node in test_data_nodes:
             matching_train_nodes = [
                 train_data_node
@@ -161,7 +160,6 @@ class Scaffold(Strategy):
         assert shared_states, "shared_states should contain at least one element"
 
         for shared_state in shared_states:
-
             assert isinstance(
                 shared_state, ScaffoldSharedState
             ), "shared_state should be an instance of ScaffoldSharedState"
