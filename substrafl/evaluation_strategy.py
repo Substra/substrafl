@@ -13,7 +13,7 @@ class EvaluationStrategy:
         eval_rounds: Optional[List[int]] = None,
     ) -> None:
         """Creates an iterator which returns True or False depending on the defined strategy.
-        At least one of eval_frequency or eval_rounds must be define. If both are defined, the
+        At least one of eval_frequency or eval_rounds must be defined. If both are defined, the
         union of both selected indexes will be evaluated.
 
         Args:
@@ -87,7 +87,7 @@ class EvaluationStrategy:
             raise TypeError("test_data_nodes must include objects of TestDataNode type")
 
         if eval_frequency is None and eval_rounds is None:
-            raise ValueError("At least one of eval_frequency or eval_rounds must be define")
+            raise ValueError("At least one of eval_frequency or eval_rounds must be defined")
 
         self._check_eval_frequency()
         self._check_eval_rounds()
