@@ -182,7 +182,10 @@ class EvaluationStrategy:
             if not self._eval_rounds:
                 raise ValueError(f"eval_rounds cannot be empty, eval_rounds={self._eval_rounds} found")
             elif not all(isinstance(r, int) for r in self._eval_rounds):
-                raise TypeError(f"eval_rounds must be of type list of ints, {type(self._eval_rounds)} found")
+                raise TypeError(
+                    "eval_rounds must only contains integers,"
+                    f" {[type(x) for x in self._eval_rounds if not isinstance(x, int)]} found"
+                )
             elif not all(r >= 0 for r in self._eval_rounds):
                 raise ValueError(f"eval_rounds can be only positive indexes, rounds={self._eval_rounds} found")
         elif self._eval_rounds is not None:
