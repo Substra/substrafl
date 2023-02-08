@@ -206,6 +206,25 @@ def test_train_newton_raphson_non_convex_cnn(torch_algo, seed):
         my_algo.train(datasamples=(x_train, y_train), _skip=True)
 
 
+@pytest.mark.parametrize(
+    "n_samples,y_shape,batch_size",
+    [(5, 1, 2), (5, 1, None), (5, 2, 2), (5, 2, None)],
+)
+def test_prediction_shape(session_dir, perceptron, torch_algo, n_samples, y_shape, batch_size):
+    x_shape = 15
+
+    x_train = np.zeros([n_samples, x_shape])
+    y_train = np.ones([n_samples, y_shape])
+
+    model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
+    my_algo = torch_algo(model=model, batch_size=batch_size)
+
+    prediction_file = session_dir / "NR_predictions"
+    my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
+    prediction = np.load(prediction_file)
+    assert prediction.shape == (n_samples, y_shape)
+
+
 @pytest.fixture(scope="module")
 def nr_test_data():
     return [np.array([[5, 5, 11], [6, 6, 13], [7, 7, 15]])]
