@@ -81,7 +81,7 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
         shutil.copy(wheel_path, wheels_dir / wheel_name)
 
         # Necessary command to install the wheel in the docker image
-        force_reinstall = "--force-reinstall " if lib_name == "substratools" else ""
+        force_reinstall = "--force-reinstall " if lib_name in ["substratools", "substra"] else ""
         install_cmd = (
             f"RUN cd {dest_dir} && python{python_major_minor}" f" -m pip install {force_reinstall}{wheel_name}\n"
         )
