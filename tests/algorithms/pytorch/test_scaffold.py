@@ -13,7 +13,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import NumUpdatesValueError
 from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_function_files
+from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
 from substrafl.strategies import Scaffold
 from tests import utils
@@ -348,7 +348,7 @@ def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_u
 @pytest.mark.slow
 @pytest.mark.substra
 def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
-    download_function_files(
+    download_algo_files(
         client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
     )
     model = load_algo(input_folder=session_dir)._model

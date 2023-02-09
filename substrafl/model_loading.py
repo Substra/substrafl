@@ -68,10 +68,10 @@ def _check_environment_compatibility(metadata: dict):
 def _validate_load_algo_inputs(folder: Path) -> dict:
     """Checks if the input folder is containing the necessary files to load a model with the
     :func:`~substrafl.model_loading.load_algo` function. It can be generated with the
-    :func:`~substrafl.model_loading.download_function_files` function.
+    :func:`~substrafl.model_loading.download_algo_files` function.
 
     Args:
-        folder (Path): Folder generated with the :func:`~substrafl.model_loading.download_function_files` function.
+        folder (Path): Folder generated with the :func:`~substrafl.model_loading.download_algo_files` function.
 
     Returns:
         dict: execution environment metadata of the model stored in the given folder
@@ -81,7 +81,7 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
 
     missing = []
     end_of_msg = (
-        "This folder should be the result of the `substrafl.download_function_files` function "
+        "This folder should be the result of the `substrafl.download_algo_files` function "
         f"and contain the {METADATA_FILE}, model and algo files."
         "being the local state of the model to load within memory."
     )
@@ -195,7 +195,7 @@ def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:
     return my_algo
 
 
-def download_function_files(
+def download_algo_files(
     client: substra.Client,
     compute_plan_key: str,
     dest_folder: os.PathLike,
@@ -277,7 +277,7 @@ def load_algo(input_folder: os.PathLike) -> Any:
         - metadata.json
         - the file specified in metadata.local_state_file
 
-    This kind of folder can be generated with the :func:`~substrafl.model_loading.download_function_files`
+    This kind of folder can be generated with the :func:`~substrafl.model_loading.download_algo_files`
     function.
 
     Args:

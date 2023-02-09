@@ -25,7 +25,7 @@ from substrafl.model_loading import ALGO_DICT_KEY
 from substrafl.model_loading import LOCAL_STATE_DICT_KEY
 from substrafl.model_loading import METADATA_FILE
 from substrafl.model_loading import REQUIRED_KEYS
-from substrafl.model_loading import download_function_files
+from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
 from substrafl.remote.register.register import _create_substra_function_files
 
@@ -164,7 +164,7 @@ def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_
     subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "substrafltestlibrary"])
 
 
-def test_download_function_files(fake_client, fake_compute_plan, session_dir, caplog):
+def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog):
     """No warning and expected files matching the given names in the metadata.json"""
     dest_folder = session_dir / str(uuid.uuid4())
 
@@ -173,7 +173,7 @@ def test_download_function_files(fake_client, fake_compute_plan, session_dir, ca
     expected_metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
 
     caplog.clear()
-    download_function_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+    download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
 
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
@@ -190,7 +190,7 @@ def test_environment_compatibility_error(fake_client, fake_compute_plan, to_remo
 
     del fake_compute_plan.metadata[to_remove]
     with pytest.raises(NotImplementedError):
-        download_function_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
 
 def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir, caplog):
@@ -202,7 +202,7 @@ def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir
         name = pkg_version.split("_")[0]
 
         caplog.clear()
-        download_function_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
         assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 1
         assert name in caplog.records[0].msg
 
@@ -212,7 +212,7 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
     dest_folder = session_dir / str(uuid.uuid4())
     fake_client.list_task = MagicMock(return_value=[])
     with pytest.raises(TrainTaskNotFoundError):
-        download_function_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
 
 def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_local_train_task):
@@ -220,7 +220,7 @@ def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, 
     dest_folder = session_dir / str(uuid.uuid4())
     fake_client.list_task = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
     with pytest.raises(MultipleTrainTaskError):
-        download_function_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
 
 def _create_algo_files(input_folder, algo, metadata):
@@ -326,4 +326,4 @@ def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_
     """Raise error if the task status is not done"""
     with pytest.raises(UnfinishedTrainTaskError):
         fake_local_train_task.status = status
-        download_function_files(fake_client, fake_compute_plan.key, session_dir, round_idx=None)
+        download_algo_files(fake_client, fake_compute_plan.key, session_dir, round_idx=None)

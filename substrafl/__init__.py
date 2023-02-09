@@ -5,7 +5,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.experiment import execute_experiment
 from substrafl.index_generator.np_index_generator import NpIndexGenerator
 from substrafl.logger import set_logging_level
-from substrafl.model_loading import download_function_files
+from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
 from substrafl.schemas import StrategyName
 
@@ -18,5 +18,5 @@ __all__ = [
     "EvaluationStrategy",
     "StrategyName",
     "load_algo",
-    "download_function_files",
+    "download_algo_files",
 ]
