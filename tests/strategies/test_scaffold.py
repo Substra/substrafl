@@ -27,8 +27,8 @@ def assert_array_list_allclose(array_list_1, array_list_2):
         ([1, 0, 1], [1.5 * np.ones((2, 3)), 1.5 * np.ones((1, 2))]),
     ],
 )
-def test_avg_shared_states_n_samples(n_samples, results):
-    # Check that avg_shared_states sends the average of weight_updates and control_variate_updates
+def test_compute_averaged_states_n_samples(n_samples, results):
+    # Check that compute_averaged_states sends the average of weight_updates and control_variate_updates
     weights = [
         [np.ones((2, 3)), np.ones((1, 2))],
         [np.zeros((2, 3)), np.zeros((1, 2))],
@@ -45,7 +45,7 @@ def test_avg_shared_states_n_samples(n_samples, results):
         for weight, n_sample in zip(weights, n_samples)
     ]
     my_scaffold = Scaffold(aggregation_lr=1)
-    averaged_states: ScaffoldAveragedStates = my_scaffold.avg_shared_states(shared_states, _skip=True)
+    averaged_states: ScaffoldAveragedStates = my_scaffold.compute_averaged_states(shared_states, _skip=True)
 
     assert_array_list_allclose(array_list_1=results, array_list_2=averaged_states.avg_parameters_update)
     # as server_control_variate = np.zeros and aggregation_lr=1, the new server_control_variate is equal
@@ -65,11 +65,12 @@ def test_avg_shared_states_n_samples(n_samples, results):
         ),
     ],
 )
-def test_avg_shared_states_type_error(shared_states):
-    # check if an empty list or something else than a List is not passed into avg_shared_states() error will be raised
+def test_compute_averaged_states_type_error(shared_states):
+    # check if an empty list or something else than a List is not passed into compute_averaged_states()
+    # error will be raised
     my_scaffold = Scaffold()
     with pytest.raises(AssertionError):
-        my_scaffold.avg_shared_states(shared_states, _skip=True)
+        my_scaffold.compute_averaged_states(shared_states, _skip=True)
 
 
 def test_scaffold_aggregation_lr_negative():
@@ -98,7 +99,7 @@ def test_check_len_states_same(parameters_update, control_variate_update, server
     ]
     strategy = Scaffold(aggregation_lr=0)
     with pytest.raises(AssertionError):
-        strategy.avg_shared_states(shared_states=shared_states, _skip=True)
+        strategy.compute_averaged_states(shared_states=shared_states, _skip=True)
 
 
 @pytest.mark.parametrize(
@@ -141,7 +142,7 @@ def test_check_same_len_between_clients(parameters_update, control_variate_updat
     ]
     strategy = Scaffold(aggregation_lr=0)
     with pytest.raises(AssertionError):
-        strategy.avg_shared_states(shared_states=shared_states, _skip=True)
+        strategy.compute_averaged_states(shared_states=shared_states, _skip=True)
 
 
 @pytest.mark.parametrize(
@@ -152,7 +153,7 @@ def test_check_same_len_between_clients(parameters_update, control_variate_updat
         (2, [1.5 * np.ones(5), 3.5 * np.ones(5)]),
     ],
 )
-def test_scaffold_avg_shared_states_aggregation_lr(aggregation_lr, expected_result):
+def test_scaffold_compute_averaged_states_aggregation_lr(aggregation_lr, expected_result):
     strategy = Scaffold(aggregation_lr=aggregation_lr)
     shared_states = [
         ScaffoldSharedState(
@@ -168,7 +169,7 @@ def test_scaffold_avg_shared_states_aggregation_lr(aggregation_lr, expected_resu
             server_control_variate=[np.ones(5), np.ones(5)],
         ),
     ]
-    averaged_states = strategy.avg_shared_states(shared_states=shared_states, _skip=True)
+    averaged_states = strategy.compute_averaged_states(shared_states=shared_states, _skip=True)
     assert_array_list_allclose(expected_result, averaged_states.avg_parameters_update)
     # Check that the aggregation lr has no incidence on the server control variate
     assert_array_list_allclose([2 * np.ones(5), 2 * np.ones(5)], averaged_states.server_control_variate)
@@ -182,7 +183,7 @@ def test_scaffold_avg_shared_states_aggregation_lr(aggregation_lr, expected_resu
         ([np.ones(5), 2 * np.ones(5)], [2 * np.ones(5), 3 * np.ones(5)]),
     ],
 )
-def test_scaffold_avg_shared_states_server_control_variate(server_control_variate, expected_result):
+def test_scaffold_compute_averaged_states_server_control_variate(server_control_variate, expected_result):
     strategy = Scaffold(aggregation_lr=1)
     shared_states = [
         ScaffoldSharedState(
@@ -192,7 +193,7 @@ def test_scaffold_avg_shared_states_server_control_variate(server_control_variat
             server_control_variate=server_control_variate,
         ),
     ]
-    averaged_states = strategy.avg_shared_states(shared_states=shared_states, _skip=True)
+    averaged_states = strategy.compute_averaged_states(shared_states=shared_states, _skip=True)
     assert_array_list_allclose(expected_result, averaged_states.server_control_variate)
 
 

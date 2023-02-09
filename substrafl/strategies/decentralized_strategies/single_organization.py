@@ -38,6 +38,17 @@ class SingleOrganization(Strategy):
         """
         return StrategyName.ONE_ORGANIZATION
 
+    def initialization_round(
+        self,
+        algo: Algo,
+        train_data_nodes: List[TrainDataNode],
+        round_idx: int,
+        clean_models: bool,
+        aggregation_node: Optional[AggregationNode] = None,
+        additional_orgs_permissions: Optional[set] = None,
+    ):
+        return
+
     def perform_round(
         self,
         algo: Algo,
@@ -62,9 +73,6 @@ class SingleOrganization(Strategy):
             additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
                 after training, in order to test the model on an other organization.
         """
-
-        if round_idx == 0:
-            return
 
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")

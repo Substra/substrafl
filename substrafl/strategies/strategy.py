@@ -31,6 +31,32 @@ class Strategy(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def initialization_round(
+        self,
+        algo: Algo,
+        train_data_nodes: List[TrainDataNode],
+        aggregation_node: Optional[AggregationNode],
+        round_idx: int,
+        clean_models: bool,
+        additional_orgs_permissions: Optional[set] = None,
+    ):
+        """Perform an initialization round of the strategy
+
+        Args:
+            algo (Algo): algo with the code to execute on the organization
+            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
+                centralized strategy, unused otherwise
+            round_idx (int): index of the round
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def perform_round(
         self,
         algo: Algo,

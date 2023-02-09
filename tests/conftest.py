@@ -3,7 +3,6 @@ import shutil
 import sys
 from pathlib import Path
 from typing import List
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -337,24 +336,13 @@ def dummy_strategy_class():
         def name(self) -> StrategyName:
             return "dummy"
 
-        def perform_round(
-            self,
-            algo: Algo,
-            train_data_nodes: List[TrainDataNode],
-            aggregation_node: Optional[AggregationNode],
-            round_idx: int,
-            clean_models: bool,
-            additional_orgs_permissions: Optional[set] = None,
-        ):
+        def initialization_round(self, *args, **kwargs):
             pass
 
-        def predict(
-            self,
-            algo: Algo,
-            test_data_nodes: List[TestDataNode],
-            train_data_nodes: List[TrainDataNode],
-            round_idx: int,
-        ):
+        def perform_round(self, *args, **kwargs):
+            pass
+
+        def predict(self, *args, **kwargs):
             pass
 
     return DummyStrategy

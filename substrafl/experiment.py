@@ -314,7 +314,7 @@ def execute_experiment(
 
     # create computation graph
     for round_idx in range(0, num_rounds + 1):
-        strategy.perform_round(
+        (strategy.initialization_round if round_idx == 0 else strategy.perform_round)(
             algo=algo,
             train_data_nodes=train_data_nodes,
             aggregation_node=aggregation_node,
