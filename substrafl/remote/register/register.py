@@ -1,5 +1,5 @@
 """
-Create the Substra algo assets and register them to the platform.
+Create the Substra function assets and register them to the platform.
 """
 import inspect
 import logging
@@ -59,7 +59,7 @@ RUN python{python_version} -m pip install -U pip
 ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
 """
 
-ALGO = """
+FUNCTION = """
 import json
 import cloudpickle
 
@@ -73,13 +73,13 @@ if __name__ == "__main__":
     # Load the wrapped user code
     remote_struct = RemoteStruct.load(src=Path(__file__).parent / '{substrafl_folder}')
 
-    # Create a Substra algo from the wrapped user code
+    # Create a Substra function from the wrapped user code
     remote_instance = remote_struct.get_remote_instance()
 
     # Register the functions to substra-tools
     remote_instance.register_substratools_function()
 
-    # Execute the algo using substra-tools
+    # Execute the function using substra-tools
     tools.execute()
 """
 
@@ -178,7 +178,7 @@ def _create_substra_function_files(
     Args:
         remote_struct (RemoteStruct): A representation of a substra algorithm.
         install_libraries (bool): whether we need to build the wheels and copy the files to install the libraries
-        dependencies (Dependency): Algorithm dependencies.
+        dependencies (Dependency): Function dependencies.
         operation_dir (pathlib.Path): path to the operation directory
 
         Returns:
@@ -244,7 +244,7 @@ def _create_substra_function_files(
     # Write template to function.py
     function_path = operation_dir / "function.py"
     function_path.write_text(
-        ALGO.format(
+        FUNCTION.format(
             substrafl_folder=SUBSTRAFL_FOLDER,
         )
     )
@@ -291,10 +291,10 @@ def register_function(
     Args:
         client (substra.Client): The substra client.
         remote_struct (RemoteStruct): The substra submittable function representation.
-        permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
+        permissions (substra.sdk.schemas.Permissions): Permissions for the function.
         inputs (typing.List[substra.sdk.schemas.FunctionInputSpec]): List of function inputs to be used.
         outputs (typing.List[substra.sdk.schemas.FunctionOutputSpec]): List of function outputs to be used.
-        dependencies (Dependency): Algorithm dependencies.
+        dependencies (Dependency): Function dependencies.
 
     Returns:
         str: Substra function key.
@@ -361,7 +361,7 @@ def add_metric(
     metric_name: typing.Optional[str] = None,
 ) -> str:
     """Adds a metric to the Substra platform using the given metric function as the
-    algorithm to execute.
+    function to execute.
     The metric function must be of type function, and its signature must ONLY contains
     `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
 
