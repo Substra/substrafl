@@ -11,6 +11,12 @@ from substrafl.strategies.strategy import Strategy
 
 
 class CentralizedStrategy(Strategy):
+    """TO DO
+
+    Args:
+        Strategy (_type_): _description_
+    """
+
     def __init__(self, *args, **kwargs):
         super(CentralizedStrategy, self).__init__(*args, **kwargs)
 
