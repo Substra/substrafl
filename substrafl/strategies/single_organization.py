@@ -118,7 +118,6 @@ class SingleOrganization(Strategy):
                 traintask_id=self.local_state.key,
                 operation=algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    shared_state=None,
                     _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
                 round_idx=round_idx,

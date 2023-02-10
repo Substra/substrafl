@@ -17,6 +17,7 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import register
+from substrafl.remote.decorators import remote
 from substrafl.remote.decorators import remote_data
 from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
@@ -372,13 +373,17 @@ def dummy_algo_class():
         def model(self):
             return "model"
 
+        @remote
+        def initialize(self, shared_states):
+            pass
+
         @remote_data
         def train(self, datasamples, shared_state):
             return dict(test=np.array([4]), datasamples=datasamples, shared_state=shared_state)
 
         @remote_data
-        def predict(self, datasamples: np.array):
-            return dict(datasamples=datasamples)
+        def predict(self, datasamples: np.array, shared_state):
+            return dict(datasamples=datasamples, shared_state=shared_state)
 
         def load(self, path: Path):
             return self

@@ -94,6 +94,8 @@ class FedAvg(Strategy):
             raise ValueError("In FedAvg strategy aggregation node cannot be None")
 
         if round_idx == 1:
+            # First round of the strategy by performing a local update on each train data node
+            assert self._shared_states is None
             self._perform_local_updates(
                 algo=algo,
                 train_data_nodes=train_data_nodes,
