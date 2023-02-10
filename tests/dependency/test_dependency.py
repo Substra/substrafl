@@ -13,7 +13,7 @@ from substrafl.exceptions import InvalidPathError
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote import remote_data
-from substrafl.remote.register.register import _create_substra_algo_files
+from substrafl.remote.register.register import _create_substra_function_files
 
 CURRENT_FILE = Path(__file__)
 
@@ -47,38 +47,38 @@ def test_dependency_validators_no_setup_file():
 @pytest.mark.slow
 @pytest.mark.substra
 class TestLocalDependency:
-    def _register_algo(self, my_algo, algo_deps, client, session_dir):
+    def _register_function(self, my_algo, algo_deps, client, session_dir):
         """Register a composite algo"""
         data_op = my_algo.train(data_samples=list(), shared_state=None)
         operation_dir = Path(tempfile.mkdtemp(dir=session_dir))
-        archive_path, description_path = _create_substra_algo_files(
+        archive_path, description_path = _create_substra_function_files(
             data_op.remote_struct,
             dependencies=algo_deps,
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=operation_dir,
         )
-        algo_query = substra.schemas.AlgoSpec(
+        algo_query = substra.schemas.FunctionSpec(
             name="algo_test_deps",
             inputs=[
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.datasamples,
                     kind=substra.schemas.AssetKind.data_sample.value,
                     optional=False,
                     multiple=True,
                 ),
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.opener,
                     kind=substra.schemas.AssetKind.data_manager.value,
                     optional=False,
                     multiple=False,
                 ),
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.local,
                     kind=substra.schemas.AssetKind.model.value,
                     optional=True,
                     multiple=False,
                 ),
-                substra.schemas.AlgoInputSpec(
+                substra.schemas.FunctionInputSpec(
                     identifier=InputIdentifiers.shared,
                     kind=substra.schemas.AssetKind.model.value,
                     optional=True,
@@ -86,10 +86,10 @@ class TestLocalDependency:
                 ),
             ],
             outputs=[
-                substra.schemas.AlgoOutputSpec(
+                substra.schemas.FunctionOutputSpec(
                     identifier=OutputIdentifiers.local, kind=substra.schemas.AssetKind.model.value, multiple=False
                 ),
-                substra.schemas.AlgoOutputSpec(
+                substra.schemas.FunctionOutputSpec(
                     identifier=OutputIdentifiers.shared, kind=substra.schemas.AssetKind.model.value, multiple=False
                 ),
             ],
@@ -97,13 +97,13 @@ class TestLocalDependency:
             file=archive_path,
             permissions=substra.schemas.Permissions(public=True, authorized_ids=list()),
         )
-        algo_key = client.add_algo(algo_query)
-        return algo_key
+        function_key = client.add_function(algo_query)
+        return function_key
 
-    def _register_composite(self, algo_key, dataset_key, data_sample_key, client):
+    def _register_composite(self, function_key, dataset_key, data_sample_key, client):
         """Register a composite traintask"""
         composite_traintask_query = substra.schemas.TaskSpec(
-            algo_key=algo_key,
+            function_key=function_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
             inputs=[
@@ -136,9 +136,9 @@ class TestLocalDependency:
 
         client = network.clients[0]
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-        algo_key = self._register_algo(dummy_algo_class(), algo_deps, client, session_dir)
+        function_key = self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintask)
 
     def test_local_dependencies_directory(
@@ -172,9 +172,9 @@ class TestLocalDependency:
             local_code=[CURRENT_FILE.parent / "local_code_subfolder"],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
+        function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintask)
 
     def test_local_dependencies_file_in_directory(
@@ -208,9 +208,9 @@ class TestLocalDependency:
             local_code=[CURRENT_FILE.parent / "local_code_subfolder" / "local_code.py"],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
+        function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintask)
 
     def test_local_dependencies_file(
@@ -244,9 +244,9 @@ class TestLocalDependency:
             local_code=[CURRENT_FILE.parent / "local_code_file.py"],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
+        function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintask)
 
     @pytest.mark.docker_only
@@ -290,7 +290,7 @@ class TestLocalDependency:
             local_dependencies=[CURRENT_FILE.parent / pkg_path for pkg_path in pkg_paths],
             editable_mode=True,
         )
-        algo_key = self._register_algo(my_algo, algo_deps, client, session_dir)
+        function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(algo_key, numpy_datasets[0], constant_samples[0], client)
+        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, composite_traintask)

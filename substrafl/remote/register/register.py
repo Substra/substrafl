@@ -1,5 +1,5 @@
 """
-Create the Substra algo assets and register them to the platform.
+Create the Substra function assets and register them to the platform.
 """
 import inspect
 import logging
@@ -56,10 +56,10 @@ RUN python{python_version} -m pip install -U pip
 # Install local dependencies
 {local_dependencies}
 
-ENTRYPOINT ["python{python_version}", "algo.py", "--function-name", "{method_name}"]
+ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
 """
 
-ALGO = """
+FUNCTION = """
 import json
 import cloudpickle
 
@@ -73,13 +73,13 @@ if __name__ == "__main__":
     # Load the wrapped user code
     remote_struct = RemoteStruct.load(src=Path(__file__).parent / '{substrafl_folder}')
 
-    # Create a Substra algo from the wrapped user code
+    # Create a Substra function from the wrapped user code
     remote_instance = remote_struct.get_remote_instance()
 
     # Register the functions to substra-tools
     remote_instance.register_substratools_function()
 
-    # Execute the algo using substra-tools
+    # Execute the function using substra-tools
     tools.execute()
 """
 
@@ -158,13 +158,13 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
     return substratools_image
 
 
-def _create_substra_algo_files(
+def _create_substra_function_files(
     remote_struct: RemoteStruct,
     install_libraries: bool,
     dependencies: Dependency,
     operation_dir: Path,
 ) -> typing.Tuple[Path, Path]:
-    """Creates the necessary files from the remote struct to register the associated algorithm to substra, zip them into
+    """Creates the necessary files from the remote struct to register the associated function to substra, zip them into
         an archive (.tar.gz).
 
         Necessary files:
@@ -173,12 +173,12 @@ def _create_substra_algo_files(
             - the wheel of the current version of Substrafl and Substra
             - the Dockerfile
             - the description.md
-            - the algo.py entrypoint
+            - the function.py entrypoint
 
     Args:
         remote_struct (RemoteStruct): A representation of a substra algorithm.
         install_libraries (bool): whether we need to build the wheels and copy the files to install the libraries
-        dependencies (Dependency): Algorithm dependencies.
+        dependencies (Dependency): Function dependencies.
         operation_dir (pathlib.Path): path to the operation directory
 
         Returns:
@@ -241,10 +241,10 @@ def _create_substra_algo_files(
                 operation_dir=operation_dir,
             )
 
-    # Write template to algo.py
-    algo_path = operation_dir / "algo.py"
-    algo_path.write_text(
-        ALGO.format(
+    # Write template to function.py
+    function_path = operation_dir / "function.py"
+    function_path.write_text(
+        FUNCTION.format(
             substrafl_folder=SUBSTRAFL_FOLDER,
         )
     )
@@ -272,42 +272,42 @@ def _create_substra_algo_files(
     )
 
     # Create necessary archive to register the operation on substra
-    archive_path = operation_dir / "algo.tar.gz"
+    archive_path = operation_dir / "function.tar.gz"
     _create_archive(archive_path=archive_path, src_path=operation_dir)
 
     return archive_path, description_path
 
 
-def register_algo(
+def register_function(
     client: substra.Client,
     remote_struct: RemoteStruct,
     permissions: substra.sdk.schemas.Permissions,
-    inputs: typing.List[substra.sdk.schemas.AlgoInputSpec],
-    outputs: typing.List[substra.sdk.schemas.AlgoOutputSpec],
+    inputs: typing.List[substra.sdk.schemas.FunctionInputSpec],
+    outputs: typing.List[substra.sdk.schemas.FunctionOutputSpec],
     dependencies: Dependency,
 ) -> str:
-    """Automatically creates the needed files to register the composite algorithm associated to the remote_struct.
+    """Automatically creates the needed files to register the function associated to the remote_struct.
 
     Args:
         client (substra.Client): The substra client.
-        remote_struct (RemoteStruct): The substra submittable algorithm representation.
-        permissions (substra.sdk.schemas.Permissions): Permissions for the algorithm.
-        inputs (typing.List[substra.sdk.schemas.AlgoInputSpec]): List of algo inputs to be used.
-        outputs (typing.List[substra.sdk.schemas.AlgoOutputSpec]): List of algo outputs to be used.
-        dependencies (Dependency): Algorithm dependencies.
+        remote_struct (RemoteStruct): The substra submittable function representation.
+        permissions (substra.sdk.schemas.Permissions): Permissions for the function.
+        inputs (typing.List[substra.sdk.schemas.FunctionInputSpec]): List of function inputs to be used.
+        outputs (typing.List[substra.sdk.schemas.FunctionOutputSpec]): List of function outputs to be used.
+        dependencies (Dependency): Function dependencies.
 
     Returns:
-        str: Substra algorithm key.
+        str: Substra function key.
     """
     with tempfile.TemporaryDirectory(dir=str(Path.cwd().resolve()), prefix=TMP_SUBSTRAFL_PREFIX) as operation_dir:
-        archive_path, description_path = _create_substra_algo_files(
+        archive_path, description_path = _create_substra_function_files(
             remote_struct,
             dependencies=dependencies,
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=Path(operation_dir),
         )
-        key = client.add_algo(
-            substra.sdk.schemas.AlgoSpec(
+        key = client.add_function(
+            substra.sdk.schemas.FunctionSpec(
                 name=remote_struct.algo_name,
                 description=description_path,
                 file=archive_path,
@@ -361,7 +361,7 @@ def add_metric(
     metric_name: typing.Optional[str] = None,
 ) -> str:
     """Adds a metric to the Substra platform using the given metric function as the
-    algorithm to execute.
+    function to execute.
     The metric function must be of type function, and its signature must ONLY contains
     `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
 
@@ -387,19 +387,19 @@ def add_metric(
             return metric_function(datasamples=datasamples, predictions_path=predictions_path)
 
     inputs_metrics = [
-        substra.sdk.schemas.AlgoInputSpec(
+        substra.sdk.schemas.FunctionInputSpec(
             identifier=InputIdentifiers.datasamples,
             kind=substra.sdk.schemas.AssetKind.data_sample,
             optional=False,
             multiple=True,
         ),
-        substra.sdk.schemas.AlgoInputSpec(
+        substra.sdk.schemas.FunctionInputSpec(
             identifier=InputIdentifiers.opener,
             kind=substra.sdk.schemas.AssetKind.data_manager,
             optional=False,
             multiple=False,
         ),
-        substra.sdk.schemas.AlgoInputSpec(
+        substra.sdk.schemas.FunctionInputSpec(
             identifier=InputIdentifiers.predictions,
             kind=substra.sdk.schemas.AssetKind.model,
             optional=False,
@@ -408,7 +408,7 @@ def add_metric(
     ]
 
     outputs_metrics = [
-        substra.sdk.schemas.AlgoOutputSpec(
+        substra.sdk.schemas.FunctionOutputSpec(
             identifier=OutputIdentifiers.performance,
             kind=substra.sdk.schemas.AssetKind.performance,
             multiple=False,
@@ -425,7 +425,7 @@ def add_metric(
         algo_name=metric_name or "metric_" + metric_function.__name__,
     )
 
-    key = register_algo(
+    key = register_function(
         client=client,
         remote_struct=remote_struct,
         permissions=permissions,

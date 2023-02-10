@@ -107,7 +107,7 @@ class LoadAlgoMetadataError(Exception):
 
 class LoadAlgoFileNotFoundError(Exception):
     """When using the :func:`~substrafl.model_loading.load_algo`, the given folder must contains the following files:
-    algo.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
+    function.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
 
 
 class LoadAlgoLocalDependencyError(Exception):

@@ -24,7 +24,7 @@ class RemoteClass:
 class DummyClient:
     backend_mode = substra.BackendType.LOCAL_SUBPROCESS
 
-    def add_algo(*args):
+    def add_function(*args):
         pass
 
 
@@ -40,20 +40,20 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
 
     remote_struct = data_op.remote_struct
 
-    algo_deps = Dependency()
+    function_deps = Dependency()
 
-    algo_key = register.register_algo(
+    function_key = register.register_function(
         client=client,
         remote_struct=remote_struct,
         permissions=default_permissions,
-        dependencies=algo_deps,
+        dependencies=function_deps,
         inputs=None,  # No need to register inputs and outputs as this algo is not actually used
         outputs=None,
     )
 
-    algo = client.get_algo(algo_key)
+    function = client.get_function(function_key)
 
-    with tarfile.open(algo.algorithm.storage_address, "r:gz") as tar:
+    with tarfile.open(function.function.storage_address, "r:gz") as tar:
         dockerfile = tar.extractfile("Dockerfile")
         lines = dockerfile.readlines()
 
@@ -78,9 +78,9 @@ def test_algo_name(algo_name, result):
     assert remote_struct.algo_name == result
 
 
-@patch("substra.sdk.schemas.AlgoSpec", MagicMock(return_value=None))
+@patch("substra.sdk.schemas.FunctionSpec", MagicMock(return_value=None))
 @pytest.mark.parametrize("algo_name, result", [("Dummy Algo Name", "Dummy Algo Name"), (None, "foo_RemoteClass")])
-def test_register_algo_name(algo_name, result, default_permissions):
+def test_register_function_name(algo_name, result, default_permissions):
     client = DummyClient()
 
     my_class = RemoteClass()
@@ -95,7 +95,7 @@ def test_register_algo_name(algo_name, result, default_permissions):
 
     algo_deps = Dependency()
 
-    _ = register.register_algo(
+    _ = register.register_function(
         client=client,
         remote_struct=remote_struct,
         permissions=default_permissions,
@@ -104,7 +104,7 @@ def test_register_algo_name(algo_name, result, default_permissions):
         outputs=None,
     )
 
-    assert substra.sdk.schemas.AlgoSpec.call_args[1]["name"] == result
+    assert substra.sdk.schemas.FunctionSpec.call_args[1]["name"] == result
 
 
 @pytest.mark.parametrize(

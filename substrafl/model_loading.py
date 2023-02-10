@@ -172,7 +172,7 @@ def _get_composite_from_round(client: substra.Client, compute_plan_key: str, rou
 
 def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:
     """Load into memory a serialized (and compressed (.tar.gz)) substrafl algo within the given algo_path.
-    This kind of file is usually the result of the ``substra.Client.download_algo`` function applied to
+    This kind of file is usually the result of the ``substra.Client.download_function`` function applied to
     a composite train task being part of a Substrafl experiment.
 
     Args:
@@ -211,7 +211,7 @@ def download_algo_files(
 
     Those files are:
 
-        - the algorithm used for this task
+        - the function used for this task
         - the output local state of the task
         - a metadata.json
 
@@ -255,7 +255,7 @@ def download_algo_files(
             f"in status {composite_traintask.status}"
         )
 
-    algo_file = client.download_algo(composite_traintask.algo.key, destination_folder=folder)
+    algo_file = client.download_function(composite_traintask.function.key, destination_folder=folder)
 
     # Get the associated head model (local state)
     local_state_file = client.download_model_from_task(
@@ -273,7 +273,7 @@ def download_algo_files(
 def load_algo(input_folder: os.PathLike) -> Any:
     """Loads an algo from a specified folder. This folder should contains:
 
-        - algo.tar.gz
+        - function.tar.gz
         - metadata.json
         - the file specified in metadata.local_state_file
 
