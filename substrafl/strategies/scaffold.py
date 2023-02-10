@@ -99,23 +99,22 @@ class Scaffold(Strategy):
                 clean_models=clean_models,
             )
 
-        else:
-            current_aggregation = aggregation_node.update_states(
-                self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
-                round_idx=round_idx,
-                authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
-                clean_models=clean_models,
-            )
+        current_aggregation = aggregation_node.update_states(
+            self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
+            round_idx=round_idx,
+            authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
+            clean_models=clean_models,
+        )
 
-            self._perform_local_updates(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                current_aggregation=current_aggregation,
-                round_idx=round_idx,
-                aggregation_id=aggregation_node.organization_id,
-                additional_orgs_permissions=additional_orgs_permissions or set(),
-                clean_models=clean_models,
-            )
+        self._perform_local_updates(
+            algo=algo,
+            train_data_nodes=train_data_nodes,
+            current_aggregation=current_aggregation,
+            round_idx=round_idx,
+            aggregation_id=aggregation_node.organization_id,
+            additional_orgs_permissions=additional_orgs_permissions or set(),
+            clean_models=clean_models,
+        )
 
     def predict(
         self,

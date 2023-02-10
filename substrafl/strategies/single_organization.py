@@ -38,6 +38,32 @@ class SingleOrganization(Strategy):
         """
         return StrategyName.ONE_ORGANIZATION
 
+    def initialization_round(
+        self,
+        algo: Algo,
+        train_data_nodes: List[TrainDataNode],
+        clean_models: bool,
+        round_idx: int,
+        additional_orgs_permissions: Optional[set] = None,
+    ):
+        n_train_data_nodes = len(train_data_nodes)
+        if n_train_data_nodes != 1:
+            raise ValueError(
+                "One organization strategy can only be used with one train_data_node"
+                f" but {n_train_data_nodes} were passed."
+            )
+
+        next_local_state = train_data_nodes[0].init_states(
+            algo.initialize(  # type: ignore
+                _algo_name=f"Initializing with {algo.__class__.__name__}",
+            ),
+            round_idx=round_idx,
+            authorized_ids=set([train_data_nodes[0].organization_id]) | additional_orgs_permissions,
+            clean_models=clean_models,
+        )
+
+        self.local_state = next_local_state
+
     def perform_round(
         self,
         algo: Algo,
@@ -62,9 +88,6 @@ class SingleOrganization(Strategy):
             additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
                 after training, in order to test the model on an other organization.
         """
-
-        if round_idx == 0:
-            return
 
         if aggregation_node is not None:
             logger.info("Aggregation nodes are ignored for decentralized strategies.")
@@ -100,10 +123,6 @@ class SingleOrganization(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        if round_idx == 0:
-            logger.warning(f"The evaluation at round zero for {self.name} will be ignored as it is not supported yet.")
-            return
-
         if len(train_data_nodes) != 1:
             raise ValueError(
                 "Single organization strategy can only be used with one train_data_node but"
