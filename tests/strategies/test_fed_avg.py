@@ -24,7 +24,7 @@ logger = getLogger("tests")
         ([1, 0, 1], 1.5 * np.ones((5, 10))),
     ],
 )
-def test_compute_averaged_states(n_samples, results):
+def test_compute_aggregated_states(n_samples, results):
     shared_states = [
         FedAvgSharedState(parameters_update=[np.ones((5, 10))], n_samples=n_samples[0]),
         FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=n_samples[1]),
@@ -32,12 +32,12 @@ def test_compute_averaged_states(n_samples, results):
     ]
 
     MyFedAvg = FedAvg()
-    averaged_states = MyFedAvg.compute_averaged_states(shared_states, _skip=True)
+    averaged_states = MyFedAvg.compute_aggregated_states(shared_states, _skip=True)
 
     assert (results == averaged_states.avg_parameters_update).all()
 
 
-def test_compute_averaged_states_different_layers():
+def test_compute_aggregated_states_different_layers():
     shared_states = [
         FedAvgSharedState(
             parameters_update=[np.asarray([[0, 1], [2, 4]]), np.asarray([[6, 8], [10, 12]])], n_samples=1
@@ -48,12 +48,12 @@ def test_compute_averaged_states_different_layers():
     ]
 
     MyFedAvg = FedAvg()
-    avg_states = MyFedAvg.compute_averaged_states(shared_states, _skip=True)
+    avg_states = MyFedAvg.compute_aggregated_states(shared_states, _skip=True)
     expected_result = [np.asarray([[12, 15.25], [14, 16]]), np.asarray([[18, 20], [22, 24]])]
     assert np.allclose(avg_states.avg_parameters_update, expected_result)
 
 
-def test_compute_averaged_states_different_length():
+def test_compute_aggregated_states_different_length():
     shared_states = [
         FedAvgSharedState(parameters_update=[np.ones((5, 10)), np.ones((5, 10))], n_samples=1),
         FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=1),
@@ -61,7 +61,7 @@ def test_compute_averaged_states_different_length():
 
     MyFedAvg = FedAvg()
     with pytest.raises(AssertionError):
-        MyFedAvg.compute_averaged_states(shared_states, _skip=True)
+        MyFedAvg.compute_aggregated_states(shared_states, _skip=True)
 
 
 @pytest.mark.slow

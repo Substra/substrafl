@@ -181,7 +181,7 @@ class Scaffold(CentralizedStrategy):
         return averaged_weight_update
 
     @remote
-    def compute_averaged_states(self, shared_states: List[ScaffoldSharedState]) -> ScaffoldAveragedStates:
+    def compute_aggregated_states(self, shared_states: List[ScaffoldSharedState]) -> ScaffoldAveragedStates:
         """Performs the aggregation of the shared states returned by the train
         methods of the user-defined algorithm, according to the server operations of the Scaffold Algo.
 

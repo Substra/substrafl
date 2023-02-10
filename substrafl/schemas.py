@@ -58,7 +58,7 @@ class ScaffoldSharedState(_Model):
 
 
 class ScaffoldAveragedStates(_Model):
-    """Shared state sent by the aggregate_organization (returned by the func strategies.scaffold.compute_averaged_states)
+    """Shared state sent by the aggregate_organization (returned by the func strategies.scaffold.compute_aggregated_states)
 
     Args:
         server_control_variate (typing.List[numpy.ndarray]): the new server_control_variate sent to the clients

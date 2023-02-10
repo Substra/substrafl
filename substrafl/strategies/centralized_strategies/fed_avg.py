@@ -58,7 +58,7 @@ class FedAvg(CentralizedStrategy):
         return StrategyName.FEDERATED_AVERAGING
 
     @remote
-    def compute_averaged_states(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
+    def compute_aggregated_states(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm.
         The average is weighted by the proportion of the number of samples.

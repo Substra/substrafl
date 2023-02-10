@@ -14,7 +14,7 @@ SharedState = TypeVar("SharedState")
 
 
 class Strategy(ABC):
-    """Base strategy to be inherited from substrafl strategies."""
+    """Base strategy to be inherited from SubstraFL strategies."""
 
     def __init__(self, *args, **kwargs):
         self.args = args

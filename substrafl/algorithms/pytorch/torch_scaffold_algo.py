@@ -352,7 +352,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         Args:
             datasamples (typing.Any): Input data returned by the ``get_data`` method from the opener.
             shared_state (typing.Optional[ScaffoldAveragedStates]): Shared state sent by the aggregate_organization
-                (returned by the func strategies.scaffold.compute_averaged_states)
+                (returned by the func strategies.scaffold.compute_aggregated_states)
                 Defaults to None.
 
 
@@ -392,7 +392,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             # Hence we need to add it to the previous local state parameters
             # Scaffold paper's Algo step 17: model = model + aggregation_lr * parameters_update
             # here shared_state.avg_parameters_update is already aggregation_lr * parameters_update,
-            # cf strategies.scaffold.compute_averaged_states
+            # cf strategies.scaffold.compute_aggregated_states
             avg_parameters_update = [torch.from_numpy(x).to(self._device) for x in shared_state.avg_parameters_update]
             weight_manager.increment_parameters(
                 model=self._model,

@@ -154,8 +154,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         """Train method of the SingleOrganization strategy implemented with torch.
 
         Args:
-            x (typing.Any): Input data.
-            y (typing.Any): Input target.
+            datasamples (typing.Any): Input data.
             shared_state (typing.Dict[str, numpy.ndarray], Optional): Kept for consistency, setting this parameter
                 won't have any effect. Defaults to None.
 

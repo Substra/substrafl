@@ -11,17 +11,21 @@ from substrafl.strategies.strategy import Strategy
 
 
 class CentralizedStrategy(Strategy):
-    """TO DO
-
-    Args:
-        Strategy (_type_): _description_
-    """
+    """Centralized strategy to be inherited from SubstraFL centralized strategies.
+    Centralized strategies share the computational graph, computed from the ``initialization_round``,
+    ``perform_round`` and ``predict_function``. They differentiate from one another by their aggregation
+    function, computed in ``compute_aggregated_states``."""
 
     def __init__(self, *args, **kwargs):
         super(CentralizedStrategy, self).__init__(*args, **kwargs)
 
     @abstractmethod
-    def compute_averaged_states(self, *args, **kwargs):
+    def compute_aggregated_states(self, *args, **kwargs):
+        """A centralized strategy compute aggregated states to share to each node.
+
+        Returns:
+            AggregatedStates: Return the computed aggregated states of the aggregation.
+        """
         raise NotImplementedError
 
     def initialization_round(
@@ -71,7 +75,7 @@ class CentralizedStrategy(Strategy):
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
     ):
-        """One round of the Federated Averaging strategy consists in:
+        """One round of the centralized strategy consists in:
             - aggregate the model shared_states
             - set the model weights to the aggregated weights on each train data nodes
             - perform a local update (train on n mini-batches) of the models on each train data nodes
@@ -90,10 +94,10 @@ class CentralizedStrategy(Strategy):
                 after training, in order to test the model on an other organization.
         """
         if aggregation_node is None:
-            raise ValueError("In FedAvg strategy aggregation node cannot be None")
+            raise ValueError(f"In {self.name} strategy aggregation node cannot be None")
 
         current_aggregation = aggregation_node.update_states(
-            self.compute_averaged_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
+            self.compute_aggregated_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
             round_idx=round_idx,
             authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
             clean_models=clean_models,

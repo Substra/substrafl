@@ -31,8 +31,8 @@ from substrafl.strategies import NewtonRaphson
         ),
     ],
 )
-def test_compute_averaged_states(damping_factor, list_gradients, list_hessian, list_n_sample, parameters_update):
-    """Test that compute_averaged_states is doing the correct calculations
+def test_compute_aggregated_states(damping_factor, list_gradients, list_hessian, list_n_sample, parameters_update):
+    """Test that compute_aggregated_states is doing the correct calculations
     Equation used:
     H = weighted_average of hessians
     G = weighted_average of gradients
@@ -44,7 +44,7 @@ def test_compute_averaged_states(damping_factor, list_gradients, list_hessian, l
     for gradients, hessian, n_sample in zip(list_gradients, list_hessian, list_n_sample):
         shared_states.append(NewtonRaphsonSharedState(gradients=gradients, hessian=hessian, n_samples=n_sample))
 
-    averaged_state = strategy.compute_averaged_states(shared_states=shared_states, _skip=True)
+    averaged_state = strategy.compute_aggregated_states(shared_states=shared_states, _skip=True)
 
     assert all(
         [

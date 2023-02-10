@@ -47,7 +47,21 @@ class SingleOrganization(Strategy):
         aggregation_node: Optional[AggregationNode] = None,
         additional_orgs_permissions: Optional[set] = None,
     ):
-        return
+        """The initialization round of the single org strategy is not included yet.
+
+        Args:
+            algo (Algo): User defined algorithm: describes the model train and predict
+            train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local
+                updates, there should be exactly one item in the list.
+            aggregation_node (AggregationNode): Should be None otherwise it will be ignored
+            round_idx (int): Round number, it starts at 0.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
+        """
+        pass
 
     def perform_round(
         self,
@@ -73,16 +87,6 @@ class SingleOrganization(Strategy):
             additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
                 after training, in order to test the model on an other organization.
         """
-
-        if aggregation_node is not None:
-            logger.info("Aggregation nodes are ignored for decentralized strategies.")
-
-        n_train_data_nodes = len(train_data_nodes)
-        if n_train_data_nodes != 1:
-            raise ValueError(
-                "One organization strategy can only be used with one train_data_node"
-                f" but {n_train_data_nodes} were passed."
-            )
 
         # define composite tasks (do not submit yet)
         # for each composite task give description of Algo instead of a key for an algo

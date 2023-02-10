@@ -64,7 +64,7 @@ class NewtonRaphson(CentralizedStrategy):
         return StrategyName.NEWTON_RAPHSON
 
     @remote
-    def compute_averaged_states(
+    def compute_aggregated_states(
         self,
         shared_states: List[NewtonRaphsonSharedState],
     ) -> NewtonRaphsonAveragedStates:
