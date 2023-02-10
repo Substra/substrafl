@@ -392,7 +392,7 @@ def test_signature_error_torch_dataset(init_function, is_valid):
         def strategies(self):
             return list()
 
-        def predict(self, datasamples, shared_state):
+        def predict(self, datasamples):
             pass
 
         def train(self, datasamples, shared_state):

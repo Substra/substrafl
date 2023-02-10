@@ -10,7 +10,7 @@ from substrafl.remote.remote_struct import RemoteStruct
 
 
 @dataclass
-class AggregateOperation:
+class RemoteOperation:
     """Aggregation operation"""
 
     remote_struct: RemoteStruct
@@ -18,7 +18,7 @@ class AggregateOperation:
 
 
 @dataclass
-class DataOperation:
+class RemoteDataOperation:
     """Data operation"""
 
     remote_struct: RemoteStruct

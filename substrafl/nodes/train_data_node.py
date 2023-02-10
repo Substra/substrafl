@@ -15,7 +15,8 @@ from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
-from substrafl.remote.operations import DataOperation
+from substrafl.remote.operations import RemoteDataOperation
+from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -42,9 +43,42 @@ class TrainDataNode(Node):
 
         super(TrainDataNode, self).__init__(organization_id)
 
+    def init_states(
+        self,
+        operation: RemoteOperation,
+        round_idx: int,
+        authorized_ids: Set[str],
+        clean_models: bool = False,
+    ) -> LocalStateRef:
+        op_id = str(uuid.uuid4())
+
+        init_task = schemas.ComputePlanTaskSpec(
+            algo_key=str(uuid.uuid4()),  # bogus algo key
+            task_id=op_id,
+            inputs=[],
+            outputs={
+                OutputIdentifiers.local: schemas.ComputeTaskOutputSpec(
+                    permissions=schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                    transient=clean_models,
+                ),
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            tag="init",
+            worker=self.organization_id,
+        ).dict()
+
+        init_task.pop("algo_key")
+        init_task["remote_operation"] = operation.remote_struct
+
+        self.init_task = init_task
+
+        return LocalStateRef(key=op_id, init=True)
+
     def update_states(
         self,
-        operation: DataOperation,
+        operation: RemoteDataOperation,
         round_idx: int,
         authorized_ids: Set[str],
         aggregation_id: Optional[str] = None,
@@ -58,7 +92,7 @@ class TrainDataNode(Node):
         and not a substra function_key as nothing has been submitted yet.
 
         Args:
-            operation (DataOperation): Automatically generated structure returned by
+            operation (RemoteDataOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote_data` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
@@ -70,25 +104,23 @@ class TrainDataNode(Node):
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.
 
         Raises:
-            TypeError: operation must be a DataOperation, make sure to decorate the train and predict methods of
-                your function with @remote
+            TypeError: operation must be a RemoteDataOperation, make sure to decorate the train and predict methods of
+                your method with @remote
 
         Returns:
             typing.Tuple[LocalStateRef, SharedStateRef]: Identifications for the results of this operation.
         """
-        if not isinstance(operation, DataOperation):
+        if not isinstance(operation, RemoteDataOperation):
             raise TypeError(
-                "operation must be a DataOperation",
+                "operation must be a RemoteDataOperation",
                 f"Given: {type(operation)}",
                 "Have you decorated your method with @remote_data?",
             )
-
         op_id = str(uuid.uuid4())
         data_inputs = [schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
             schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
             for data_sample in self.data_sample_keys
         ]
-
         local_inputs = (
             [
                 schemas.InputRef(
@@ -100,7 +132,6 @@ class TrainDataNode(Node):
             if local_state is not None
             else []
         )
-
         if operation.shared_state is not None:
             shared_inputs = [
                 schemas.InputRef(
@@ -110,7 +141,7 @@ class TrainDataNode(Node):
                 )
             ]
 
-        elif local_state is not None:
+        elif local_state is not None and not local_state.init:
             shared_inputs = [
                 schemas.InputRef(
                     identifier=InputIdentifiers.shared,
@@ -179,6 +210,22 @@ class TrainDataNode(Node):
         Returns:
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
+
+        init_remote_struct: RemoteStruct = self.init_task["remote_operation"]
+        algo_key = register_algo(
+            client=client,
+            remote_struct=init_remote_struct,
+            permissions=permissions,
+            inputs=[],
+            outputs=[
+                schemas.AlgoOutputSpec(
+                    identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
+                ),
+            ],
+            dependencies=dependencies,
+        )
+        self.init_task["algo_key"] = algo_key
+        cache[init_remote_struct] = algo_key
         for task in self.tasks:
             if isinstance(task["remote_operation"], RemoteStruct):
                 remote_struct: RemoteStruct = task["remote_operation"]

@@ -86,8 +86,8 @@ class Scaffold(Strategy):
         if aggregation_node is None:
             raise ValueError("In Scaffold strategy aggregation node cannot be None")
 
-        if round_idx == 0:
-            # Initialization of the strategy by performing a local update on each train data organization
+        if round_idx == 1:
+            # First round of the strategy by performing a local update on each train data organization
             assert self._local_states is None
             assert self._shared_states is None
             self._perform_local_updates(
@@ -142,7 +142,6 @@ class Scaffold(Strategy):
             test_data_node.update_states(
                 operation=algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    shared_state=None,
                     _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,

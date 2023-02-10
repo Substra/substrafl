@@ -8,17 +8,17 @@ from typing import Callable
 from typing import List
 from typing import Optional
 
-from substrafl.remote.operations import AggregateOperation
-from substrafl.remote.operations import DataOperation
+from substrafl.remote.operations import RemoteDataOperation
+from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.substratools_methods import RemoteMethod
 
 
 def remote_data(method: Callable):
     """Decorator for a remote function containing a ``data_samples`` argument (e.g the ``Algo.train`` function)
-    With this decorator, when the function is called, it is not executed but it returns a ``DataOperation``
+    With this decorator, when the function is called, it is not executed but it returns a ``RemoteDataOperation``
     object containing all the informations needed to execute it later
-    (see ``substrafl.remote.operations.DataOperation``).
+    (see ``substrafl.remote.operations.RemoteDataOperation``).
 
         - The decorated function definition should have at least a shared_state argument
         -   If the decorated function is called without a ``_skip=True`` argument, the arguments required
@@ -49,7 +49,7 @@ def remote_data(method: Callable):
         _skip: bool = False,
         _algo_name: Optional[str] = None,
         **method_parameters,
-    ) -> DataOperation:
+    ) -> RemoteDataOperation:
         """
         Args:
             data_samples (List[str]): The data samples paths. Defaults to None.
@@ -60,7 +60,7 @@ def remote_data(method: Callable):
                 Defaults to None.
 
         Returns:
-            DataOperation: resulting DataOperation
+            RemoteDataOperation: resulting RemoteDataOperation
         """
         if _skip:
             return method(self=self, shared_state=shared_state, **method_parameters)
@@ -69,7 +69,7 @@ def remote_data(method: Callable):
 
         assert "datasamples" not in method_parameters.keys()
 
-        return DataOperation(
+        return RemoteDataOperation(
             RemoteStruct(
                 cls=self.__class__,
                 cls_args=self.args,
@@ -88,9 +88,9 @@ def remote_data(method: Callable):
 
 def remote(method: Callable):
     """Decorator for a remote function.
-    With this decorator, when the function is called, it is not executed but it returns a ``AggregateOperation``
+    With this decorator, when the function is called, it is not executed but it returns a ``RemoteOperation``
     object containing all the informations needed to execute it later (see
-    ``substrafl.remote.operations.AggregateOperation``).
+    ``substrafl.remote.operations.RemoteOperation``).
 
         - The decorated function definition should have at least a shared_state argument
         -   If the decorated function is called without a ``_skip=True`` argument, the arguments required
@@ -120,11 +120,11 @@ def remote(method: Callable):
         _skip: bool = False,
         _algo_name: Optional[str] = None,
         **method_parameters,
-    ) -> AggregateOperation:
+    ) -> RemoteOperation:
         if _skip:
             return method(self=self, shared_states=shared_states, **method_parameters)
 
-        return AggregateOperation(
+        return RemoteOperation(
             RemoteStruct(
                 cls=self.__class__,
                 cls_args=self.args,

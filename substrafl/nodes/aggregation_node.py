@@ -12,7 +12,7 @@ from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.nodes.references.shared_state import SharedStateRef
-from substrafl.remote.operations import AggregateOperation
+from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -27,7 +27,7 @@ class AggregationNode(Node):
 
     def update_states(
         self,
-        operation: AggregateOperation,
+        operation: RemoteOperation,
         round_idx: int,
         authorized_ids: Set[str],
         clean_models: bool = False,
@@ -38,7 +38,7 @@ class AggregationNode(Node):
         and not a substra function_key as nothing has been submitted yet.
 
         Args:
-            operation (AggregateOperation): Automatically generated structure returned by
+            operation (RemoteOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote` decorator. This allows to register an
                 operation and execute it later on.
             round_idx (int): Round number, it starts at 1.
@@ -47,15 +47,15 @@ class AggregationNode(Node):
                 anymore) or not. Defaults to False.
 
         Raises:
-            TypeError: operation must be an AggregateOperation, make sure to decorate your (user defined) aggregate
+            TypeError: operation must be an RemoteOperation, make sure to decorate your (user defined) aggregate
                 function of the strategy with @remote.
 
         Returns:
             SharedStateRef: Identification for the result of this operation.
         """
-        if not isinstance(operation, AggregateOperation):
+        if not isinstance(operation, RemoteOperation):
             raise TypeError(
-                "operation must be a AggregateOperation",
+                "operation must be a RemoteOperation",
                 f"Given: {type(operation)}",
                 "Have you decorated your method with @remote?",
             )

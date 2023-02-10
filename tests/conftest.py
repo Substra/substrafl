@@ -377,8 +377,8 @@ def dummy_algo_class():
             return dict(test=np.array([4]), datasamples=datasamples, shared_state=shared_state)
 
         @remote_data
-        def predict(self, datasamples: np.array, shared_state):
-            return dict(datasamples=datasamples, shared_state=shared_state)
+        def predict(self, datasamples: np.array):
+            return dict(datasamples=datasamples)
 
         def load(self, path: Path):
             return self

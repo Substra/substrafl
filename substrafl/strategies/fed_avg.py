@@ -93,10 +93,7 @@ class FedAvg(Strategy):
         if aggregation_node is None:
             raise ValueError("In FedAvg strategy aggregation node cannot be None")
 
-        if round_idx == 0:
-            # Initialization of the strategy by performing a local update on each train data organization
-            assert self._local_states is None
-            assert self._shared_states is None
+        if round_idx == 1:
             self._perform_local_updates(
                 algo=algo,
                 train_data_nodes=train_data_nodes,
@@ -107,23 +104,22 @@ class FedAvg(Strategy):
                 clean_models=clean_models,
             )
 
-        else:
-            current_aggregation = aggregation_node.update_states(
-                self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
-                round_idx=round_idx,
-                authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
-                clean_models=clean_models,
-            )
+        current_aggregation = aggregation_node.update_states(
+            self.avg_shared_states(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
+            round_idx=round_idx,
+            authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
+            clean_models=clean_models,
+        )
 
-            self._perform_local_updates(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                current_aggregation=current_aggregation,
-                round_idx=round_idx,
-                aggregation_id=aggregation_node.organization_id,
-                additional_orgs_permissions=additional_orgs_permissions or set(),
-                clean_models=clean_models,
-            )
+        self._perform_local_updates(
+            algo=algo,
+            train_data_nodes=train_data_nodes,
+            current_aggregation=current_aggregation,
+            round_idx=round_idx,
+            aggregation_id=aggregation_node.organization_id,
+            additional_orgs_permissions=additional_orgs_permissions or set(),
+            clean_models=clean_models,
+        )
 
     def predict(
         self,
@@ -150,7 +146,6 @@ class FedAvg(Strategy):
                 traintask_id=local_state.key,
                 operation=algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    shared_state=None,
                     _algo_name=f"Testing with {algo.__class__.__name__}",
                 ),
                 round_idx=round_idx,

@@ -33,6 +33,10 @@ class Algo(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def initialize(self, shared_states):
+        raise NotImplementedError
+
     # The abstractmethod decorator has no effect when combined with @remote_data
     # and @remote_data is there to indicate that it should be on the child class
     # train function
@@ -64,7 +68,7 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, datasamples: Any, shared_state: Any, predictions_path: Path = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: Path = None) -> Any:
         """Is executed for each TestDataOrganizations. The predictions will be saved on the predictions_path.
         The predictions are then loaded and used to calculate the metric.
 

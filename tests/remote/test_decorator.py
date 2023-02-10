@@ -7,8 +7,8 @@ from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.decorators import remote
 from substrafl.remote.decorators import remote_data
-from substrafl.remote.operations import AggregateOperation
-from substrafl.remote.operations import DataOperation
+from substrafl.remote.operations import RemoteDataOperation
+from substrafl.remote.operations import RemoteOperation
 
 # TODO: these are actually integration tests between the decorator, the RemoteStruct and the Remote methods
 
@@ -40,8 +40,8 @@ def test_remote_data():
     my_remote_class = RemoteClass(50, 20, a=42, b=3)
     data_op = my_remote_class.train(data_samples=["fake_path", "fake_path_2"], shared_state=None)
     # Check that the output of a function decorated with remote_data is not the result
-    # but a DataOperation object
-    assert isinstance(data_op, DataOperation)
+    # but a RemoteDataOperation object
+    assert isinstance(data_op, RemoteDataOperation)
 
     # Reconstruct the RemoteClass from the RemoteStruct
     remote_struct = data_op.remote_struct
@@ -62,7 +62,7 @@ def test_remote_data_get_method_from_remote_struct(session_dir):
     my_remote_class = RemoteClass()
     data_op = my_remote_class.train(data_samples=["fake_path", "fake_path_2"], shared_state=None)
 
-    assert isinstance(data_op, DataOperation)
+    assert isinstance(data_op, RemoteDataOperation)
 
     new_remote_class = data_op.remote_struct.get_remote_instance()
     new_remote_class.save_model(4, session_dir / InputIdentifiers.shared)
@@ -89,7 +89,7 @@ def test_remote_data_extra_arg(session_dir):
     extra argument in the function is saved in the RemoteStruct"""
     my_remote_class = RemoteClass()
     data_op = my_remote_class.train(data_samples=["fake_path", "fake_path_2"], shared_state=None, extra_arg=100)
-    assert isinstance(data_op, DataOperation)
+    assert isinstance(data_op, RemoteDataOperation)
 
     new_remote_class = data_op.remote_struct.get_remote_instance()
 
@@ -119,8 +119,8 @@ def test_remote():
     aggregate_op = my_remote_class.aggregate(shared_states=None)
 
     # Check that the output of a function decorated with remote is not the result
-    # but an AggregateOperation object
-    assert isinstance(aggregate_op, AggregateOperation)
+    # but an RemoteOperation object
+    assert isinstance(aggregate_op, RemoteOperation)
 
     # Reconstruct the RemoteClass from the RemoteStruct
     new_remote_class = aggregate_op.remote_struct.get_instance()

@@ -75,6 +75,7 @@ def _register_operations(
             dependencies=dependencies,
         )
 
+        tasks += [train_data_node.init_task]
         tasks += train_data_node.tasks
 
     if evaluation_strategy is not None:
@@ -314,14 +315,23 @@ def execute_experiment(
 
     # create computation graph
     for round_idx in range(0, num_rounds + 1):
-        strategy.perform_round(
-            algo=algo,
-            train_data_nodes=train_data_nodes,
-            aggregation_node=aggregation_node,
-            additional_orgs_permissions=additional_orgs_permissions,
-            round_idx=round_idx,
-            clean_models=clean_models,
-        )
+        if round_idx == 0:
+            strategy.initialization_round(
+                algo=algo,
+                train_data_nodes=train_data_nodes,
+                additional_orgs_permissions=additional_orgs_permissions,
+                round_idx=round_idx,
+                clean_models=clean_models,
+            )
+        else:
+            strategy.perform_round(
+                algo=algo,
+                train_data_nodes=train_data_nodes,
+                aggregation_node=aggregation_node,
+                additional_orgs_permissions=additional_orgs_permissions,
+                round_idx=round_idx,
+                clean_models=clean_models,
+            )
 
         if evaluation_strategy is not None and next(evaluation_strategy):
             strategy.predict(
