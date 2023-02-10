@@ -53,7 +53,7 @@ class TrainDataNode(Node):
         op_id = str(uuid.uuid4())
 
         init_task = schemas.ComputePlanTaskSpec(
-            algo_key=str(uuid.uuid4()),  # bogus algo key
+            function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=[],
             outputs={
@@ -69,7 +69,7 @@ class TrainDataNode(Node):
             worker=self.organization_id,
         ).dict()
 
-        init_task.pop("algo_key")
+        init_task.pop("function_key")
         init_task["remote_operation"] = operation.remote_struct
 
         self.init_task = init_task
@@ -212,20 +212,20 @@ class TrainDataNode(Node):
         """
 
         init_remote_struct: RemoteStruct = self.init_task["remote_operation"]
-        algo_key = register_algo(
+        function_key = register_function(
             client=client,
             remote_struct=init_remote_struct,
             permissions=permissions,
             inputs=[],
             outputs=[
-                schemas.AlgoOutputSpec(
+                schemas.FunctionOutputSpec(
                     identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
                 ),
             ],
             dependencies=dependencies,
         )
-        self.init_task["algo_key"] = algo_key
-        cache[init_remote_struct] = algo_key
+        self.init_task["function_key"] = function_key
+        cache[init_remote_struct] = function_key
         for task in self.tasks:
             if isinstance(task["remote_operation"], RemoteStruct):
                 remote_struct: RemoteStruct = task["remote_operation"]
