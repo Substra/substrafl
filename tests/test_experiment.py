@@ -32,7 +32,7 @@ def test_execute_experiment_has_no_side_effect(
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
     strategy = FedAvg()
     # test every two rounds
-    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, rounds=2)
+    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, eval_frequency=2)
     dummy_algo_instance = dummy_algo_class()
 
     cp1 = execute_experiment(

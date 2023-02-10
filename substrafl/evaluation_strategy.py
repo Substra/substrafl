@@ -1,7 +1,6 @@
 from typing import List
 from typing import Optional
 from typing import Set
-from typing import Union
 
 from substrafl.nodes.test_data_node import TestDataNode
 
@@ -10,25 +9,25 @@ class EvaluationStrategy:
     def __init__(
         self,
         test_data_nodes: List[TestDataNode],
-        rounds: Union[int, List[int]],
+        eval_frequency: Optional[int] = 1,
+        eval_rounds: Optional[List[int]] = None,
     ) -> None:
         """Creates an iterator which returns True or False depending on the defined strategy.
+        At least one of eval_frequency or eval_rounds must be defined. If both are defined, the
+        union of both selected indexes will be evaluated.
 
         Args:
             test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested.
-            rounds (Union[int, List[int]]): on which round the model is to be tested. If rounds is an int the model
-                will be tested every ``rounds`` rounds starting from the first round. It will also be tested on the last
-                round. If rounds is a list the model will be tested on the index of a round given in the rounds list.
-                Note that the first round starts at 1.
+            eval_frequency (Optional[int]): The model will be tested every ``eval_frequency`` rounds. Default to 1.
+                Set to None to activate eval_rounds only.
+            eval_rounds (Optional[List[int]]): If specified, the model will be tested on the index of a round given
+                in the rounds list. Set to None to activate eval_frequency only.
 
         Raises:
             ValueError: test_data_nodes cannot be an empty list
             TypeError: test_data_nodes must be filled with instances of TestDataNode
             TypeError: rounds must be a list or an int
-            ValueError: if rounds is an int it must be strictly positive
-            ValueError: if rounds is a list it cannot be empty
-            TypeError: if rounds is a list it must be filled with variables of type int
-            ValueError: if rounds is a list it must be filled only with positive integers
+            ValueError: both eval_rounds and eval_frequency cannot be None at the same time
 
         Example:
 
@@ -38,7 +37,8 @@ class EvaluationStrategy:
 
                 my_evaluation_strategy = EvaluationStrategy(
                         test_data_nodes = list_of_test_data_nodes,
-                        rounds = 2,
+                        eval_frequency = 2,
+                        eval_rounds=None,
                     )
 
             every next ``next(my_evaluation_strategy)`` will return:
@@ -59,7 +59,8 @@ class EvaluationStrategy:
 
                 my_evaluation_strategy = EvaluationStrategy(
                         test_data_nodes = list_of_test_data_nodes,
-                        rounds = [1, 2],
+                        eval_frequency = None,
+                        eval_rounds = [1, 2],
                     )
 
             every next ``next(my_evaluation_strategy)`` will return
@@ -75,7 +76,8 @@ class EvaluationStrategy:
         """
         self._current_round = 0
         self.test_data_nodes = test_data_nodes
-        self._rounds = rounds
+        self._eval_frequency = eval_frequency
+        self._eval_rounds = eval_rounds
         self._num_rounds = None
 
         if not test_data_nodes:
@@ -84,19 +86,11 @@ class EvaluationStrategy:
         if not all(isinstance(node, TestDataNode) for node in test_data_nodes):
             raise TypeError("test_data_nodes must include objects of TestDataNode type")
 
-        if not isinstance(rounds, (list, int)):
-            raise TypeError(f"rounds must be of type list of ints or an int, {type(rounds)} found")
+        if eval_frequency is None and eval_rounds is None:
+            raise ValueError("At least one of eval_frequency or eval_rounds must be defined")
 
-        if isinstance(rounds, int):
-            if rounds <= 0:
-                raise ValueError(f"rounds must be positive, rounds={rounds} found")
-        elif isinstance(rounds, list):
-            if not rounds:
-                raise ValueError(f"rounds cannot be empty, rounds={rounds} found")
-            elif not all(isinstance(r, int) for r in rounds):
-                raise TypeError(f"rounds must be of type list of ints or int, {type(rounds)} found")
-            elif not all(r >= 0 for r in rounds):
-                raise ValueError(f"rounds can be only positive, rounds={rounds} found")
+        self._check_eval_frequency()
+        self._check_eval_rounds()
 
     @property
     def test_data_nodes_org_ids(self) -> Set:
@@ -145,21 +139,57 @@ class EvaluationStrategy:
                 exceeds num_rounds. Defaults to None.
 
         Raises:
-            ValueError: num_rounds must not be smaller than self._rounds if self._rounds is an int
-            ValueError: num_rounds must not be be smaller than the largest value of self._rounds
+            ValueError: num_rounds must not be smaller than self._eval_frequency
+            ValueError: num_rounds must not be be smaller than the largest value of self._eval_rounds
         """
 
-        if isinstance(self._rounds, int) and num_rounds < self._rounds:
+        if self._eval_frequency is not None and num_rounds < self._eval_frequency:
             raise ValueError(
-                f"Not possible to test every {self._rounds} rounds (from EvaluationStrategy) "
+                f"Not possible to test every {self._eval_frequency} rounds (from EvaluationStrategy) "
                 f"as total number of rounds (num_rounds) from the Strategy is {num_rounds}."
             )
-        elif isinstance(self._rounds, list) and max(self._rounds) > num_rounds:
+
+        if self._eval_rounds is not None and max(self._eval_rounds) > num_rounds:
             # rounds is a list of round indices
             raise ValueError(
                 f"Not possible to test rounds (from EvaluationStrategy.rounds) greater than {num_rounds}"
                 "(num_rounds) from the Strategy."
             )
+
+    def _check_eval_frequency(self):
+        """Check eval_frequency validity.
+
+        Raises:
+            ValueError: eval_frequency must be a positive int
+            TypeError: eval_frequency must be of type int or None
+        """
+        if isinstance(self._eval_frequency, int):
+            if self._eval_frequency <= 0:
+                raise ValueError(f"eval_frequency must be positive, eval_frequency={self._eval_frequency} found")
+        elif self._eval_frequency is not None:
+            raise TypeError(f"eval_frequency must be of type int, {type(self._eval_frequency)} found")
+
+    def _check_eval_rounds(self):
+        """Check eval_rounds validity.
+
+        Raises:
+            ValueError: if eval_rounds is a list it cannot be empty
+            TypeError: if eval_rounds is a list it must be filled with variables of type int
+            ValueError: if eval_rounds is a list it must be filled with positive integers
+            TypeError: eval_rounds must be of type list or None
+        """
+        if isinstance(self._eval_rounds, list):
+            if not self._eval_rounds:
+                raise ValueError(f"eval_rounds cannot be empty, eval_rounds={self._eval_rounds} found")
+            elif not all(isinstance(r, int) for r in self._eval_rounds):
+                raise TypeError(
+                    "eval_rounds must only contains integers,"
+                    f" {[type(x) for x in self._eval_rounds if not isinstance(x, int)]} found"
+                )
+            elif not all(r >= 0 for r in self._eval_rounds):
+                raise ValueError(f"eval_rounds can be only positive indexes, rounds={self._eval_rounds} found")
+        elif self._eval_rounds is not None:
+            raise TypeError(f"eval_rounds must be of type list of ints, {type(self._eval_rounds)} found")
 
     def __iter__(self):
         """Required methods for iterables."""
@@ -170,12 +200,14 @@ class EvaluationStrategy:
         required for iterators"""
 
         test_it = False
-        if isinstance(self._rounds, int):
+
+        if self._eval_frequency is not None:
             # checks if _current_round is divisible by rounds or it's a last round
-            test_it = (self._current_round % self._rounds == 0) or (self._current_round == self.num_rounds)
-        else:
+            test_it = (self._current_round % self._eval_frequency == 0) or (self._current_round == self.num_rounds)
+
+        if self._eval_rounds is not None:
             # rounds is a list of round indices
-            test_it = self._current_round in self._rounds
+            test_it = test_it or self._current_round in self._eval_rounds
 
         if self.num_rounds and self._current_round > self.num_rounds:
             # raise an error if number of call to next() exceeded num_rounds

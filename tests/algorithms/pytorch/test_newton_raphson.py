@@ -305,8 +305,8 @@ def compute_plan(
 
     strategy = NewtonRaphson(damping_factor=DAMPING_FACTOR)
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_data_nodes, rounds=[0, NUM_ROUNDS]  # test the initialization and the last round
-    )
+        test_data_nodes=test_data_nodes, eval_frequency=None, eval_rounds=[0, NUM_ROUNDS]
+    )  # test the initialization and the last round
 
     compute_plan = execute_experiment(
         client=network.clients[0],

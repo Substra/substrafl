@@ -97,7 +97,7 @@ def substrafl_fed_avg(
     strategy = FedAvg()
 
     # Evaluation strategy
-    evaluation = EvaluationStrategy(test_data_nodes=test_data_nodes, rounds=[n_rounds])
+    evaluation = EvaluationStrategy(test_data_nodes=test_data_nodes, eval_frequency=None, eval_rounds=[n_rounds])
 
     # Launch experiment
     compute_plan = execute_experiment(
