@@ -10,13 +10,8 @@ from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
-<<<<<<< HEAD
-from substrafl.remote.operations import DataOperation
-from substrafl.remote.register import register_function
-=======
 from substrafl.remote.operations import RemoteDataOperation
-from substrafl.remote.register import register_algo
->>>>>>> 84829fa (feat: add initialization task)
+from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 
 
