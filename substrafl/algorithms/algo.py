@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from typing import List
 
+from substrafl.remote.decorators import remote
 from substrafl.schemas import StrategyName
 
 
@@ -31,10 +32,6 @@ class Algo(abc.ABC):
         Returns:
             typing.List: typing.List[StrategyName]
         """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def initialize(self, shared_states):
         raise NotImplementedError
 
     # The abstractmethod decorator has no effect when combined with @remote_data
@@ -113,6 +110,10 @@ class Algo(abc.ABC):
         """
 
         raise NotImplementedError
+
+    @remote
+    def initialize(self, shared_states):
+        return
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file.

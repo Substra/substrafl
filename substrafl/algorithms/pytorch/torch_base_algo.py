@@ -17,7 +17,6 @@ from substrafl.exceptions import DatasetSignatureError
 from substrafl.exceptions import DatasetTypeError
 from substrafl.exceptions import OptimizerValueError
 from substrafl.index_generator import BaseIndexGenerator
-from substrafl.remote.decorators import remote
 from substrafl.remote.decorators import remote_data
 
 logger = logging.getLogger(__name__)
@@ -93,10 +92,6 @@ class TorchAlgo(Algo):
     ) -> Any:
         # Must be implemented in the child class
         raise NotImplementedError()
-
-    @remote
-    def initialize(self, shared_states):
-        pass
 
     @remote_data
     def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None) -> Any:
