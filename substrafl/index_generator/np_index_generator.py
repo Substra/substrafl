@@ -76,8 +76,6 @@ class NpIndexGenerator(BaseIndexGenerator):
             batch_size (typing.Optional[int]): The size of each batch. If set to None, the batch_size is the
                 number of samples.
             num_updates (int): The number of updates. After num_updates, the generator raises a StopIteration error.
-                To reset it for the next round, use the
-                :py:func:`~substrafl.index_generator.np_index_generator.NpIndexGenerator.reset_counter` function.
             shuffle (bool, Optional): Set to True to shuffle the indexes before each new epoch. Defaults to True.
             drop_last (bool, Optional): Set to True to drop the last incomplete batch, if the dataset size is not
                 divisible by the batch size. If False and the size of dataset is not divisible by the batch size, then
