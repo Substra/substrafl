@@ -95,10 +95,6 @@ class NpIndexGenerator(BaseIndexGenerator):
             seed=seed,
         )
 
-    def __iter__(self):
-        """Required methods for generators, returns ``self``."""
-        return self
-
     def __next__(self):
         """Generates the next batch.
 

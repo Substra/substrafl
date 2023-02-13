@@ -404,8 +404,6 @@ class TorchScaffoldAlgo(TorchAlgo):
                 torch.from_numpy(t).to(self._device) for t in shared_state.server_control_variate
             ]
 
-        self._index_generator.reset_counter()
-
         # save original parameters to compute the weight updates and reset the model parameters after
         # the model is trained
         original_parameters = weight_manager.get_parameters(

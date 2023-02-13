@@ -327,8 +327,6 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
                 updates=parameter_updates,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
-        self._index_generator.reset_counter()
-
         # Train mode for torch model
         self._model.train()
 

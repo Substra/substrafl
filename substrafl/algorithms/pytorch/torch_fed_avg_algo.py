@@ -193,8 +193,6 @@ class TorchFedAvgAlgo(TorchAlgo):
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
 
-        self._index_generator.reset_counter()
-
         old_parameters = weight_manager.get_parameters(
             model=self._model, with_batch_norm_parameters=self._with_batch_norm_parameters
         )

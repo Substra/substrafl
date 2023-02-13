@@ -129,9 +129,10 @@ class BaseIndexGenerator(abc.ABC):
 
     def __iter__(self) -> "BaseIndexGenerator":
         """Required methods for generators, returns ``self``."""
+        self._reset_counter()
         return self
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def __next__(self) -> Any:
         """Shall return a python object (batch_index) which
         is used for selecting each batch in the training loop method during training in this way :
@@ -146,7 +147,7 @@ class BaseIndexGenerator(abc.ABC):
         """
         raise NotImplementedError
 
-    def reset_counter(self):
+    def _reset_counter(self):
         """Reset the counter to
         prepare for the next generation
         of batches.

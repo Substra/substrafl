@@ -232,7 +232,7 @@ def test_np_index_generator_reset():
     for _ in range(num_updates):
         next(nig)
 
-    nig.reset_counter()
+    iter(nig)
     assert nig.counter == 0
     for _ in range(num_updates):
         next(nig)

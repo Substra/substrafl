@@ -171,8 +171,6 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         if self._index_generator.n_samples is None:
             self._index_generator.n_samples = len(train_dataset)
 
-        self._index_generator.reset_counter()
-
         # Create torch dataloader
         self._torch_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 

@@ -65,10 +65,6 @@ def basic_fed_avg(  # noqa: C901
             for p_new, p_old in zip(nets[idx_client].parameters(), old_weights):
                 p_new.data = p_old
 
-        # Reset the iterator
-        for idx_client in range(num_clients):
-            batch_samplers[idx_client].reset_counter()
-
         # Aggregation step
         aggregated_delta_weights = [None for _ in range(len(deltas_sent[0]))]
         for idx_weight in range(len(deltas_sent[0])):
