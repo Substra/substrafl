@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The substra-tools methods is now generic, and load the inputs depending on the inputs dictionary content (#59)
 - BREAKING: rename tuple to task (#79)
 - BREAKING: clarify `EvaluationStrategy` arguments: change `rounds` to `eval_frequency` and `eval_rounds` (#85)
+- BREAKING: change `eval_frequency` default value to None to avoid confusion with hidden default value ()
 
 ## [0.33.0](https://github.com/Substra/substrafl/releases/tag/0.33.0) - 2022-12-19
 
