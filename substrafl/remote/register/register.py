@@ -148,6 +148,7 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
                 f"Your environment uses substra-tools={substratools_image_version}. Version \
                 {MINIMAL_DOCKER_SUBSTRATOOLS_VERSION} will be used on Docker.",
                 exceptions.SubstraToolsDeprecationWarning,
+                stacklevel=2,
             )
         substratools_image_version = MINIMAL_DOCKER_SUBSTRATOOLS_VERSION
     substratools_image = _DEFAULT_SUBSTRATOOLS_IMAGE.format(
