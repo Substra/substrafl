@@ -486,7 +486,7 @@ def test_gpu(
     strategy = strategy_class(damping_factor=0.1) if strategy_class == NewtonRaphson else strategy_class()
 
     my_eval_strategy = EvaluationStrategy(
-        test_data_nodes=test_data_nodes, eval_frequency=None, eval_rounds=[num_rounds]  # test only at the last round
+        test_data_nodes=test_data_nodes, eval_rounds=[num_rounds]  # test only at the last round
     )
 
     compute_plan = execute_experiment(

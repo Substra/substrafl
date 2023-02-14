@@ -46,13 +46,11 @@ def test_eval_rounds(eval_rounds):
 
     evaluation_strategy = EvaluationStrategy(
         test_data_nodes=test_data_nodes,
-        eval_frequency=None,
         eval_rounds=eval_rounds,
     )
     evaluation_strategy.num_rounds = num_rounds
 
     for i in range(num_rounds + 1):
-
         response = next(evaluation_strategy)
 
         if i in eval_rounds:
@@ -85,7 +83,6 @@ def test_union_eval_rounds_and_eval_frequency(eval_frequency, eval_rounds):
     true_rounds = set(range(0, num_rounds, eval_frequency)) | set(eval_rounds) | {num_rounds}
 
     for i in range(num_rounds + 1):
-
         response = next(evaluation_strategy)
 
         if i in true_rounds:
@@ -147,7 +144,7 @@ def test_eval_rounds_edges(eval_rounds, e):
     test_data_nodes = [test_data_node] * n_nodes
 
     with pytest.raises(e):
-        EvaluationStrategy(test_data_nodes=test_data_nodes, eval_frequency=None, eval_rounds=eval_rounds)
+        EvaluationStrategy(test_data_nodes=test_data_nodes, eval_rounds=eval_rounds)
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,7 @@ class EvaluationStrategy:
     def __init__(
         self,
         test_data_nodes: List[TestDataNode],
-        eval_frequency: Optional[int] = 1,
+        eval_frequency: Optional[int] = None,
         eval_rounds: Optional[List[int]] = None,
     ) -> None:
         """Creates an iterator which returns True or False depending on the defined strategy.
@@ -18,10 +18,10 @@ class EvaluationStrategy:
 
         Args:
             test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested.
-            eval_frequency (Optional[int]): The model will be tested every ``eval_frequency`` rounds. Default to 1.
-                Set to None to activate eval_rounds only.
+            eval_frequency (Optional[int]): The model will be tested every ``eval_frequency`` rounds.
+                Set to None to activate eval_rounds only. Default to None.
             eval_rounds (Optional[List[int]]): If specified, the model will be tested on the index of a round given
-                in the rounds list. Set to None to activate eval_frequency only.
+                in the rounds list. Set to None to activate eval_frequency only. Default to None.
 
         Raises:
             ValueError: test_data_nodes cannot be an empty list
