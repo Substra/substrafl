@@ -18,7 +18,8 @@ with open(os.path.join(here, "substrafl", "__version__.py"), "r", "utf-8") as fp
 setup(
     name="substrafl",
     version=about["__version__"],
-    description="A high-level federated learning Python library to run federated learning experiments at scale on a Substra network",
+    description="""A high-level federated learning Python library to run
+     federated learning experiments at scale on a Substra network""",
     long_description="readme",
     long_description_content_type="text/markdown",
     url="https://docs.substra.org/",
