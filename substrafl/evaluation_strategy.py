@@ -19,9 +19,9 @@ class EvaluationStrategy:
         Args:
             test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested.
             eval_frequency (Optional[int]): The model will be tested every ``eval_frequency`` rounds.
-                Set to None to activate eval_rounds only. Default to None.
+                Set to None to activate eval_rounds only. Defaults to None.
             eval_rounds (Optional[List[int]]): If specified, the model will be tested on the index of a round given
-                in the rounds list. Set to None to activate eval_frequency only. Default to None.
+                in the rounds list. Set to None to activate eval_frequency only. Defaults to None.
 
         Raises:
             ValueError: test_data_nodes cannot be an empty list

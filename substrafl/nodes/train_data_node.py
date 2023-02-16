@@ -64,7 +64,7 @@ class TrainDataNode(Node):
             round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
                 it is preceded by an initialization round tagged: 0.
             authorized_ids (typing.Set[str]): Authorized org to access the output model.
-            aggregation_id (str): Aggregation node id to authorize access to the shared model. Default to None.
+            aggregation_id (str): Aggregation node id to authorize access to the shared model. Defaults to None.
             clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
             local_state (typing.Optional[LocalStateRef]): The parent task LocalStateRef. Defaults to None.

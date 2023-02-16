@@ -223,7 +223,7 @@ def download_algo_files(
         compute_plan_key (str): Compute plan key to fetch the model from.
         dest_folder (os.PathLike): Folder where to download the files.
         round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
-            the last round will be used. (Default to None).
+            the last round will be used. (Defaults to None).
 
     Raises:
         NotImplementedError: The given compute plan must have been submitted to Substra through the

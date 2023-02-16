@@ -57,7 +57,7 @@ def remote_data(method: Callable):
                 None.
             _skip (bool, Optional): if True, calls the decorated function. Defaults to False.
             _algo_name(str, Optional): opportunity to set a custom algo name.
-                Default to None.
+                Defaults to None.
 
         Returns:
             DataOperation: resulting DataOperation
