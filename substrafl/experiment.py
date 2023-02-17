@@ -94,7 +94,7 @@ def _register_operations(
             client,
             permissions,
             cache=operation_cache,
-            dependencies=Dependency(editable_mode=dependencies.editable_mode),
+            dependencies=dependencies,
         )
 
         tasks += aggregation_node.tasks
