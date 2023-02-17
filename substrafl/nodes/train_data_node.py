@@ -41,6 +41,8 @@ class TrainDataNode(Node):
         self.data_manager_key = data_manager_key
         self.data_sample_keys = data_sample_keys
 
+        self.init_task = None
+
         super(TrainDataNode, self).__init__(organization_id)
 
     def init_states(
@@ -211,21 +213,24 @@ class TrainDataNode(Node):
             typing.Dict[RemoteStruct, OperationKey]: updated cache
         """
 
-        init_remote_struct: RemoteStruct = self.init_task["remote_operation"]
-        function_key = register_function(
-            client=client,
-            remote_struct=init_remote_struct,
-            permissions=permissions,
-            inputs=[],
-            outputs=[
-                schemas.FunctionOutputSpec(
-                    identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
-                ),
-            ],
-            dependencies=dependencies,
-        )
-        self.init_task["function_key"] = function_key
-        cache[init_remote_struct] = function_key
+        if self.init_task is not None:
+            # Register init task if exists
+            init_remote_struct: RemoteStruct = self.init_task["remote_operation"]
+            function_key = register_function(
+                client=client,
+                remote_struct=init_remote_struct,
+                permissions=permissions,
+                inputs=[],
+                outputs=[
+                    schemas.FunctionOutputSpec(
+                        identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
+                    ),
+                ],
+                dependencies=dependencies,
+            )
+            self.init_task["function_key"] = function_key
+            cache[init_remote_struct] = function_key
+
         for task in self.tasks:
             if isinstance(task["remote_operation"], RemoteStruct):
                 remote_struct: RemoteStruct = task["remote_operation"]
