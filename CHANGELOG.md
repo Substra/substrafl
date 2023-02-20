@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- chore: Test only field for datasamples (#67)
+- Test only field for datasamples (#67)
 
 ### Changed
 
