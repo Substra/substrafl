@@ -66,8 +66,10 @@ def rng_algo(request, torch_linear_model, numpy_torch_dataset):
 @pytest.fixture
 def rng_strategy():
     class RngStrategy(Strategy):
-        _local_states = None
-        _shared_states = None
+        def __init__(self, algo):
+            self.algo = algo
+            self._local_states = None
+            self._shared_states = None
 
         @property
         def name(self) -> StrategyName:

@@ -3,6 +3,7 @@ from typing import Optional
 
 import numpy as np
 
+from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.references.local_state import LocalStateRef
@@ -38,6 +39,15 @@ class Scaffold(Strategy):
 
     def __init__(self, algo: Algo, aggregation_lr: float = 1):
         super(Scaffold, self).__init__(algo=algo)
+
+        if self.name not in algo.strategies:
+            raise exceptions.IncompatibleAlgoStrategyError(
+                f"The algo {algo.__class__.__name__} is not compatible with the strategy {self.__class__.__name__},"
+                f"named {self.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
+                "strategies."
+            )
+
+        self.algo = algo
 
         if aggregation_lr < 0:
             raise ValueError("aggregation_lr must be >=0")

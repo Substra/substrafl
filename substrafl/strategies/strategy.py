@@ -4,8 +4,6 @@ from typing import List
 from typing import Optional
 from typing import TypeVar
 
-from substrafl import exceptions
-from substrafl.algorithms.algo import Algo
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
@@ -18,15 +16,7 @@ SharedState = TypeVar("SharedState")
 class Strategy(ABC):
     """Base strategy to be inherited from SubstraFL strategies."""
 
-    def __init__(self, algo: Algo, *args, **kwargs):
-        if self.name not in algo.strategies:
-            raise exceptions.IncompatibleAlgoStrategyError(
-                f"The algo {algo.__class__.__name__} is not compatible with the strategy {self.__class__.__name__},"
-                f"named {self.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
-                "strategies."
-            )
-
-        self.algo = algo
+    def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
 

@@ -9,7 +9,6 @@ import substra
 from substrafl import execute_experiment
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
-from substrafl.exceptions import IncompatibleAlgoStrategyError
 from substrafl.exceptions import LenMetadataError
 from substrafl.strategies import FedAvg
 
@@ -82,25 +81,4 @@ def test_too_long_additional_metadata(session_dir, dummy_strategy_class, dummy_a
             dependencies=None,
             experiment_folder=session_dir / "experiment_folder",
             additional_metadata=additional_metadata,
-        )
-
-
-def test_match_algo_strategy(session_dir, dummy_strategy_class, dummy_algo_class):
-    client = Mock(spec=substra.Client)
-
-    class MyAlgo(dummy_algo_class):
-        @property
-        def strategies(self):
-            return ["not_the_dummy_strategy"]
-
-    with pytest.raises(IncompatibleAlgoStrategyError):
-        execute_experiment(
-            client=client,
-            strategy=dummy_strategy_class(algo=MyAlgo()),
-            train_data_nodes=[],
-            evaluation_strategy=None,
-            aggregation_node=None,
-            num_rounds=2,
-            dependencies=None,
-            experiment_folder=session_dir / "experiment_folder",
         )

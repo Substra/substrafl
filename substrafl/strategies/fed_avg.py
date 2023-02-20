@@ -3,6 +3,7 @@ from typing import Optional
 
 import numpy as np
 
+from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
 from substrafl.nodes.aggregation_node import AggregationNode
@@ -47,6 +48,15 @@ class FedAvg(Strategy):
 
     def __init__(self, algo: Algo):
         super(FedAvg, self).__init__(algo=algo)
+
+        if self.name not in algo.strategies:
+            raise exceptions.IncompatibleAlgoStrategyError(
+                f"The algo {algo.__class__.__name__} is not compatible with the strategy {self.__class__.__name__},"
+                f"named {self.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
+                "strategies."
+            )
+
+        self.algo = algo
 
         # current local and share states references of the client
         self._local_states: Optional[List[LocalStateRef]] = None
