@@ -29,15 +29,14 @@ def test_execute_experiment_has_no_side_effect(
     executed"""
 
     num_rounds = 2
+    dummy_algo_instance = dummy_algo_class()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-    strategy = FedAvg()
+    strategy = FedAvg(algo=dummy_algo_instance)
     # test every two rounds
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, eval_frequency=2)
-    dummy_algo_instance = dummy_algo_class()
 
     cp1 = execute_experiment(
         client=network.clients[0],
-        algo=dummy_algo_instance,
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
@@ -50,7 +49,6 @@ def test_execute_experiment_has_no_side_effect(
     # this second run fails if the variables changed in the first run
     cp2 = execute_experiment(
         client=network.clients[0],
-        algo=dummy_algo_instance,
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,
@@ -76,8 +74,7 @@ def test_too_long_additional_metadata(session_dir, dummy_strategy_class, dummy_a
     with pytest.raises(LenMetadataError):
         execute_experiment(
             client=client,
-            algo=dummy_algo_class(),
-            strategy=dummy_strategy_class(),
+            strategy=dummy_strategy_class(algo=dummy_algo_class()),
             train_data_nodes=[],
             evaluation_strategy=None,
             aggregation_node=None,
@@ -99,8 +96,7 @@ def test_match_algo_strategy(session_dir, dummy_strategy_class, dummy_algo_class
     with pytest.raises(IncompatibleAlgoStrategyError):
         execute_experiment(
             client=client,
-            algo=MyAlgo(),
-            strategy=dummy_strategy_class(),
+            strategy=dummy_strategy_class(algo=MyAlgo()),
             train_data_nodes=[],
             evaluation_strategy=None,
             aggregation_node=None,

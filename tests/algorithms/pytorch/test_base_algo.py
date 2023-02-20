@@ -75,7 +75,6 @@ def rng_strategy():
 
         def perform_round(
             self,
-            algo,
             train_data_nodes,
             aggregation_node,
             round_idx,
@@ -90,7 +89,7 @@ def rng_strategy():
 
             for i, node in enumerate(train_data_nodes):
                 next_local_state, next_shared_state = node.update_states(
-                    algo.train(
+                    self.algo.train(
                         node.data_sample_keys,
                     ),
                     round_idx=round_idx,
@@ -105,9 +104,8 @@ def rng_strategy():
             self._local_states = next_local_states
             self._shared_states = next_shared_states
 
-        def predict(
+        def perform_predict(
             self,
-            algo,
             test_data_nodes,
             train_data_nodes,
             round_idx: int,
@@ -286,11 +284,10 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
     )
-    strategy = rng_strategy()
+    strategy = rng_strategy(algo=my_algo)
 
     cp = execute_experiment(
         client=network.clients[0],
-        algo=my_algo,
         strategy=strategy,
         train_data_nodes=[train_linear_nodes[0]],
         evaluation_strategy=None,
@@ -484,7 +481,11 @@ def test_gpu(
     train_data_nodes = [train_linear_nodes[0]] if strategy_class == SingleOrganization else train_linear_nodes
     test_data_nodes = [test_linear_nodes[0]] if strategy_class == SingleOrganization else test_linear_nodes
 
-    strategy = strategy_class(damping_factor=0.1) if strategy_class == NewtonRaphson else strategy_class()
+    strategy = (
+        strategy_class(algo=my_algo, damping_factor=0.1)
+        if strategy_class == NewtonRaphson
+        else strategy_class(algo=my_algo)
+    )
 
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_data_nodes, eval_rounds=[num_rounds]  # test only at the last round
@@ -492,7 +493,6 @@ def test_gpu(
 
     compute_plan = execute_experiment(
         client=network.clients[0],
-        algo=my_algo,
         strategy=strategy,
         train_data_nodes=train_data_nodes,
         evaluation_strategy=my_eval_strategy,

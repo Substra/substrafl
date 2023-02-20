@@ -23,8 +23,8 @@ class SingleOrganization(Strategy):
     all the model execution.
     """
 
-    def __init__(self):
-        super(SingleOrganization, self).__init__()
+    def __init__(self, algo: Algo):
+        super(SingleOrganization, self).__init__(algo=algo)
 
         # State
         self.local_state: Optional[LocalStateRef] = None
@@ -66,7 +66,6 @@ class SingleOrganization(Strategy):
 
     def perform_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
         clean_models: bool,
@@ -77,7 +76,6 @@ class SingleOrganization(Strategy):
         on a given data node
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict
             train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local
                 updates, there should be exactly one item in the list.
             aggregation_node (AggregationNode): Should be None otherwise it will be ignored
@@ -102,10 +100,10 @@ class SingleOrganization(Strategy):
         # define composite tasks (do not submit yet)
         # for each composite task give description of Algo instead of a key for an algo
         next_local_state, _ = train_data_nodes[0].update_states(
-            algo.train(  # type: ignore
+            self.algo.train(  # type: ignore
                 train_data_nodes[0].data_sample_keys,
                 shared_state=None,
-                _algo_name=f"Training with {algo.__class__.__name__}",
+                _algo_name=f"Training with {self.algo.__class__.__name__}",
             ),
             local_state=self.local_state,
             round_idx=round_idx,
@@ -116,9 +114,8 @@ class SingleOrganization(Strategy):
         # keep the states in a list: one/organization
         self.local_state = next_local_state
 
-    def predict(
+    def perform_predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -135,9 +132,9 @@ class SingleOrganization(Strategy):
             # Init state for testtask
             test_data_node.update_states(
                 traintask_id=self.local_state.key,
-                operation=algo.predict(
+                operation=self.algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    _algo_name=f"Testing with {algo.__class__.__name__}",
+                    _algo_name=f"Testing with {self.algo.__class__.__name__}",
                 ),
                 round_idx=round_idx,
             )  # Init state for testtask

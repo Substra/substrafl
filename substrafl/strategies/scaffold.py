@@ -36,8 +36,8 @@ class Scaffold(Strategy):
             (`eta_g` in the paper). Defaults to 1. Must be >=0.
     """
 
-    def __init__(self, aggregation_lr: float = 1):
-        super(Scaffold, self).__init__()
+    def __init__(self, algo: Algo, aggregation_lr: float = 1):
+        super(Scaffold, self).__init__(algo=algo)
 
         if aggregation_lr < 0:
             raise ValueError("aggregation_lr must be >=0")
@@ -57,7 +57,6 @@ class Scaffold(Strategy):
 
     def perform_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         round_idx: int,
@@ -72,7 +71,6 @@ class Scaffold(Strategy):
             - perform a local update (train on n mini-batches) of the models on each train data nodes
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict methods
             train_data_nodes (typing.List[TrainDataNode]): List of the organizations on which to perform
             local updates aggregation_node (AggregationNode): Node without data, used to perform
                 operations on the shared states of the models
@@ -91,7 +89,6 @@ class Scaffold(Strategy):
             # We consider this step as part of the initialization and tag it as round 0.
             assert self._shared_states is None
             self._perform_local_updates(
-                algo=algo,
                 train_data_nodes=train_data_nodes,
                 current_aggregation=None,
                 round_idx=0,
@@ -108,7 +105,6 @@ class Scaffold(Strategy):
         )
 
         self._perform_local_updates(
-            algo=algo,
             train_data_nodes=train_data_nodes,
             current_aggregation=current_aggregation,
             round_idx=round_idx,
@@ -117,9 +113,8 @@ class Scaffold(Strategy):
             clean_models=clean_models,
         )
 
-    def predict(
+    def perform_predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -139,9 +134,9 @@ class Scaffold(Strategy):
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(
-                operation=algo.predict(
+                operation=self.algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    _algo_name=f"Testing with {algo.__class__.__name__}",
+                    _algo_name=f"Testing with {self.algo.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,
                 round_idx=round_idx,
@@ -320,7 +315,6 @@ class Scaffold(Strategy):
 
     def _perform_local_updates(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
@@ -332,7 +326,6 @@ class Scaffold(Strategy):
         on each train data nodes.
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict methods
             train_data_nodes (typing.List[TrainDataNode]): List of the organizations on which to perform
             local updates current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to be
             passed as input to each local training
@@ -352,10 +345,10 @@ class Scaffold(Strategy):
             # define composite tasks (do not submit yet)
             # for each composite task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
-                algo.train(  # type: ignore
+                self.algo.train(  # type: ignore
                     node.data_sample_keys,
                     shared_state=current_aggregation,
-                    _algo_name=f"Training with {algo.__class__.__name__}",
+                    _algo_name=f"Training with {self.algo.__class__.__name__}",
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,

@@ -15,8 +15,6 @@ import substra
 import substratools
 
 import substrafl
-from substrafl import exceptions
-from substrafl.algorithms.algo import Algo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
@@ -99,7 +97,7 @@ def _register_operations(
             client,
             permissions,
             cache=operation_cache,
-            dependencies=Dependency(editable_mode=dependencies.editable_mode),
+            dependencies=dependencies,
         )
 
         tasks += aggregation_node.tasks
@@ -112,7 +110,6 @@ def _save_experiment_summary(
     compute_plan_key: str,
     strategy: Strategy,
     num_rounds: int,
-    algo: Algo,
     operation_cache: Dict[RemoteStruct, OperationKey],
     train_data_nodes: TrainDataNode,
     aggregation_node: Optional[AggregationNode],
@@ -144,7 +141,6 @@ def _save_experiment_summary(
     experiment_summary["compute_plan_key"] = compute_plan_key
     experiment_summary["strategy"] = type(strategy).__name__
     experiment_summary["num_rounds"] = num_rounds
-    experiment_summary["algo"] = algo.summary()
     experiment_summary["function_keys"] = {
         operation_cache[remote_struct]: remote_struct.summary() for remote_struct in operation_cache
     }
@@ -214,7 +210,6 @@ def _get_packages_versions() -> dict:
 
 def execute_experiment(
     client: substra.Client,
-    algo: Algo,
     strategy: Strategy,
     train_data_nodes: List[TrainDataNode],
     num_rounds: int,
@@ -260,9 +255,6 @@ def execute_experiment(
         dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the substrafl Dependency class. Defaults None.
         experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
-        clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
-            if you want to download or re-use intermediary models. This causes the disk space to fill
-            quickly so should be set to True unless needed. Defaults to True.
         name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
             the compute plan name is set to the timestamp.
         additional_metadata(dict, typing.Optional): Optional dictionary of metadata to be passed to the Substra WebApp.
@@ -275,13 +267,6 @@ def execute_experiment(
     """
     if dependencies is None:
         dependencies = Dependency()
-
-    if strategy.name not in algo.strategies:
-        raise exceptions.IncompatibleAlgoStrategyError(
-            f"The algo {algo.__class__.__name__} is not compatible with the strategy {strategy.__class__.__name__},"
-            f"named {strategy.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
-            "strategies."
-        )
 
     train_data_nodes = copy.deepcopy(train_data_nodes)
     aggregation_node = copy.deepcopy(aggregation_node)
@@ -311,10 +296,15 @@ def execute_experiment(
 
     logger.info("Building the compute plan.")
 
-    additional_orgs_permissions = (
-        evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
+    strategy.build_graph(
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        evaluation_strategy=evaluation_strategy,
+        num_rounds=num_rounds,
+        clean_models=clean_models,
     )
 
+<<<<<<< HEAD
     # create computation graph.
     for round_idx in range(0, num_rounds + 1):
         if round_idx == 0:
@@ -342,6 +332,8 @@ def execute_experiment(
                 round_idx=round_idx,
             )
 
+=======
+>>>>>>> ae421a4 (feat: remove-algo-from-execute-exp)
     # Computation graph is created
     logger.info("Registering the algorithm to Substra.")
     tasks, operation_cache = _register_operations(
@@ -365,7 +357,6 @@ def execute_experiment(
         compute_plan_key=compute_plan_key,
         strategy=strategy,
         num_rounds=num_rounds,
-        algo=algo,
         operation_cache=operation_cache,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,

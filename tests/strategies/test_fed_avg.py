@@ -24,20 +24,20 @@ logger = getLogger("tests")
         ([1, 0, 1], 1.5 * np.ones((5, 10))),
     ],
 )
-def test_avg_shared_states(n_samples, results):
+def test_avg_shared_states(dummy_algo_class, n_samples, results):
     shared_states = [
         FedAvgSharedState(parameters_update=[np.ones((5, 10))], n_samples=n_samples[0]),
         FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=n_samples[1]),
         FedAvgSharedState(parameters_update=[2 * np.ones((5, 10))], n_samples=n_samples[2]),
     ]
 
-    MyFedAvg = FedAvg()
+    MyFedAvg = FedAvg(algo=dummy_algo_class())
     averaged_states = MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
     assert (results == averaged_states.avg_parameters_update).all()
 
 
-def test_avg_shared_states_different_layers():
+def test_avg_shared_states_different_layers(dummy_algo_class):
     shared_states = [
         FedAvgSharedState(
             parameters_update=[np.asarray([[0, 1], [2, 4]]), np.asarray([[6, 8], [10, 12]])], n_samples=1
@@ -47,19 +47,19 @@ def test_avg_shared_states_different_layers():
         ),
     ]
 
-    MyFedAvg = FedAvg()
+    MyFedAvg = FedAvg(algo=dummy_algo_class())
     avg_states = MyFedAvg.avg_shared_states(shared_states, _skip=True)
     expected_result = [np.asarray([[12, 15.25], [14, 16]]), np.asarray([[18, 20], [22, 24]])]
     assert np.allclose(avg_states.avg_parameters_update, expected_result)
 
 
-def test_avg_shared_states_different_length():
+def test_avg_shared_states_different_length(dummy_algo_class):
     shared_states = [
         FedAvgSharedState(parameters_update=[np.ones((5, 10)), np.ones((5, 10))], n_samples=1),
         FedAvgSharedState(parameters_update=[np.zeros((5, 10))], n_samples=1),
     ]
 
-    MyFedAvg = FedAvg()
+    MyFedAvg = FedAvg(algo=dummy_algo_class())
     with pytest.raises(AssertionError):
         MyFedAvg.avg_shared_states(shared_states, _skip=True)
 
@@ -97,10 +97,9 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, dummy_a
     aggregation_node = AggregationNode(network.msp_ids[0])
     my_algo0 = MyAlgo()
     algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
-    strategy = FedAvg()
+    strategy = FedAvg(algo=my_algo0)
     compute_plan = execute_experiment(
         client=network.clients[0],
-        algo=my_algo0,
         strategy=strategy,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
@@ -122,10 +121,9 @@ def test_fed_avg_train_tasks_output_permissions(dummy_algo_class, additional_org
     ]
 
     aggregation_node = AggregationNode("DummyNode0")
-    strategy = FedAvg()
+    strategy = FedAvg(dummy_algo_class())
 
     strategy.perform_round(
-        algo=dummy_algo_class(),
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
         round_idx=1,

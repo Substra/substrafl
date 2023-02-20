@@ -339,7 +339,6 @@ def dummy_strategy_class():
 
         def perform_round(
             self,
-            algo: Algo,
             train_data_nodes: List[TrainDataNode],
             aggregation_node: Optional[AggregationNode],
             round_idx: int,
@@ -348,9 +347,8 @@ def dummy_strategy_class():
         ):
             pass
 
-        def predict(
+        def perform_predict(
             self,
-            algo: Algo,
             test_data_nodes: List[TestDataNode],
             train_data_nodes: List[TrainDataNode],
             round_idx: int,
