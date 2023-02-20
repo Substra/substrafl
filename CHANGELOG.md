@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+blan
+
 - Possibility to test on an organization where no training has been performed (#74)
 - Add contributing, contributors & code of conduct files (#68)
 
