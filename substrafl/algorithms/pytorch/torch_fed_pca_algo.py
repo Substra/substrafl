@@ -254,9 +254,9 @@ class TorchFedPCAAlgo(TorchAlgo):
 
     def _get_state_to_save(self) -> dict:
         """Create the algo checkpoint: a dictionary saved with ``torch.save`` using the
-        mother class.
+        parent class.
 
-        The mother class saves the TorchLinearModel containing the eigenvectors. Inthis
+        The parent class saves the TorchLinearModel containing the eigenvectors. In this
         algorithm, we additionnally need to save the sample mean and covariance matrix
         as well as the round index as the self.train function behaves differently based
         on this round index.
