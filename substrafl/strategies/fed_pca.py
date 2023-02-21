@@ -64,7 +64,7 @@ class FedPCA(FedAvg):
             )
 
         elif round_idx < 2:
-                function_to_execute = self.avg_shared_states
+            function_to_execute = self.avg_shared_states
         else:
             function_to_execute = self.avg_shared_states_with_qr
 
@@ -87,7 +87,6 @@ class FedPCA(FedAvg):
 
     @remote
     def avg_shared_states_with_qr(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
-
         if not shared_states:
             raise EmptySharedStatesError(
                 "Your shared_states is empty. Please ensure that "
@@ -95,18 +94,14 @@ class FedPCA(FedAvg):
             )
         parameters_update_len = len(shared_states[0].parameters_update)
         assert all(
-            [
-                len(shared_state.parameters_update) == parameters_update_len
-                for shared_state in shared_states
-            ]
+            [len(shared_state.parameters_update) == parameters_update_len for shared_state in shared_states]
         ), "Not the same number of layers for every input parameters."
 
         n_all_samples = sum([state.n_samples for state in shared_states])
 
         averaged_states = []
         for idx in range(parameters_update_len):
-            states = [ state.parameters_update[idx] * (state.n_samples / n_all_samples)
-                                            for state in shared_states]
+            states = [state.parameters_update[idx] * (state.n_samples / n_all_samples) for state in shared_states]
             averaged_state_before_qr = np.sum(states, axis=0)
             averaged_state_after_qr, _ = linalg.qr(averaged_state_before_qr.T)
             averaged_state_after_qr = averaged_state_after_qr.T

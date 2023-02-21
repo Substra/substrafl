@@ -74,7 +74,6 @@ class TorchFedPCAAlgo(TorchAlgo):
         *args,
         **kwargs,
     ):
-
         self.in_features = in_features
         self.out_features = out_features
         self._batch_size = batch_size
@@ -111,7 +110,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             completed.
         """
         if self.round_counter <= 2:
-            raise ValueError("Cannot do prediction before round 2")
+            logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
         else:
             super(TorchFedPCAAlgo, self)._local_predict(predict_dataset, predictions_path)
 
@@ -219,22 +218,22 @@ class TorchFedPCAAlgo(TorchAlgo):
             self.round_counter += 1
             return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
         elif self.local_covmat is None:
-                # In round 1
-                # Replacing the local mean by the aggregated one
-                self.local_mean = old_parameters[0][0]
-                # Fill new parameters with an arbitrary numpy array of correct shape
-                new_parameters = old_parameters[0].cpu().numpy()
-                # Starting local covariate matrix computation
-                self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
-                self.local_n = 0
-                for x_batch, _ in train_data_loader:
-                    x_batch = x_batch.to(self._device)
-                    # Centering input vectors
-                    rep_means = self.local_mean.repeat(x_batch.shape[0], 1).to(self._device)
-                    x_batch -= rep_means
-                    self.local_n += x_batch.shape[0]
-                    # Updating cov matrix
-                    self.local_covmat += torch.matmul(x_batch.T, x_batch)
+            # In round 1
+            # Replacing the local mean by the aggregated one
+            self.local_mean = old_parameters[0][0]
+            # Fill new parameters with an arbitrary numpy array of correct shape
+            new_parameters = old_parameters[0].cpu().numpy()
+            # Starting local covariate matrix computation
+            self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
+            self.local_n = 0
+            for x_batch, _ in train_data_loader:
+                x_batch = x_batch.to(self._device)
+                # Centering input vectors
+                rep_means = self.local_mean.repeat(x_batch.shape[0], 1).to(self._device)
+                x_batch -= rep_means
+                self.local_n += x_batch.shape[0]
+                # Updating cov matrix
+                self.local_covmat += torch.matmul(x_batch.T, x_batch)
 
         else:
             subspace_method = True
