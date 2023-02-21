@@ -88,7 +88,7 @@ class FedPCA(FedAvg):
     @remote
     def avg_shared_states_with_qr(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
 
-        if len(shared_states) == 0:
+        if not shared_states:
             raise EmptySharedStatesError(
                 "Your shared_states is empty. Please ensure that "
                 "the train method of your algorithm returns a FedAvgSharedState object."
