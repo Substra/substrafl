@@ -176,7 +176,7 @@ def test_linear_data_samples_pca():
 
 
 @pytest.fixture(scope="session")
-def train_linear_data_samples_pca(network):
+def train_linear_data_samples_pca(network, seed):
     """Generates linear linked data for training purposes. The train_linear_data_samples data and
     test_linear_data_samples data are linked with the same weights as they fixed per the same seed.
 
@@ -190,7 +190,7 @@ def train_linear_data_samples_pca(network):
     mean = np.array([100.0, -20.0, 10.0])
 
     result = []
-    np.random.seed(42)
+    np.random.seed(seed)
     for _ in range(network.n_organizations):
         data = np.zeros((100, 4))
         data[:, :3] = np.random.multivariate_normal(mean, cov_matrix, size=100)
@@ -215,4 +215,4 @@ def test_cp_performance(network, compute_plan, session_dir, train_linear_data_sa
     fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
     numpy_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in numpy_pca_eigen_values])
     fed_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in fed_pca_eigen_values])
-    np.testing.assert_allclose(numpy_pca_eigen_values, fed_pca_eigen_values, rtol=1e-2)
+    np.testing.assert_allclose(numpy_pca_eigen_values, fed_pca_eigen_values, rtol=1e-5)

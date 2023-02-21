@@ -62,7 +62,7 @@ class FedPCA(FedAvg):
                 additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
-
+            function_to_execute = self.avg_shared_states
         elif round_idx < 2:
             function_to_execute = self.avg_shared_states
         else:

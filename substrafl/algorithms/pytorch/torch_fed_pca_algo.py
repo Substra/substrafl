@@ -82,7 +82,11 @@ class TorchFedPCAAlgo(TorchAlgo):
         self.round_counter = 0
 
         super().__init__(
-            model=TorchLinearModel(self.in_features, self.out_features, device=self._device),
+            model=TorchLinearModel(
+                self.in_features,
+                self.out_features,
+                device=self._get_torch_device(use_gpu),
+            ),
             criterion=None,
             optimizer=None,
             index_generator=None,
