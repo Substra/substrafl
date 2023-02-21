@@ -63,8 +63,7 @@ class FedPCA(FedAvg):
                 clean_models=clean_models,
             )
 
-        else:
-            if round_idx < 2:
+        elif round_idx < 2:
                 function_to_execute = self.avg_shared_states
             else:
                 function_to_execute = self.avg_shared_states_with_qr
