@@ -61,7 +61,6 @@ def compute_plan(
     strategy = FedPCA()
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes_pca,
-        eval_frequency=None,
         eval_rounds=[NUM_ROUNDS],
     )
 
