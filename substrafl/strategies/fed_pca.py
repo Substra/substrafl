@@ -104,7 +104,7 @@ class FedPCA(FedAvg):
 
         n_all_samples = sum([state.n_samples for state in shared_states])
 
-        averaged_states = list()
+        averaged_states = []
         for idx in range(len(shared_states[0].parameters_update)):
             states = [ state.parameters_update[idx] * (state.n_samples / n_all_samples)
                                             for state in shared_states]
