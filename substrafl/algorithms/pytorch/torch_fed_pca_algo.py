@@ -28,7 +28,7 @@ class TorchLinearModel(torch.nn.Module):
         device (str): working device, cuda or cpu
     """
 
-    def __init__(self, in_features, out_features, device):
+    def __init__(self, in_features: int, out_features: int, device: str):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -68,7 +68,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         dataset: torch.utils.data.Dataset,
         in_features: int,
         out_features: int,
-        batch_size: Optional[int],
+        batch_size: Optional[int] = None,
         seed: Optional[int] = None,
         use_gpu: bool = True,
         *args,
@@ -137,7 +137,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             # If batch_size is None, it is set to the number of samples in the dataset by the index generator
             num_updates = 1
         else:
-            num_updates = math.ceil(float(n_samples) / self._batch_size)
+            num_updates = math.ceil(n_samples / self._batch_size)
 
         index_generator = NpIndexGenerator(batch_size=self._batch_size, num_updates=num_updates, drop_last=False)
         index_generator.n_samples = n_samples
@@ -236,9 +236,9 @@ class TorchFedPCAAlgo(TorchAlgo):
                     # Updating cov matrix
                     self.local_covmat += torch.matmul(x_batch.T, x_batch)
 
-            else:
-                subspace_method = True
-                new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
+        else:
+            subspace_method = True
+            new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
 
         if subspace_method is True:
             # Assigning orthonormalized parameters
