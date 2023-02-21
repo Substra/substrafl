@@ -18,7 +18,7 @@ from substrafl.strategies import FedAvg
 
 
 class FedPCA(FedAvg):
-    """Federated PCA strategy."""
+    """Federated Principal Component Analysis strategy."""
 
     def __init__(self):
         super(FedPCA, self).__init__()
