@@ -82,10 +82,8 @@ class TorchFedPCAAlgo(TorchAlgo):
         self.local_covmat = None
         self.round_counter = 0
 
-        dev = super()._get_torch_device(use_gpu)
-
         super().__init__(
-            model=TorchLinearModel(self.in_features, self.out_features, device=dev),
+            model=TorchLinearModel(self.in_features, self.out_features, device=self._device),
             criterion=None,
             optimizer=None,
             index_generator=None,
