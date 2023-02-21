@@ -52,7 +52,7 @@ class TorchLinearModel(torch.nn.Module):
 
 
 class TorchFedPCAAlgo(TorchAlgo):
-    """TorchFedPCAAlgo class, inheriting from TorchAlgo and designed to do a PCA.
+    """TorchFedPCAAlgo class, inheriting from TorchAlgo and designed to perform Principal Component Analysis (PCA).
 
     Args:
         dataset (torch.utils.data.Dataset): input data on which to perform PCA
