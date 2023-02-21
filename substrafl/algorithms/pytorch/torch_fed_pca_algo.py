@@ -218,8 +218,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             new_parameters[0] = self.local_mean.cpu().numpy()
             self.round_counter += 1
             return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
-        else:
-            if self.local_covmat is None:
+        elif self.local_covmat is None:
                 # In round 1
                 # Replacing the local mean by the aggregated one
                 self.local_mean = old_parameters[0][0]
