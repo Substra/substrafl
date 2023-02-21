@@ -106,9 +106,8 @@ class FedPCA(FedAvg):
 
         averaged_states = list()
         for idx in range(len(shared_states[0].parameters_update)):
-            states = list()
-            for state in shared_states:
-                states.append(state.parameters_update[idx] * (state.n_samples / n_all_samples))
+            states = [ state.parameters_update[idx] * (state.n_samples / n_all_samples)
+                                            for state in shared_states]
             averaged_state_before_qr = np.sum(states, axis=0)
             averaged_state_after_qr, _ = linalg.qr(averaged_state_before_qr.T)
             averaged_state_after_qr = averaged_state_after_qr.T
