@@ -72,7 +72,7 @@ class FedPCA(FedAvg):
             current_aggregation = aggregation_node.update_states(
                 function_to_execute(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
                 round_idx=round_idx,
-                authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
+                authorized_ids={train_data_node.organization_id for train_data_node in train_data_nodes},
                 clean_models=clean_models,
             )
 
