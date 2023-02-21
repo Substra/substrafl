@@ -112,7 +112,14 @@ class Algo(abc.ABC):
         raise NotImplementedError
 
     @remote
-    def initialize(self, shared_states):
+    @staticmethod
+    def initialize(shared_states):
+        """Empty function, useful to load the algo in the different organizations
+        in order to perform an evaluation before any training step.
+
+        Args:
+            shared_states: Unused but enforced signature due to the @remote decorator.
+        """
         return
 
     def summary(self) -> dict:
