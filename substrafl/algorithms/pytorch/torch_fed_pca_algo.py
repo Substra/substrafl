@@ -97,7 +97,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             **kwargs,
         )
 
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path: Path):
         """Map inputs to lower dimensional space.
 
         Args:
