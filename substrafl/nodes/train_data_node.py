@@ -144,6 +144,7 @@ class TrainDataNode(Node):
             ]
 
         elif local_state is not None and not local_state.init:
+            # If the parent task is an init task, no shared states have been produced.
             shared_inputs = [
                 schemas.InputRef(
                     identifier=InputIdentifiers.shared,
