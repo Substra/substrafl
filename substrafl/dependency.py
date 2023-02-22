@@ -25,8 +25,8 @@ class Dependency(BaseModel):
         local_dependencies (List[pathlib.Path]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
-        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders must be
-            at the same level than your script.
+        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be pasted
+        to the level of the running script.
     """
 
     editable_mode: bool = False

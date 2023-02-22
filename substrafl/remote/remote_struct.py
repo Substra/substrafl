@@ -1,4 +1,3 @@
-import inspect
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -125,21 +124,6 @@ class RemoteStruct:
             method_name=self._method_name,
             method_parameters=self._method_parameters,
         )
-
-    def get_cls_file_path(self) -> Path:
-        """Get the path to the file where the cls attribute is defined.
-
-        Returns:
-            pathlib.Path: path to the file where the cls is defined.
-        """
-        try:
-            algo_file_path = Path(inspect.getfile(self._cls)).resolve().parent
-        except (TypeError, OSError):
-            # In a notebook, we get the TypeError (OSError on python 3.10): <class '__main__.MyAlgo'> is a built-in
-            # class.
-            # To fix it, we use the cwd of the notebook and assume local dependencies are there
-            algo_file_path = Path.cwd().resolve()
-        return algo_file_path
 
     def summary(self) -> Dict[str, str]:
         """Get a summary of what the remote struct represents.

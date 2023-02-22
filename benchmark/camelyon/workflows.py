@@ -89,7 +89,7 @@ def substrafl_fed_avg(
     base = Path(__file__).parent
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy", "sklearn"],
-        local_code=[base / "common" / "data_managers.py", base / "common" / "weldon.py", base / "weldon_fedavg.py"],
+        local_code=[base / "common", base / "weldon_fedavg.py"],
         editable_mode=False,
     )
 

@@ -116,9 +116,9 @@ def _copy_local_packages(
     return local_dependencies_cmd
 
 
-def _copy_local_code(path: Path, algo_file_path: Path, operation_dir: Path):
+def _copy_local_code(path: Path, operation_dir: Path):
     """Copy the local code given by the user to the operation directory."""
-    relative_path = path.relative_to(algo_file_path)
+    relative_path = ""  # path.relative_to(algo_file_path)
     (operation_dir / relative_path.parent).mkdir(exist_ok=True)
     if path.is_dir():
         shutil.copytree(path, operation_dir / relative_path)
@@ -229,9 +229,8 @@ def _create_substra_function_files(
     # The files to copy to the container must be in the same folder as the Dockerfile
     local_dependencies_cmd = ""
     if dependencies is not None:
-        algo_file_path = remote_struct.get_cls_file_path()
         for path in dependencies.local_code:
-            _copy_local_code(path=path, algo_file_path=algo_file_path, operation_dir=operation_dir)
+            _copy_local_code(path=path, operation_dir=operation_dir)
 
         if install_libraries:
             local_dep_dir = substrafl_internal / "local_dependencies"
