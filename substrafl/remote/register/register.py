@@ -118,12 +118,10 @@ def _copy_local_packages(
 
 def _copy_local_code(path: Path, operation_dir: Path):
     """Copy the local code given by the user to the operation directory."""
-    relative_path = ""  # path.relative_to(algo_file_path)
-    (operation_dir / relative_path.parent).mkdir(exist_ok=True)
     if path.is_dir():
-        shutil.copytree(path, operation_dir / relative_path)
+        shutil.copytree(path, operation_dir / path.name)
     elif path.is_file():
-        shutil.copy(path, operation_dir / relative_path)
+        shutil.copy(path, operation_dir / path.name)
     else:
         raise ValueError(f"Does not exist {path}")
 
