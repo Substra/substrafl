@@ -94,7 +94,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             index_generator=None,
             dataset=dataset,
             scheduler=None,
-            seed=seed,
+            seed=self._seed,
             use_gpu=use_gpu,
             *args,
             **kwargs,
@@ -206,7 +206,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             with_batch_norm_parameters=False,
         )
 
-        subspace_method = False
         if self.local_mean is None:
             # In round 0
             new_parameters = old_parameters[0].cpu().numpy()
@@ -221,9 +220,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             # Using the model parameters as a container for local_mean to be aggregated
             new_parameters[0] = self.local_mean.cpu().numpy()
             self.round_counter += 1
-            return FedAvgSharedState(
-                n_samples=self.local_n, parameters_update=[new_parameters]
-            )
+            return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
         elif self.local_covmat is None:
             # In round 1 we are:
             #   - Computing the local covariance matrix
@@ -234,9 +231,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             self.local_mean = old_parameters[0][0]
             # Fill new parameters with an arbitrary numpy array of correct shape
             # Starting local covariate matrix computation
-            self.local_covmat = torch.zeros(
-                (self._model.in_features, self._model.in_features)
-            ).to(self._device)
+            self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
             self.local_n = 0
             for x_batch, _ in train_data_loader:
                 x_batch = x_batch.to(self._device)
@@ -254,11 +249,7 @@ class TorchFedPCAAlgo(TorchAlgo):
                 generator=torch.Generator().manual_seed(self._seed),
             ).to(self._device)
 
-        new_parameters = (
-            torch.matmul(old_parameters[0].to(self._device), self.local_covmat)
-            .cpu()
-            .numpy()
-        )
+        new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
 
         # Assigning orthonormalized parameters
         weight_manager.set_parameters(
@@ -268,9 +259,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         )
 
         self.round_counter += 1
-        return FedAvgSharedState(
-            n_samples=len(train_dataset), parameters_update=[new_parameters]
-        )
+        return FedAvgSharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
 
     def _get_state_to_save(self) -> dict:
         """Create the algo checkpoint: a dictionary saved with ``torch.save`` using the

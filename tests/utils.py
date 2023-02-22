@@ -107,17 +107,3 @@ def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: i
     aggregate_model = pickle.loads(model_path.read_bytes())
 
     return aggregate_model
-
-
-def download_last_aggregate_model(network, session_dir, compute_plan):
-
-    aggregate_tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key]})
-    aggregate_tasks = [t for t in aggregate_tasks if t.tag == "aggregate"]
-    aggregate_tasks = sorted(aggregate_tasks, key=lambda task: task.rank)
-    aggregate_task = aggregate_tasks[-1]
-    model_path = network.clients[0].download_model_from_task(
-        aggregate_task.key, identifier=OutputIdentifiers.model, folder=session_dir
-    )
-    aggregate_model = pickle.loads(model_path.read_bytes())
-
-    return aggregate_model

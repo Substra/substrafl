@@ -13,7 +13,6 @@ from substrafl.nodes import TrainDataNode
 from substrafl.strategies.fed_pca import FedPCA
 from tests import assets_factory
 from tests import utils
-from tests.utils import download_last_aggregate_model
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ def torch_pca_algo(numpy_torch_dataset, seed):
                 out_features=N_EIGENVALUES,
                 batch_size=BATCH_SIZE,
                 dataset=numpy_torch_dataset,
-                seed=seed
+                seed=seed,
             )
 
     return MyAlgo
@@ -212,8 +211,8 @@ def test_cp_performance(network, compute_plan, session_dir, train_linear_data_sa
     cov = np.cov(data.T)
     _, eig = np.linalg.eig(cov)
     numpy_pca_eigen_values = eig.T[:2]
-    fed_pca_model = download_last_aggregate_model(network, session_dir, compute_plan)
+    fed_pca_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=21)
     fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
     numpy_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in numpy_pca_eigen_values])
     fed_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in fed_pca_eigen_values])
-    np.testing.assert_allclose(numpy_pca_eigen_values, fed_pca_eigen_values, rtol=1e-5)
+    assert np.allclose(numpy_pca_eigen_values, fed_pca_eigen_values, rtol=1e-5)
