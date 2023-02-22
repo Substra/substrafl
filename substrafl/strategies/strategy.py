@@ -35,7 +35,7 @@ class Strategy(ABC):
         algo: Algo,
         train_data_nodes: List[TrainDataNode],
         clean_models: bool,
-        round_idx: int,
+        round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
     ):
         next_local_states = []
