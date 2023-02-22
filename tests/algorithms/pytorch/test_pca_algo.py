@@ -211,7 +211,9 @@ def test_cp_performance(network, compute_plan, session_dir, train_linear_data_sa
     cov = np.cov(data.T)
     _, eig = np.linalg.eig(cov)
     numpy_pca_eigen_values = eig.T[:2]
-    fed_pca_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=21)
+    final_rank = 2 * NUM_ROUNDS + 1
+    fed_pca_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=final_rank)
+
     fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
     numpy_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in numpy_pca_eigen_values])
     fed_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in fed_pca_eigen_values])
