@@ -59,7 +59,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         in_features (int): input data dimensionality
         out_features (int): number of dimensions to keep after PCA
         batch_size (Optional[int]): mini-batch size
-        seed (Optional[int]): random generator seed
+        seed (int): random generator seed. Default to 1.
         use_gpu (bool): whether to use GPU or not
     """
 
@@ -69,7 +69,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         in_features: int,
         out_features: int,
         batch_size: Optional[int] = None,
-        seed: Optional[int] = None,
+        seed: int = 1,
         use_gpu: bool = True,
         *args,
         **kwargs,
@@ -80,6 +80,8 @@ class TorchFedPCAAlgo(TorchAlgo):
         self.local_mean = None
         self.local_covmat = None
         self.round_counter = 0
+        self._seed = seed
+        torch.manual_seed(self._seed)
 
         super().__init__(
             model=TorchLinearModel(
@@ -174,7 +176,6 @@ class TorchFedPCAAlgo(TorchAlgo):
         Returns:
             FedAvgSharedState: updated model and parameters shared for aggregation.
         """
-
         # Create torch dataset
         train_dataset = self._dataset(datasamples, is_inference=False)
 
@@ -220,15 +221,22 @@ class TorchFedPCAAlgo(TorchAlgo):
             # Using the model parameters as a container for local_mean to be aggregated
             new_parameters[0] = self.local_mean.cpu().numpy()
             self.round_counter += 1
-            return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
+            return FedAvgSharedState(
+                n_samples=self.local_n, parameters_update=[new_parameters]
+            )
         elif self.local_covmat is None:
-            # In round 1
+            # In round 1 we are:
+            #   - Computing the local covariance matrix
+            #   - Initializing the weights for the subspace iteration method
+            #      and storing them in old_parameters
+
             # Replacing the local mean by the aggregated one
             self.local_mean = old_parameters[0][0]
             # Fill new parameters with an arbitrary numpy array of correct shape
-            new_parameters = old_parameters[0].cpu().numpy()
             # Starting local covariate matrix computation
-            self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
+            self.local_covmat = torch.zeros(
+                (self._model.in_features, self._model.in_features)
+            ).to(self._device)
             self.local_n = 0
             for x_batch, _ in train_data_loader:
                 x_batch = x_batch.to(self._device)
@@ -239,20 +247,30 @@ class TorchFedPCAAlgo(TorchAlgo):
                 # Updating cov matrix
                 self.local_covmat += torch.matmul(x_batch.T, x_batch)
 
-        else:
-            subspace_method = True
-            new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
+            # Initializing the weights for the subspace iteration
+            old_parameters[0] = torch.normal(
+                torch.zeros(old_parameters[0].shape),
+                torch.ones(old_parameters[0].shape),
+                generator=torch.Generator().manual_seed(self._seed),
+            ).to(self._device)
 
-        if subspace_method is True:
-            # Assigning orthonormalized parameters
-            weight_manager.set_parameters(
-                model=self._model,
-                parameters=old_parameters,
-                with_batch_norm_parameters=False,
-            )
+        new_parameters = (
+            torch.matmul(old_parameters[0].to(self._device), self.local_covmat)
+            .cpu()
+            .numpy()
+        )
+
+        # Assigning orthonormalized parameters
+        weight_manager.set_parameters(
+            model=self._model,
+            parameters=old_parameters,
+            with_batch_norm_parameters=False,
+        )
 
         self.round_counter += 1
-        return FedAvgSharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
+        return FedAvgSharedState(
+            n_samples=len(train_dataset), parameters_update=[new_parameters]
+        )
 
     def _get_state_to_save(self) -> dict:
         """Create the algo checkpoint: a dictionary saved with ``torch.save`` using the

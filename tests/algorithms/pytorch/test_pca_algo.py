@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 LINEAR_N_COL = 3
 LINEAR_N_TARGET = 1
 N_EIGENVALUES = 2
-NUM_ROUNDS = 7
+NUM_ROUNDS = 10
 BATCH_SIZE = 1
 
 
@@ -38,6 +38,7 @@ def torch_pca_algo(numpy_torch_dataset, seed):
                 out_features=N_EIGENVALUES,
                 batch_size=BATCH_SIZE,
                 dataset=numpy_torch_dataset,
+                seed=seed
             )
 
     return MyAlgo

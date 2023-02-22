@@ -63,8 +63,6 @@ class FedPCA(FedAvg):
                 clean_models=clean_models,
             )
             function_to_execute = self.avg_shared_states
-        elif round_idx < 2:
-            function_to_execute = self.avg_shared_states
         else:
             function_to_execute = self.avg_shared_states_with_qr
 
@@ -106,5 +104,4 @@ class FedPCA(FedAvg):
             averaged_state_after_qr, _ = linalg.qr(averaged_state_before_qr.T)
             averaged_state_after_qr = averaged_state_after_qr.T
             averaged_states.append(averaged_state_after_qr)
-
         return FedAvgAveragedState(avg_parameters_update=averaged_states)
