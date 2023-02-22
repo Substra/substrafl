@@ -95,12 +95,13 @@ class FedAvg(Strategy):
 
         if round_idx == 1:
             # First round of the strategy by performing a local update on each train data node
+            # We consider this step as part of the initialization and tag it as round 0.
             assert self._shared_states is None
             self._perform_local_updates(
                 algo=algo,
                 train_data_nodes=train_data_nodes,
                 current_aggregation=None,
-                round_idx=round_idx,
+                round_idx=0,
                 aggregation_id=aggregation_node.organization_id,
                 additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,

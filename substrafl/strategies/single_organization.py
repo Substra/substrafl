@@ -43,7 +43,7 @@ class SingleOrganization(Strategy):
         algo: Algo,
         train_data_nodes: List[TrainDataNode],
         clean_models: bool,
-        round_idx: int,
+        round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
     ):
         n_train_data_nodes = len(train_data_nodes)
