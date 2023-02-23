@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Local code dependencies are now copied to the level of the running script automatically ([#99](https://github.com/Substra/substrafl/pull/99/files))
+- BREAKING: Given local code dependencies are now copied to the level of the running script systematically ([#99](https://github.com/Substra/substrafl/pull/99/files))
 
 ## [0.34.0](https://github.com/Substra/substrafl/releases/tag/0.34.0) - 2023-02-20
 
