@@ -107,7 +107,7 @@ def main():
 
     # Read old benchmark results from file if run in local
     if params["mode"] != "remote":
-        results = read_results(LOCAL_RESULTS_FILE)
+        results = set(read_results(LOCAL_RESULTS_FILE))
 
     # Not used in remote, TODO: refactor at some point
     data_path = params.pop("data_path").resolve()

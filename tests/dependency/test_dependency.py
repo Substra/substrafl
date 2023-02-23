@@ -194,7 +194,7 @@ class TestLocalDependency:
                 datasamples: np.ndarray,
                 shared_state,
             ):
-                from local_code_subfolder.local_code import add_strings
+                from local_code import add_strings
 
                 some_strings = add_strings("Foo", "Bar")
                 assert some_strings == "FooBar"  # For flake8 purposes
