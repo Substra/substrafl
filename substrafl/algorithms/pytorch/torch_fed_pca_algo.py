@@ -28,12 +28,11 @@ class TorchLinearModel(torch.nn.Module):
         device (str): working device, cuda or cpu
     """
 
-    def __init__(self, in_features: int, out_features: int, device: str):
+    def __init__(self, in_features: int, out_features: int):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.device = device
-        self.eigen_vectors = torch.nn.Linear(self.in_features, self.out_features, bias=False).to(self.device)
+        self.eigen_vectors = torch.nn.Linear(self.in_features, self.out_features, bias=False)
         self.eigen_vectors.weight.data.to(self.device)
 
     def forward(self, x):
@@ -87,7 +86,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             model=TorchLinearModel(
                 self.in_features,
                 self.out_features,
-                device=self._get_torch_device(use_gpu),
             ),
             criterion=None,
             optimizer=None,
