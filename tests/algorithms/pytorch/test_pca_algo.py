@@ -133,7 +133,7 @@ def test_linear_nodes_pca(
 
     Returns:
         List[TestDataNode]: A one element list containing a substrafl TestDataNode for linear data with
-        a mae metric.
+          a mae metric.
     """
 
     linear_samples = assets_factory.add_numpy_samples(
