@@ -162,7 +162,7 @@ class TorchFedPCAAlgo(TorchAlgo):
               Defaults to None.
 
         Important:
-            this functions behaves differently depending on the round of the federated
+            This functions behaves differently depending on the round of the federated
             algorithm for PCA. In the first round, the mean vector is computed. In the
             second round, the covariance matrix is computed. The computation of the
             eigenvectors starts from round 3. Sufficiently many rounds are necessary
