@@ -23,10 +23,6 @@ class FedPCA(FedAvg):
     def __init__(self):
         super(FedPCA, self).__init__()
 
-        # current local and share states references of the client
-        self._local_states: Optional[List[LocalStateRef]] = None
-        self._shared_states: Optional[List[SharedStateRef]] = None
-
     @property
     def name(self) -> StrategyName:
         """The name of the strategy
