@@ -111,9 +111,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             This function shall not be used before the second round to Fed PCA algo is
             completed. Before that, the covariance matrix is not built.
 
-        Raises:
-            ValueError if the function is called before second round to Fed PCA algo is
-            completed.
         """
         if self.round_counter <= 2:
             logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
