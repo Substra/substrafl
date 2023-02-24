@@ -1,12 +1,15 @@
+from contextlib import nullcontext as does_not_raise
 from logging import getLogger
 
 import numpy as np
 import pytest
 
+from substrafl import exceptions
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.schemas import ScaffoldAveragedStates
 from substrafl.schemas import ScaffoldSharedState
+from substrafl.schemas import StrategyName
 from substrafl.strategies import Scaffold
 
 logger = getLogger("tests")
@@ -17,6 +20,23 @@ def assert_array_list_allclose(array_list_1, array_list_2):
 
     for array1, array2 in zip(array_list_1, array_list_2):
         assert np.allclose(array1, array2)
+
+
+@pytest.mark.parametrize(
+    "strategy_name, expectation",
+    [
+        ("not_the_dummy_strategy", pytest.raises(exceptions.IncompatibleAlgoStrategyError)),
+        (StrategyName.SCAFFOLD, does_not_raise()),
+    ],
+)
+def test_match_algo_scaffold(strategy_name, dummy_algo_class, expectation):
+    class MyAlgo(dummy_algo_class):
+        @property
+        def strategies(self):
+            return [strategy_name]
+
+    with expectation:
+        Scaffold(algo=MyAlgo())
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,9 @@
+from contextlib import nullcontext as does_not_raise
+
 import numpy as np
 import pytest
 
-from substrafl.exceptions import DampingFactorValueError
+from substrafl import exceptions
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.test_data_node import TestDataNode
@@ -9,7 +11,25 @@ from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.decorators import remote_data
 from substrafl.schemas import NewtonRaphsonAveragedStates
 from substrafl.schemas import NewtonRaphsonSharedState
+from substrafl.schemas import StrategyName
 from substrafl.strategies import NewtonRaphson
+
+
+@pytest.mark.parametrize(
+    "strategy_name, expectation",
+    [
+        ("not_the_dummy_strategy", pytest.raises(exceptions.IncompatibleAlgoStrategyError)),
+        (StrategyName.NEWTON_RAPHSON, does_not_raise()),
+    ],
+)
+def test_match_algo_newton_raphson(strategy_name, dummy_algo_class, expectation):
+    class MyAlgo(dummy_algo_class):
+        @property
+        def strategies(self):
+            return [strategy_name]
+
+    with expectation:
+        NewtonRaphson(algo=MyAlgo(), damping_factor=1)
 
 
 @pytest.mark.parametrize(
@@ -68,7 +88,7 @@ def test_compute_averaged_states(
 def test_eta_value(dummy_algo_class, damping_factor, wrong_eta_value):
     """Test that the EtaValueError is raised if not 0 < damping_factor <= 1"""
     if wrong_eta_value:
-        with pytest.raises(DampingFactorValueError):
+        with pytest.raises(exceptions.DampingFactorValueError):
             NewtonRaphson(algo=dummy_algo_class(), damping_factor=damping_factor)
     else:
         NewtonRaphson(algo=dummy_algo_class(), damping_factor=damping_factor)

@@ -10,7 +10,7 @@ import pydantic
 class StrategyName(str, Enum):
     FEDERATED_AVERAGING = "Federated Averaging"
     SCAFFOLD = "Scaffold"
-    ONE_ORGANIZATION = "One organization"
+    SINGLE_ORGANIZATION = "Single organization"
     NEWTON_RAPHSON = "Newton Raphson"
 
 

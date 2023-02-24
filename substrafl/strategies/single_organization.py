@@ -47,7 +47,7 @@ class SingleOrganization(Strategy):
         Returns:
             StrategyName: Name of the strategy
         """
-        return StrategyName.ONE_ORGANIZATION
+        return StrategyName.SINGLE_ORGANIZATION
 
     def initialization_round(
         self,

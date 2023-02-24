@@ -143,7 +143,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         Returns:
             typing.List: typing.List[StrategyName]
         """
-        return [StrategyName.ONE_ORGANIZATION]
+        return [StrategyName.SINGLE_ORGANIZATION]
 
     @remote_data
     def train(
