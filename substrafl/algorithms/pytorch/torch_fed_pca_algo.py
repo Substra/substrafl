@@ -157,9 +157,9 @@ class TorchFedPCAAlgo(TorchAlgo):
         Args:
             datasamples (Any): input data
             shared_state (Optional[FedAvgAveragedState]): incoming FedAvgAveragedState
-            obtained at the previous round of the federated algorihtm (after
-            aggregation). It contains the federatively learnt eigenvectors.
-            Defaults to None.
+              obtained at the previous round of the federated algorihtm (after
+              aggregation). It contains the federatively learnt eigenvectors.
+              Defaults to None.
 
         Important:
             this functions behaves differently depending on the round of the federated
