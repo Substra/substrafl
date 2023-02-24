@@ -43,7 +43,7 @@ class FedPCA(FedAvg):
     ):
         """One round of the Federated PCA"""
         if aggregation_node is None:
-            raise ValueError("In FedAvg strategy aggregation node cannot be None")
+            raise ValueError(f"In {self.name} strategy aggregation node cannot be None")
 
         if round_idx == 0:
             # Initialization of the strategy by performing a local update on each train data organization
