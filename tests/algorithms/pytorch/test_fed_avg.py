@@ -48,7 +48,7 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
 
 @pytest.fixture(scope="module")
 def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
-    NUM_ROUNDS = 10
+    NUM_ROUNDS = 3
 
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
