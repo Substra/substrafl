@@ -68,7 +68,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         in_features: int,
         out_features: int,
         batch_size: Optional[int] = None,
-        seed: int = 1,
+        seed: Optional[int] = None,
         use_gpu: bool = True,
         *args,
         **kwargs,
