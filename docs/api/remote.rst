@@ -1,7 +1,7 @@
 Remote
 ======
 
-This is an internal Substrafl module, the user should not use
+This is an internal SubstraFL module, the user should not use
 any functions here directly, apart from the ``remote_data`` and ``remote``
 decorators.
 This modules defines how the user code is wrapped, transformed and registered as

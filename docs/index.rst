@@ -1,4 +1,4 @@
-Substrafl
+SubstraFL
 ==========
 
 .. toctree::

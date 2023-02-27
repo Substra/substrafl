@@ -23,7 +23,8 @@ class TestDataNode(Node):
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
         test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
-        metric_keys (List[str]):  Substra metric keys to the metrics, use substra.Client().add_function()
+        metric_keys (List[str]):  Substra function keys to the metrics, see
+            :py:func:`~substrafl.remote.register.register.add_metric` for more information on how to register metrics.
     """
 
     def __init__(
