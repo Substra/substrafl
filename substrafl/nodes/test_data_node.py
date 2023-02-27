@@ -17,14 +17,14 @@ from substrafl.remote.remote_struct import RemoteStruct
 
 class TestDataNode(Node):
     """A node on which you will test your algorithm.
-    A TestDataNode must also be a train data node for now.
 
     Args:
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
         test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
-        metric_keys (List[str]):  Substra function keys to the metrics, see
-            :py:func:`~substrafl.remote.register.register.add_metric` for more information on how to register metrics.
+        function_keys (List[str]):  Keys of the functions that implement the different metrics. See
+            :py:func:`~substrafl.remote.register.register.add_metric` for more information on how to register metric
+            functions.
     """
 
     def __init__(
@@ -32,14 +32,14 @@ class TestDataNode(Node):
         organization_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        metric_keys: List[str],
+        function_keys: List[str],
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys
 
-        if not isinstance(metric_keys, list):
+        if not isinstance(function_keys, list):
             raise TypeError("metric keys must be of type list")
-        self.metric_keys = metric_keys
+        self.function_keys = function_keys
 
         self.testtasks: List[Dict] = []
         self.predicttasks: List[Dict] = []
@@ -111,7 +111,7 @@ class TestDataNode(Node):
         predicttask["remote_operation"] = operation.remote_struct
         self.predicttasks.append(predicttask)
 
-        for metric_key in self.metric_keys:
+        for metric_key in self.function_keys:
             testtask = schemas.ComputePlanTaskSpec(
                 function_key=metric_key,
                 task_id=str(uuid.uuid4()),
@@ -218,7 +218,7 @@ class TestDataNode(Node):
             {
                 "data_manager_key": self.data_manager_key,
                 "data_sample_keys": self.test_data_sample_keys,
-                "metric_keys": self.metric_keys,
+                "function_keys": self.function_keys,
             }
         )
         return summary
