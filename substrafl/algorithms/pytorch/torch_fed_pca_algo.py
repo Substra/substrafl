@@ -20,9 +20,8 @@ class TorchLinearModel(torch.nn.Module):
 
     Args:
         in_features (int): dimension of input vectors
-        out_features (int): number of dimensions to keep as part of dimensionsality
+        out_features (int): number of dimensions to keep as part of dimensionality
             reduction
-        device (str): working device, cuda or cpu
     """
 
     def __init__(self, in_features: int, out_features: int):
@@ -30,7 +29,6 @@ class TorchLinearModel(torch.nn.Module):
         self.in_features = in_features
         self.out_features = out_features
         self.eigen_vectors = torch.nn.Linear(self.in_features, self.out_features, bias=False)
-        self.eigen_vectors.weight.data.to(self.device)
 
     def forward(self, x):
         """Perform dimensionality reduction.
