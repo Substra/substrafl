@@ -359,7 +359,7 @@ def add_metric(
     metric_name: typing.Optional[str] = None,
 ) -> str:
     """Adds a metric to the Substra platform using the given metric function as the
-    function to execute.
+    function to register.
     The metric function must be of type function, and its signature must ONLY contains
     `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
 
@@ -373,7 +373,7 @@ def add_metric(
             the metric name is set to the 'metric_{metric_function.__name__}'.
 
     Returns:
-        str: The metric key of the metric created from the metric function.
+        str: The key of the function created from the metric function.
     """
 
     _check_metric_function(metric_function=metric_function)
