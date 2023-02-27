@@ -7,8 +7,6 @@ from numpy import linalg
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
 from substrafl.nodes.aggregation_node import AggregationNode
-from substrafl.nodes.references.local_state import LocalStateRef
-from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
 from substrafl.schemas import FedAvgAveragedState
@@ -18,7 +16,42 @@ from substrafl.strategies import FedAvg
 
 
 class FedPCA(FedAvg):
-    """Federated Principal Component Analysis strategy."""
+    """Federated Principal Component Analysis strategy.
+    This strategy should be used only using TorchFedPCAAlgo
+
+    The goal of this strategy is to perform a principal component analysis (PCA) by
+    computing the eigen vectors with highest eigen values of the covariance matrices
+    of the data samples. We assume we have clients indexed by $j$, with $n_j$ data samples each.
+    We note $N = \sum_j n_j$ the total number of samples. We denote $D$ the dimension of
+    the data, and $K$ the number of eigen vectors computed.
+
+    It is based on the Federated sub-space iteration algorithm described
+    here https://doi.org/10.1093/bioadv/vbac026 (algorithm 3 of the paper)
+
+    During the process, the local covariance matrices of each center are not shared.
+    However, the column-wise mean of each dataset is shared across the centers.
+
+    The Federated Subspace iteration is divded in three steps:
+
+    Step 1: for d= 1, ..., D, each center computes the mean of the $d$ component of
+    their dataset and share it to the central aggregator. The central aggregator averages
+    the local mean and send to all the clients the global column-wise means of data.
+
+    Step 2: Each center normalize their dataset by substracting the global mean column-wise
+    and compute the covariance matrix of their local data after mean-subtraction. We denote by $C_j$
+    the local covariance matrices.
+
+    We initialize eig_0: a matrix of size $D \times K$ corresponding to the $K$ eigen
+    vectors we want to compute
+    Step 3: For a given number of rounds (rounds are labeled by $r$) we perform the following:
+        Step 3.1: each center $j$ computes  $eig^r_j = C_j \dot eig^{r-1}_j$
+        Step 3.2: the aggregator computes $eig^r = \frac{1}{N}\sum_j n_j eig^r_j
+        Step 3:3: the aggregator performs a QR decomposition: eig^r \mapsto QR(eig^r)
+                    and sahres $eig^r$ to all the clients
+
+    $eig^r$ will converge to the $K$ eigen-vectors of the global covariance matrix with
+    the high eign-values.
+    """
 
     def __init__(self):
         super(FedPCA, self).__init__()

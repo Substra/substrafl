@@ -79,7 +79,12 @@ class TorchFedPCAAlgo(TorchAlgo):
         self.local_mean = None
         self.local_covmat = None
         self.round_counter = 0
-        self._seed = seed
+        if seed is not None:
+            self._seed = seed
+        else:
+            # We need the seed to be fix so each center initiate the models
+            # with the same weights.
+            self._seed = 1
         torch.manual_seed(self._seed)
 
         super().__init__(
