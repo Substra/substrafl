@@ -1,4 +1,3 @@
-import logging
 import math
 from pathlib import Path
 from typing import Any
@@ -14,8 +13,6 @@ from substrafl.remote import remote_data
 from substrafl.schemas import FedAvgAveragedState
 from substrafl.schemas import FedAvgSharedState
 from substrafl.schemas import StrategyName
-
-logger = logging.getLogger(__name__)
 
 
 class TorchLinearModel(torch.nn.Module):
@@ -78,7 +75,6 @@ class TorchFedPCAAlgo(TorchAlgo):
         self._batch_size = batch_size
         self.local_mean = None
         self.local_covmat = None
-        self.round_counter = 0
         if seed is not None:
             self._seed = seed
         else:
@@ -102,23 +98,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             *args,
             **kwargs,
         )
-
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path: Path):
-        """Map inputs to lower dimensional space.
-
-        Args:
-            predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
-            predictions_path (os.PathLike): path where to save predictions.
-
-        Important:
-            This function shall not be used before the second round to Fed PCA algo is
-            completed. Before that, the covariance matrix is not built.
-
-        """
-        if self.round_counter <= 2:
-            logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
-        else:
-            super(TorchFedPCAAlgo, self)._local_predict(predict_dataset, predictions_path)
 
     @property
     def strategies(self) -> List[StrategyName]:
@@ -219,7 +198,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             self.local_mean /= self.local_n
             # Using the model parameters as a container for local_mean to be aggregated
             new_parameters[0] = self.local_mean.cpu().numpy()
-            self.round_counter += 1
             return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
         elif self.local_covmat is None:
             # In round 1 we are:
@@ -258,7 +236,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             with_batch_norm_parameters=False,
         )
 
-        self.round_counter += 1
         return FedAvgSharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
 
     def _get_state_to_save(self) -> dict:
@@ -278,7 +255,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             {
                 "mean": self.local_mean,
                 "cov": self.local_covmat,
-                "round_counter": self.round_counter,
             }
         )
         return checkpoint
@@ -300,5 +276,4 @@ class TorchFedPCAAlgo(TorchAlgo):
         checkpoint = super(TorchFedPCAAlgo, self)._update_from_checkpoint(path)
         self.local_mean = checkpoint.pop("mean")
         self.local_covmat = checkpoint.pop("cov")
-        self.round_counter = checkpoint.pop("round_counter")
         return checkpoint

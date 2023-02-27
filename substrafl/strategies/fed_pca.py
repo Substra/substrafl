@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from typing import Optional
 
@@ -7,12 +8,15 @@ from numpy import linalg
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
 from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
 from substrafl.schemas import FedAvgAveragedState
 from substrafl.schemas import FedAvgSharedState
 from substrafl.schemas import StrategyName
 from substrafl.strategies import FedAvg
+
+logger = logging.getLogger(__name__)
 
 
 class FedPCA(FedAvg):
@@ -22,8 +26,8 @@ class FedPCA(FedAvg):
     The goal of this strategy is to perform a principal component analysis (PCA) by
     computing the eigen vectors with highest eigen values of the covariance matrices
     of the data samples. We assume we have clients indexed by $j$, with $n_j$ data samples each.
-    We note $N = \sum_j n_j$ the total number of samples. We denote $D$ the dimension of
-    the data, and $K$ the number of eigen vectors computed.
+    We note :math:`N = \\sum_j n_j` the total number of samples. We denote :math:`D` the dimension of
+    the data, and :math:`K` the number of eigen vectors computed.
 
     It is based on the Federated sub-space iteration algorithm described
     here https://doi.org/10.1093/bioadv/vbac026 (algorithm 3 of the paper)
@@ -41,15 +45,15 @@ class FedPCA(FedAvg):
     and compute the covariance matrix of their local data after mean-subtraction. We denote by $C_j$
     the local covariance matrices.
 
-    We initialize eig_0: a matrix of size $D \times K$ corresponding to the $K$ eigen
+    We initialize eig_0: a matrix of size :math:`D \\times K` corresponding to the :math:`K` eigen
     vectors we want to compute
     Step 3: For a given number of rounds (rounds are labeled by $r$) we perform the following:
-        Step 3.1: each center $j$ computes  $eig^r_j = C_j \dot eig^{r-1}_j$
-        Step 3.2: the aggregator computes $eig^r = \frac{1}{N}\sum_j n_j eig^r_j
-        Step 3:3: the aggregator performs a QR decomposition: eig^r \mapsto QR(eig^r)
-                    and sahres $eig^r$ to all the clients
+        Step 3.1: each center :math:`j` computes  :math:`eig^r_j = C_j \\dot eig^{r-1}_j`
+        Step 3.2: the aggregator computes :math:`eig^r = \\frac{1}{N}\\sum_j n_j eig^r_j`
+        Step 3:3: the aggregator performs a QR decomposition: :math:`eig^r \\mapsto QR(eig^r)`
+                    and sahres :math:`eig^r` to all the clients
 
-    $eig^r$ will converge to the $K$ eigen-vectors of the global covariance matrix with
+    :math:`eig^r` will converge to the :math:`K` eigen-vectors of the global covariance matrix with
     the high eign-values.
     """
 
@@ -64,6 +68,19 @@ class FedPCA(FedAvg):
             StrategyName: Name of the strategy
         """
         return StrategyName.FEDERATED_PCA
+
+    def predict(
+        self,
+        algo: Algo,
+        test_data_nodes: List[TestDataNode],
+        train_data_nodes: List[TrainDataNode],
+        round_idx: int,
+    ):
+        if round_idx <= 2:
+            logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
+            return
+
+        return super().predict(algo, test_data_nodes, train_data_nodes, round_idx)
 
     def perform_round(
         self,
