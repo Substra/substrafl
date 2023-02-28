@@ -10,7 +10,7 @@ from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
-from substrafl.remote.operations import DataOperation
+from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -49,14 +49,14 @@ class TestDataNode(Node):
     def update_states(
         self,
         traintask_id: str,
-        operation: DataOperation,
+        operation: RemoteDataOperation,
         round_idx: int,
     ):
         """Creating a test task based on the node characteristic.
 
         Args:
             traintask_id (str): The substra parent id
-            operation (DataOperation): Automatically generated structure returned by
+            operation (RemoteDataOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote_data` decorator. This allows to register an
                 operation and execute it later on.
             round_idx: (int): Round number of the strategy starting at 1.
@@ -69,17 +69,11 @@ class TestDataNode(Node):
             schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
             for data_sample in self.test_data_sample_keys
         ]
-
         predict_input = [
             schemas.InputRef(
                 identifier=InputIdentifiers.local,
                 parent_task_key=traintask_id,
                 parent_task_output_identifier=OutputIdentifiers.local,
-            ),
-            schemas.InputRef(
-                identifier=InputIdentifiers.shared,
-                parent_task_key=traintask_id,
-                parent_task_output_identifier=OutputIdentifiers.shared,
             ),
         ]
 
@@ -180,12 +174,6 @@ class TestDataNode(Node):
                         ),
                         schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.local,
-                            kind=schemas.AssetKind.model.value,
-                            optional=False,
-                            multiple=False,
-                        ),
-                        schemas.FunctionInputSpec(
-                            identifier=InputIdentifiers.shared,
                             kind=schemas.AssetKind.model.value,
                             optional=False,
                             multiple=False,

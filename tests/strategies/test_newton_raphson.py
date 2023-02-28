@@ -112,7 +112,8 @@ def test_newton_raphson_perform_round(dummy_algo_class):
         clean_models=False,
     )
     assert len(aggregation_node.tasks) == 1
-    assert all([len(train_data_node.tasks) == 1 for train_data_node in train_data_nodes])
+    # Perform round create two train tasks at round 1, to compute one aggregation step on the first round.
+    assert all([len(train_data_node.tasks) == 2 for train_data_node in train_data_nodes])
 
 
 def test_newton_raphson_predict(dummy_algo_class):

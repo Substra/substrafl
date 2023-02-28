@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from typing import List
 
+from substrafl.remote.decorators import remote
 from substrafl.schemas import StrategyName
 
 
@@ -64,7 +65,7 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, datasamples: Any, shared_state: Any, predictions_path: Path = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: Path = None) -> Any:
         """Is executed for each TestDataOrganizations. The predictions will be saved on the predictions_path.
         The predictions are then loaded and used to calculate the metric.
 
@@ -109,6 +110,16 @@ class Algo(abc.ABC):
         """
 
         raise NotImplementedError
+
+    @remote
+    def initialize(self, shared_states):
+        """Empty function, useful to load the algo in the different organizations
+        in order to perform an evaluation before any training step.
+
+        Args:
+            shared_states: Unused but enforced signature due to the @remote decorator.
+        """
+        return
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file.

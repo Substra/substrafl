@@ -119,33 +119,33 @@ def test_pytorch_scaffold_algo_weights(
 
     my_algo = torch_algo()
 
-    rank_0_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=0)
-    rank_2_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=2)
+    rank_1_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=1)
+    rank_3_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=3)
 
     # Download the aggregate output
-    aggregate_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=1)
+    aggregate_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=2)
     aggregate_update = [torch.from_numpy(x).to("cpu") for x in aggregate_model.avg_parameters_update]
 
     # Assert the model initialization is the same for every model
-    assert_model_parameters_equal(rank_0_local_models[0].model, rank_0_local_models[1].model)
+    assert_model_parameters_equal(rank_1_local_models[0].model, rank_1_local_models[1].model)
     assert_tensor_list_equal(
-        rank_0_local_models[0]._client_control_variate, rank_0_local_models[1]._client_control_variate
+        rank_1_local_models[0]._client_control_variate, rank_1_local_models[1]._client_control_variate
     )
 
     # assert the _client_control_variate have been updated
-    assert_tensor_list_not_zeros(rank_0_local_models[0]._client_control_variate)
-    assert_tensor_list_not_zeros(rank_0_local_models[1]._client_control_variate)
+    assert_tensor_list_not_zeros(rank_1_local_models[0]._client_control_variate)
+    assert_tensor_list_not_zeros(rank_1_local_models[1]._client_control_variate)
 
     # Assert that the weights are well set
-    for model_0, model_2 in zip(rank_0_local_models, rank_2_local_models):
-        increment_parameters(model_0.model, aggregate_update, with_batch_norm_parameters=True)
-        assert_model_parameters_equal(model_0.model, model_2.model)
+    for model_1, model_3 in zip(rank_1_local_models, rank_3_local_models):
+        increment_parameters(model_1.model, aggregate_update, with_batch_norm_parameters=True)
+        assert_model_parameters_equal(model_1.model, model_3.model)
 
     # The local models and _client_control_variate are always the same on every organization, as both organizations have
     # the same data
-    assert_model_parameters_equal(rank_2_local_models[0].model, rank_2_local_models[1].model)
+    assert_model_parameters_equal(rank_3_local_models[0].model, rank_3_local_models[1].model)
     assert_tensor_list_equal(
-        rank_2_local_models[0]._client_control_variate, rank_2_local_models[1]._client_control_variate
+        rank_3_local_models[0]._client_control_variate, rank_3_local_models[1]._client_control_variate
     )
 
 

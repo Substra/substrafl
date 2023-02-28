@@ -304,12 +304,13 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
     output_model = {}
 
     for task in network.clients[0].list_task(filters={"compute_plan_key": [cp.key]}):
-        download_path = network.clients[0].download_model_from_task(
-            task.key,
-            folder=session_dir,
-            identifier=OutputIdentifiers.shared,
-        )
-        output_model[task.metadata["round_idx"]] = PickleSerializer().load(download_path)
+        if task.tag == "train":
+            download_path = network.clients[0].download_model_from_task(
+                task.key,
+                folder=session_dir,
+                identifier=OutputIdentifiers.shared,
+            )
+            output_model[task.metadata["round_idx"]] = PickleSerializer().load(download_path)
 
     if test_seed is not None:
         assert all(output_model["1"] == expected_output_round_1)

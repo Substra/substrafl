@@ -94,7 +94,7 @@ class TorchAlgo(Algo):
         raise NotImplementedError()
 
     @remote_data
-    def predict(self, datasamples: Any, shared_state: Any, predictions_path: os.PathLike = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None) -> Any:
         """Executes the following operations:
 
             * Create the test torch dataset.
