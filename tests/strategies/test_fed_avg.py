@@ -1,39 +1,19 @@
-from contextlib import nullcontext as does_not_raise
 from logging import getLogger
 
 import numpy as np
 import pytest
 
-from substrafl import exceptions
 from substrafl import execute_experiment
 from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote_data
 from substrafl.schemas import FedAvgSharedState
-from substrafl.schemas import StrategyName
 from substrafl.strategies import FedAvg
 
 from .. import utils
 
 logger = getLogger("tests")
-
-
-@pytest.mark.parametrize(
-    "strategy_name, expectation",
-    [
-        ("not_the_dummy_strategy", pytest.raises(exceptions.IncompatibleAlgoStrategyError)),
-        (StrategyName.FEDERATED_AVERAGING, does_not_raise()),
-    ],
-)
-def test_match_algo_fedavg(strategy_name, dummy_algo_class, expectation):
-    class MyAlgo(dummy_algo_class):
-        @property
-        def strategies(self):
-            return [strategy_name]
-
-    with expectation:
-        FedAvg(algo=MyAlgo())
 
 
 @pytest.mark.parametrize(

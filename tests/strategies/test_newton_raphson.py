@@ -1,5 +1,3 @@
-from contextlib import nullcontext as does_not_raise
-
 import numpy as np
 import pytest
 
@@ -11,25 +9,7 @@ from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.decorators import remote_data
 from substrafl.schemas import NewtonRaphsonAveragedStates
 from substrafl.schemas import NewtonRaphsonSharedState
-from substrafl.schemas import StrategyName
 from substrafl.strategies import NewtonRaphson
-
-
-@pytest.mark.parametrize(
-    "strategy_name, expectation",
-    [
-        ("not_the_dummy_strategy", pytest.raises(exceptions.IncompatibleAlgoStrategyError)),
-        (StrategyName.NEWTON_RAPHSON, does_not_raise()),
-    ],
-)
-def test_match_algo_newton_raphson(strategy_name, dummy_algo_class, expectation):
-    class MyAlgo(dummy_algo_class):
-        @property
-        def strategies(self):
-            return [strategy_name]
-
-    with expectation:
-        NewtonRaphson(algo=MyAlgo(), damping_factor=1)
 
 
 @pytest.mark.parametrize(
