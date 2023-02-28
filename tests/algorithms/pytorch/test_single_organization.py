@@ -45,7 +45,7 @@ def compute_plan(
         num_updates=N_UPDATES,
     )
 
-    class MyOneOrganizationAlgo(TorchSingleOrganizationAlgo):
+    class MySingleOrganizationAlgo(TorchSingleOrganizationAlgo):
         def __init__(
             self,
         ):
@@ -57,7 +57,7 @@ def compute_plan(
                 dataset=numpy_torch_dataset,
             )
 
-    my_algo = MyOneOrganizationAlgo()
+    my_algo = MySingleOrganizationAlgo()
 
     strategy = SingleOrganization(algo=my_algo)
 
