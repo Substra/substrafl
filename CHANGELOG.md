@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Added
+
+- Initialization task to each strategy in SubstraFL. ([#89](https://github.com/Substra/substrafl/pull/89))
+
+This allows to load the `Algo` and its model to the platform before any training, and allow to perform a testing task before any training.
+This init task consists in submitting an empty function, coded in the `BaseAlgo`class.
+
+```py
+@remote
+def initialize(self, shared_states):
+     return
+```
+
+The init task return a `local` output that will be passed as input to a test task, and to the first train task.
+
+An other change in this PR is that test tasks don't take a shared as input anymore. This was not needed anymore.
+
+The graph pass from:
+
+```mermaid
+flowchart LR
+    TrainTask1_round0--Local-->TestTask1_r0
+    TrainTask1_round0--Shared-->TestTask1_r0
+
+ TrainTask2_round0--Shared-->AggregateTask
+    TrainTask2_round0--Local-->TestTask2_r0
+    TrainTask2_round0--Shared-->TestTask2_r0
+
+    AggregateTask--Shared-->TrainTask1_r1
+    TrainTask1_round0--Local-->TrainTask1_r1
+
+    AggregateTask--Shared-->TrainTask2_r1
+    TrainTask2_round0--Local-->TrainTask2_r1
+    TrainTask1_round0--Shared-->AggregateTask
+
+    TrainTask1_r1--Local-->TestTask1_r1
+    TrainTask1_r1--Shared-->TestTask1_r1
+
+    TrainTask2_r1--Local-->TestTask2_r1
+    TrainTask2_r1--Shared-->TestTask2_r1
+```
+
+to:
+
+```mermaid
+flowchart LR
+    InitTask1_round0--Local-->TestTask1_r0
+    InitTask2_round0--Local-->TestTask2_r0
+
+    InitTask1_round0--Local-->TrainTask1_r1
+    InitTask2_round0--Local-->TrainTask2_r1
+
+    TrainTask2_r1--Shared-->AggregateTask
+    TrainTask1_r1--Shared-->AggregateTask
+    TrainTask1_r1--Local-->TestTask1_r1
+    TrainTask2_r1--Local-->TestTask2_r1
+
+    TrainTask1_r1--Local-->TrainTask1_r2
+    TrainTask2_r1--Local-->TrainTask2_r2
+    AggregateTask--Shared-->TrainTask1_r2
+    AggregateTask--Shared-->TrainTask2_r2
+
+    TrainTask1_r2--Local-->TestTask1_r2
+    TrainTask2_r2--Local-->TestTask2_r2
+```
+
 ### Changed
 
 - BREAKING: change `eval_frequency` default value to None to avoid confusion with hidden default value (#91)
