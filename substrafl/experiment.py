@@ -304,36 +304,6 @@ def execute_experiment(
         clean_models=clean_models,
     )
 
-<<<<<<< HEAD
-    # create computation graph.
-    for round_idx in range(0, num_rounds + 1):
-        if round_idx == 0:
-            strategy.initialization_round(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                additional_orgs_permissions=additional_orgs_permissions,
-                clean_models=clean_models,
-            )
-        else:
-            strategy.perform_round(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                aggregation_node=aggregation_node,
-                additional_orgs_permissions=additional_orgs_permissions,
-                round_idx=round_idx,
-                clean_models=clean_models,
-            )
-
-        if evaluation_strategy is not None and next(evaluation_strategy):
-            strategy.predict(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                test_data_nodes=evaluation_strategy.test_data_nodes,
-                round_idx=round_idx,
-            )
-
-=======
->>>>>>> ae421a4 (feat: remove-algo-from-execute-exp)
     # Computation graph is created
     logger.info("Registering the algorithm to Substra.")
     tasks, operation_cache = _register_operations(
