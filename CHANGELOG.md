@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initialization task to each strategy in SubstraFL. ([#89](https://github.com/Substra/substrafl/pull/89))
 
-This allows to load the `Algo` and its model to the platform before any training, and allow to perform a testing task before any training.
+This allows to load the `Algo` and all its attributes to the platform before any training? Once on the platform, we can perform a testing task before any training.
 This init task consists in submitting an empty function, coded in the `BaseAlgo`class.
 
 ```py
@@ -21,8 +21,6 @@ def initialize(self, shared_states):
 ```
 
 The init task return a `local` output that will be passed as input to a test task, and to the first train task.
-
-An other change in this PR is that test tasks don't take a shared as input anymore. This was not needed anymore.
 
 The graph pass from:
 
@@ -75,6 +73,7 @@ flowchart LR
 
 ### Changed
 
+- Test tasks don't take a `shared` as input anymore ([#89](https://github.com/Substra/substrafl/pull/89))
 - BREAKING: change `eval_frequency` default value to None to avoid confusion with hidden default value (#91)
 - BREAKING: rename Algo to Function ([#82](https://github.com/Substra/substrafl/pull/82))
 - BREAKING: clarify `EvaluationStrategy` arguments: change `rounds` to `eval_frequency` and `eval_rounds` (#85)
