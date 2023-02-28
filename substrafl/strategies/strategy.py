@@ -118,7 +118,13 @@ class Strategy(ABC):
         num_rounds: int,
         clean_models: Optional[bool],
     ):
-        """_summary_
+        """Build the computation graph of the strategy.
+        The built graph will be stored by side effect in the given train_data_nodes,
+        aggregation_nodes and evaluation_strategy.
+        This function create a graph be first calling the initialization_round method of the strategy
+        at round 0, and then call the perform_round method for each new round.
+        If the current round is part of the evaluation strategy, the perform_predict method is
+        called to complete the graph.
 
         Args:
             train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
