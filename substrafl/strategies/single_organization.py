@@ -51,7 +51,6 @@ class SingleOrganization(Strategy):
 
     def initialization_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         clean_models: bool,
         round_idx: Optional[int] = 0,
@@ -65,8 +64,8 @@ class SingleOrganization(Strategy):
             )
 
         next_local_state = train_data_nodes[0].init_states(
-            algo.initialize(  # type: ignore
-                _algo_name=f"Initializing with {algo.__class__.__name__}",
+            self.algo.initialize(  # type: ignore
+                _algo_name=f"Initializing with {self.algo.__class__.__name__}",
             ),
             round_idx=round_idx,
             authorized_ids=set([train_data_nodes[0].organization_id]) | additional_orgs_permissions,
