@@ -2,7 +2,6 @@ import logging
 from typing import List
 from typing import Optional
 
-from substrafl import exceptions
 from substrafl.algorithms import Algo
 from substrafl.nodes import AggregationNode
 from substrafl.nodes import TestDataNode
@@ -27,16 +26,6 @@ class SingleOrganization(Strategy):
     def __init__(self, algo: Algo):
         super(SingleOrganization, self).__init__(algo=algo)
 
-        if self.name not in algo.strategies:
-            raise exceptions.IncompatibleAlgoStrategyError(
-                f"The algo {algo.__class__.__name__} is not compatible with the strategy {self.__class__.__name__},"
-                f"named {self.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
-                "strategies."
-            )
-
-        self.algo = algo
-
-        self.algo = algo
         # State
         self.local_state: Optional[LocalStateRef] = None
 

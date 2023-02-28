@@ -3,7 +3,6 @@ from typing import Optional
 
 import numpy as np
 
-from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import DampingFactorValueError
 from substrafl.exceptions import EmptySharedStatesError
@@ -49,15 +48,6 @@ class NewtonRaphson(Strategy):
                 the gradient descent. Recommended value: ``damping_factor=0.8``.
         """
         super(NewtonRaphson, self).__init__(algo=algo, damping_factor=damping_factor)
-
-        if self.name not in algo.strategies:
-            raise exceptions.IncompatibleAlgoStrategyError(
-                f"The algo {algo.__class__.__name__} is not compatible with the strategy {self.__class__.__name__},"
-                f"named {self.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
-                "strategies."
-            )
-
-        self.algo = algo
 
         # States
         self._local_states: Optional[List[LocalStateRef]] = None
