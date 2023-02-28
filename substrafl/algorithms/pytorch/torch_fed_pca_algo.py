@@ -30,7 +30,7 @@ class TorchLinearModel(torch.nn.Module):
         self.out_features = out_features
         self.eigen_vectors = torch.nn.Linear(self.in_features, self.out_features, bias=False)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform dimensionality reduction.
 
         Args:
