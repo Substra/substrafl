@@ -254,6 +254,9 @@ def execute_experiment(
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
             the substrafl Dependency class. Defaults None.
+        clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
+            if you want to download or re-use intermediary models. This causes the disk space to fill
+            quickly so should be set to True unless needed. Defaults to True.
         experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
             the compute plan name is set to the timestamp.
