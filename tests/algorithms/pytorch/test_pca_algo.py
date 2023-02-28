@@ -52,7 +52,6 @@ def compute_plan(
     network,
     session_dir,
 ):
-
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
@@ -211,7 +210,8 @@ def test_cp_performance(network, compute_plan, session_dir, train_linear_data_sa
     cov = np.cov(data.T)
     _, eig = np.linalg.eig(cov)
     numpy_pca_eigen_values = eig.T[:2]
-    final_rank = 2 * NUM_ROUNDS + 1
+    # The number of rank is an init task, a first local update, and then aggregation and train times num rounds
+    final_rank = 1 + 1 + 2 * NUM_ROUNDS
     fed_pca_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=final_rank)
 
     fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
