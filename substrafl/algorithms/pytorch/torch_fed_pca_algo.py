@@ -106,7 +106,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         """
         return [StrategyName.FEDERATED_PCA]
 
-    def _instantiate_index_generator(self, n_samples):
+    def _instantiate_index_generator(self, n_samples: int):
         """Create a generator for batches data points indices.
 
         Args:
