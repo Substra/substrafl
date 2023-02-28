@@ -75,7 +75,7 @@ class FedPCA(FedAvg):
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
-    ):
+    ) -> None:
         if round_idx <= 2:
             logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
             return
