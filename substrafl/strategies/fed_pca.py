@@ -90,7 +90,7 @@ class FedPCA(FedAvg):
         round_idx: int,
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
-    ):
+    ) -> None:
         """One round of the Federated PCA"""
         if aggregation_node is None:
             raise ValueError(f"In {self.name} strategy aggregation node cannot be None")
