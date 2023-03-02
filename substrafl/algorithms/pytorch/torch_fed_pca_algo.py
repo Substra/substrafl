@@ -197,11 +197,12 @@ class TorchFedPCAAlgo(TorchAlgo):
             # Using the model parameters as a container for local_mean to be aggregated
             new_parameters[0] = self.local_mean.cpu().numpy()
             return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
+
         elif self.local_covmat is None:
-            # In round 1 we are:
-            #   - Computing the local covariance matrix
-            #   - Initializing the weights for the subspace iteration method
-            #      and storing them in old_parameters
+            # In round 1 we:
+            #   - Compute the local covariance matrix
+            #   - Initialize the weights for the subspace iteration method
+            #      and store them in old_parameters
 
             # Replacing the local mean by the aggregated one
             self.local_mean = old_parameters[0][0]

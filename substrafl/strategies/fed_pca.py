@@ -3,7 +3,6 @@ from typing import List
 from typing import Optional
 
 import numpy as np
-from numpy import linalg
 
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
@@ -47,6 +46,7 @@ class FedPCA(FedAvg):
 
     We initialize eig_0: a matrix of size :math:`D \\times K` corresponding to the :math:`K` eigen
     vectors we want to compute
+
     Step 3: For a given number of rounds (rounds are labeled by $r$) we perform the following:
         Step 3.1: each center :math:`j` computes  :math:`eig^r_j = C_j \\dot eig^{r-1}_j`
         Step 3.2: the aggregator computes :math:`eig^r = \\frac{1}{N}\\sum_j n_j eig^r_j`
@@ -91,7 +91,26 @@ class FedPCA(FedAvg):
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
     ) -> None:
-        """One round of the Federated PCA"""
+        """One round of the Federated Principal Component Analisys strategy consists in:
+            - if ``round_idx==0``: initialize the strategy by performing a local update
+                (train on n mini-batches) of the models on each train data node
+            - aggregate the model shared_states
+            - set the model weights to the aggregated weights on each train data nodes
+            - perform a local update (train on n mini-batches) of the models on each train data nodes
+
+        Args:
+            algo (Algo): User defined algorithm: describes the model train and predict methods
+            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform
+                local updates.
+            aggregation_node (AggregationNode): Node without data, used to perform
+                operations on the shared states of the models
+            round_idx (int): Round number, it starts at 0.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
+        """
         if aggregation_node is None:
             raise ValueError(f"In {self.name} strategy aggregation node cannot be None")
 
@@ -108,8 +127,12 @@ class FedPCA(FedAvg):
                 additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
+            # At round 0, we only want to send the average of the shared states.
+            # We use the avg_shared_states function of FedAvgAlgo
             function_to_execute = self.avg_shared_states
         else:
+            # For the next round, we want to send the orthogonal matrix as shared states
+            # to average. We use avg_shared_states_with_qr to compute it.
             function_to_execute = self.avg_shared_states_with_qr
 
         current_aggregation = aggregation_node.update_states(
@@ -131,6 +154,20 @@ class FedPCA(FedAvg):
 
     @remote
     def avg_shared_states_with_qr(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
+        """Compute the weighted average of all elements returned by the train
+        methods of the user-defined algorithm and factorize the obtained matrix
+        with a qr decomposition, where q is orthonormal and r is upper-triangular.
+
+        Args:
+            shared_states (typing.List[FedAvgSharedState]): The list of the
+                shared_state returned by the train method of the algorithm for each organization.
+
+        Raises:
+            EmptySharedStatesError: The train method of your algorithm must return a shared_state
+
+        Returns:
+            FedAvgAveragedState: returned the q matrix as a FedAvgAveragedState.
+        """
         if not shared_states:
             raise EmptySharedStatesError(
                 "Your shared_states is empty. Please ensure that "
@@ -146,8 +183,10 @@ class FedPCA(FedAvg):
         averaged_states = []
         for idx in range(parameters_update_len):
             states = [state.parameters_update[idx] * (state.n_samples / n_all_samples) for state in shared_states]
+
             averaged_state_before_qr = np.sum(states, axis=0)
-            averaged_state_after_qr, _ = linalg.qr(averaged_state_before_qr.T)
-            averaged_state_after_qr = averaged_state_after_qr.T
-            averaged_states.append(averaged_state_after_qr)
+            averaged_state_after_qr, _ = np.linalg.qr(averaged_state_before_qr.T)
+
+            averaged_states.append(averaged_state_after_qr.T)
+
         return FedAvgAveragedState(avg_parameters_update=averaged_states)
