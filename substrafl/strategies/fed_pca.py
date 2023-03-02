@@ -91,12 +91,12 @@ class FedPCA(FedAvg):
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
     ) -> None:
-        """One round of the Federated Principal Component Analisys strategy consists in:
-            - if ``round_idx==0``: initialize the strategy by performing a local update
-                (train on n mini-batches) of the models on each train data node
-            - aggregate the model shared_states
-            - set the model weights to the aggregated weights on each train data nodes
-            - perform a local update (train on n mini-batches) of the models on each train data nodes
+        """One round of the Federated Principal Component Analysis strategy consists in:
+            - if ``round_idx==0``: initialize the strategy by performing a local update and
+                a classic aggregation. This first step aims to compute the average mean
+                on all centers.
+            - the second local update will compute the covariance matrix, that will be used
+                to compute the orthogonal matrix on each round after.
 
         Args:
             algo (Algo): User defined algorithm: describes the model train and predict methods
