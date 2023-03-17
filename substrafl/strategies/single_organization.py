@@ -56,7 +56,7 @@ class SingleOrganization(Strategy):
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
-            round_idx (Optional[int], optional): index of the round. Defaults to 0.
+            round_idx (typing.Optional[int]): index of the round. Defaults to 0.
             additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
                 after training, in order to test the model on an other organization. Default to None
         """
