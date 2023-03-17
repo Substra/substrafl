@@ -43,6 +43,7 @@ class NewtonRaphson(Strategy):
     def __init__(self, algo: Algo, damping_factor: float):
         """
         Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
             damping_factor (float): Must be between 0 and 1. Multiplicative coefficient of the parameters update.
                 Smaller value for :math:`\\eta` will increase the stability but decrease the speed of convergence of
                 the gradient descent. Recommended value: ``damping_factor=0.8``.
@@ -283,17 +284,13 @@ class NewtonRaphson(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Predict function for test_data_nodes on which the model have been trained on.
+        """Perform prediction on test_data_nodes.
 
         Args:
-            test_data_nodes (List[TestDataNode]): test data nodes to intersect with train data
-                nodes to evaluate the model on.
+            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
             train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
                 on.
             round_idx (int): round index.
-
-        Raises:
-            NotImplementedError: Cannot test on a node we did not train on for now.
         """
 
         for test_data_node in test_data_nodes:

@@ -30,13 +30,15 @@ class Scaffold(Strategy):
     performed in a centralized way, where a single server or
     ``AggregationNode`` communicates with a number of clients ``TrainDataNode``
     and ``TestDataNode``.
-
-    Args:
-        aggregation_lr (float, Optional): Global aggregation rate applied on the averaged weight updates
-            (`eta_g` in the paper). Defaults to 1. Must be >=0.
     """
 
     def __init__(self, algo: Algo, aggregation_lr: float = 1):
+        """
+        Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+            aggregation_lr (float, Optional): Global aggregation rate applied on the averaged weight updates
+                (`eta_g` in the paper). Defaults to 1. Must be >=0.
+        """
         super(Scaffold, self).__init__(algo=algo)
 
         if aggregation_lr < 0:
@@ -119,6 +121,14 @@ class Scaffold(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
+        """Perform prediction on test_data_nodes.
+
+        Args:
+            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+                on.
+            round_idx (int): round index.
+        """
         for test_data_node in test_data_nodes:
             matching_train_nodes = [
                 train_data_node

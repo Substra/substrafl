@@ -124,7 +124,6 @@ def _save_experiment_summary(
         compute_plan_key (str): compute plan key
         strategy (substrafl.strategies.Strategy): strategy
         num_rounds (int): num_rounds
-        algo (substrafl.algorithms.Algo): algo
         operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
         train_data_nodes (TrainDataNode): train_data_nodes
         aggregation_node (typing.Optional[AggregationNode]): aggregation_node
@@ -244,7 +243,6 @@ def execute_experiment(
 
     Args:
         client (substra.Client): A substra client to interact with the Substra platform
-        algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         strategy (Strategy): The strategy by which your algorithm will be executed
         train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
             occurs evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.

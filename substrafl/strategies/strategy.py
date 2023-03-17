@@ -19,6 +19,13 @@ class Strategy(ABC):
     """Base strategy to be inherited from SubstraFL strategies."""
 
     def __init__(self, algo: Algo, *args, **kwargs):
+        """
+        Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+
+        Raises:
+            exceptions.IncompatibleAlgoStrategyError: Raise an error if the strategy name is not in ``algo.strategies``.
+        """
         self.args = args
         self.kwargs = kwargs
 
@@ -51,6 +58,17 @@ class Strategy(ABC):
         round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
     ):
+        """Call the initialize function of the algo on each train node.
+
+        Args:
+            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            round_idx (Optional[int], optional): index of the round. Defaults to 0.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization. Default to None
+        """
         next_local_states = []
 
         for node in train_data_nodes:
@@ -98,8 +116,8 @@ class Strategy(ABC):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Predict function of the strategy: evaluate the model.
-        Gets the model for a train organization and evaluate it on the
+        """Perform the prediction of the algo on each test nodes.
+        Gets the model for a train organization and compute the prediction on the
         test nodes.
 
         Args:

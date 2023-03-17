@@ -46,6 +46,10 @@ class FedAvg(Strategy):
     """
 
     def __init__(self, algo: Algo):
+        """
+        Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+        """
         super(FedAvg, self).__init__(algo=algo)
 
         # current local and share states references of the client
@@ -126,6 +130,14 @@ class FedAvg(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
+        """Perform prediction on test_data_nodes.
+
+        Args:
+            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+                on.
+            round_idx (int): round index.
+        """
         for test_data_node in test_data_nodes:
             matching_train_nodes = [
                 train_data_node

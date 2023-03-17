@@ -24,6 +24,10 @@ class SingleOrganization(Strategy):
     """
 
     def __init__(self, algo: Algo):
+        """
+        Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+        """
         super(SingleOrganization, self).__init__(algo=algo)
 
         # State
@@ -45,6 +49,17 @@ class SingleOrganization(Strategy):
         round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
     ):
+        """Call the initialize function of the algo on each train node.
+
+        Args:
+            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            round_idx (Optional[int], optional): index of the round. Defaults to 0.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization. Default to None
+        """
         n_train_data_nodes = len(train_data_nodes)
         if n_train_data_nodes != 1:
             raise ValueError(
@@ -119,6 +134,14 @@ class SingleOrganization(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
+        """Perform prediction on test_data_nodes.
+
+        Args:
+            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+                on.
+            round_idx (int): round index.
+        """
         if len(train_data_nodes) != 1:
             raise ValueError(
                 "Single organization strategy can only be used with one train_data_node but"
@@ -126,8 +149,6 @@ class SingleOrganization(Strategy):
             )
 
         for test_data_node in test_data_nodes:
-            if train_data_nodes[0].organization_id != test_data_node.organization_id:
-                raise NotImplementedError("Cannot test on a organization we did not train on for now.")
             # Init state for testtask
             test_data_node.update_states(
                 traintask_id=self.local_state.key,
