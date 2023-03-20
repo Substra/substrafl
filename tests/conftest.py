@@ -72,8 +72,9 @@ def docker_client():
 def prune_docker_image(request, docker_client):
     yield
     backend_type = substra.BackendType(request.config.getoption("--mode"))
+
     if backend_type == substra.BackendType.LOCAL_DOCKER:
-        docker_client.images.prune()
+        docker_client.images.prune(filters={"dangling": False})
 
 
 @pytest.fixture(scope="session")
