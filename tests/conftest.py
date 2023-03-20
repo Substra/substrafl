@@ -56,20 +56,33 @@ def set_multiprocessing_variable():
 
 
 @pytest.fixture(scope="session")
+def docker_client():
+    try:
+        docker_client = docker.from_env()
+        return docker_client
+    except docker.errors.DockerException as e:
+        raise ConnectionError(
+            "Couldn't get the Docker client from environment variables. "
+            "Is your Docker server running ?\n"
+            "Docker error : {0}".format(e)
+        )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prune_docker_image(request, docker_client):
+    yield
+    backend_type = substra.BackendType(request.config.getoption("--mode"))
+    if backend_type == substra.BackendType.LOCAL_DOCKER:
+        docker_client.images.prune()
+
+
+@pytest.fixture(scope="session")
 def session_dir():
     temp_dir = Path.cwd() / "local-assets-cl"
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     yield temp_dir
     shutil.rmtree(temp_dir)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def prune_docker_image(request):
-    yield
-    backend_type = substra.BackendType(request.config.getoption("--mode"))
-    if backend_type == substra.BackendType.LOCAL_DOCKER:
-        docker.images.prune()
 
 
 @pytest.fixture(scope="session")
