@@ -11,6 +11,7 @@ import substra
 import torch
 from substra.sdk.schemas import Permissions
 
+import docker
 from substrafl.algorithms.algo import Algo
 from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
@@ -61,6 +62,14 @@ def session_dir():
 
     yield temp_dir
     shutil.rmtree(temp_dir)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prune_docker_image(request):
+    yield
+    backend_type = substra.BackendType(request.config.getoption("--mode"))
+    if backend_type == substra.BackendType.LOCAL_DOCKER:
+        docker.images.prune()
 
 
 @pytest.fixture(scope="session")

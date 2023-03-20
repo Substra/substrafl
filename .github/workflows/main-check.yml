@@ -32,7 +32,6 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          docker image prune
 
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v3

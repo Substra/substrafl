@@ -58,6 +58,7 @@ setup(
             "types-PyYAML>=6.0.0",
             "torch>=1.9.1,!=1.12.0",  # bug in 1.12.0 (https://github.com/pytorch/pytorch/pull/80345)
             "nbmake>=1.1",
+            "docker",
         ],
     },
     python_requires=">=3.8",
