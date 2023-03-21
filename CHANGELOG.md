@@ -81,7 +81,7 @@ flowchart LR
 ### Fixed
 
 - BREAKING: Given local code dependencies are now copied to the level of the running script systematically ([#99](https://github.com/Substra/substrafl/pull/99/files))
-- Docker image are pruned in main check of Github Action to free disk space while test run ([#102](https://github.com/Substra/substrafl/pull/102))
+- Docker images are pruned in main check of Github Action to free disk space while test run ([#102](https://github.com/Substra/substrafl/pull/102))
 
 ## [0.34.0](https://github.com/Substra/substrafl/releases/tag/0.34.0) - 2023-02-20
 
