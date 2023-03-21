@@ -11,6 +11,7 @@ import substra
 import torch
 from substra.sdk.schemas import Permissions
 
+import docker
 from substrafl.algorithms.algo import Algo
 from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
@@ -37,6 +38,11 @@ def pytest_addoption(parser):
         help="Choose the mode on which to run the tests",
     )
     parser.addoption(
+        "--prune-docker",
+        action="store_true",
+        help="Prune ALL docker images if set. Will be considered only if mode set to docker",
+    )
+    parser.addoption(
         "--ci",
         action="store_true",
         help="Run the tests on the backend deployed by substra-test nightly (remote mode). "
@@ -52,6 +58,30 @@ def set_multiprocessing_variable():
         multiprocessing.set_start_method("spawn")
     else:
         multiprocessing.set_start_method("fork")
+
+
+@pytest.fixture(scope="session")
+def docker_client():
+    try:
+        docker_client = docker.from_env()
+        return docker_client
+    except docker.errors.DockerException as e:
+        raise ConnectionError(
+            "Couldn't get the Docker client from environment variables. "
+            "Is your Docker server running ?\n"
+            "Docker error : {0}".format(e)
+        )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def prune_docker_image(request, docker_client):
+    yield
+    backend_type = substra.BackendType(request.config.getoption("--mode"))
+    prune_docker = request.config.getoption("--prune-docker")
+
+    if backend_type == substra.BackendType.LOCAL_DOCKER and prune_docker:
+        docker_client.containers.prune()
+        docker_client.images.prune(filters={"dangling": False})
 
 
 @pytest.fixture(scope="session")

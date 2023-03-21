@@ -29,7 +29,7 @@ test-subprocess: pyclean
 # Run the slow tests in subprocess mode (those not marked docker only)
 # then run all the substra tests in local docker mode
 test-local-slow: pyclean test-subprocess-slow
-	pytest tests ${COV_OPTIONS} --mode=docker -m "slow and not gpu"
+	pytest tests ${COV_OPTIONS} ${PRUNE_OPTIONS} --mode=docker -m "slow and not gpu"
 
 test-ci: pyclean
 	USE_LATEST_SUBSTRATOOLS=True pytest tests --ci -m "e2e and not gpu"
