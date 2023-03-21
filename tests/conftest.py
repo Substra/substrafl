@@ -38,6 +38,11 @@ def pytest_addoption(parser):
         help="Choose the mode on which to run the tests",
     )
     parser.addoption(
+        "--prune-docker",
+        action="store_true",
+        help="Prune ALL docker images if set. Will be considered only if mode set to docker",
+    )
+    parser.addoption(
         "--ci",
         action="store_true",
         help="Run the tests on the backend deployed by substra-test nightly (remote mode). "
@@ -72,8 +77,9 @@ def docker_client():
 def prune_docker_image(request, docker_client):
     yield
     backend_type = substra.BackendType(request.config.getoption("--mode"))
+    prune_docker = request.config.getoption("--prune-docker")
 
-    if backend_type == substra.BackendType.LOCAL_DOCKER:
+    if backend_type == substra.BackendType.LOCAL_DOCKER and prune_docker:
         docker_client.containers.prune()
         docker_client.images.prune(filters={"dangling": False})
 

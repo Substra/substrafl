@@ -63,7 +63,7 @@ jobs:
           USE_LATEST_SUBSTRATOOLS: True
         run: |
           cd substrafl
-          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" test-local-slow
+          make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" PRUNE_OPTIONS="--prune-docker" test-local-slow
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
