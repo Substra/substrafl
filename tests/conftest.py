@@ -75,7 +75,7 @@ def prune_docker_image(request, docker_client):
 
     if backend_type == substra.BackendType.LOCAL_DOCKER:
         docker_client.containers.prune()
-        docker_client.images.prune(filters={"dangling": False, "until": "10m"})
+        docker_client.images.prune(filters={"dangling": False})
 
 
 @pytest.fixture(scope="session")
