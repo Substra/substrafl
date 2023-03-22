@@ -27,7 +27,7 @@ def assert_array_list_allclose(array_list_1, array_list_2):
         ([1, 0, 1], [1.5 * np.ones((2, 3)), 1.5 * np.ones((1, 2))]),
     ],
 )
-def test_avg_shared_states_n_samples(n_samples, results):
+def test_avg_shared_states_n_samples(dummy_algo_class, n_samples, results):
     # Check that avg_shared_states sends the average of weight_updates and control_variate_updates
     weights = [
         [np.ones((2, 3)), np.ones((1, 2))],
@@ -44,7 +44,7 @@ def test_avg_shared_states_n_samples(n_samples, results):
         )
         for weight, n_sample in zip(weights, n_samples)
     ]
-    my_scaffold = Scaffold(aggregation_lr=1)
+    my_scaffold = Scaffold(algo=dummy_algo_class(), aggregation_lr=1)
     averaged_states: ScaffoldAveragedStates = my_scaffold.avg_shared_states(shared_states, _skip=True)
 
     assert_array_list_allclose(array_list_1=results, array_list_2=averaged_states.avg_parameters_update)
@@ -65,16 +65,16 @@ def test_avg_shared_states_n_samples(n_samples, results):
         ),
     ],
 )
-def test_avg_shared_states_type_error(shared_states):
+def test_avg_shared_states_type_error(dummy_algo_class, shared_states):
     # check if an empty list or something else than a List is not passed into avg_shared_states() error will be raised
-    my_scaffold = Scaffold()
+    my_scaffold = Scaffold(algo=dummy_algo_class())
     with pytest.raises(AssertionError):
         my_scaffold.avg_shared_states(shared_states, _skip=True)
 
 
-def test_scaffold_aggregation_lr_negative():
+def test_scaffold_aggregation_lr_negative(dummy_algo_class):
     with pytest.raises(ValueError):
-        Scaffold(aggregation_lr=-1)
+        Scaffold(algo=dummy_algo_class(), aggregation_lr=-1)
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ def test_scaffold_aggregation_lr_negative():
         ([np.zeros(5)], [np.zeros(5)], [np.zeros(5), np.zeros(5)]),
     ],
 )
-def test_check_len_states_same(parameters_update, control_variate_update, server_control_variate):
+def test_check_len_states_same(dummy_algo_class, parameters_update, control_variate_update, server_control_variate):
     """Check that for a given client parameters_update, control_variate_update and server_control_variate have the same
     length."""
     shared_states = [
@@ -96,7 +96,7 @@ def test_check_len_states_same(parameters_update, control_variate_update, server
             server_control_variate=server_control_variate,
         ),
     ]
-    strategy = Scaffold(aggregation_lr=0)
+    strategy = Scaffold(algo=dummy_algo_class(), aggregation_lr=0)
     with pytest.raises(AssertionError):
         strategy.avg_shared_states(shared_states=shared_states, _skip=True)
 
@@ -121,7 +121,9 @@ def test_check_len_states_same(parameters_update, control_variate_update, server
         ),
     ],
 )
-def test_check_same_len_between_clients(parameters_update, control_variate_update, server_control_variate):
+def test_check_same_len_between_clients(
+    dummy_algo_class, parameters_update, control_variate_update, server_control_variate
+):
     """ "Check that between all clients the parameters update have the same length, the control variate update
     have the same length and the server control variate have the same length
     """
@@ -139,7 +141,7 @@ def test_check_same_len_between_clients(parameters_update, control_variate_updat
             server_control_variate=server_control_variate[1],
         ),
     ]
-    strategy = Scaffold(aggregation_lr=0)
+    strategy = Scaffold(algo=dummy_algo_class(), aggregation_lr=0)
     with pytest.raises(AssertionError):
         strategy.avg_shared_states(shared_states=shared_states, _skip=True)
 
@@ -152,8 +154,8 @@ def test_check_same_len_between_clients(parameters_update, control_variate_updat
         (2, [1.5 * np.ones(5), 3.5 * np.ones(5)]),
     ],
 )
-def test_scaffold_avg_shared_states_aggregation_lr(aggregation_lr, expected_result):
-    strategy = Scaffold(aggregation_lr=aggregation_lr)
+def test_scaffold_avg_shared_states_aggregation_lr(dummy_algo_class, aggregation_lr, expected_result):
+    strategy = Scaffold(algo=dummy_algo_class(), aggregation_lr=aggregation_lr)
     shared_states = [
         ScaffoldSharedState(
             parameters_update=[0 * np.ones(5), np.ones(5)],
@@ -182,8 +184,8 @@ def test_scaffold_avg_shared_states_aggregation_lr(aggregation_lr, expected_resu
         ([np.ones(5), 2 * np.ones(5)], [2 * np.ones(5), 3 * np.ones(5)]),
     ],
 )
-def test_scaffold_avg_shared_states_server_control_variate(server_control_variate, expected_result):
-    strategy = Scaffold(aggregation_lr=1)
+def test_scaffold_avg_shared_states_server_control_variate(dummy_algo_class, server_control_variate, expected_result):
+    strategy = Scaffold(algo=dummy_algo_class(), aggregation_lr=1)
     shared_states = [
         ScaffoldSharedState(
             parameters_update=[np.ones(5)] * len(server_control_variate),
@@ -206,10 +208,9 @@ def test_scaffold_train_tasks_output_permissions(dummy_algo_class, additional_or
     ]
 
     aggregation_node = AggregationNode("DummyNode0")
-    strategy = Scaffold()
+    strategy = Scaffold(algo=dummy_algo_class())
 
     strategy.perform_round(
-        algo=dummy_algo_class(),
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
         round_idx=1,

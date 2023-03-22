@@ -4,7 +4,9 @@ from typing import List
 from typing import Optional
 from typing import TypeVar
 
+from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
+from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
@@ -14,11 +16,30 @@ SharedState = TypeVar("SharedState")
 
 
 class Strategy(ABC):
-    """Base strategy to be inherited from substrafl strategies."""
+    """Base strategy to be inherited from SubstraFL strategies."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, algo: Algo, *args, **kwargs):
+        """
+        Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+
+        Raises:
+            exceptions.IncompatibleAlgoStrategyError: Raise an error if the strategy name is not in ``algo.strategies``.
+        """
         self.args = args
         self.kwargs = kwargs
+
+        self.kwargs.update({"algo": algo})
+
+        self.algo = algo
+
+        if self.name not in algo.strategies:
+            raise exceptions.IncompatibleAlgoStrategyError(
+                f"The algo {self.algo.__class__.__name__} is not compatible with the strategy "
+                f"{self.__class__.__name__}, "
+                f"named {self.name}. Check the algo strategies property: algo.strategies to see the list of compatible "
+                "strategies."
+            )
 
     @property
     @abstractmethod
@@ -32,20 +53,30 @@ class Strategy(ABC):
 
     def initialization_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         clean_models: bool,
         round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
     ):
+        """Call the initialize function of the algo on each train node.
+
+        Args:
+            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            round_idx (typing.Optional[int]): index of the round. Defaults to 0.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization. Default to None
+        """
         next_local_states = []
 
         for node in train_data_nodes:
             # define composite tasks (do not submit yet)
             # for each composite task give description of Algo instead of a key for an algo
             next_local_state = node.init_states(
-                algo.initialize(  # type: ignore
-                    _algo_name=f"Initializing with {algo.__class__.__name__}",
+                self.algo.initialize(
+                    _algo_name=f"Initializing with {self.algo.__class__.__name__}",
                 ),
                 round_idx=round_idx,
                 authorized_ids=set([node.organization_id]) | additional_orgs_permissions,
@@ -57,7 +88,6 @@ class Strategy(ABC):
     @abstractmethod
     def perform_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: Optional[AggregationNode],
         round_idx: int,
@@ -67,7 +97,6 @@ class Strategy(ABC):
         """Perform one round of the strategy
 
         Args:
-            algo (Algo): algo with the code to execute on the organization
             train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
             aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
                 centralized strategy, unused otherwise
@@ -81,22 +110,74 @@ class Strategy(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def predict(
+    def perform_predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Predict function of the strategy: evaluate the model.
-        Gets the model for a train organization and evaluate it on the
+        """Perform the prediction of the algo on each test nodes.
+        Gets the model for a train organization and compute the prediction on the
         test nodes.
 
         Args:
-            algo (Algo): algo with the code to execute on the organization
             test_data_nodes (typing.List[TestDataNode]): list of nodes on which to evaluate
             train_data_nodes (typing.List[TrainDataNode]): list of nodes on which the model has
                 been trained
             round_idx (int): index of the round
         """
         raise NotImplementedError
+
+    def build_graph(
+        self,
+        train_data_nodes: List[TrainDataNode],
+        aggregation_node: Optional[List[AggregationNode]],
+        evaluation_strategy: Optional[EvaluationStrategy],
+        num_rounds: int,
+        clean_models: Optional[bool],
+    ):
+        """Build the computation graph of the strategy.
+        The built graph will be stored by side effect in the given train_data_nodes,
+        aggregation_nodes and evaluation_strategy.
+        This function create a graph be first calling the initialization_round method of the strategy
+        at round 0, and then call the perform_round method for each new round.
+        If the current round is part of the evaluation strategy, the perform_predict method is
+        called to complete the graph.
+
+        Args:
+            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
+                centralized strategy, unused otherwise
+            evaluation_strategy (Optional[EvaluationStrategy]): _description_
+            num_rounds (int): _description_
+            clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
+                if you want to download or re-use intermediary models. This causes the disk space to fill
+                quickly so should be set to True unless needed. Defaults to True.
+        """
+        additional_orgs_permissions = (
+            evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
+        )
+
+        # create computation graph.
+        for round_idx in range(0, num_rounds + 1):
+            if round_idx == 0:
+                self.initialization_round(
+                    train_data_nodes=train_data_nodes,
+                    additional_orgs_permissions=additional_orgs_permissions,
+                    clean_models=clean_models,
+                )
+            else:
+                self.perform_round(
+                    train_data_nodes=train_data_nodes,
+                    aggregation_node=aggregation_node,
+                    additional_orgs_permissions=additional_orgs_permissions,
+                    round_idx=round_idx,
+                    clean_models=clean_models,
+                )
+
+            if evaluation_strategy is not None and next(evaluation_strategy):
+                self.perform_predict(
+                    train_data_nodes=train_data_nodes,
+                    test_data_nodes=evaluation_strategy.test_data_nodes,
+                    round_idx=round_idx,
+                )

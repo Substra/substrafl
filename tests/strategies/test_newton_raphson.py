@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from substrafl.exceptions import DampingFactorValueError
+from substrafl import exceptions
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.test_data_node import TestDataNode
@@ -31,14 +31,16 @@ from substrafl.strategies import NewtonRaphson
         ),
     ],
 )
-def test_compute_averaged_states(damping_factor, list_gradients, list_hessian, list_n_sample, parameters_update):
+def test_compute_averaged_states(
+    dummy_algo_class, damping_factor, list_gradients, list_hessian, list_n_sample, parameters_update
+):
     """Test that compute_averaged_states is doing the correct calculations
     Equation used:
     H = weighted_average of hessians
     G = weighted_average of gradients
     parameters_update = -damping_factor * H^{-1}.G
     """
-    strategy = NewtonRaphson(damping_factor=damping_factor)
+    strategy = NewtonRaphson(algo=dummy_algo_class(), damping_factor=damping_factor)
     shared_states = []
     # create share state from each gradients, hessian and n_sample for each client
     for gradients, hessian, n_sample in zip(list_gradients, list_hessian, list_n_sample):
@@ -63,13 +65,13 @@ def test_compute_averaged_states(damping_factor, list_gradients, list_hessian, l
         (2, True),
     ],
 )
-def test_eta_value(damping_factor, wrong_eta_value):
+def test_eta_value(dummy_algo_class, damping_factor, wrong_eta_value):
     """Test that the EtaValueError is raised if not 0 < damping_factor <= 1"""
     if wrong_eta_value:
-        with pytest.raises(DampingFactorValueError):
-            NewtonRaphson(damping_factor=damping_factor)
+        with pytest.raises(exceptions.DampingFactorValueError):
+            NewtonRaphson(algo=dummy_algo_class(), damping_factor=damping_factor)
     else:
-        NewtonRaphson(damping_factor=damping_factor)
+        NewtonRaphson(algo=dummy_algo_class(), damping_factor=damping_factor)
 
 
 def test_newton_raphson_perform_round(dummy_algo_class):
@@ -102,10 +104,9 @@ def test_newton_raphson_perform_round(dummy_algo_class):
 
     aggregation_node = AggregationNode("DummyNode0")
     my_algo0 = MyAlgo()
-    strategy = NewtonRaphson(damping_factor=1)
+    strategy = NewtonRaphson(algo=my_algo0, damping_factor=1)
 
     strategy.perform_round(
-        algo=my_algo0,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
         round_idx=1,
@@ -139,15 +140,14 @@ def test_newton_raphson_predict(dummy_algo_class):
         ),
     ]
 
-    strategy = NewtonRaphson(damping_factor=1)
+    strategy = NewtonRaphson(algo=dummy_algo_class(), damping_factor=1)
 
     strategy._local_states = [
         LocalStateRef(key="dummy_key"),
         LocalStateRef(key="dummy_key"),
     ]
 
-    strategy.predict(
-        algo=dummy_algo_class(),
+    strategy.perform_predict(
         test_data_nodes=test_data_nodes,
         train_data_nodes=train_data_nodes,
         round_idx=0,
@@ -167,10 +167,9 @@ def test_newton_raphson_train_tasks_output_permissions(dummy_algo_class, additio
     ]
 
     aggregation_node = AggregationNode("DummyNode0")
-    strategy = NewtonRaphson(damping_factor=1)
+    strategy = NewtonRaphson(algo=dummy_algo_class(), damping_factor=1)
 
     strategy.perform_round(
-        algo=dummy_algo_class(),
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
         round_idx=1,

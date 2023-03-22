@@ -15,8 +15,6 @@ import substra
 import substratools
 
 import substrafl
-from substrafl import exceptions
-from substrafl.algorithms.algo import Algo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
@@ -99,7 +97,7 @@ def _register_operations(
             client,
             permissions,
             cache=operation_cache,
-            dependencies=Dependency(editable_mode=dependencies.editable_mode),
+            dependencies=dependencies,
         )
 
         tasks += aggregation_node.tasks
@@ -112,7 +110,6 @@ def _save_experiment_summary(
     compute_plan_key: str,
     strategy: Strategy,
     num_rounds: int,
-    algo: Algo,
     operation_cache: Dict[RemoteStruct, OperationKey],
     train_data_nodes: TrainDataNode,
     aggregation_node: Optional[AggregationNode],
@@ -127,7 +124,6 @@ def _save_experiment_summary(
         compute_plan_key (str): compute plan key
         strategy (substrafl.strategies.Strategy): strategy
         num_rounds (int): num_rounds
-        algo (substrafl.algorithms.Algo): algo
         operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
         train_data_nodes (TrainDataNode): train_data_nodes
         aggregation_node (typing.Optional[AggregationNode]): aggregation_node
@@ -144,7 +140,6 @@ def _save_experiment_summary(
     experiment_summary["compute_plan_key"] = compute_plan_key
     experiment_summary["strategy"] = type(strategy).__name__
     experiment_summary["num_rounds"] = num_rounds
-    experiment_summary["algo"] = algo.summary()
     experiment_summary["function_keys"] = {
         operation_cache[remote_struct]: remote_struct.summary() for remote_struct in operation_cache
     }
@@ -214,7 +209,6 @@ def _get_packages_versions() -> dict:
 
 def execute_experiment(
     client: substra.Client,
-    algo: Algo,
     strategy: Strategy,
     train_data_nodes: List[TrainDataNode],
     num_rounds: int,
@@ -249,7 +243,6 @@ def execute_experiment(
 
     Args:
         client (substra.Client): A substra client to interact with the Substra platform
-        algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         strategy (Strategy): The strategy by which your algorithm will be executed
         train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
             occurs evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
@@ -275,13 +268,6 @@ def execute_experiment(
     """
     if dependencies is None:
         dependencies = Dependency()
-
-    if strategy.name not in algo.strategies:
-        raise exceptions.IncompatibleAlgoStrategyError(
-            f"The algo {algo.__class__.__name__} is not compatible with the strategy {strategy.__class__.__name__},"
-            f"named {strategy.name}. Check the algo strategies property: algo.strategies to see the list of compatible"
-            "strategies."
-        )
 
     train_data_nodes = copy.deepcopy(train_data_nodes)
     aggregation_node = copy.deepcopy(aggregation_node)
@@ -311,36 +297,13 @@ def execute_experiment(
 
     logger.info("Building the compute plan.")
 
-    additional_orgs_permissions = (
-        evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
+    strategy.build_graph(
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        evaluation_strategy=evaluation_strategy,
+        num_rounds=num_rounds,
+        clean_models=clean_models,
     )
-
-    # create computation graph.
-    for round_idx in range(0, num_rounds + 1):
-        if round_idx == 0:
-            strategy.initialization_round(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                additional_orgs_permissions=additional_orgs_permissions,
-                clean_models=clean_models,
-            )
-        else:
-            strategy.perform_round(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                aggregation_node=aggregation_node,
-                additional_orgs_permissions=additional_orgs_permissions,
-                round_idx=round_idx,
-                clean_models=clean_models,
-            )
-
-        if evaluation_strategy is not None and next(evaluation_strategy):
-            strategy.predict(
-                algo=algo,
-                train_data_nodes=train_data_nodes,
-                test_data_nodes=evaluation_strategy.test_data_nodes,
-                round_idx=round_idx,
-            )
 
     # Computation graph is created
     logger.info("Registering the algorithm to Substra.")
@@ -365,7 +328,6 @@ def execute_experiment(
         compute_plan_key=compute_plan_key,
         strategy=strategy,
         num_rounds=num_rounds,
-        algo=algo,
         operation_cache=operation_cache,
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,

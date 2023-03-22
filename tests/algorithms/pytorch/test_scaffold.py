@@ -80,14 +80,13 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
         editable_mode=True,
     )
 
-    strategy = Scaffold()
+    strategy = Scaffold(algo=torch_algo())
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes, eval_rounds=[0, NUM_ROUNDS]
     )  # test the initialization and the last round
 
     compute_plan = execute_experiment(
         client=network.clients[0],
-        algo=torch_algo(),
         strategy=strategy,
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=my_eval_strategy,

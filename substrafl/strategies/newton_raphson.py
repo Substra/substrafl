@@ -40,14 +40,15 @@ class NewtonRaphson(Strategy):
     the gradients of the loss with respect to :math:`\\theta`  and :math:`0 < \\eta <= 1` is the damping factor.
     """
 
-    def __init__(self, damping_factor: float):
+    def __init__(self, algo: Algo, damping_factor: float):
         """
         Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
             damping_factor (float): Must be between 0 and 1. Multiplicative coefficient of the parameters update.
                 Smaller value for :math:`\\eta` will increase the stability but decrease the speed of convergence of
                 the gradient descent. Recommended value: ``damping_factor=0.8``.
         """
-        super(NewtonRaphson, self).__init__(damping_factor=damping_factor)
+        super(NewtonRaphson, self).__init__(algo=algo, damping_factor=damping_factor)
 
         # States
         self._local_states: Optional[List[LocalStateRef]] = None
@@ -69,7 +70,6 @@ class NewtonRaphson(Strategy):
 
     def perform_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         round_idx: int,
@@ -85,7 +85,6 @@ class NewtonRaphson(Strategy):
             - perform a local update of the models on each train data nodes
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict methods
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform
                 local updates
             aggregation_node (AggregationNode): node without data, used to perform operations
@@ -106,7 +105,6 @@ class NewtonRaphson(Strategy):
             assert self._shared_states is None
 
             self._perform_local_updates(
-                algo=algo,
                 train_data_nodes=train_data_nodes,
                 current_aggregation=None,
                 round_idx=0,
@@ -119,14 +117,13 @@ class NewtonRaphson(Strategy):
             self.compute_averaged_states(
                 shared_states=self._shared_states,
                 _algo_name="Aggregating",
-            ),  # type: ignore
+            ),
             round_idx=round_idx,
             authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
             clean_models=clean_models,
         )
 
         self._perform_local_updates(
-            algo=algo,
             train_data_nodes=train_data_nodes,
             current_aggregation=current_aggregation,
             round_idx=round_idx,
@@ -233,7 +230,6 @@ class NewtonRaphson(Strategy):
 
     def _perform_local_updates(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
@@ -244,7 +240,6 @@ class NewtonRaphson(Strategy):
         """Perform a local update of the model on each train data nodes.
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict methods
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to
                 perform local updates
             current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to
@@ -265,10 +260,10 @@ class NewtonRaphson(Strategy):
             # define composite tasks (do not submit yet)
             # for each composite task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
-                algo.train(  # type: ignore
+                self.algo.train(
                     node.data_sample_keys,
                     shared_state=current_aggregation,
-                    _algo_name=f"Training with {algo.__class__.__name__}",
+                    _algo_name=f"Training with {self.algo.__class__.__name__}",
                 ),
                 local_state=self._local_states[i] if self._local_states is not None else None,
                 round_idx=round_idx,
@@ -283,25 +278,19 @@ class NewtonRaphson(Strategy):
         self._local_states = next_local_states
         self._shared_states = next_shared_states
 
-    def predict(
+    def perform_predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Predict function for test_data_nodes on which the model have been trained on.
+        """Perform prediction on test_data_nodes.
 
         Args:
-            algo (Algo): algo to use for computing the predictions.
-            test_data_nodes (List[TestDataNode]): test data nodes to intersect with train data
-                nodes to evaluate the model on.
+            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
             train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
                 on.
             round_idx (int): round index.
-
-        Raises:
-            NotImplementedError: Cannot test on a node we did not train on for now.
         """
 
         for test_data_node in test_data_nodes:
@@ -319,9 +308,9 @@ class NewtonRaphson(Strategy):
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(
-                operation=algo.predict(
+                operation=self.algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    _algo_name=f"Testing with {algo.__class__.__name__}",
+                    _algo_name=f"Testing with {self.algo.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,
                 round_idx=round_idx,

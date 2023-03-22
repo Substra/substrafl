@@ -37,8 +37,6 @@ def compute_plan(
     N_UPDATES = 1
     N_ROUND = 2
 
-    strategy = SingleOrganization()
-
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
     optimizer = torch.optim.SGD(perceptron.parameters(), lr=0.1)
@@ -47,7 +45,7 @@ def compute_plan(
         num_updates=N_UPDATES,
     )
 
-    class MyOneOrganizationAlgo(TorchSingleOrganizationAlgo):
+    class MySingleOrganizationAlgo(TorchSingleOrganizationAlgo):
         def __init__(
             self,
         ):
@@ -59,12 +57,14 @@ def compute_plan(
                 dataset=numpy_torch_dataset,
             )
 
-    my_algo = MyOneOrganizationAlgo()
+    my_algo = MySingleOrganizationAlgo()
+
+    strategy = SingleOrganization(algo=my_algo)
+
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes[:1], eval_rounds=[0, N_ROUND])
 
     compute_plan = execute_experiment(
         client=network.clients[0],
-        algo=my_algo,
         strategy=strategy,
         train_data_nodes=train_linear_nodes[:1],
         evaluation_strategy=my_eval_strategy,

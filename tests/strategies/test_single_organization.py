@@ -10,10 +10,9 @@ def test_single_organization_train_tasks_output_permissions(dummy_algo_class, ad
 
     train_data_node = TrainDataNode("DummyNode0", "dummy_key", ["dummy_key"])
 
-    strategy = SingleOrganization()
+    strategy = SingleOrganization(algo=dummy_algo_class())
 
     strategy.perform_round(
-        algo=dummy_algo_class(),
         train_data_nodes=[train_data_node],
         round_idx=1,
         clean_models=False,

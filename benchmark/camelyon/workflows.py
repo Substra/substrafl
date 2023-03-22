@@ -94,7 +94,7 @@ def substrafl_fed_avg(
     )
 
     # Custom Strategy used for the data loading (from custom_torch_function.py file)
-    strategy = FedAvg()
+    strategy = FedAvg(algo=my_algo)
 
     # Evaluation strategy
     evaluation = EvaluationStrategy(test_data_nodes=test_data_nodes, eval_rounds=[n_rounds])
@@ -102,7 +102,6 @@ def substrafl_fed_avg(
     # Launch experiment
     compute_plan = execute_experiment(
         client=clients[1],
-        algo=my_algo,
         strategy=strategy,
         train_data_nodes=train_data_nodes,
         evaluation_strategy=evaluation,
