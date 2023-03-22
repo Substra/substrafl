@@ -73,8 +73,8 @@ flowchart LR
 
 ### Changed
 
-- BREAKING: `algo` are now passed as parameters to the `strategy` and not to `execute_experiement` ([#98](https://github.com/Substra/substrafl/pull/98))
-- BREAKING `Strategies` needs to implement a new method `build_graph` to build the graph of tasks to be execute in `execute_experiment` ([#98](https://github.com/Substra/substrafl/pull/98))
+- BREAKING: `algo` are now passed as parameter to the `strategy` and not to `execute_experiement` anymore ([#98](https://github.com/Substra/substrafl/pull/98))
+- BREAKING A `strategy` need to implement a new method `build_graph` to build the graph of tasks to be execute in `execute_experiment` ([#98](https://github.com/Substra/substrafl/pull/98))
 - BREAKING: `predict` method of `strategy` has been renamed to `perform_predict` ([#98](https://github.com/Substra/substrafl/pull/98))
 - Test tasks don't take a `shared` as input anymore ([#89](https://github.com/Substra/substrafl/pull/89))
 - BREAKING: change `eval_frequency` default value to None to avoid confusion with hidden default value (#91)
