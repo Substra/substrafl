@@ -117,7 +117,7 @@ class NewtonRaphson(Strategy):
             self.compute_averaged_states(
                 shared_states=self._shared_states,
                 _algo_name="Aggregating",
-            ),  # type: ignore
+            ),
             round_idx=round_idx,
             authorized_ids=set([train_data_node.organization_id for train_data_node in train_data_nodes]),
             clean_models=clean_models,
@@ -260,7 +260,7 @@ class NewtonRaphson(Strategy):
             # define composite tasks (do not submit yet)
             # for each composite task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
-                self.algo.train(  # type: ignore
+                self.algo.train(
                     node.data_sample_keys,
                     shared_state=current_aggregation,
                     _algo_name=f"Training with {self.algo.__class__.__name__}",
