@@ -20,6 +20,17 @@ class Strategy(ABC):
 
     def __init__(self, algo: Algo, *args, **kwargs):
         """
+        All arguments of a child of this class need to be passed to it through its ``args`` and ``kwargs``
+        in order to use them when instantiating it as a RemoteStruct in each process.
+
+        Example:
+
+            .. code-block:: python
+
+                class MyStrat(Strategy):
+                    def __init__(self, algo, my_custom_arg):
+                        super.__init__(algo=algo, my_custom_arg=my_custom_arg)
+
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
 
