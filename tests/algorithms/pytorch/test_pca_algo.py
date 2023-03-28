@@ -57,7 +57,7 @@ def compute_plan(
         editable_mode=True,
     )
 
-    strategy = FedPCA()
+    strategy = FedPCA(algo=torch_pca_algo())
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes_pca,
         eval_rounds=[NUM_ROUNDS],
@@ -65,7 +65,6 @@ def compute_plan(
 
     compute_plan = execute_experiment(
         client=network.clients[0],
-        algo=torch_pca_algo(),
         strategy=strategy,
         train_data_nodes=train_linear_nodes_pca,
         evaluation_strategy=my_eval_strategy,
@@ -210,9 +209,13 @@ def test_cp_performance(network, compute_plan, session_dir, train_linear_data_sa
     cov = np.cov(data.T)
     _, eig = np.linalg.eig(cov)
     numpy_pca_eigen_values = eig.T[:2]
-    # The number of rank is an init task, a first local update, and then aggregation and train times num rounds
-    final_rank = 1 + 1 + 2 * NUM_ROUNDS
-    fed_pca_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=final_rank)
+    # The number of rank is a first local update, and then aggregation and train times num rounds
+    final_aggregated_rank = (
+        1 + 2 * NUM_ROUNDS - 1
+    )  # We want the last aggregated task, one rank before the final train one
+    fed_pca_model = utils.download_aggregate_model_by_rank(
+        network, session_dir, compute_plan, rank=final_aggregated_rank
+    )
 
     fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
     numpy_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in numpy_pca_eigen_values])

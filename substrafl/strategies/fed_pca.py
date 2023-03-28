@@ -7,6 +7,7 @@ import numpy as np
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
 from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
@@ -59,7 +60,15 @@ class FedPCA(Strategy):
     """
 
     def __init__(self, algo: Algo):
+        """
+        Args:
+            algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+        """
         super().__init__(algo=algo)
+
+        # current local and share states references of the client
+        self._local_states: Optional[List[LocalStateRef]] = None
+        self._shared_states: Optional[List[SharedStateRef]] = None
 
     @property
     def name(self) -> StrategyName:
@@ -76,11 +85,41 @@ class FedPCA(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ) -> None:
+        """Perform prediction on test_data_nodes. Perform prediction before round 2 is not take into account
+        as all objects to compute prediction are not initialize before the second round.
+
+        Args:
+            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+                on.
+            round_idx (int): round index.
+        """
         if round_idx <= 2:
             logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
             return
 
-        return super().perform_predict(self.algo, test_data_nodes, train_data_nodes, round_idx)
+        for test_data_node in test_data_nodes:
+            matching_train_nodes = [
+                train_data_node
+                for train_data_node in train_data_nodes
+                if train_data_node.organization_id == test_data_node.organization_id
+            ]
+            if len(matching_train_nodes) == 0:
+                node_index = 0
+            else:
+                node_index = train_data_nodes.index(matching_train_nodes[0])
+
+            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            local_state = self._local_states[node_index]
+
+            test_data_node.update_states(
+                traintask_id=local_state.key,
+                operation=self.algo.predict(
+                    data_samples=test_data_node.test_data_sample_keys,
+                    _algo_name=f"Testing with {self.algo.__class__.__name__}",
+                ),
+                round_idx=round_idx,
+            )  # Init state for testtask
 
     def perform_round(
         self,
@@ -91,7 +130,7 @@ class FedPCA(Strategy):
         additional_orgs_permissions: Optional[set] = None,
     ) -> None:
         """One round of the Federated Principal Component Analysis strategy consists in:
-            - if ``round_idx==0``: initialize the strategy by performing a local update and
+            - if ``round_idx==1``: initialize the strategy by performing a local update and
                 a classic aggregation. This first step aims to compute the average mean
                 on all centers.
             - the second local update will compute the covariance matrix, that will be used
@@ -112,9 +151,8 @@ class FedPCA(Strategy):
         if aggregation_node is None:
             raise ValueError(f"In {self.name} strategy aggregation node cannot be None")
 
-        if round_idx == 0:
+        if round_idx == 1:
             # Initialization of the strategy by performing a local update on each train data organization
-            assert self._local_states is None
             assert self._shared_states is None
             self._perform_local_updates(
                 train_data_nodes=train_data_nodes,
@@ -124,7 +162,7 @@ class FedPCA(Strategy):
                 additional_orgs_permissions=additional_orgs_permissions or set(),
                 clean_models=clean_models,
             )
-            # At round 0, we only want to send the average of the shared states.
+            # At round 1, we only want to send the average of the shared states.
             function_to_execute = self.avg_shared_states
         else:
             # For the next round, we want to send the orthogonal matrix as shared states
@@ -132,7 +170,7 @@ class FedPCA(Strategy):
             function_to_execute = self.avg_shared_states_with_qr
 
         current_aggregation = aggregation_node.update_states(
-            function_to_execute(shared_states=self._shared_states, _algo_name="Aggregating"),  # type: ignore
+            function_to_execute(shared_states=self._shared_states, _algo_name="Aggregating"),
             round_idx=round_idx,
             authorized_ids={train_data_node.organization_id for train_data_node in train_data_nodes},
             clean_models=clean_models,
