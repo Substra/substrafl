@@ -48,7 +48,7 @@ class NewtonRaphson(Strategy):
                 Smaller value for :math:`\\eta` will increase the stability but decrease the speed of convergence of
                 the gradient descent. Recommended value: ``damping_factor=0.8``.
         """
-        super(NewtonRaphson, self).__init__(algo=algo, damping_factor=damping_factor)
+        super().__init__(algo=algo, damping_factor=damping_factor)
 
         # States
         self._local_states: Optional[List[LocalStateRef]] = None

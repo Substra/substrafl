@@ -39,7 +39,7 @@ class Scaffold(Strategy):
             aggregation_lr (float, Optional): Global aggregation rate applied on the averaged weight updates
                 (`eta_g` in the paper). Defaults to 1. Must be >=0.
         """
-        super(Scaffold, self).__init__(algo=algo, aggregation_lr=aggregation_lr)
+        super().__init__(algo=algo, aggregation_lr=aggregation_lr)
 
         if aggregation_lr < 0:
             raise ValueError("aggregation_lr must be >=0")

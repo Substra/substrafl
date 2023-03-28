@@ -28,7 +28,7 @@ class SingleOrganization(Strategy):
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         """
-        super(SingleOrganization, self).__init__(algo=algo)
+        super().__init__(algo=algo)
 
         # State
         self.local_state: Optional[LocalStateRef] = None

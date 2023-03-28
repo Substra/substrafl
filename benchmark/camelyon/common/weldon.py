@@ -13,7 +13,7 @@ class Weldon(torch.nn.Module):
         n_top: int = 10,
         n_bottom: int = 10,
     ):
-        super(Weldon, self).__init__()
+        super().__init__()
 
         self.n_top = n_top
         self.n_bottom = n_bottom

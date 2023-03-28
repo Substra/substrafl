@@ -43,7 +43,7 @@ class TrainDataNode(Node):
 
         self.init_task = None
 
-        super(TrainDataNode, self).__init__(organization_id)
+        super().__init__(organization_id)
 
     def init_states(
         self,
