@@ -10,8 +10,8 @@ from substrafl import NpIndexGenerator
 from substrafl.algorithms.pytorch import weight_manager
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
 from substrafl.remote import remote_data
-from substrafl.schemas import FedAvgAveragedState
-from substrafl.schemas import FedAvgSharedState
+from substrafl.schemas import FedPCAAveragedState
+from substrafl.schemas import FedPCASharedState
 from substrafl.schemas import StrategyName
 
 
@@ -170,15 +170,15 @@ class TorchFedPCAAlgo(TorchAlgo):
     def train(
         self,
         datasamples: Any,
-        shared_state: Optional[FedAvgAveragedState] = None,  # Set to None per default for clarity reason as
+        shared_state: Optional[FedPCAAveragedState] = None,  # Set to None per default for clarity reason as
         # the decorator will do it if the arg shared_state is not passed.
-    ) -> FedAvgSharedState:
+    ) -> FedPCASharedState:
         """Train the local model for one round of the federated algorithm.
 
         Args:
             datasamples (Any): input data
-            shared_state (Optional[FedAvgAveragedState]): incoming FedAvgAveragedState
-              obtained at the previous round of the federated algorihtm (after
+            shared_state (Optional[FedPCAAveragedState]): incoming FedPCAAveragedState
+              obtained at the previous round of the federated algorithm (after
               aggregation). It contains the federatively learnt eigenvectors.
               Defaults to None.
 
@@ -192,7 +192,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             minimum when the algorithm has converged.
 
         Returns:
-            FedAvgSharedState: updated model and parameters shared for aggregation.
+            FedPCASharedState: updated model and parameters shared for aggregation.
         """
         # Create torch dataset
         train_dataset = self._dataset(datasamples, is_inference=False)
@@ -256,7 +256,7 @@ class TorchFedPCAAlgo(TorchAlgo):
                 with_batch_norm_parameters=False,
             )
 
-        return FedAvgSharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
+        return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
 
     def _get_state_to_save(self) -> dict:
         """Create the algo checkpoint: a dictionary saved with ``torch.save`` using the
