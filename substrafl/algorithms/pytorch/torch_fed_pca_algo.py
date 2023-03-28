@@ -76,7 +76,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         if seed is not None:
             self._seed = seed
         else:
-            # We need the seed to be fix so each center initiate the models
+            # We to seed each task to initialize the models
             # with the same weights.
             self._seed = 1
         torch.manual_seed(self._seed)

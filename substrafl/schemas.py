@@ -38,6 +38,22 @@ class FedAvgSharedState(_Model):
     parameters_update: List[np.ndarray]
 
 
+class FedPCAAveragedState(_Model):
+    """Shared state sent by the aggregate_organization in the federated
+    PCA strategy."""
+
+    avg_parameters_update: List[np.ndarray]
+
+
+class FedPCASharedState(_Model):
+    """Shared state returned by the train method of the algorithm for each client,
+    received by the aggregate function in the federated PCA strategy.
+    """
+
+    n_samples: int
+    parameters_update: List[np.ndarray]
+
+
 class ScaffoldSharedState(_Model):
     """Shared state returned by the train method of the algorithm for each client
     (e.g. algorithms.pytorch.scaffold.train)

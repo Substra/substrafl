@@ -7,18 +7,19 @@ import numpy as np
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
 from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
-from substrafl.schemas import FedAvgAveragedState
-from substrafl.schemas import FedAvgSharedState
+from substrafl.schemas import FedPCAAveragedState
+from substrafl.schemas import FedPCASharedState
 from substrafl.schemas import StrategyName
-from substrafl.strategies import FedAvg
+from substrafl.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
 
 
-class FedPCA(FedAvg):
+class FedPCA(Strategy):
     """Federated Principal Component Analysis strategy.
     This strategy should be used only using TorchFedPCAAlgo
 
@@ -57,8 +58,8 @@ class FedPCA(FedAvg):
     the high eign-values.
     """
 
-    def __init__(self):
-        super(FedPCA, self).__init__()
+    def __init__(self, algo: Algo):
+        super().__init__(algo=algo)
 
     @property
     def name(self) -> StrategyName:
@@ -69,9 +70,8 @@ class FedPCA(FedAvg):
         """
         return StrategyName.FEDERATED_PCA
 
-    def predict(
+    def perform_predict(
         self,
-        algo: Algo,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
@@ -80,11 +80,10 @@ class FedPCA(FedAvg):
             logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
             return
 
-        return super().predict(algo, test_data_nodes, train_data_nodes, round_idx)
+        return super().perform_predict(self.algo, test_data_nodes, train_data_nodes, round_idx)
 
     def perform_round(
         self,
-        algo: Algo,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         round_idx: int,
@@ -99,7 +98,6 @@ class FedPCA(FedAvg):
                 to compute the orthogonal matrix on each round after.
 
         Args:
-            algo (Algo): User defined algorithm: describes the model train and predict methods
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform
                 local updates.
             aggregation_node (AggregationNode): Node without data, used to perform
@@ -119,7 +117,6 @@ class FedPCA(FedAvg):
             assert self._local_states is None
             assert self._shared_states is None
             self._perform_local_updates(
-                algo=algo,
                 train_data_nodes=train_data_nodes,
                 current_aggregation=None,
                 round_idx=round_idx,
@@ -128,7 +125,6 @@ class FedPCA(FedAvg):
                 clean_models=clean_models,
             )
             # At round 0, we only want to send the average of the shared states.
-            # We use the avg_shared_states function of FedAvgAlgo
             function_to_execute = self.avg_shared_states
         else:
             # For the next round, we want to send the orthogonal matrix as shared states
@@ -143,7 +139,6 @@ class FedPCA(FedAvg):
         )
 
         self._perform_local_updates(
-            algo=algo,
             train_data_nodes=train_data_nodes,
             current_aggregation=current_aggregation,
             round_idx=round_idx,
@@ -153,25 +148,25 @@ class FedPCA(FedAvg):
         )
 
     @remote
-    def avg_shared_states_with_qr(self, shared_states: List[FedAvgSharedState]) -> FedAvgAveragedState:
+    def avg_shared_states_with_qr(self, shared_states: List[FedPCASharedState]) -> FedPCAAveragedState:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm and factorize the obtained matrix
         with a qr decomposition, where q is orthonormal and r is upper-triangular.
 
         Args:
-            shared_states (typing.List[FedAvgSharedState]): The list of the
+            shared_states (typing.List[FedPCASharedState]): The list of the
                 shared_state returned by the train method of the algorithm for each organization.
 
         Raises:
             EmptySharedStatesError: The train method of your algorithm must return a shared_state
 
         Returns:
-            FedAvgAveragedState: returned the q matrix as a FedAvgAveragedState.
+            FedPCAAveragedState: returned the q matrix as a FedPCAAveragedState.
         """
         if not shared_states:
             raise EmptySharedStatesError(
                 "Your shared_states is empty. Please ensure that "
-                "the train method of your algorithm returns a FedAvgSharedState object."
+                "the train method of your algorithm returns a FedPCASharedState object."
             )
         parameters_update_len = len(shared_states[0].parameters_update)
         assert all(
@@ -189,4 +184,109 @@ class FedPCA(FedAvg):
 
             averaged_states.append(averaged_state_after_qr.T)
 
-        return FedAvgAveragedState(avg_parameters_update=averaged_states)
+        return FedPCAAveragedState(avg_parameters_update=averaged_states)
+
+    @remote
+    def avg_shared_states(self, shared_states: List[FedPCASharedState]) -> FedPCAAveragedState:
+        """Compute the weighted average of all elements returned by the train
+        methods of the user-defined algorithm.
+        The average is weighted by the proportion of the number of samples.
+
+        Example:
+
+            .. code-block:: python
+
+                shared_states = [
+                    {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
+                    {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
+                ]
+                result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
+
+        Args:
+            shared_states (typing.List[FedAvgSharedState]): The list of the
+                shared_state returned by the train method of the algorithm for each organization.
+
+        Raises:
+            EmptySharedStatesError: The train method of your algorithm must return a shared_state
+            TypeError: Each shared_state must contains the key **n_samples**
+            TypeError: Each shared_state must contains at least one element to average
+            TypeError: All the elements of shared_states must be similar (same keys)
+            TypeError: All elements to average must be of type np.ndarray
+
+        Returns:
+            FedAvgAveragedState: A dict containing the weighted average of each input parameters
+            without the passed key "n_samples".
+        """
+        if len(shared_states) == 0:
+            raise EmptySharedStatesError(
+                "Your shared_states is empty. Please ensure that "
+                "the train method of your algorithm returns a FedAvgSharedState object."
+            )
+
+        assert all(
+            [
+                len(shared_state.parameters_update) == len(shared_states[0].parameters_update)
+                for shared_state in shared_states
+            ]
+        ), "Not the same number of layers for every input parameters."
+
+        n_all_samples = sum([state.n_samples for state in shared_states])
+
+        averaged_states = list()
+        for idx in range(len(shared_states[0].parameters_update)):
+            states = list()
+            for state in shared_states:
+                states.append(state.parameters_update[idx] * (state.n_samples / n_all_samples))
+            averaged_states.append(np.sum(states, axis=0))
+
+        return FedPCAAveragedState(avg_parameters_update=averaged_states)
+
+    def _perform_local_updates(
+        self,
+        train_data_nodes: List[TrainDataNode],
+        current_aggregation: Optional[SharedStateRef],
+        round_idx: int,
+        aggregation_id: str,
+        additional_orgs_permissions: set,
+        clean_models: bool,
+    ):
+        """Perform a local update (train on n mini-batches) of the models
+        on each train data nodes.
+
+        Args:
+            train_data_nodes (typing.List[TrainDataNode]): List of the organizations on which to perform
+            local updates current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to
+                be passed as input to each local training
+            round_idx (int): Round number, it starts at 1.
+            aggregation_id (str): Id of the aggregation node the shared state is given to.
+            additional_orgs_permissions (set): Additional permissions to give to the model outputs
+                after training, in order to test the model on an other organization.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+        """
+
+        next_local_states = []
+        next_shared_states = []
+
+        for i, node in enumerate(train_data_nodes):
+            # define composite tasks (do not submit yet)
+            # for each composite task give description of Algo instead of a key for an algo
+            next_local_state, next_shared_state = node.update_states(
+                self.algo.train(
+                    node.data_sample_keys,
+                    shared_state=current_aggregation,
+                    _algo_name=f"Training with {self.algo.__class__.__name__}",
+                ),
+                local_state=self._local_states[i] if self._local_states is not None else None,
+                round_idx=round_idx,
+                authorized_ids=set([node.organization_id]) | additional_orgs_permissions,
+                aggregation_id=aggregation_id,
+                clean_models=clean_models,
+            )
+            # keep the states in a list: one/organization
+            next_local_states.append(next_local_state)
+            next_shared_states.append(next_shared_state)
+
+        self._local_states = next_local_states
+        self._shared_states = next_shared_states
