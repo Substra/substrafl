@@ -199,7 +199,7 @@ def train_linear_data_samples_pca(network, seed):
 
 @pytest.mark.substra
 @pytest.mark.slow
-def test_cp_performance(network, compute_plan, session_dir, train_linear_data_samples_pca):
+def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_linear_data_samples_pca):
     """Check the weight initialization, aggregation and set weights.
     The aggregation itself is tested at the strategy level, here we test
     the pytorch layer.

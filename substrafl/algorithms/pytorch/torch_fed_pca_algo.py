@@ -73,6 +73,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         self._batch_size = batch_size
         self.local_mean = None
         self.local_covmat = None
+
         if seed is not None:
             self._seed = seed
         else:
@@ -124,6 +125,46 @@ class TorchFedPCAAlgo(TorchAlgo):
         index_generator = NpIndexGenerator(batch_size=self._batch_size, num_updates=num_updates, drop_last=False)
         index_generator.n_samples = n_samples
         return index_generator
+
+    def _compute_local_mean(self, old_parameters, train_data_loader):
+        new_parameters = old_parameters[0].cpu().numpy()
+        dataset_size = len(train_data_loader.dataset)
+        self.local_mean = torch.zeros((self._model.in_features,)).to(self._device)
+
+        for x_batch, _ in train_data_loader:
+            x_batch = x_batch.to(self._device)
+            self.local_mean += torch.sum(x_batch, dim=(0,))
+
+        self.local_mean /= dataset_size
+        # Using the model parameters as a container for local_mean to be aggregated
+        new_parameters[0] = self.local_mean.cpu().numpy()
+        return new_parameters
+
+    def _compute_local_covmat(self, old_parameters, train_data_loader):
+        # Replacing the local mean by the aggregated one
+        self.local_mean = old_parameters[0][0]
+
+        # Fill new parameters with an arbitrary numpy array of correct shape
+        # Starting local covariate matrix computation
+        self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
+
+        for x_batch, _ in train_data_loader:
+            x_batch = x_batch.to(self._device)
+            # Centering input vectors
+            rep_means = self.local_mean.repeat(x_batch.shape[0], 1).to(self._device)
+            x_batch -= rep_means
+            # Updating cov matrix
+            self.local_covmat += torch.matmul(x_batch.T, x_batch)
+
+        # Initializing the weights for the subspace iteration
+        old_parameters[0] = torch.normal(
+            torch.zeros(old_parameters[0].shape),
+            torch.ones(old_parameters[0].shape),
+            generator=torch.Generator().manual_seed(self._seed),
+        ).to(self._device)
+
+        new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
+        return new_parameters
 
     @remote_data
     def train(
@@ -185,55 +226,35 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         if self.local_mean is None:
             # In round 0
-            new_parameters = old_parameters[0].cpu().numpy()
-            self.local_mean = torch.zeros((self._model.in_features,)).to(self._device)
-            self.local_n = 0
-            for x_batch, _ in train_data_loader:
-                x_batch = x_batch.to(self._device)
-                self.local_mean += torch.sum(x_batch, dim=(0,))
-                self.local_n += x_batch.shape[0]
-
-            self.local_mean /= self.local_n
-            # Using the model parameters as a container for local_mean to be aggregated
-            new_parameters[0] = self.local_mean.cpu().numpy()
-            return FedAvgSharedState(n_samples=self.local_n, parameters_update=[new_parameters])
+            new_parameters = self._compute_local_mean(
+                old_parameters=old_parameters,
+                train_data_loader=train_data_loader,
+            )
 
         elif self.local_covmat is None:
             # In round 1 we:
             #   - Compute the local covariance matrix
             #   - Initialize the weights for the subspace iteration method
             #      and store them in old_parameters
+            new_parameters = self._compute_local_covmat(
+                old_parameters=old_parameters,
+                train_data_loader=train_data_loader,
+            )
+            # Assigning orthonormalized parameters
+            weight_manager.set_parameters(
+                model=self._model,
+                parameters=old_parameters,
+                with_batch_norm_parameters=False,
+            )
+        else:
+            new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
 
-            # Replacing the local mean by the aggregated one
-            self.local_mean = old_parameters[0][0]
-            # Fill new parameters with an arbitrary numpy array of correct shape
-            # Starting local covariate matrix computation
-            self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
-            self.local_n = 0
-            for x_batch, _ in train_data_loader:
-                x_batch = x_batch.to(self._device)
-                # Centering input vectors
-                rep_means = self.local_mean.repeat(x_batch.shape[0], 1).to(self._device)
-                x_batch -= rep_means
-                self.local_n += x_batch.shape[0]
-                # Updating cov matrix
-                self.local_covmat += torch.matmul(x_batch.T, x_batch)
-
-            # Initializing the weights for the subspace iteration
-            old_parameters[0] = torch.normal(
-                torch.zeros(old_parameters[0].shape),
-                torch.ones(old_parameters[0].shape),
-                generator=torch.Generator().manual_seed(self._seed),
-            ).to(self._device)
-
-        new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
-
-        # Assigning orthonormalized parameters
-        weight_manager.set_parameters(
-            model=self._model,
-            parameters=old_parameters,
-            with_batch_norm_parameters=False,
-        )
+            # Assigning orthonormalized parameters
+            weight_manager.set_parameters(
+                model=self._model,
+                parameters=old_parameters,
+                with_batch_norm_parameters=False,
+            )
 
         return FedAvgSharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
 
@@ -242,7 +263,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         parent class.
 
         The parent class saves the TorchLinearModel containing the eigenvectors. In this
-        algorithm, we additionnally need to save the sample mean and covariance matrix
+        algorithm, we additionally need to save the sample mean and covariance matrix
         as well as the round index as the self.train function behaves differently based
         on this round index.
 
