@@ -1,6 +1,7 @@
 from torch import __version__ as torch_version
 
 from substrafl.algorithms.pytorch.torch_fed_avg_algo import TorchFedAvgAlgo
+from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
 from substrafl.algorithms.pytorch.torch_newton_raphson_algo import TorchNewtonRaphsonAlgo
 from substrafl.algorithms.pytorch.torch_scaffold_algo import TorchScaffoldAlgo
 from substrafl.algorithms.pytorch.torch_single_organization_algo import TorchSingleOrganizationAlgo
@@ -15,4 +16,10 @@ if torch_version == "1.12.0":
     )
 
 
-__all__ = ["TorchFedAvgAlgo", "TorchSingleOrganizationAlgo", "TorchScaffoldAlgo", "TorchNewtonRaphsonAlgo"]
+__all__ = [
+    "TorchFedAvgAlgo",
+    "TorchFedPCAAlgo",
+    "TorchSingleOrganizationAlgo",
+    "TorchScaffoldAlgo",
+    "TorchNewtonRaphsonAlgo",
+]

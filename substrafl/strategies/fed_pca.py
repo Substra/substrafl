@@ -186,6 +186,61 @@ class FedPCA(Strategy):
         )
 
     @remote
+    def avg_shared_states(self, shared_states: List[FedPCASharedState]) -> FedPCAAveragedState:
+        """Compute the weighted average of all elements returned by the train
+        methods of the user-defined algorithm.
+        The average is weighted by the proportion of the number of samples.
+
+        Example:
+
+            .. code-block:: python
+
+                shared_states = [
+                    {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
+                    {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
+                ]
+                result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
+
+        Args:
+            shared_states (typing.List[FedAvgSharedState]): The list of the
+                shared_state returned by the train method of the algorithm for each organization.
+
+        Raises:
+            EmptySharedStatesError: The train method of your algorithm must return a shared_state
+            TypeError: Each shared_state must contains the key **n_samples**
+            TypeError: Each shared_state must contains at least one element to average
+            TypeError: All the elements of shared_states must be similar (same keys)
+            TypeError: All elements to average must be of type np.ndarray
+
+        Returns:
+            FedAvgAveragedState: A dict containing the weighted average of each input parameters
+            without the passed key "n_samples".
+        """
+        if len(shared_states) == 0:
+            raise EmptySharedStatesError(
+                "Your shared_states is empty. Please ensure that "
+                "the train method of your algorithm returns a FedPCASharedState object."
+            )
+
+        assert all(
+            [
+                len(shared_state.parameters_update) == len(shared_states[0].parameters_update)
+                for shared_state in shared_states
+            ]
+        ), "Not the same number of layers for every input parameters."
+
+        n_all_samples = sum([state.n_samples for state in shared_states])
+
+        averaged_states = list()
+        for idx in range(len(shared_states[0].parameters_update)):
+            states = list()
+            for state in shared_states:
+                states.append(state.parameters_update[idx] * (state.n_samples / n_all_samples))
+            averaged_states.append(np.sum(states, axis=0))
+
+        return FedPCAAveragedState(avg_parameters_update=averaged_states)
+
+    @remote
     def avg_shared_states_with_qr(self, shared_states: List[FedPCASharedState]) -> FedPCAAveragedState:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm and factorize the obtained matrix
@@ -221,62 +276,6 @@ class FedPCA(Strategy):
             averaged_state_after_qr, _ = np.linalg.qr(averaged_state_before_qr.T)
 
             averaged_states.append(averaged_state_after_qr.T)
-
-        return FedPCAAveragedState(avg_parameters_update=averaged_states)
-
-    @remote
-    def avg_shared_states(self, shared_states: List[FedPCASharedState]) -> FedPCAAveragedState:
-        """Compute the weighted average of all elements returned by the train
-        methods of the user-defined algorithm.
-        The average is weighted by the proportion of the number of samples.
-
-        Example:
-
-            .. code-block:: python
-
-                shared_states = [
-                    {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
-                    {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
-                ]
-                result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
-
-        Args:
-            shared_states (typing.List[FedAvgSharedState]): The list of the
-                shared_state returned by the train method of the algorithm for each organization.
-
-        Raises:
-            EmptySharedStatesError: The train method of your algorithm must return a shared_state
-            TypeError: Each shared_state must contains the key **n_samples**
-            TypeError: Each shared_state must contains at least one element to average
-            TypeError: All the elements of shared_states must be similar (same keys)
-            TypeError: All elements to average must be of type np.ndarray
-
-        Returns:
-            FedAvgAveragedState: A dict containing the weighted average of each input parameters
-            without the passed key "n_samples".
-        """
-        if len(shared_states) == 0:
-            raise EmptySharedStatesError(
-                "Your shared_states is empty. Please ensure that "
-                "the train method of your algorithm returns a FedAvgSharedState object."
-            )
-
-        assert all(
-            [
-                len(shared_state.parameters_update) == len(shared_states[0].parameters_update)
-                for shared_state in shared_states
-            ]
-        ), "Not the same number of layers for every input parameters."
-
-        n_all_samples = sum([state.n_samples for state in shared_states])
-
-        averaged_states = list()
-        for idx in range(len(shared_states[0].parameters_update)):
-            states = list()
-            for state in shared_states:
-                states.append(state.parameters_update[idx] * (state.n_samples / n_all_samples))
-            averaged_states.append(np.sum(states, axis=0))
-
         return FedPCAAveragedState(avg_parameters_update=averaged_states)
 
     def _perform_local_updates(
