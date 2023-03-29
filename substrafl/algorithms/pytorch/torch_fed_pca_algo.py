@@ -46,15 +46,38 @@ class TorchLinearModel(torch.nn.Module):
 
 
 class TorchFedPCAAlgo(TorchAlgo):
-    """TorchFedPCAAlgo class, inheriting from TorchAlgo and designed to perform Principal Component Analysis (PCA).
+    """To be inherited. Wraps the necessary operation so a torch model can be trained in the Federated PCA
+    strategy.
 
-    Args:
-        dataset (torch.utils.data.Dataset): input data on which to perform PCA
-        in_features (int): input data dimensionality
-        out_features (int): number of dimensions to keep after PCA
-        batch_size (Optional[int]): mini-batch size
-        seed (int): random generator seed. Default to 1.
-        use_gpu (bool): whether to use GPU or not
+    The ``train`` method:
+
+        - computes the local mean during the first round
+        - computes the covariance matrix during the second round
+        - computes the eigen vectors regarding the shared covariance matrix for all next rounds
+
+    The ``predict`` method generates the eigen vectors.
+
+    To add a custom parameter to the ``__init__`` of the class, also add it to the call to ``super().__init__``
+    as shown in the example with ``my_custom_extra_parameter``. Only primitive types (str, int, ...) are supported
+    for extra parameters.
+
+    Example:
+
+        .. code-block:: python
+
+            class MyAlgo(TorchFedPCAAlgo):
+                def __init__(
+                    self,
+                    my_custom_extra_parameter,
+                ):
+                    super().__init__(
+                        in_features=10,
+                        out_features=2,
+                        batch_size=16,
+                        dataset=my_dataset,
+                        seed=seed,
+                        my_custom_extra_parameter=my_custom_extra_parameter,
+                    )
     """
 
     def __init__(
@@ -68,6 +91,18 @@ class TorchFedPCAAlgo(TorchAlgo):
         *args,
         **kwargs,
     ):
+        """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
+        Some attributes will then be overwritten by their previous states in the `load()` function,
+        before the `train()` or `predict()` function is ran.
+
+        Args:
+            dataset (torch.utils.data.Dataset): input data on which to perform PCA
+            in_features (int): input data dimensionality
+            out_features (int): number of dimensions to keep after PCA
+            batch_size (Optional[int]): mini-batch size
+            seed (int): random generator seed. Default to 1.
+            use_gpu (bool): whether to use GPU or not
+        """
         self.in_features = in_features
         self.out_features = out_features
         self._batch_size = batch_size
