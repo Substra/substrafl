@@ -20,7 +20,7 @@ class Strategy(ABC):
 
     def __init__(self, algo: Algo, *args, **kwargs):
         """
-        All arguments of a child of this class need to be passed to it through its ``args`` and ``kwargs``
+        All child class arguments need to be passed to it through its ``args`` and ``kwargs``
         in order to use them when instantiating it as a RemoteStruct in each process.
 
         Example:
