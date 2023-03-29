@@ -50,7 +50,7 @@ class FedAvg(Strategy):
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
         """
-        super(FedAvg, self).__init__(algo=algo)
+        super().__init__(algo=algo)
 
         # current local and share states references of the client
         self._local_states: Optional[List[LocalStateRef]] = None

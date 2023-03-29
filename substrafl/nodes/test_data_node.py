@@ -44,7 +44,7 @@ class TestDataNode(Node):
         self.testtasks: List[Dict] = []
         self.predicttasks: List[Dict] = []
 
-        super(TestDataNode, self).__init__(organization_id)
+        super().__init__(organization_id)
 
     def update_states(
         self,

@@ -235,3 +235,15 @@ def test_scaffold_train_tasks_output_permissions(dummy_algo_class, additional_or
                 for task in train_data_node.tasks
             ]
         )
+
+
+@pytest.mark.parametrize(
+    "aggregation_lr",
+    [0, 1, 2],
+)
+def test_scaffold_remote_struct_arguments(dummy_algo_class, aggregation_lr):
+    strategy = Scaffold(algo=dummy_algo_class(), aggregation_lr=aggregation_lr)
+    remote_struct = strategy.avg_shared_states(shared_states=["dummy"]).remote_struct
+    strategy_instance = remote_struct.get_instance()
+
+    assert strategy._aggregation_lr == strategy_instance._aggregation_lr

@@ -85,6 +85,7 @@ flowchart LR
 
 - BREAKING: Given local code dependencies are now copied to the level of the running script systematically ([#99](https://github.com/Substra/substrafl/pull/99/files))
 - Docker images are pruned in main check of Github Action to free disk space while test run ([#102](https://github.com/Substra/substrafl/pull/102))
+- Pass `aggregation_lr` to the parent class for Scaffold. Fix [issue 103](https://github.com/Substra/substrafl/issues/103) ([#104](https://github.com/Substra/substrafl/pull/104))
 
 ## [0.34.0](https://github.com/Substra/substrafl/releases/tag/0.34.0) - 2023-02-20
 
