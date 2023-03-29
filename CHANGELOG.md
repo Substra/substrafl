@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.35.0] - 2023-44-29
+
 ### Added
 
 - Initialization task to each strategy in SubstraFL. ([#89](https://github.com/Substra/substrafl/pull/89))
