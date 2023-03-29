@@ -15,7 +15,7 @@ from substrafl.schemas import FedPCASharedState
 from substrafl.schemas import StrategyName
 
 
-class TorchLinearModel(torch.nn.modules.module.Module):
+class TorchLinearModel:
     """Define linear model to encapsulate eigenvectors.
 
     Args:
