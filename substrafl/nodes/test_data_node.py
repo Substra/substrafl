@@ -3,7 +3,6 @@ from typing import Dict
 from typing import List
 
 import substra
-from substra import schemas
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
@@ -65,12 +64,14 @@ class TestDataNode(Node):
 
         predicttask_id = str(uuid.uuid4())
 
-        data_inputs = [schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
-            schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
+        data_inputs = [
+            substra.schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)
+        ] + [
+            substra.schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
             for data_sample in self.test_data_sample_keys
         ]
         predict_input = [
-            schemas.InputRef(
+            substra.schemas.InputRef(
                 identifier=InputIdentifiers.local,
                 parent_task_key=traintask_id,
                 parent_task_output_identifier=OutputIdentifiers.local,
@@ -78,20 +79,20 @@ class TestDataNode(Node):
         ]
 
         test_input = [
-            schemas.InputRef(
+            substra.schemas.InputRef(
                 identifier=InputIdentifiers.predictions,
                 parent_task_key=predicttask_id,
                 parent_task_output_identifier=OutputIdentifiers.predictions,
             )
         ]
 
-        predicttask = schemas.ComputePlanTaskSpec(
+        predicttask = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=predicttask_id,
             inputs=data_inputs + predict_input,
             outputs={
-                OutputIdentifiers.predictions: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
+                OutputIdentifiers.predictions: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
                     transient=True,
                 )
             },
@@ -106,13 +107,13 @@ class TestDataNode(Node):
         self.predicttasks.append(predicttask)
 
         for metric_key in self.metric_keys:
-            testtask = schemas.ComputePlanTaskSpec(
+            testtask = substra.schemas.ComputePlanTaskSpec(
                 function_key=metric_key,
                 task_id=str(uuid.uuid4()),
                 inputs=data_inputs + test_input,
                 outputs={
-                    OutputIdentifiers.performance: schemas.ComputeTaskOutputSpec(
-                        permissions=schemas.Permissions(public=True, authorized_ids=[]),
+                    OutputIdentifiers.performance: substra.schemas.ComputeTaskOutputSpec(
+                        permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
                         transient=False,
                     )
                 },
@@ -160,29 +161,29 @@ class TestDataNode(Node):
                     permissions=permissions,
                     dependencies=dependencies,
                     inputs=[
-                        schemas.FunctionInputSpec(
+                        substra.schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.datasamples,
-                            kind=schemas.AssetKind.data_sample.value,
+                            kind=substra.schemas.AssetKind.data_sample.value,
                             optional=False,
                             multiple=True,
                         ),
-                        schemas.FunctionInputSpec(
+                        substra.schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.opener,
-                            kind=schemas.AssetKind.data_manager.value,
+                            kind=substra.schemas.AssetKind.data_manager.value,
                             optional=False,
                             multiple=False,
                         ),
-                        schemas.FunctionInputSpec(
+                        substra.schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.local,
-                            kind=schemas.AssetKind.model.value,
+                            kind=substra.schemas.AssetKind.model.value,
                             optional=False,
                             multiple=False,
                         ),
                     ],
                     outputs=[
-                        schemas.FunctionOutputSpec(
+                        substra.schemas.FunctionOutputSpec(
                             identifier=OutputIdentifiers.predictions,
-                            kind=schemas.AssetKind.model.value,
+                            kind=substra.schemas.AssetKind.model.value,
                             multiple=False,
                         )
                     ],

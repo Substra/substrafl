@@ -4,7 +4,6 @@ from typing import Set
 from typing import TypeVar
 
 import substra
-from substra import schemas
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
@@ -64,7 +63,7 @@ class AggregationNode(Node):
 
         inputs = (
             [
-                schemas.InputRef(
+                substra.schemas.InputRef(
                     identifier=InputIdentifiers.models,
                     parent_task_key=ref.key,
                     parent_task_output_identifier=OutputIdentifiers.shared,
@@ -75,13 +74,13 @@ class AggregationNode(Node):
             else None
         )
 
-        aggregate_task = schemas.ComputePlanTaskSpec(
+        aggregate_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=inputs,
             outputs={
-                OutputIdentifiers.model: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                OutputIdentifiers.model: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
                     transient=clean_models,
                 )
             },
@@ -102,7 +101,7 @@ class AggregationNode(Node):
     def register_operations(
         self,
         client: substra.Client,
-        permissions: schemas.Permissions,
+        permissions: substra.sdk.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
@@ -136,16 +135,18 @@ class AggregationNode(Node):
                         permissions=permissions,
                         dependencies=dependencies,
                         inputs=[
-                            schemas.FunctionInputSpec(
+                            substra.schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.models,
-                                kind=schemas.AssetKind.model.value,
+                                kind=substra.schemas.AssetKind.model.value,
                                 optional=False,
                                 multiple=True,
                             )
                         ],
                         outputs=[
-                            schemas.FunctionOutputSpec(
-                                identifier=OutputIdentifiers.model, kind=schemas.AssetKind.model.value, multiple=False
+                            substra.schemas.FunctionOutputSpec(
+                                identifier=OutputIdentifiers.model,
+                                kind=substra.schemas.AssetKind.model.value,
+                                multiple=False,
                             )
                         ],
                     )
