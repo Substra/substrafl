@@ -179,8 +179,7 @@ epub_exclude_files = ["search.html"]
 # The following elements are the link that auto doc were not able to do
 nitpick_ignore = [
     ("py:class", "pydantic.main.BaseModel"),
-    ("py:class", "torch.nn.modules.module.Module"),
-    ("py:class", "torch.nn.modules.loss._Loss"),
+    ("py:class", "torch.*"),
     ("py:class", "torch.optim.optimizer.Optimizer"),
     ("py:class", "torch.optim.lr_scheduler._LRScheduler"),
     ("py:class", "torch.device"),
