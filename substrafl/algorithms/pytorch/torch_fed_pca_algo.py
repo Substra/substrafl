@@ -6,9 +6,9 @@ from typing import Optional
 
 import torch
 
-from substrafl import NpIndexGenerator
 from substrafl.algorithms.pytorch import weight_manager
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
+from substrafl.index_generator import NpIndexGenerator
 from substrafl.remote import remote_data
 from substrafl.schemas import FedPCAAveragedState
 from substrafl.schemas import FedPCASharedState
@@ -86,7 +86,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         in_features: int,
         out_features: int,
         batch_size: Optional[int] = None,
-        seed: Optional[int] = None,
+        seed: int = 1,
         use_gpu: bool = True,
         *args,
         **kwargs,
@@ -100,7 +100,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             in_features (int): input data dimensionality
             out_features (int): number of dimensions to keep after PCA
             batch_size (Optional[int]): mini-batch size
-            seed (int): random generator seed. Default to 1.
+            seed (int): random generator seed. The seed is mandatory. Default to 1.
             use_gpu (bool): whether to use GPU or not
         """
         self.in_features = in_features
@@ -108,13 +108,8 @@ class TorchFedPCAAlgo(TorchAlgo):
         self._batch_size = batch_size
         self.local_mean = None
         self.local_covmat = None
+        self._seed = seed
 
-        if seed is not None:
-            self._seed = seed
-        else:
-            # We to seed each task to initialize the models
-            # with the same weights.
-            self._seed = 1
         torch.manual_seed(self._seed)
 
         super().__init__(
@@ -123,10 +118,8 @@ class TorchFedPCAAlgo(TorchAlgo):
                 self.out_features,
             ),
             criterion=None,
-            optimizer=None,
             index_generator=None,
             dataset=dataset,
-            scheduler=None,
             seed=self._seed,
             use_gpu=use_gpu,
             *args,
@@ -176,8 +169,8 @@ class TorchFedPCAAlgo(TorchAlgo):
         return new_parameters
 
     def _compute_local_covmat(self, old_parameters, train_data_loader):
-        # Replacing the local mean by the aggregated one
-        self.local_mean = old_parameters[0][0]
+        # Getting the averaged mean from the model parameter
+        averaged_mean = old_parameters[0][0]
 
         # Fill new parameters with an arbitrary numpy array of correct shape
         # Starting local covariate matrix computation
@@ -186,9 +179,9 @@ class TorchFedPCAAlgo(TorchAlgo):
         for x_batch, _ in train_data_loader:
             x_batch = x_batch.to(self._device)
             # Centering input vectors
-            rep_means = self.local_mean.repeat(x_batch.shape[0], 1).to(self._device)
+            rep_means = averaged_mean.repeat(x_batch.shape[0], 1).to(self._device)
             x_batch -= rep_means
-            # Updating cov matrix
+            # Updating covariance matrix
             self.local_covmat += torch.matmul(x_batch.T, x_batch)
 
         # Initializing the weights for the subspace iteration
@@ -260,14 +253,14 @@ class TorchFedPCAAlgo(TorchAlgo):
         )
 
         if self.local_mean is None:
-            # In round 0
+            # In round 1
             new_parameters = self._compute_local_mean(
                 old_parameters=old_parameters,
                 train_data_loader=train_data_loader,
             )
 
         elif self.local_covmat is None:
-            # In round 1 we:
+            # In round 2 we:
             #   - Compute the local covariance matrix
             #   - Initialize the weights for the subspace iteration method
             #      and store them in old_parameters

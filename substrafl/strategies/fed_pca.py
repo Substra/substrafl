@@ -96,7 +96,7 @@ class FedPCA(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ) -> None:
-        """Perform prediction on test_data_nodes. Perform prediction before round 2 is not take into account
+        """Perform prediction on test_data_nodes. Perform prediction before round 3 is not take into account
         as all objects to compute prediction are not initialize before the second round.
 
         Args:
@@ -105,8 +105,8 @@ class FedPCA(Strategy):
                 on.
             round_idx (int): round index.
         """
-        if round_idx <= 2:
-            logger.warning(f"Evaluation ignored at round zero and one for {self.name} (pre-processing rounds).")
+        if round_idx < 3:
+            logger.warning(f"Evaluation ignored before round 3 for {self.name} (pre-processing rounds).")
             return
 
         for test_data_node in test_data_nodes:
@@ -140,12 +140,12 @@ class FedPCA(Strategy):
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
     ) -> None:
-        """One round of the Federated Principal Component Analysis strategy consists in:
-            - if ``round_idx==1``: initialize the strategy by performing a local update and
-                a classic aggregation. This first step aims to compute the average mean
-                on all centers.
-            - the second local update will compute the covariance matrix, that will be used
-                to compute the orthogonal matrix on each round after.
+        """The Federated Principal Component Analysis strategy uses the first two rounds as pre-processing rounds.
+
+        Three type of rounds:
+            - Compute the average mean on all centers at round 1.
+            - Compute the local covariance matrix of each center at round 2.
+            - Use the local covariance matrices to compute the orthogonal matrix for every next rounds.
 
         Args:
             train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform
@@ -256,7 +256,8 @@ class FedPCA(Strategy):
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm and factorize the obtained matrix
         with a QR decomposition, where Q is orthonormal and R is upper-triangular.
-        The function returns the Q matrix only.
+
+        The returned FedPCAAveragedState the **Q matrix only**.
 
         Args:
             shared_states (typing.List[FedPCASharedState]): The list of the
