@@ -173,13 +173,15 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ["search.html"]
 
+autodoc_mock_imports = ["torch"]
 
 # As we defined the type of our args, auto doc is trying to find a link to a
 # documentation for each type specified
 # The following elements are the link that auto doc were not able to do
 nitpick_ignore = [
     ("py:class", "pydantic.main.BaseModel"),
-    ("py:class", "torch.*"),
+    ("py:class", "torch.nn.modules.module.Module"),
+    ("py:class", "torch.nn.modules.loss._Loss"),
     ("py:class", "torch.optim.optimizer.Optimizer"),
     ("py:class", "torch.optim.lr_scheduler._LRScheduler"),
     ("py:class", "torch.device"),
