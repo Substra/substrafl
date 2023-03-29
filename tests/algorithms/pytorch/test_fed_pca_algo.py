@@ -21,7 +21,6 @@ LINEAR_N_COL = 3
 LINEAR_N_TARGET = 1
 N_EIGENVALUES = 2
 NUM_ROUNDS = 10
-BATCH_SIZE = 1
 
 
 @pytest.fixture(scope="module")
@@ -35,7 +34,7 @@ def torch_pca_algo(numpy_torch_dataset, seed):
             super().__init__(
                 in_features=LINEAR_N_COL,
                 out_features=N_EIGENVALUES,
-                batch_size=BATCH_SIZE,
+                batch_size=1,
                 dataset=numpy_torch_dataset,
                 seed=seed,
             )
@@ -199,7 +198,7 @@ def train_linear_data_samples_pca(network, seed):
 
 @pytest.mark.substra
 @pytest.mark.slow
-def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_linear_data_samples_pca):
+def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_linear_data_samples_pca, rtol):
     """Check the weight initialization, aggregation and set weights.
     The aggregation itself is tested at the strategy level, here we test
     the pytorch layer.
@@ -208,7 +207,7 @@ def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_lin
     data = np.concatenate([d[:, :LINEAR_N_COL] for d in train_linear_data_samples_pca])
     cov = np.cov(data.T)
     _, eig = np.linalg.eig(cov)
-    numpy_pca_eigen_values = eig.T[:2]
+    numpy_pca_eigen_values = eig.T[:N_EIGENVALUES]
     # The number of rank is a first local update, and then aggregation and train times num rounds
     final_aggregated_rank = (
         1 + 2 * NUM_ROUNDS - 1
@@ -218,6 +217,11 @@ def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_lin
     )
 
     fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
-    numpy_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in numpy_pca_eigen_values])
-    fed_pca_eigen_values = np.array([np.sign(eigen_v[0]) * eigen_v for eigen_v in fed_pca_eigen_values])
-    assert np.allclose(numpy_pca_eigen_values, fed_pca_eigen_values, rtol=1e-5)
+
+    # Align eigen values using their collinear coefficient
+    assert np.array(
+        [
+            np.allclose(np.dot(numpy_pca_eigen_values[i], row) * row, numpy_pca_eigen_values[i], rtol=rtol)
+            for i, row in enumerate(fed_pca_eigen_values)
+        ]
+    ).all()

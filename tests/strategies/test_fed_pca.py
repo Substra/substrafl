@@ -50,13 +50,16 @@ def test_avg_shared_states(dummy_algo_class, n_samples, results):
         ),
     ],
 )
-def test_avg_shared_states_with_qr(dummy_algo_class, shared_states, results):
+def test_avg_shared_states_with_qr(dummy_algo_class, shared_states, results, rtol):
     MyFedPCA = FedPCA(algo=dummy_algo_class())
     averaged_states_with_qr = MyFedPCA.avg_shared_states_with_qr(shared_states, _skip=True)
-    assert [
-        np.allclose(np.dot(results[0][i], row) * row, results[0][i])
-        for i, row in enumerate(averaged_states_with_qr.avg_parameters_update[0])
-    ]
+
+    assert np.array(
+        [
+            np.allclose(np.dot(results[0][i], row) * row, results[0][i], rtol=rtol)
+            for i, row in enumerate(averaged_states_with_qr.avg_parameters_update[0])
+        ]
+    ).all()
 
 
 def test_fed_pca_perform_round(dummy_algo_class):
