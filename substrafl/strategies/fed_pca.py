@@ -22,41 +22,52 @@ logger = logging.getLogger(__name__)
 
 class FedPCA(Strategy):
     """Federated Principal Component Analysis strategy.
-    This strategy should be used only using TorchFedPCAAlgo
 
-    The goal of this strategy is to perform a principal component analysis (PCA) by
+    The goal of this strategy is to perform a **principal component analysis** (PCA) by
     computing the eigen vectors with highest eigen values of the covariance matrices
-    of the data samples. We assume we have clients indexed by $j$, with $n_j$ data samples each.
+    regarding the provided data.
+
+    We assume we have clients indexed by :math:`j`, with :math:`n_j` samples each.
+
     We note :math:`N = \\sum_j n_j` the total number of samples. We denote :math:`D` the dimension of
     the data, and :math:`K` the number of eigen vectors computed.
 
-    It is based on the Federated sub-space iteration algorithm described
-    here https://doi.org/10.1093/bioadv/vbac026 (algorithm 3 of the paper)
+    This strategy implementation is based on the **federated iteration algorithm** described
+    by:
+
+        *Anne Hartebrodt, Richard Röttger,* **Federated horizontally partitioned principal component analysis
+        for biomedical applications,** *Bioinformatics Advances, Volume 2, Issue 1, 2022, vbac026,*
+        https://doi.org/10.1093/bioadv/vbac026 *(algorithm 3 of the paper)*
 
     During the process, the local covariance matrices of each center are not shared.
     However, the column-wise mean of each dataset is shared across the centers.
 
-    The Federated Subspace iteration is divded in three steps:
+    The federated iteration is divided in **three steps**.
 
-    Step 1: for d= 1, ..., D, each center computes the mean of the $d$ component of
-    their dataset and share it to the central aggregator. The central aggregator averages
-    the local mean and send to all the clients the global column-wise means of data.
+    Step 1:
+        - For :math:`d= 1, ..., D`, each center computes the mean of the :math:`d` component of
+          their dataset and share it to the central aggregator. The central aggregator averages
+          the local mean and send to all the clients the global column-wise means of data.
 
-    Step 2: Each center normalize their dataset by substracting the global mean column-wise
-    and compute the covariance matrix of their local data after mean-subtraction. We denote by $C_j$
-    the local covariance matrices.
+    Step 2:
+        - Each center normalize their dataset by subtracting the global mean column-wise
+          and compute the covariance matrix of their local data after mean-subtraction. We denote by :math:`C_j`
+          the local covariance matrices.
 
-    We initialize eig_0: a matrix of size :math:`D \\times K` corresponding to the :math:`K` eigen
-    vectors we want to compute
+        We initialize :math:`eig_0`: a matrix of size :math:`D \\times K` corresponding to the :math:`K` eigen
+        vectors we want to compute
 
-    Step 3: For a given number of rounds (rounds are labeled by $r$) we perform the following:
-        Step 3.1: each center :math:`j` computes  :math:`eig^r_j = C_j \\dot eig^{r-1}_j`
-        Step 3.2: the aggregator computes :math:`eig^r = \\frac{1}{N}\\sum_j n_j eig^r_j`
-        Step 3:3: the aggregator performs a QR decomposition: :math:`eig^r \\mapsto QR(eig^r)`
-                    and sahres :math:`eig^r` to all the clients
+    Step 3, for a given number of rounds (rounds are labeled by :math:`r`) we perform the following:
+        Step 3.1:
+            - Each center :math:`j` computes  :math:`eig^r_j = C_j.eig^{r-1}_j`
+        Step 3.2:
+            - The aggregator computes :math:`eig^r = \\frac{1}{N}\\sum_j n_j eig^r_j`
+        Step 3:3:
+            - The aggregator performs a QR decomposition: :math:`eig^r \\mapsto QR(eig^r)`
+              and shares :math:`eig^r` to all the clients
 
-    :math:`eig^r` will converge to the :math:`K` eigen-vectors of the global covariance matrix with
-    the high eign-values.
+            :math:`eig^r` will converge to the :math:`K` eigen-vectors of the global covariance matrix with
+            the highest eigen-values.
     """
 
     def __init__(self, algo: Algo):
@@ -196,13 +207,13 @@ class FedPCA(Strategy):
             .. code-block:: python
 
                 shared_states = [
-                    {"weights": [3, 3, 3], "gradient": [4, 4, 4], "n_samples": 20},
-                    {"weights": [6, 6, 6], "gradient": [1, 1, 1], "n_samples": 40},
+                    {"parameters_update": [3, 6, 1], "n_samples": 20},
+                    {"parameters_update": [6, 3, 1], "n_samples": 40},
                 ]
-                result = {"weights": [5, 5, 5], "gradient": [2, 2, 2]}
+                result = {"parameters_update": [5, 4, 1]}
 
         Args:
-            shared_states (typing.List[FedAvgSharedState]): The list of the
+            shared_states (typing.List[FedPCASharedState]): The list of the
                 shared_state returned by the train method of the algorithm for each organization.
 
         Raises:
@@ -213,7 +224,7 @@ class FedPCA(Strategy):
             TypeError: All elements to average must be of type np.ndarray
 
         Returns:
-            FedAvgAveragedState: A dict containing the weighted average of each input parameters
+            FedPCAAveragedState: A dict containing the weighted average of each input parameters
             without the passed key "n_samples".
         """
         if len(shared_states) == 0:
@@ -244,7 +255,8 @@ class FedPCA(Strategy):
     def avg_shared_states_with_qr(self, shared_states: List[FedPCASharedState]) -> FedPCAAveragedState:
         """Compute the weighted average of all elements returned by the train
         methods of the user-defined algorithm and factorize the obtained matrix
-        with a qr decomposition, where q is orthonormal and r is upper-triangular.
+        with a QR decomposition, where Q is orthonormal and R is upper-triangular.
+        The function returns the Q matrix only.
 
         Args:
             shared_states (typing.List[FedPCASharedState]): The list of the
@@ -254,7 +266,7 @@ class FedPCA(Strategy):
             EmptySharedStatesError: The train method of your algorithm must return a shared_state
 
         Returns:
-            FedPCAAveragedState: returned the q matrix as a FedPCAAveragedState.
+            FedPCAAveragedState: returned the Q matrix as a FedPCAAveragedState.
         """
         if not shared_states:
             raise EmptySharedStatesError(
