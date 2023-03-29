@@ -6,7 +6,6 @@ from typing import Set
 from typing import Tuple
 
 import substra
-from substra import schemas
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
@@ -54,13 +53,13 @@ class TrainDataNode(Node):
     ) -> LocalStateRef:
         op_id = str(uuid.uuid4())
 
-        init_task = schemas.ComputePlanTaskSpec(
+        init_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=[],
             outputs={
-                OutputIdentifiers.local: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
                     transient=clean_models,
                 ),
             },
@@ -119,13 +118,15 @@ class TrainDataNode(Node):
                 "Have you decorated your method with @remote_data?",
             )
         op_id = str(uuid.uuid4())
-        data_inputs = [schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)] + [
-            schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
+        data_inputs = [
+            substra.schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)
+        ] + [
+            substra.schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
             for data_sample in self.data_sample_keys
         ]
         local_inputs = (
             [
-                schemas.InputRef(
+                substra.schemas.InputRef(
                     identifier=InputIdentifiers.local,
                     parent_task_key=local_state.key,
                     parent_task_output_identifier=OutputIdentifiers.local,
@@ -136,7 +137,7 @@ class TrainDataNode(Node):
         )
         if operation.shared_state is not None:
             shared_inputs = [
-                schemas.InputRef(
+                substra.schemas.InputRef(
                     identifier=InputIdentifiers.shared,
                     parent_task_key=operation.shared_state.key,
                     parent_task_output_identifier=OutputIdentifiers.model,
@@ -146,7 +147,7 @@ class TrainDataNode(Node):
         elif local_state is not None and not local_state.init:
             # If the parent task is an init task, no shared states have been produced.
             shared_inputs = [
-                schemas.InputRef(
+                substra.schemas.InputRef(
                     identifier=InputIdentifiers.shared,
                     parent_task_key=local_state.key,
                     parent_task_output_identifier=OutputIdentifiers.shared,
@@ -156,20 +157,20 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
-        composite_traintask = schemas.ComputePlanTaskSpec(
+        composite_traintask = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=data_inputs + local_inputs + shared_inputs,
             outputs={
-                OutputIdentifiers.shared: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(
+                OutputIdentifiers.shared: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(
                         public=False,
                         authorized_ids=list(authorized_ids | set([aggregation_id] if aggregation_id else [])),
                     ),
                     transient=clean_models,
                 ),
-                OutputIdentifiers.local: schemas.ComputeTaskOutputSpec(
-                    permissions=schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
                     transient=clean_models,
                 ),
             },
@@ -190,7 +191,7 @@ class TrainDataNode(Node):
     def register_operations(
         self,
         client: substra.Client,
-        permissions: schemas.Permissions,
+        permissions: substra.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
@@ -204,7 +205,7 @@ class TrainDataNode(Node):
 
         Args:
             client (substra.Client): Substra client for the organization.
-            permissions (substra.sdk.schemas.Permissions): schemas.Permissions for the function.
+            permissions (substra.schemas.Permissions): schemas.Permissions for the function.
             cache (typing.Dict[RemoteStruct, OperationKey]): Already registered function identifications. The key of
                 each element is the RemoteStruct id (generated by substrafl) and the value is the key generated by
                 substra.
@@ -223,8 +224,8 @@ class TrainDataNode(Node):
                 permissions=permissions,
                 inputs=[],
                 outputs=[
-                    schemas.FunctionOutputSpec(
-                        identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
+                    substra.schemas.FunctionOutputSpec(
+                        identifier=OutputIdentifiers.local, kind=substra.schemas.AssetKind.model.value, multiple=False
                     ),
                 ],
                 dependencies=dependencies,
@@ -242,37 +243,41 @@ class TrainDataNode(Node):
                         remote_struct=remote_struct,
                         permissions=permissions,
                         inputs=[
-                            schemas.FunctionInputSpec(
+                            substra.schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.datasamples,
-                                kind=schemas.AssetKind.data_sample.value,
+                                kind=substra.schemas.AssetKind.data_sample.value,
                                 optional=False,
                                 multiple=True,
                             ),
-                            schemas.FunctionInputSpec(
+                            substra.schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.opener,
-                                kind=schemas.AssetKind.data_manager.value,
+                                kind=substra.schemas.AssetKind.data_manager.value,
                                 optional=False,
                                 multiple=False,
                             ),
-                            schemas.FunctionInputSpec(
+                            substra.schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.local,
-                                kind=schemas.AssetKind.model.value,
+                                kind=substra.schemas.AssetKind.model.value,
                                 optional=True,
                                 multiple=False,
                             ),
-                            schemas.FunctionInputSpec(
+                            substra.schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.shared,
-                                kind=schemas.AssetKind.model.value,
+                                kind=substra.schemas.AssetKind.model.value,
                                 optional=True,
                                 multiple=False,
                             ),
                         ],
                         outputs=[
-                            schemas.FunctionOutputSpec(
-                                identifier=OutputIdentifiers.local, kind=schemas.AssetKind.model.value, multiple=False
+                            substra.schemas.FunctionOutputSpec(
+                                identifier=OutputIdentifiers.local,
+                                kind=substra.schemas.AssetKind.model.value,
+                                multiple=False,
                             ),
-                            schemas.FunctionOutputSpec(
-                                identifier=OutputIdentifiers.shared, kind=schemas.AssetKind.model.value, multiple=False
+                            substra.schemas.FunctionOutputSpec(
+                                identifier=OutputIdentifiers.shared,
+                                kind=substra.schemas.AssetKind.model.value,
+                                multiple=False,
                             ),
                         ],
                         dependencies=dependencies,
