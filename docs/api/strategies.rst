@@ -18,6 +18,11 @@ Newton Raphson
 
 .. autoclass:: substrafl.strategies.NewtonRaphson
 
+Fed PCA
+^^^^^^^
+
+.. autoclass:: substrafl.strategies.FedPCA
+
 Single Organization
 ^^^^^^^^^^^^^^^^^^^
 
