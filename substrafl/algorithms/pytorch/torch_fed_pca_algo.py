@@ -31,7 +31,7 @@ class TorchLinearModel(torch.nn.Module):
         self.eigen_vectors = torch.nn.Linear(self.in_features, self.out_features, bias=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Perform dimensionality reduction.
+        """Performs dimensionality reduction.
 
         Args:
             x (torch.Tensor): inputs to map to reduced dim space.
@@ -91,9 +91,9 @@ class TorchFedPCAAlgo(TorchAlgo):
         *args,
         **kwargs,
     ):
-        """The ``__init__`` functions is called at each call of the `train()` or `predict()` function
+        """The ``__init__`` function is called at each call of the `train()` or `predict()` function
         Some attributes will then be overwritten by their previous states in the `load()` function,
-        before the `train()` or `predict()` function is ran.
+        before the `train()` or `predict()` function is run.
 
         Args:
             dataset (torch.utils.data.Dataset): input data on which to perform PCA
