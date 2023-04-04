@@ -244,6 +244,7 @@ def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_lin
     ],
 )
 def test_train_pca_algo(torch_pca_algo, data, local_mean, local_covmat, rtol):
+    """Data index 0 are the input data, and index 1 are unused labels."""
     my_algo = torch_pca_algo()
     assert my_algo.local_mean is None
 
@@ -265,6 +266,7 @@ def test_train_pca_algo(torch_pca_algo, data, local_mean, local_covmat, rtol):
     ],
 )
 def test_predict_pca_algo(torch_pca_algo, session_dir, data, rtol):
+    """Data index 0 are the input data, and index 1 are unused labels."""
     my_algo = torch_pca_algo()
 
     prediction_file = session_dir / "PCA_predictions"

@@ -233,20 +233,16 @@ class FedPCA(Strategy):
                 "the train method of your algorithm returns a FedPCASharedState object."
             )
 
+        parameters_update_len = len(shared_states[0].parameters_update)
         assert all(
-            [
-                len(shared_state.parameters_update) == len(shared_states[0].parameters_update)
-                for shared_state in shared_states
-            ]
+            [len(shared_state.parameters_update) == parameters_update_len for shared_state in shared_states]
         ), "Not the same number of layers for every input parameters."
 
         n_all_samples = sum([state.n_samples for state in shared_states])
 
         averaged_states = []
-        for idx in range(len(shared_states[0].parameters_update)):
-            states = list()
-            for state in shared_states:
-                states.append(state.parameters_update[idx] * (state.n_samples / n_all_samples))
+        for idx in range(parameters_update_len):
+            states = [state.parameters_update[idx] * (state.n_samples / n_all_samples) for state in shared_states]
             averaged_states.append(np.sum(states, axis=0))
 
         return FedPCAAveragedState(avg_parameters_update=averaged_states)
