@@ -86,6 +86,16 @@ def test_fed_pca_perform_round(dummy_algo_class):
     # Perform round create two train tasks at round 1, to compute one aggregation step on the first round.
     assert all([len(train_data_node.tasks) == 2 for train_data_node in train_data_nodes])
 
+    strategy.perform_round(
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        round_idx=2,
+        clean_models=False,
+    )
+    assert len(aggregation_node.tasks) == 1 + 1
+    # Perform round create one train tasks at round 2, to compute one aggregation step on the first round.
+    assert all([len(train_data_node.tasks) == 2 + 1 for train_data_node in train_data_nodes])
+
 
 def test_fed_pca_predict(dummy_algo_class):
     """Test that the predict function updates the TestDataNode tasks starting from round 3."""
