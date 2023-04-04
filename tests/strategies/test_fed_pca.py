@@ -18,6 +18,9 @@ from substrafl.strategies import FedPCA
     ],
 )
 def test_avg_shared_states(dummy_algo_class, n_samples, results):
+    """First shared states have ones only, second one zeros only, and third twos only.
+    The n samples list in the multiplicative coefficient for each of these states.
+    """
     shared_states = [
         FedPCASharedState(parameters_update=[np.ones((5, 10))], n_samples=n_samples[0]),
         FedPCASharedState(parameters_update=[np.zeros((5, 10))], n_samples=n_samples[1]),

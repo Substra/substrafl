@@ -199,13 +199,6 @@ class TorchFedPCAAlgo(TorchAlgo):
     ) -> FedPCASharedState:
         """Train the local model for one round of the federated algorithm.
 
-        Args:
-            datasamples (Any): input data
-            shared_state (Optional[FedPCAAveragedState]): incoming FedPCAAveragedState
-              obtained at the previous round of the federated algorithm (after
-              aggregation). It contains the federatively learnt eigenvectors.
-              Defaults to None.
-
         Important:
             This functions behaves differently depending on the round of the federated
             algorithm for PCA. In the first round, the mean vector is computed. In the
@@ -214,6 +207,13 @@ class TorchFedPCAAlgo(TorchAlgo):
             for the method to produce accurate eigenvectors. This can be monitored
             through mean square reconstruction error which should reach a global
             minimum when the algorithm has converged.
+
+        Args:
+            datasamples (Any): input data
+            shared_state (Optional[FedPCAAveragedState]): incoming FedPCAAveragedState
+              obtained at the previous round of the federated algorithm (after
+              aggregation). It contains the federatively learnt eigenvectors.
+              Defaults to None.
 
         Returns:
             FedPCASharedState: updated model and parameters shared for aggregation.
@@ -302,7 +302,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         Returns:
             dict: checkpoint to save
         """
-        checkpoint = super(TorchFedPCAAlgo, self)._get_state_to_save()
+        checkpoint = super()._get_state_to_save()
         checkpoint.update(
             {
                 "mean": self.local_mean,
@@ -325,7 +325,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         Returns:
             dict: checkpoint
         """
-        checkpoint = super(TorchFedPCAAlgo, self)._update_from_checkpoint(path)
+        checkpoint = super()._update_from_checkpoint(path)
         self.local_mean = checkpoint.pop("mean")
         self.local_covmat = checkpoint.pop("covariance_matrix")
         return checkpoint
