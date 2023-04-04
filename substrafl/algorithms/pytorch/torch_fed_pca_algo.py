@@ -163,13 +163,9 @@ class TorchFedPCAAlgo(TorchAlgo):
             self.local_mean += torch.sum(x_batch, dim=(0,))
 
         self.local_mean /= dataset_size
-        # Using the model parameters as a container for local_mean to be aggregated
         return self.local_mean.cpu().numpy()
 
     def _compute_local_covmat(self, averaged_mean: torch.Tensor, train_data_loader: torch.utils.data.DataLoader):
-        # Getting the averaged mean from the model parameter
-
-        # Fill new parameters with an arbitrary numpy array of correct shape
         # Starting local covariate matrix computation
         self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
 
