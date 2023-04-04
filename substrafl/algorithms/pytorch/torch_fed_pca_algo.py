@@ -154,8 +154,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         index_generator.n_samples = n_samples
         return index_generator
 
-    def _compute_local_mean(self, old_parameters, train_data_loader):
-        new_parameters = old_parameters[0].cpu().numpy()
+    def _compute_local_mean(self, train_data_loader: torch.utils.data.Dataloader):
         dataset_size = len(train_data_loader.dataset)
         self.local_mean = torch.zeros((self._model.in_features,)).to(self._device)
 
@@ -165,12 +164,10 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         self.local_mean /= dataset_size
         # Using the model parameters as a container for local_mean to be aggregated
-        new_parameters[0] = self.local_mean.cpu().numpy()
-        return new_parameters
+        return self.local_mean.cpu().numpy()
 
-    def _compute_local_covmat(self, old_parameters, train_data_loader):
+    def _compute_local_covmat(self, averaged_mean: torch.Tensor, train_data_loader: torch.utils.data.Dataloade):
         # Getting the averaged mean from the model parameter
-        averaged_mean = old_parameters[0][0]
 
         # Fill new parameters with an arbitrary numpy array of correct shape
         # Starting local covariate matrix computation
@@ -179,19 +176,18 @@ class TorchFedPCAAlgo(TorchAlgo):
         for x_batch, _ in train_data_loader:
             x_batch = x_batch.to(self._device)
             # Centering input vectors
-            rep_means = averaged_mean.repeat(x_batch.shape[0], 1).to(self._device)
-            x_batch -= rep_means
+            repeated_means = averaged_mean.repeat(x_batch.shape[0], 1).to(self._device)
+            x_batch -= repeated_means
             # Updating covariance matrix
             self.local_covmat += torch.matmul(x_batch.T, x_batch)
-
         # Initializing the weights for the subspace iteration
-        old_parameters[0] = torch.normal(
-            torch.zeros(old_parameters[0].shape),
-            torch.ones(old_parameters[0].shape),
+        initialization = torch.normal(
+            torch.zeros((self.out_features, self.in_features)),
+            torch.ones((self.out_features, self.in_features)),
             generator=torch.Generator().manual_seed(self._seed),
         ).to(self._device)
 
-        new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
+        new_parameters = torch.matmul(initialization.to(self._device), self.local_covmat).cpu().numpy()
         return new_parameters
 
     @remote_data
@@ -238,53 +234,61 @@ class TorchFedPCAAlgo(TorchAlgo):
         # Create torch dataloader
         train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
-        if shared_state is not None:
-            # The shared states are the model parameters.
-            # Hence we need to assign them to the previous local state parameters.
-            weight_manager.set_parameters(
-                model=self._model,
-                parameters=[torch.Tensor(shared_state.avg_parameters_update[0])],
-                with_batch_norm_parameters=False,
-            )
-
-        old_parameters = weight_manager.get_parameters(
-            model=self._model,
-            with_batch_norm_parameters=False,
-        )
-
         if self.local_mean is None:
-            # In round 1
-            new_parameters = self._compute_local_mean(
-                old_parameters=old_parameters,
+            # In round 1:
+            #   - Computation of the local mean
+            parameters_update = self._compute_local_mean(
                 train_data_loader=train_data_loader,
             )
 
         elif self.local_covmat is None:
-            # In round 2 we:
-            #   - Compute the local covariance matrix
-            #   - Initialize the weights for the subspace iteration method
-            #      and store them in old_parameters
-            new_parameters = self._compute_local_covmat(
-                old_parameters=old_parameters,
+            # In round 2:
+            #   - Computation of the local covariance matrix
+            #   - Initialization of the weights for the subspace iteration method
+            averaged_mean = torch.Tensor(shared_state.avg_parameters_update[0])
+
+            parameters_update = self._compute_local_covmat(
+                averaged_mean=averaged_mean,
                 train_data_loader=train_data_loader,
             )
-            # Assigning orthonormalized parameters
-            weight_manager.set_parameters(
-                model=self._model,
-                parameters=old_parameters,
-                with_batch_norm_parameters=False,
-            )
+
         else:
-            new_parameters = torch.matmul(old_parameters[0].to(self._device), self.local_covmat).cpu().numpy()
+            averaged_parameters = torch.Tensor(shared_state.avg_parameters_update[0])
 
-            # Assigning orthonormalized parameters
             weight_manager.set_parameters(
                 model=self._model,
-                parameters=old_parameters,
+                parameters=[averaged_parameters],
                 with_batch_norm_parameters=False,
             )
 
-        return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[new_parameters])
+            parameters_update = torch.matmul(averaged_parameters.to(self._device), self.local_covmat).cpu().numpy()
+
+        return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[parameters_update])
+
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
+        """Executes the following operations:
+
+            * Create the torch dataloader using the batch size given at the ``__init__`` of the class
+            * Sets the model to `eval` mode
+            * Returns the predictions
+
+        Args:
+            predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
+        """
+        dataloader_batchsize = self._batch_size or len(predict_dataset)
+        predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)
+
+        self._model.eval()
+
+        predictions = torch.Tensor([])
+        with torch.inference_mode():
+            for x in predict_loader:
+                x = x.to(self._device)
+                predictions = torch.cat((predictions, self._model(x)), 0)
+
+        predictions = predictions.cpu().detach()
+
+        self._save_predictions(predictions, predictions_path)
 
     def _get_state_to_save(self) -> dict:
         """Create the algo checkpoint: a dictionary saved with ``torch.save`` using the
@@ -302,7 +306,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         checkpoint.update(
             {
                 "mean": self.local_mean,
-                "cov": self.local_covmat,
+                "covariance_matrix": self.local_covmat,
             }
         )
         return checkpoint
@@ -323,5 +327,5 @@ class TorchFedPCAAlgo(TorchAlgo):
         """
         checkpoint = super(TorchFedPCAAlgo, self)._update_from_checkpoint(path)
         self.local_mean = checkpoint.pop("mean")
-        self.local_covmat = checkpoint.pop("cov")
+        self.local_covmat = checkpoint.pop("covariance_matrix")
         return checkpoint

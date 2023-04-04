@@ -10,6 +10,7 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
+from substrafl.schemas import FedPCAAveragedState
 from substrafl.strategies.fed_pca import FedPCA
 from tests import assets_factory
 from tests import utils
@@ -225,3 +226,65 @@ def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_lin
             for i, row in enumerate(fed_pca_eigen_values)
         ]
     ).all()
+
+
+@pytest.mark.parametrize(
+    "data, local_mean, local_covmat",
+    [
+        [
+            (np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]), np.array([[0], [0], [0]])),
+            np.array([2, 2, 2]),
+            np.array([[2, 2, 2], [2, 2, 2], [2, 2, 2]]),
+        ],
+        [
+            (np.array([[3, 2, 1], [1, 2, 3], [2, 2, 2]]), np.array([[0], [0], [0]])),
+            np.array([2, 2, 2]),
+            np.array([[2, 0, -2], [0, 0, 0], [-2, 0, 2]]),
+        ],
+    ],
+)
+def test_train_pca_algo(torch_pca_algo, data, local_mean, local_covmat, rtol):
+    my_algo = torch_pca_algo()
+    assert my_algo.local_mean is None
+
+    out = my_algo.train(datasamples=data, _skip=True)
+    assert np.allclose(out.parameters_update[0], local_mean, rtol=rtol)
+    assert np.allclose(my_algo.local_mean, local_mean, rtol=rtol)
+    assert my_algo.local_covmat is None
+
+    avg_mean = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
+    out = my_algo.train(datasamples=data, shared_state=avg_mean, _skip=True)
+    assert np.allclose(my_algo.local_covmat, local_covmat, rtol=rtol)
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        (np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]), np.array([[0], [0], [0]])),
+        (np.array([[3, 2, 1], [1, 2, 3], [2, 2, 2]]), np.array([[0], [0], [0]])),
+    ],
+)
+def test_predict_pca_algo(torch_pca_algo, session_dir, data, rtol):
+    my_algo = torch_pca_algo()
+
+    prediction_file = session_dir / "PCA_predictions"
+
+    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
+    predictions_round0 = np.load(prediction_file)
+
+    out = my_algo.train(datasamples=data, _skip=True)
+    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
+    predictions_round1 = np.load(prediction_file)
+    assert np.allclose(predictions_round0, predictions_round1, rtol=rtol)  # Model is not updated before round 2
+
+    avg_mean = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
+    out = my_algo.train(datasamples=data, shared_state=avg_mean, _skip=True)
+    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
+    predictions_round2 = np.load(prediction_file)
+    assert np.allclose(predictions_round1, predictions_round2, rtol=rtol)  # Model is not updated before round 2
+
+    avg_parameters = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
+    out = my_algo.train(datasamples=data, shared_state=avg_parameters, _skip=True)
+    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
+    predictions_round3 = np.load(prediction_file)
+    assert not np.allclose(predictions_round2, predictions_round3, rtol=rtol)  # Model is updated at round 3
