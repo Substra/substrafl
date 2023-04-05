@@ -19,6 +19,7 @@ is made last. ([#110](https://github.com/Substra/substrafl/pull/110))
 
 ### Added
 
+- Add the Federated Principal Component Analysis strategy ([#97](https://github.com/Substra/substrafl/pull/97))
 - Initialization task to each strategy in SubstraFL. ([#89](https://github.com/Substra/substrafl/pull/89))
 
 This allows to load the `Algo` and all its attributes to the platform before any training? Once on the platform, we can perform a testing task before any training.
