@@ -154,6 +154,8 @@ class TorchFedPCAAlgo(TorchAlgo):
         Returns:
             torch.Tensor: input tensor project in the new dimension.
         """
+        self._model.eval()
+
         return self._model(input_tensor)
 
     def _instantiate_index_generator(self, n_samples: int):
@@ -177,7 +179,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
     def _compute_local_mean(self, train_data_loader: torch.utils.data.DataLoader):
         dataset_size = len(train_data_loader.dataset)
-        self.local_mean = torch.zeros((self._model.in_features,)).to(self._device)
+        self.local_mean = torch.zeros((self.in_features,)).to(self._device)
 
         for x_batch, _ in train_data_loader:
             x_batch = x_batch.to(self._device)
@@ -188,7 +190,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
     def _compute_local_covmat(self, averaged_mean: torch.Tensor, train_data_loader: torch.utils.data.DataLoader):
         # Starting local covariate matrix computation
-        self.local_covmat = torch.zeros((self._model.in_features, self._model.in_features)).to(self._device)
+        self.local_covmat = torch.zeros((self.in_features, self.in_features)).to(self._device)
 
         for x_batch, _ in train_data_loader:
             x_batch = x_batch.to(self._device)
@@ -302,13 +304,11 @@ class TorchFedPCAAlgo(TorchAlgo):
         dataloader_batchsize = self._batch_size or len(predict_dataset)
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)
 
-        self._model.eval()
-
         predictions = torch.Tensor([])
         with torch.inference_mode():
             for x in predict_loader:
                 x = x.to(self._device)
-                predictions = torch.cat((predictions, self._model(x)), 0)
+                predictions = torch.cat((predictions, self.reduce_dimension(x)), 0)
 
         predictions = predictions.cpu().detach()
 
