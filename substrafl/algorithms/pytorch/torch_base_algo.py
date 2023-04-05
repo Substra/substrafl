@@ -95,7 +95,7 @@ class TorchAlgo(Algo):
 
     @remote_data
     def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None) -> Any:
-        """Executes the following operations:
+        """Execute the following operations:
 
             * Create the test torch dataset.
             * Execute and return the results of the ``self._local_predict`` method
@@ -122,10 +122,10 @@ class TorchAlgo(Algo):
             shutil.move(str(predictions_path) + ".npy", predictions_path)
 
     def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
-        """Executes the following operations:
+        """Execute the following operations:
 
             * Create the torch dataloader using the index generator batch size.
-            * Sets the model to `eval` mode
+            * Set the model to `eval` mode
             * Save the predictions using the
               :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` function.
 
@@ -244,7 +244,7 @@ class TorchAlgo(Algo):
         """Load the checkpoint and update the internal state
         from it.
         Pop the values from the checkpoint so that we can ensure that it is empty at the
-        end, ie all the values have been used.
+        end, i.e. all the values have been used.
 
         Args:
             path (pathlib.Path): path where the checkpoint is saved

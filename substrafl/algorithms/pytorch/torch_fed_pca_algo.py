@@ -20,7 +20,7 @@ class TorchLinearModel(torch.nn.Module):
 
     Args:
         in_features (int): dimension of input vectors
-        out_features (int): number of dimensions to keep as part of dimensionality
+        out_features (int): dimension to keep as part of dimensionality
             reduction
     """
 
@@ -98,10 +98,10 @@ class TorchFedPCAAlgo(TorchAlgo):
         Args:
             dataset (torch.utils.data.Dataset): input data on which to perform PCA
             in_features (int): input data dimensionality
-            out_features (int): number of dimensions to keep after PCA
+            out_features (int): dimension to keep after PCA
             batch_size (Optional[int]): mini-batch size
             seed (int): random generator seed. The seed is mandatory. Default to 1.
-            use_gpu (bool): whether to use GPU or not
+            use_gpu (bool): whether to use GPU or not. Default to True.
         """
         self.in_features = in_features
         self.out_features = out_features
@@ -220,7 +220,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             This functions behaves differently depending on the round of the federated
             algorithm for PCA. In the first round, the mean vector is computed. In the
             second round, the covariance matrix is computed. The computation of the
-            eigenvectors starts from round 3. Sufficiently many rounds are necessary
+            eigenvectors starts from round 3. A sufficient number of rounds is necessary
             for the method to produce accurate eigenvectors. This can be monitored
             through mean square reconstruction error which should reach a global
             minimum when the algorithm has converged.
@@ -284,7 +284,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
     @remote_data
     def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: Path = None) -> Any:
-        """Executes the following operations:
+        """Execute the following operations:
 
             * Create the test torch dataset.
             * Execute the reduction dimension of the test dataset, and save the predictions on the
@@ -339,7 +339,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         """Load the checkpoint and update the internal state from it.
 
         Pop the values from the checkpoint so that we can ensure that it is empty at the
-        end, ie all the values have been used. For the specific case of PCA computation,
+        end, i.e. all the values have been used. For the specific case of PCA computation,
         the sample mean, covariance matrix and federated algorithm round index also need
         to be popped.
 
