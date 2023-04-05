@@ -135,6 +135,27 @@ class TorchFedPCAAlgo(TorchAlgo):
         """
         return [StrategyName.FEDERATED_PCA]
 
+    @property
+    def eigen_vectors(self) -> torch.Tensor:
+        """Current computed eigen vectors
+
+        Returns:
+            torch.Tensor: eigen vectors
+        """
+        return self._model.eigen_vectors.weight.data
+
+    def reduce_dimension(self, input_tensor: torch.Tensor) -> torch.Tensor:
+        """Compute the dimensions reduction on the input tensor, using the current
+        eigen vectors.
+
+        Args:
+            input_tensor (torch.Tensor): input tensor to compute the dimension reduction on.
+
+        Returns:
+            torch.Tensor: input tensor project in the new dimension.
+        """
+        return self._model(input_tensor)
+
     def _instantiate_index_generator(self, n_samples: int):
         """Create a generator for batches data points indices.
 

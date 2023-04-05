@@ -8,6 +8,8 @@ from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
 from substrafl.remote import register
@@ -258,6 +260,35 @@ def test_torch_fed_pca_performance(network, compute_plan, rtol):
     # Test computed predictions (inputs projected with eigen vectors)
     perfs = network.clients[0].get_performances(compute_plan.key)
     assert pytest.approx(0, abs=rtol) == perfs.performance[0]
+
+
+@pytest.mark.slow
+@pytest.mark.substra
+def test_download_load_algo(
+    network, compute_plan, session_dir, test_linear_data_samples_pca, numpy_pca_eigen_vectors, rtol
+):
+    download_algo_files(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        round_idx=None,
+        dest_folder=session_dir,
+    )
+    my_algo = load_algo(input_folder=session_dir)
+
+    # Align eigen values using their collinear coefficient
+    assert np.array(
+        [
+            np.allclose(np.dot(numpy_pca_eigen_vectors[i], row) * row, numpy_pca_eigen_vectors[i], rtol=rtol)
+            for i, row in enumerate(my_algo.eigen_vectors)
+        ]
+    ).all()
+
+    y_pred = (
+        my_algo.reduce_dimension(torch.from_numpy(test_linear_data_samples_pca[0][:, :-1]).float()).detach().numpy()
+    )
+    y_true = test_linear_data_samples_pca[0][:, -1]
+    performance = (abs(y_pred) - abs(y_true)).mean()
+    assert pytest.approx(0, abs=rtol) == performance
 
 
 @pytest.mark.parametrize(
