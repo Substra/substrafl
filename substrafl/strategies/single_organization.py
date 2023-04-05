@@ -111,8 +111,8 @@ class SingleOrganization(Strategy):
                 f" but {n_train_data_nodes} were passed."
             )
 
-        # define composite tasks (do not submit yet)
-        # for each composite task give description of Algo instead of a key for an algo
+        # define train tasks (do not submit yet)
+        # for each train task give description of Algo instead of a key for an algo
         next_local_state, _ = train_data_nodes[0].update_states(
             self.algo.train(
                 train_data_nodes[0].data_sample_keys,

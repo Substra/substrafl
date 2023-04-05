@@ -118,8 +118,8 @@ def test_pytorch_scaffold_algo_weights(
 
     my_algo = torch_algo()
 
-    rank_1_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=1)
-    rank_3_local_models = utils.download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank=3)
+    rank_1_local_models = utils.download_train_task_models_by_rank(network, session_dir, my_algo, compute_plan, rank=1)
+    rank_3_local_models = utils.download_train_task_models_by_rank(network, session_dir, my_algo, compute_plan, rank=3)
 
     # Download the aggregate output
     aggregate_model = utils.download_aggregate_model_by_rank(network, session_dir, compute_plan, rank=2)

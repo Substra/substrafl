@@ -257,8 +257,8 @@ class NewtonRaphson(Strategy):
         next_shared_states = []
 
         for i, node in enumerate(train_data_nodes):
-            # define composite tasks (do not submit yet)
-            # for each composite task give description of Algo instead of a key for an algo
+            # define train tasks (do not submit yet)
+            # for each train task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
                 self.algo.train(
                     node.data_sample_keys,

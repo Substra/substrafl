@@ -83,8 +83,8 @@ class Strategy(ABC):
         next_local_states = []
 
         for node in train_data_nodes:
-            # define composite tasks (do not submit yet)
-            # for each composite task give description of Algo instead of a key for an algo
+            # define train tasks (do not submit yet)
+            # for each train task give description of Algo instead of a key for an algo
             next_local_state = node.init_states(
                 self.algo.initialize(
                     _algo_name=f"Initializing with {self.algo.__class__.__name__}",
