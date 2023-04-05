@@ -144,7 +144,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         """
         return self._model.eigen_vectors.weight.data
 
-    def reduce_dimension(self, input_tensor: torch.Tensor) -> torch.Tensor:
+    def transform(self, input_tensor: torch.Tensor) -> torch.Tensor:
         """Compute the dimensions reduction on the input tensor, using the current
         eigen vectors.
 
@@ -308,7 +308,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         with torch.inference_mode():
             for x in predict_loader:
                 x = x.to(self._device)
-                predictions = torch.cat((predictions, self.reduce_dimension(x)), 0)
+                predictions = torch.cat((predictions, self.transform(x)), 0)
 
         predictions = predictions.cpu().detach()
 

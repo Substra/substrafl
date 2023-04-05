@@ -283,9 +283,7 @@ def test_download_load_algo(
         ]
     ).all()
 
-    y_pred = (
-        my_algo.reduce_dimension(torch.from_numpy(test_linear_data_samples_pca[0][:, :-1]).float()).detach().numpy()
-    )
+    y_pred = my_algo.transform(torch.from_numpy(test_linear_data_samples_pca[0][:, :-1]).float()).detach().numpy()
     y_true = test_linear_data_samples_pca[0][:, -1]
     performance = (abs(y_pred) - abs(y_true)).mean()
     assert pytest.approx(0, abs=rtol) == performance
