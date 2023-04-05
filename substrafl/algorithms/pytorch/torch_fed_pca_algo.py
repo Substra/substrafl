@@ -145,14 +145,15 @@ class TorchFedPCAAlgo(TorchAlgo):
         return self._model.eigen_vectors.weight.data
 
     def transform(self, input_tensor: torch.Tensor) -> torch.Tensor:
-        """Compute the dimensions reduction on the input tensor, using the current
-        eigen vectors.
+        """Compute the project of the input vector on the eigen vector subspace.
+        Input tensor shape must be of shape (N, in_features). The returned tensor
+        will be of shape (N, out_features).
 
         Args:
             input_tensor (torch.Tensor): input tensor to compute the dimension reduction on.
 
         Returns:
-            torch.Tensor: input tensor project in the new dimension.
+            torch.Tensor: input tensor project in the reduced dimension.
         """
         self._model.eval()
 
