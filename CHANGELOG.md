@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- Remove references to `composite`. Replace by `train_task`. ([#108](https://github.com/Substra/substrafl/pull/108))
+
 ### Added
 
 - Add the Federated Principal Component Analysis strategy ([#97](https://github.com/Substra/substrafl/pull/97))
