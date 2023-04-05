@@ -137,7 +137,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
     @property
     def eigen_vectors(self) -> torch.Tensor:
-        """Current computed eigen vectors
+        """Current computed eigen vectors.
 
         Returns:
             torch.Tensor: eigen vectors
@@ -282,16 +282,23 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[parameters_update])
 
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
+    @remote_data
+    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: Path = None) -> Any:
         """Executes the following operations:
 
-            * Create the torch dataloader using the batch size given at the ``__init__`` of the class
-            * Sets the model to `eval` mode
-            * Saves the predictions
+            * Create the test torch dataset.
+            * Execute the reduction dimension of the test dataset, and save the predictions on the
+              prediction path.
 
         Args:
-            predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
+            datasamples (typing.Any): Input data
+            shared_state (typing.Any): Latest train task shared state (output of the train method)
+            predictions_path (os.PathLike): Destination file to save predictions
         """
+
+        # Create torch dataset
+        predict_dataset = self._dataset(datasamples, is_inference=True)
+
         dataloader_batchsize = self._batch_size or len(predict_dataset)
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)
 
