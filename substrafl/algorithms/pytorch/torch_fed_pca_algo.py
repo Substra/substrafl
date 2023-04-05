@@ -289,8 +289,8 @@ class TorchFedPCAAlgo(TorchAlgo):
         """Execute the following operations:
 
             * Create the test torch dataset.
-            * Execute the reduction dimension of the test dataset, and save the predictions on the
-              prediction path.
+            * Execute the reduction dimension of the test dataset, and save them as
+              predictions on the prediction path.
 
         Args:
             datasamples (typing.Any): Input data
