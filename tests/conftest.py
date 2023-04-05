@@ -142,7 +142,6 @@ def mae_metric(network, default_permissions, mae):
     def mae_score(datasamples, predictions_path):
         y_true = datasamples[1]
         y_pred = np.load(predictions_path)
-
         return mae(y_pred, y_true)
 
     metric_key = register.add_metric(

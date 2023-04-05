@@ -41,8 +41,8 @@ class TorchLinearModel(torch.nn.Module):
             torch.Tensor: reduced dim vectors
         """
         eigen_vectors = self.eigen_vectors.weight.data
-        coefs = x @ eigen_vectors.T
-        return coefs @ eigen_vectors
+        projection = x @ eigen_vectors.T
+        return projection
 
 
 class TorchFedPCAAlgo(TorchAlgo):
@@ -266,7 +266,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
             * Create the torch dataloader using the batch size given at the ``__init__`` of the class
             * Sets the model to `eval` mode
-            * Returns the predictions
+            * Saves the predictions
 
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.

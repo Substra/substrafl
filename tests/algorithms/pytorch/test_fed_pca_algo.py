@@ -10,6 +10,7 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
+from substrafl.remote import register
 from substrafl.schemas import FedPCAAveragedState
 from substrafl.strategies.fed_pca import FedPCA
 from tests import assets_factory
@@ -19,8 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 LINEAR_N_COL = 3
-LINEAR_N_TARGET = 1
-N_EIGENVALUES = 2
+N_EIGENVALUES = 1
 NUM_ROUNDS = 10
 
 
@@ -117,7 +117,7 @@ def train_linear_nodes_pca(network, numpy_datasets, train_linear_data_samples_pc
 def test_linear_nodes_pca(
     network,
     numpy_datasets,
-    mae_metric,
+    abs_diff_metric,
     test_linear_data_samples_pca,
     session_dir,
 ):
@@ -148,7 +148,7 @@ def test_linear_nodes_pca(
             network.msp_ids[0],
             numpy_datasets[0],
             linear_samples,
-            metric_keys=[mae_metric],
+            metric_keys=[abs_diff_metric],
         )
     ]
 
@@ -156,21 +156,47 @@ def test_linear_nodes_pca(
 
 
 @pytest.fixture(scope="session")
-def test_linear_data_samples_pca():
+def numpy_pca_eigen_vectors(train_linear_data_samples_pca):
+    data = np.concatenate([d[:, :LINEAR_N_COL] for d in train_linear_data_samples_pca])
+    cov = np.cov(data.T)
+    _, eig = np.linalg.eig(cov)
+    pca_eigen_vectors = eig.T[:N_EIGENVALUES]
+    return pca_eigen_vectors
+
+
+@pytest.fixture(scope="session")
+def test_linear_data_samples_pca(numpy_pca_eigen_vectors):
     """Generates linear linked data for testing purposes. The train_linear_data_samples data and
     test_linear_data_samples data are linked with the same weights as they fixed per the same seed.
 
     Returns:
         List[np.ndarray]: A one element list containing linear linked data.
     """
-    return [
-        assets_factory.linear_data(
-            n_col=LINEAR_N_COL + LINEAR_N_TARGET,
-            n_samples=64,
-            weights_seed=42,
-            noise_seed=42,
-        )
-    ]
+    test_inputs_data = assets_factory.linear_data(
+        n_col=LINEAR_N_COL,
+        n_samples=64,
+        weights_seed=42,
+        noise_seed=42,
+    )
+
+    projected_data = np.matmul(test_inputs_data, numpy_pca_eigen_vectors.T)
+    return [np.concatenate((test_inputs_data, projected_data), axis=1)]
+
+
+@pytest.fixture(scope="session")
+def abs_diff_metric(network, default_permissions, mae):
+    metric_deps = Dependency(pypi_dependencies=["numpy"], editable_mode=True)
+
+    def abs_diff(datasamples, predictions_path):
+        y_true = datasamples[1]
+        y_pred = np.load(predictions_path)
+        return (abs(y_pred) - abs(y_true)).mean()
+
+    metric_key = register.add_metric(
+        client=network.clients[0], metric_function=abs_diff, permissions=default_permissions, dependencies=metric_deps
+    )
+
+    return metric_key
 
 
 @pytest.fixture(scope="session")
@@ -199,16 +225,14 @@ def train_linear_data_samples_pca(network, seed):
 
 @pytest.mark.substra
 @pytest.mark.slow
-def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_linear_data_samples_pca, rtol):
+def test_torch_fed_pca_eigen_values(network, compute_plan, session_dir, numpy_pca_eigen_vectors, rtol):
     """Check the weight initialization, aggregation and set weights.
     The aggregation itself is tested at the strategy level, here we test
     the pytorch layer.
     """
 
-    data = np.concatenate([d[:, :LINEAR_N_COL] for d in train_linear_data_samples_pca])
-    cov = np.cov(data.T)
-    _, eig = np.linalg.eig(cov)
-    numpy_pca_eigen_values = eig.T[:N_EIGENVALUES]
+    # Test eigen values compute during last aggregation
+
     # The number of rank is a first local update, and then aggregation and train times num rounds
     final_aggregated_rank = (
         1 + 2 * NUM_ROUNDS - 1
@@ -217,15 +241,23 @@ def test_torch_fed_pca_performance(network, compute_plan, session_dir, train_lin
         network, session_dir, compute_plan, rank=final_aggregated_rank
     )
 
-    fed_pca_eigen_values = fed_pca_model.avg_parameters_update[0]
+    fed_pca_eigen_vectors = fed_pca_model.avg_parameters_update[0]
 
     # Align eigen values using their collinear coefficient
     assert np.array(
         [
-            np.allclose(np.dot(numpy_pca_eigen_values[i], row) * row, numpy_pca_eigen_values[i], rtol=rtol)
-            for i, row in enumerate(fed_pca_eigen_values)
+            np.allclose(np.dot(numpy_pca_eigen_vectors[i], row) * row, numpy_pca_eigen_vectors[i], rtol=rtol)
+            for i, row in enumerate(fed_pca_eigen_vectors)
         ]
     ).all()
+
+
+@pytest.mark.substra
+@pytest.mark.slow
+def test_torch_fed_pca_performance(network, compute_plan, rtol):
+    # Test computed predictions (inputs projected with eigen vectors)
+    perfs = network.clients[0].get_performances(compute_plan.key)
+    assert pytest.approx(0, abs=rtol) == perfs.performance[0]
 
 
 @pytest.mark.parametrize(
