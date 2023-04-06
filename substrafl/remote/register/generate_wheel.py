@@ -83,7 +83,8 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
         # Necessary command to install the wheel in the docker image
         force_reinstall = "--force-reinstall " if lib_name in ["substratools", "substra"] else ""
         install_cmd = (
-            f"RUN cd {dest_dir} && python{python_major_minor}" f" -m pip install {force_reinstall}{wheel_name}\n"
+            f"COPY {dest_dir}/{wheel_name} . \n"
+            + f"RUN python{python_major_minor} -m pip install {force_reinstall}{wheel_name}\n"
         )
         install_cmds.append(install_cmd)
 
@@ -135,7 +136,7 @@ def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: 
 
         # Get wheel name based on current version
         shutil.copy(LOCAL_WHEELS_FOLDER / wheel_name, wheels_dir / wheel_name)
-        install_cmd = f"RUN cd {dest_dir} && python{python_major_minor} -m pip install {wheel_name}\n"
+        install_cmd = f"COPY {dest_dir}/{wheel_name} . \n RUN python{python_major_minor} -m pip install {wheel_name}\n"
         install_cmds.append(install_cmd)
 
     return "\n".join(install_cmds)
