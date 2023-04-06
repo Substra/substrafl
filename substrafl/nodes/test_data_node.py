@@ -126,6 +126,7 @@ class TestDataNode(Node):
 
     def register_predict_operations(
         self,
+        *,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],

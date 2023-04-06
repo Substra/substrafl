@@ -101,6 +101,7 @@ def get_parameters(
 
 
 def increment_parameters(
+    *,
     model: torch.nn.Module,
     updates: List[torch.nn.parameter.Parameter],
     with_batch_norm_parameters: bool,

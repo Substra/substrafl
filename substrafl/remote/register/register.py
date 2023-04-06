@@ -281,6 +281,7 @@ def _create_substra_function_files(
 
 
 def register_function(
+    *,
     client: substra.Client,
     remote_struct: RemoteStruct,
     permissions: substra.sdk.schemas.Permissions,
@@ -356,6 +357,7 @@ def _check_metric_function(metric_function: typing.Callable):
 
 
 def add_metric(
+    *,
     client: substra.Client,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,

@@ -67,8 +67,8 @@ def _register_operations(
 
     for train_data_node in train_data_nodes:
         operation_cache = train_data_node.register_operations(
-            client,
-            permissions,
+            client=client,
+            permissions=permissions,
             cache=operation_cache,
             dependencies=dependencies,
         )
@@ -94,8 +94,8 @@ def _register_operations(
     # the strategy dependencies
     if aggregation_node is not None:
         operation_cache = aggregation_node.register_operations(
-            client,
-            permissions,
+            client=client,
+            permissions=permissions,
             cache=operation_cache,
             dependencies=dependencies,
         )
@@ -208,6 +208,7 @@ def _get_packages_versions() -> dict:
 
 
 def execute_experiment(
+    *,
     client: substra.Client,
     strategy: Strategy,
     train_data_nodes: List[TrainDataNode],

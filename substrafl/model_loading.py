@@ -196,6 +196,7 @@ def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:
 
 
 def download_algo_files(
+    *,
     client: substra.Client,
     compute_plan_key: str,
     dest_folder: os.PathLike,
