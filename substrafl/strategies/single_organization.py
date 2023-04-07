@@ -69,7 +69,7 @@ class SingleOrganization(Strategy):
             )
 
         next_local_state = train_data_nodes[0].init_states(
-            self.algo.initialize(
+            opertation=self.algo.initialize(
                 _algo_name=f"Initializing with {self.algo.__class__.__name__}",
             ),
             round_idx=round_idx,
