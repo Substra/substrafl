@@ -81,8 +81,8 @@ def _register_operations(
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
             predict_algo_cache = test_data_node.register_predict_operations(
-                client,
-                permissions,
+                client=client,
+                permissions=permissions,
                 cache=predict_algo_cache,
                 dependencies=dependencies,
             )
