@@ -111,7 +111,7 @@ def _copy_local_packages(
 
     local_dependencies_cmd = "\n".join(
         [
-            f"COPY {operation_dir}/{dependency}  . \n"
+            f"COPY {dependency}  {dependency} \n"
             + f"RUN python{python_major_minor} -m pip install --no-cache-dir {dependency} \n"
             for dependency in dependencies_buffer
         ]
