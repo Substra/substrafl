@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.35.1](https://github.com/Substra/substrafl/releases/tag/0.35.1) - 2023-04-11
+
 ### Changed
 
 - Change order of layers in the Dockerfile: files are copied as needed before the installation layers, and the final copy
