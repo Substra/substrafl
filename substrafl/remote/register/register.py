@@ -42,8 +42,6 @@ SUBSTRAFL_FOLDER = "substrafl_internal"
 DOCKERFILE_TEMPLATE = """
 FROM {docker_image}
 
-COPY . .
-
 # install dependencies
 RUN python{python_version} -m pip install -U pip
 
@@ -57,6 +55,9 @@ RUN python{python_version} -m pip install -U pip
 {local_dependencies}
 
 ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
+
+COPY . .
+
 """
 
 FUNCTION = """
@@ -88,7 +89,7 @@ def _copy_local_packages(
     path: Path, local_dependencies: typing.List[Path], python_major_minor: str, operation_dir: Path
 ):
     """Copy the local libraries given by the user and generate the installation command."""
-    dependencies_buffer = list()
+    dependencies_buffer = []
     path.mkdir(exist_ok=True)
     for dependency_path in local_dependencies:
         dest_path = path / dependency_path.name
@@ -108,11 +109,14 @@ def _copy_local_packages(
 
         dependencies_buffer.append(f"{dest_path.relative_to(operation_dir)}")
 
-    local_dependencies_cmd = (
-        f"RUN python{python_major_minor} -m pip install --no-cache-dir " + " ".join(dependencies_buffer)
-        if len(local_dependencies) > 0
-        else ""
+    local_dependencies_cmd = "\n".join(
+        [
+            f"COPY {operation_dir}/{dependency}  . \n"
+            + f"RUN python{python_major_minor} -m pip install --no-cache-dir {dependency} \n"
+            for dependency in dependencies_buffer
+        ]
     )
+
     return local_dependencies_cmd
 
 
