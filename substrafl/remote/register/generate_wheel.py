@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 LOCAL_WHEELS_FOLDER = Path.home() / ".substrafl"
 
 
-def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
+def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
     """Prepares the private modules from lib_modules list to be installed in a Docker image and generates the
     appropriated install command for a dockerfile. It first creates the wheel for each library. Each of the
     libraries must be already installed in the correct version locally. Use command:
@@ -91,7 +91,7 @@ def local_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor:
     return "\n".join(install_cmds)
 
 
-def pypi_lib_wheels(lib_modules: List, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
+def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
     """Retrieves lib_modules' wheels to be installed in a Docker image and generates
     the appropriated install command for a dockerfile.
 

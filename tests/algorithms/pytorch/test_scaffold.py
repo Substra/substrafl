@@ -137,7 +137,7 @@ def test_pytorch_scaffold_algo_weights(
 
     # Assert that the weights are well set
     for model_1, model_3 in zip(rank_1_local_models, rank_3_local_models):
-        increment_parameters(model_1.model, aggregate_update, with_batch_norm_parameters=True)
+        increment_parameters(model=model_1.model, updates=aggregate_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_1.model, model_3.model)
 
     # The local models and _client_control_variate are always the same on every organization, as both organizations have

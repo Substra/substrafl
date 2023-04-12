@@ -91,7 +91,7 @@ def rng_strategy():
 
             for i, node in enumerate(train_data_nodes):
                 next_local_state, next_shared_state = node.update_states(
-                    self.algo.train(
+                    operation=self.algo.train(
                         node.data_sample_keys,
                     ),
                     round_idx=round_idx,

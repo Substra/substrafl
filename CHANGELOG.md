@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Enforce kwargs for user facing function with more than 3 parameters ([#109](https://github.com/Substra/substrafl/pull/109))
 - Remove references to `composite`. Replace by `train_task`. ([#108](https://github.com/Substra/substrafl/pull/108))
 
 ### Added

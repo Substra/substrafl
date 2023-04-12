@@ -126,15 +126,15 @@ def test_add_metric_wrong_metric_function(metric_function, error, default_permis
     if error is not None:
         with pytest.raises(error):
             register.add_metric(
-                client,
-                default_permissions,
-                metric_deps,
-                metric_function,
+                client=client,
+                permissions=default_permissions,
+                dependencies=metric_deps,
+                metric_function=metric_function,
             )
     else:
         register.add_metric(
-            client,
-            default_permissions,
-            metric_deps,
-            metric_function,
+            client=client,
+            permissions=default_permissions,
+            dependencies=metric_deps,
+            metric_function=metric_function,
         )

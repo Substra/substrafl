@@ -46,6 +46,7 @@ def remote_data(method: Callable):
         self,
         data_samples: Optional[List[str]] = None,
         shared_state: Any = None,
+        *,
         _skip: bool = False,
         _algo_name: Optional[str] = None,
         **method_parameters,
@@ -117,6 +118,7 @@ def remote(method: Callable):
     def remote_method_inner(
         self,
         shared_states: Optional[List] = None,
+        *,
         _skip: bool = False,
         _algo_name: Optional[str] = None,
         **method_parameters,

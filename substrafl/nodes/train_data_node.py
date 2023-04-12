@@ -46,6 +46,7 @@ class TrainDataNode(Node):
 
     def init_states(
         self,
+        *,
         operation: RemoteOperation,
         round_idx: int,
         authorized_ids: Set[str],
@@ -80,6 +81,7 @@ class TrainDataNode(Node):
     def update_states(
         self,
         operation: RemoteDataOperation,
+        *,
         round_idx: int,
         authorized_ids: Set[str],
         aggregation_id: Optional[str] = None,
@@ -190,6 +192,7 @@ class TrainDataNode(Node):
 
     def register_operations(
         self,
+        *,
         client: substra.Client,
         permissions: substra.sdk.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],

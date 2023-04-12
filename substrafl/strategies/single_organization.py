@@ -44,6 +44,7 @@ class SingleOrganization(Strategy):
 
     def initialization_round(
         self,
+        *,
         train_data_nodes: List[TrainDataNode],
         clean_models: bool,
         round_idx: Optional[int] = 0,
@@ -68,7 +69,7 @@ class SingleOrganization(Strategy):
             )
 
         next_local_state = train_data_nodes[0].init_states(
-            self.algo.initialize(
+            operation=self.algo.initialize(
                 _algo_name=f"Initializing with {self.algo.__class__.__name__}",
             ),
             round_idx=round_idx,
@@ -80,6 +81,7 @@ class SingleOrganization(Strategy):
 
     def perform_round(
         self,
+        *,
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
         clean_models: bool,
@@ -114,7 +116,7 @@ class SingleOrganization(Strategy):
         # define train tasks (do not submit yet)
         # for each train task give description of Algo instead of a key for an algo
         next_local_state, _ = train_data_nodes[0].update_states(
-            self.algo.train(
+            operation=self.algo.train(
                 train_data_nodes[0].data_sample_keys,
                 shared_state=None,
                 _algo_name=f"Training with {self.algo.__class__.__name__}",

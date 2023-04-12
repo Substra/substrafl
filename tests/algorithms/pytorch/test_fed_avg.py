@@ -100,7 +100,7 @@ def test_pytorch_fedavg_algo_weights(network, compute_plan, torch_algo, session_
 
     # Assert that the weights are well set
     for model_1, model_3 in zip(rank_1_local_models, rank_3_local_models):
-        increment_parameters(model_1.model, aggregate_update, with_batch_norm_parameters=True)
+        increment_parameters(model=model_1.model, updates=aggregate_update, with_batch_norm_parameters=True)
         assert_model_parameters_equal(model_1.model, model_3.model)
 
     # The local models are always the same on every organization

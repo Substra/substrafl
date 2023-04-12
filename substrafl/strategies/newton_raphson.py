@@ -70,6 +70,7 @@ class NewtonRaphson(Strategy):
 
     def perform_round(
         self,
+        *,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: AggregationNode,
         round_idx: int,
@@ -114,7 +115,7 @@ class NewtonRaphson(Strategy):
             )
 
         current_aggregation = aggregation_node.update_states(
-            self.compute_averaged_states(
+            operation=self.compute_averaged_states(
                 shared_states=self._shared_states,
                 _algo_name="Aggregating",
             ),
@@ -260,7 +261,7 @@ class NewtonRaphson(Strategy):
             # define train tasks (do not submit yet)
             # for each train task give description of Algo instead of a key for an algo
             next_local_state, next_shared_state = node.update_states(
-                self.algo.train(
+                operation=self.algo.train(
                     node.data_sample_keys,
                     shared_state=current_aggregation,
                     _algo_name=f"Training with {self.algo.__class__.__name__}",

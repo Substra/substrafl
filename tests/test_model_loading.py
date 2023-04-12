@@ -326,4 +326,6 @@ def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_
     """Raise error if the task status is not done"""
     with pytest.raises(UnfinishedTrainTaskError):
         fake_local_train_task.status = status
-        download_algo_files(fake_client, fake_compute_plan.key, session_dir, round_idx=None)
+        download_algo_files(
+            client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=session_dir, round_idx=None
+        )

@@ -157,8 +157,8 @@ def test_increment_parameters(model, with_batch_norm_parameters, request):
     my_model2 = request.getfixturevalue(model)()
 
     weight_manager.increment_parameters(
-        my_model1,
-        weight_manager.get_parameters(my_model2, with_batch_norm_parameters=with_batch_norm_parameters),
+        model=my_model1,
+        updates=weight_manager.get_parameters(my_model2, with_batch_norm_parameters=with_batch_norm_parameters),
         with_batch_norm_parameters=with_batch_norm_parameters,
     )
 
