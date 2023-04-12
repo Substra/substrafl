@@ -80,8 +80,8 @@ class TrainDataNode(Node):
 
     def update_states(
         self,
-        *,
         operation: RemoteDataOperation,
+        *,
         round_idx: int,
         authorized_ids: Set[str],
         aggregation_id: Optional[str] = None,

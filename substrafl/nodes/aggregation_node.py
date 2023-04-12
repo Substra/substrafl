@@ -26,8 +26,8 @@ class AggregationNode(Node):
 
     def update_states(
         self,
-        *,
         operation: RemoteOperation,
+        *,
         round_idx: int,
         authorized_ids: Set[str],
         clean_models: bool = False,
