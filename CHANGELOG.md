@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Added
+
+- Add the Federated Principal Component Analysis strategy ([#97](https://github.com/Substra/substrafl/pull/97))
+
 ## [0.35.1](https://github.com/Substra/substrafl/releases/tag/0.35.1) - 2023-04-11
 
 ### Changed
@@ -14,12 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change order of layers in the Dockerfile: files are copied as needed before the installation layers, and the final copy
 is made last. ([#110](https://github.com/Substra/substrafl/pull/110))
 
-
 ## [0.35.0](https://github.com/Substra/substrafl/releases/tag/0.35.0) - 2023-03-31
 
 ### Added
 
-- Add the Federated Principal Component Analysis strategy ([#97](https://github.com/Substra/substrafl/pull/97))
 - Initialization task to each strategy in SubstraFL. ([#89](https://github.com/Substra/substrafl/pull/89))
 
 This allows to load the `Algo` and all its attributes to the platform before any training? Once on the platform, we can perform a testing task before any training.
