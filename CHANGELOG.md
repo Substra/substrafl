@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Enforce kwargs for user facing function with more thant 3 parameters ([#109](https://github.com/Substra/substrafl/pull/109))
+
+### Changed
+
 - Change order of layers in the Dockerfile: files are copied as needed before the installation layers, and the final copy
 is made last. ([#110](https://github.com/Substra/substrafl/pull/110))
 
