@@ -125,20 +125,20 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
     return metadata
 
 
-def _get_composite_from_round(client: substra.Client, compute_plan_key: str, round_idx: int) -> substra.models.Task:
-    """Return the composite train task:
+def _get_train_task_from_round(client: substra.Client, compute_plan_key: str, round_idx: int) -> substra.models.Task:
+    """Return the train task:
 
         - hosted on the given client organization
         - belonging to the given compute plan
         - of the given round_idx
 
     Args:
-        client (substra.Client): Substra client where to fetch the composite train task from.
-        compute_plan_key (str): Compute plan key to fetch the composite from.
-        round_idx (int): Round of the strategy to fetch the composite from.
+        client (substra.Client): Substra client where to fetch the train task from.
+        compute_plan_key (str): Compute plan key to fetch the train task from.
+        round_idx (int): Round of the strategy to fetch the train task from.
 
     Returns:
-        substra.models.Task: The composite matching the given requirements.
+        substra.models.Task: The train task matching the given requirements.
     """
     org_id = client.organization_info().organization_id
 
@@ -173,7 +173,7 @@ def _get_composite_from_round(client: substra.Client, compute_plan_key: str, rou
 def _load_algo(algo_path: Path, extraction_folder: Path) -> Any:
     """Load into memory a serialized (and compressed (.tar.gz)) substrafl algo within the given algo_path.
     This kind of file is usually the result of the ``substra.Client.download_function`` function applied to
-    a composite train task being part of a Substrafl experiment.
+    a train task being part of a Substrafl experiment.
 
     Args:
         algo_path (Path): A file being the tar.gz compression of a substrafl RemoteStruct algorithm
@@ -216,7 +216,7 @@ def download_algo_files(
         - a metadata.json
 
     Important:
-        This function supports only strategies with one composite traintask for a given organization and round.
+        This function supports only strategies with one train task for a given organization and round.
 
     Args:
         client (substra.Client): Substra client where to fetch the model from.
@@ -228,10 +228,10 @@ def download_algo_files(
     Raises:
         NotImplementedError: The given compute plan must have been submitted to Substra through the
             :func:`~substrafl.experiment.execute_experiment` function.
-        TrainTaskNotFoundError: If no composite matches the given requirements.
+        TrainTaskNotFoundError: If no train task matches the given requirements.
         MultipleTrainTaskError: The experiment to get the model from can't have multiple
             TrainDataNodes hosted on the same organization. In practice this means the presence of multiple
-            composite train tasks with the same round number on the same rank.
+            train tasks with the same round number on the same rank.
         UnfinishedTrainTaskError: The task from which the files are trying to be downloaded is not done.
     """
     compute_plan = client.get_compute_plan(compute_plan_key)
@@ -244,22 +244,19 @@ def download_algo_files(
     if round_idx is None:
         round_idx = compute_plan.metadata["num_rounds"]
 
-    # Get the composite associated to user inputs
-    composite_traintask = _get_composite_from_round(
-        client=client, compute_plan_key=compute_plan_key, round_idx=round_idx
-    )
+    # Get the train task associated to user inputs
+    train_task = _get_train_task_from_round(client=client, compute_plan_key=compute_plan_key, round_idx=round_idx)
 
-    if composite_traintask.status is not Status.done:
+    if train_task.status is not Status.done:
         raise UnfinishedTrainTaskError(
-            f"Can't download algo files form task {composite_traintask.key} as it is "
-            f"in status {composite_traintask.status}"
+            f"Can't download algo files form task {train_task.key} as it is " f"in status {train_task.status}"
         )
 
-    algo_file = client.download_function(composite_traintask.function.key, destination_folder=folder)
+    algo_file = client.download_function(train_task.function.key, destination_folder=folder)
 
     # Get the associated head model (local state)
     local_state_file = client.download_model_from_task(
-        composite_traintask.key, folder=folder, identifier=OutputIdentifiers.local
+        train_task.key, folder=folder, identifier=OutputIdentifiers.local
     )
 
     # Environment requirements and local state path

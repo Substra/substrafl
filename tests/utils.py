@@ -70,7 +70,7 @@ def wait(client, asset, timeout=FUTURE_TIMEOUT, raises=True):
     return asset
 
 
-def download_composite_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
+def download_train_task_models_by_rank(network, session_dir, my_algo, compute_plan, rank: int):
     # Retrieve local train task key
     train_tasks = network.clients[0].list_task(
         filters={

@@ -48,7 +48,7 @@ def test_dependency_validators_no_setup_file():
 @pytest.mark.substra
 class TestLocalDependency:
     def _register_function(self, my_algo, algo_deps, client, session_dir):
-        """Register a composite algo"""
+        """Register a train function"""
         data_op = my_algo.train(data_samples=list(), shared_state=None)
         operation_dir = Path(tempfile.mkdtemp(dir=session_dir))
         archive_path, description_path = _create_substra_function_files(
@@ -100,9 +100,9 @@ class TestLocalDependency:
         function_key = client.add_function(algo_query)
         return function_key
 
-    def _register_composite(self, function_key, dataset_key, data_sample_key, client):
-        """Register a composite traintask"""
-        composite_traintask_query = substra.schemas.TaskSpec(
+    def _register_train_task(self, function_key, dataset_key, data_sample_key, client):
+        """Register a traintask"""
+        train_task_query = substra.schemas.TaskSpec(
             function_key=function_key,
             data_manager_key=dataset_key,
             train_data_sample_keys=[data_sample_key],
@@ -120,9 +120,9 @@ class TestLocalDependency:
             },
             worker=client.organization_info().organization_id,
         )
-        composite_key = client.add_task(composite_traintask_query)
-        composite_traintask = client.get_task(composite_key)
-        return composite_traintask
+        train_task_key = client.add_task(train_task_query)
+        train_task = client.get_task(train_task_key)
+        return train_task
 
     def test_pypi_dependency(
         self,
@@ -138,8 +138,8 @@ class TestLocalDependency:
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=True)
         function_key = self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintask)
+        train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, train_task)
 
     def test_local_dependencies_directory(
         self,
@@ -174,8 +174,8 @@ class TestLocalDependency:
         )
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintask)
+        train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, train_task)
 
     def test_local_dependencies_file_in_directory(
         self,
@@ -210,8 +210,8 @@ class TestLocalDependency:
         )
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintask)
+        train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, train_task)
 
     def test_local_dependencies_file(
         self,
@@ -246,8 +246,8 @@ class TestLocalDependency:
         )
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintask)
+        train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, train_task)
 
     @pytest.mark.docker_only
     @pytest.mark.parametrize(
@@ -292,5 +292,5 @@ class TestLocalDependency:
         )
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
-        composite_traintask = self._register_composite(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, composite_traintask)
+        train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
+        utils.wait(client, train_task)

@@ -86,7 +86,7 @@ class TrainDataNode(Node):
         clean_models: bool = False,
         local_state: Optional[LocalStateRef] = None,
     ) -> Tuple[LocalStateRef, SharedStateRef]:
-        """Adding a composite train task to the list of operations to
+        """Adding a train task to the list of operations to
         be executed by the node during the compute plan. This is done in a static
         way, nothing is submitted to substra.
         This is why the function key is a RemoteStruct (substrafl local reference of the algorithm)
@@ -157,7 +157,7 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
-        composite_traintask = substra.schemas.ComputePlanTaskSpec(
+        train_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
             inputs=data_inputs + local_inputs + shared_inputs,
@@ -181,10 +181,10 @@ class TrainDataNode(Node):
             worker=self.organization_id,
         ).dict()
 
-        composite_traintask.pop("function_key")
-        composite_traintask["remote_operation"] = operation.remote_struct
+        train_task.pop("function_key")
+        train_task["remote_operation"] = operation.remote_struct
 
-        self.tasks.append(composite_traintask)
+        self.tasks.append(train_task)
 
         return LocalStateRef(op_id), SharedStateRef(op_id)
 
@@ -195,7 +195,7 @@ class TrainDataNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ) -> Dict[RemoteStruct, OperationKey]:
-        """Define the functions for each operation and submit the composite traintask to substra.
+        """Define the functions for each operation and submit the train task to substra.
 
         Go through every operation in the computation graph, check what function they use (identified by their
         RemoteStruct id), submit it to substra and save `RemoteStruct : function_key` into the `cache`
