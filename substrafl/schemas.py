@@ -9,6 +9,7 @@ import pydantic
 
 class StrategyName(str, Enum):
     FEDERATED_AVERAGING = "Federated Averaging"
+    FEDERATED_PCA = "Federated PCA"
     SCAFFOLD = "Scaffold"
     SINGLE_ORGANIZATION = "Single organization"
     NEWTON_RAPHSON = "Newton Raphson"
@@ -31,6 +32,22 @@ class FedAvgAveragedState(_Model):
 class FedAvgSharedState(_Model):
     """Shared state returned by the train method of the algorithm for each client,
     received by the aggregate function in the federated averaging strategy.
+    """
+
+    n_samples: int
+    parameters_update: List[np.ndarray]
+
+
+class FedPCAAveragedState(_Model):
+    """Shared state sent by the aggregate_organization in the federated
+    PCA strategy."""
+
+    avg_parameters_update: List[np.ndarray]
+
+
+class FedPCASharedState(_Model):
+    """Shared state returned by the train method of the algorithm for each client,
+    received by the aggregate function in the federated PCA strategy.
     """
 
     n_samples: int

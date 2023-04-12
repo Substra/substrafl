@@ -173,6 +173,7 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ["search.html"]
 
+autodoc_mock_imports = ["torch"]
 
 # As we defined the type of our args, auto doc is trying to find a link to a
 # documentation for each type specified
