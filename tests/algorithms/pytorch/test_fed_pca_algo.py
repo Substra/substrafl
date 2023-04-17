@@ -352,7 +352,7 @@ def test_predict_pca_algo(torch_pca_algo, session_dir, data, rtol):
 
 
 @pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
-def test_batch_size_in_predict(batch_size, session_dir, torch_pca_algo):
+def test_large_batch_size_in_predict(batch_size, session_dir, torch_pca_algo):
     n_samples = 10
 
     x_train = np.zeros([n_samples, 3])

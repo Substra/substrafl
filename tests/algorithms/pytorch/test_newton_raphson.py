@@ -371,7 +371,7 @@ def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, ma
 
 
 @pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
-def test_batch_size_in_predict(batch_size, session_dir, torch_algo, perceptron):
+def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, perceptron):
     n_samples = 10
 
     x_train = np.zeros([n_samples, 10])
