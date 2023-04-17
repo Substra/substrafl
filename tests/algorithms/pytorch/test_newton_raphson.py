@@ -381,4 +381,6 @@ def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, percep
     my_algo = torch_algo(model=model, batch_size=batch_size)
 
     prediction_file = session_dir / "NR_predictions"
+
+    # Check that no MemoryError is thrown
     my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
