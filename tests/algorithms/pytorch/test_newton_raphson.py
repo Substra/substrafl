@@ -368,3 +368,17 @@ def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, ma
     # This test fails with default approx parameters
     # TODO: investigate
     assert performance == pytest.approx(EXPECTED_PERFORMANCE, abs=rtol)
+
+
+@pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
+def test_batch_size_in_predict(batch_size, session_dir, torch_algo, perceptron):
+    n_samples = 10
+
+    x_train = np.zeros([n_samples, 10])
+    y_train = np.ones([n_samples, 10])
+
+    model = perceptron(linear_n_col=10, linear_n_target=10)
+    my_algo = torch_algo(model=model, batch_size=batch_size)
+
+    prediction_file = session_dir / "NR_predictions"
+    my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)

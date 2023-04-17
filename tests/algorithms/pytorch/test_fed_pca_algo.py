@@ -31,13 +31,11 @@ def torch_pca_algo(numpy_torch_dataset, seed):
     torch.manual_seed(seed)
 
     class MyAlgo(TorchFedPCAAlgo):
-        def __init__(
-            self,
-        ):
+        def __init__(self, batch_size=1):
             super().__init__(
                 in_features=LINEAR_N_COL,
                 out_features=N_EIGENVALUES,
-                batch_size=1,
+                batch_size=batch_size,
                 dataset=numpy_torch_dataset,
                 seed=seed,
             )
@@ -351,3 +349,16 @@ def test_predict_pca_algo(torch_pca_algo, session_dir, data, rtol):
     my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
     predictions_round3 = np.load(prediction_file)
     assert not np.allclose(predictions_round2, predictions_round3, rtol=rtol)  # Model is updated at round 3
+
+
+@pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
+def test_batch_size_in_predict(batch_size, session_dir, torch_pca_algo):
+    n_samples = 10
+
+    x_train = np.zeros([n_samples, 3])
+    y_train = np.ones([n_samples, 1])
+
+    my_algo = torch_pca_algo(batch_size=batch_size)
+
+    prediction_file = session_dir / "NR_predictions"
+    my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)

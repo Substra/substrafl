@@ -258,7 +258,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
         """
-        dataloader_batchsize = self._batch_size or len(predict_dataset)
+        dataloader_batchsize = min(self._batch_size, len(predict_dataset)) if self._batch_size else len(predict_dataset)
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)
 
         self._model.eval()
