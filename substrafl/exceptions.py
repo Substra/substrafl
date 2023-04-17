@@ -27,6 +27,10 @@ class EmptySharedStatesError(Exception):
     StrategySharedState object."""
 
 
+class ExistingRegisteredMetricError(Exception):
+    """A metric with the same name is already registered."""
+
+
 class IncompatibleAlgoStrategyError(Exception):
     """This algo is not compatible with this strategy."""
 

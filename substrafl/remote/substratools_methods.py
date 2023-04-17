@@ -88,8 +88,10 @@ class RemoteMethod:
         elif OutputIdentifiers.shared in outputs:
             self.save_model(method_output, outputs[OutputIdentifiers.shared])
 
-        elif OutputIdentifiers.performance in outputs:
-            tools.save_performance(method_output, outputs[OutputIdentifiers.performance])
+        else:
+            for output in outputs:
+                if output.startswith(OutputIdentifiers.performance):
+                    tools.save_performance(method_output[output], output)
 
     def generic_function(
         self,

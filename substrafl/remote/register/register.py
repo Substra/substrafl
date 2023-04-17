@@ -343,24 +343,21 @@ def _check_metric_function(metric_function: typing.Callable):
 
     if "datasamples" not in parameters:
         raise exceptions.MetricFunctionSignatureError(
-            "The metric_function() function must contain datasamples as parameter."
+            f"The metric_function: {metric_function.__name__} must contain datasamples as parameter."
         )
     elif "predictions_path" not in parameters:
         raise exceptions.MetricFunctionSignatureError(
-            "The metric_function() function must contain predictions_path as parameter."
+            "The metric_function: {metric_function.__name__}  must contain predictions_path as parameter."
         )
     elif len(parameters) != 2:
         raise exceptions.MetricFunctionSignatureError(
-            """The metric_function() function must ONLY contains datasamples and predictions_path as
+            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions_path as
             parameters."""
         )
 
 
 def add_metric(
     *,
-    client: substra.Client,
-    permissions: substra.sdk.schemas.Permissions,
-    dependencies: Dependency,
     metric_function: typing.Callable,
     metric_name: typing.Optional[str] = None,
 ) -> str:
@@ -377,65 +374,102 @@ def add_metric(
             This function is registered in substra as a metric.
         metric_name (str, Optional): Optional name chosen by the user to identify the metric. If None,
             the metric name is set to the 'metric_{metric_function.__name__}'.
-
-    Returns:
-        str: The key of the function created from the metric function.
     """
 
     _check_metric_function(metric_function=metric_function)
 
-    class Metric:
-        def score(self, datasamples, predictions_path, _skip=True):
-            # The _skip argument is needed to match the default signature of methods executed
-            # on substratools_methods.py.
-            return metric_function(datasamples=datasamples, predictions_path=predictions_path)
+    metric_register.add_metric(metric_function=metric_function, metric_name=metric_name)
 
-    inputs_metrics = [
-        substra.sdk.schemas.FunctionInputSpec(
-            identifier=InputIdentifiers.datasamples,
-            kind=substra.sdk.schemas.AssetKind.data_sample,
-            optional=False,
-            multiple=True,
-        ),
-        substra.sdk.schemas.FunctionInputSpec(
-            identifier=InputIdentifiers.opener,
-            kind=substra.sdk.schemas.AssetKind.data_manager,
-            optional=False,
-            multiple=False,
-        ),
-        substra.sdk.schemas.FunctionInputSpec(
-            identifier=InputIdentifiers.predictions,
-            kind=substra.sdk.schemas.AssetKind.model,
-            optional=False,
-            multiple=False,
-        ),
-    ]
 
-    outputs_metrics = [
-        substra.sdk.schemas.FunctionOutputSpec(
-            identifier=OutputIdentifiers.performance,
-            kind=substra.sdk.schemas.AssetKind.performance,
-            multiple=False,
+class MetricRegister:
+    def __init__(self):
+        self._metrics = {}
+
+    def add_metric(
+        self,
+        metric_function: typing.Callable,
+        metric_name: typing.Optional[str] = None,
+    ):
+        metric_name = metric_name or metric_function.__name__
+        if metric_name not in self._metrics:
+            self._metrics[metric_name] = metric_function
+        else:
+            raise exceptions.ExistingRegisteredMetricError("A metric with the same name is already registered.")
+
+    def get_registered_functions(self):
+        return self._metrics
+
+    def register_metric(
+        self,
+        client: substra.Client,
+        dependencies: Dependency,
+        permissions: substra.sdk.schemas.Permissions,
+    ):
+        metrics = metric_register.get_registered_functions()
+
+        class Metric:
+            def score(self, datasamples, predictions_path, _skip=True):
+                # The _skip argument is needed to match the default signature of methods executed
+                # on substratools_methods.py.
+                output = {}
+                for name in metrics:
+                    output[OutputIdentifiers.performance + "_" + name] = metrics[name](
+                        datasamples=datasamples, predictions_path=predictions_path
+                    )
+                return output
+
+        inputs_metrics = [
+            substra.sdk.schemas.FunctionInputSpec(
+                identifier=InputIdentifiers.datasamples,
+                kind=substra.sdk.schemas.AssetKind.data_sample,
+                optional=False,
+                multiple=True,
+            ),
+            substra.sdk.schemas.FunctionInputSpec(
+                identifier=InputIdentifiers.opener,
+                kind=substra.sdk.schemas.AssetKind.data_manager,
+                optional=False,
+                multiple=False,
+            ),
+            substra.sdk.schemas.FunctionInputSpec(
+                identifier=InputIdentifiers.predictions,
+                kind=substra.sdk.schemas.AssetKind.model,
+                optional=False,
+                multiple=False,
+            ),
+        ]
+
+        outputs_metrics = []
+
+        for name in metrics:
+            outputs_metrics.append(
+                substra.sdk.schemas.FunctionOutputSpec(
+                    identifier=OutputIdentifiers.performance + "_" + name,
+                    kind=substra.sdk.schemas.AssetKind.performance,
+                    multiple=False,
+                )
+            )
+
+        remote_struct = RemoteStruct(
+            cls=Metric,
+            cls_args=[],
+            cls_kwargs={},
+            remote_cls=RemoteMethod,
+            method_name="score",
+            method_parameters={},
+            algo_name="Testing",
         )
-    ]
 
-    remote_struct = RemoteStruct(
-        cls=Metric,
-        cls_args=[],
-        cls_kwargs={},
-        remote_cls=RemoteMethod,
-        method_name="score",
-        method_parameters={},
-        algo_name=metric_name or "metric_" + metric_function.__name__,
-    )
+        key = register_function(
+            client=client,
+            remote_struct=remote_struct,
+            permissions=permissions,
+            inputs=inputs_metrics,
+            outputs=outputs_metrics,
+            dependencies=dependencies,
+        )
 
-    key = register_function(
-        client=client,
-        remote_struct=remote_struct,
-        permissions=permissions,
-        inputs=inputs_metrics,
-        outputs=outputs_metrics,
-        dependencies=dependencies,
-    )
+        return key
 
-    return key
+
+metric_register = MetricRegister()
