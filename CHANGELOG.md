@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Fixed
+
+- Close issue [#114](https://github.com/Substra/substrafl/issues/114). Large batch size are set to the number of samples in predict for NR and FedPCA. ([#115](https://github.com/Substra/substrafl/pull/115))
+
 ### Changed
 
 - Enforce kwargs for user facing function with more than 3 parameters ([#109](https://github.com/Substra/substrafl/pull/109))
