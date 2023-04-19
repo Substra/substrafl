@@ -147,7 +147,7 @@ class Scaffold(Strategy):
             test_data_node.update_states(
                 operation=self.algo.predict(
                     data_samples=test_data_node.test_data_sample_keys,
-                    _algo_name=f"Testing with {self.algo.__class__.__name__}",
+                    _algo_name=f"Predicting with {self.algo.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,
                 round_idx=round_idx,
