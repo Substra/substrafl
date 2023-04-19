@@ -371,7 +371,7 @@ def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, ma
 
 
 @pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
-def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, perceptron):
+def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, perceptron, mocker):
     n_samples = 10
 
     x_train = np.zeros([n_samples, 10])
@@ -382,5 +382,10 @@ def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, percep
 
     prediction_file = session_dir / "NR_predictions"
 
+    spy = mocker.spy(torch.utils.data, "DataLoader")
+
     # Check that no MemoryError is thrown
     my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
+
+    assert spy.call_count == 1
+    assert spy.spy_return.batch_size == min(batch_size, n_samples)

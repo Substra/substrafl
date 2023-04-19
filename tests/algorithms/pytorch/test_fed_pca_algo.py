@@ -352,7 +352,7 @@ def test_predict_pca_algo(torch_pca_algo, session_dir, data, rtol):
 
 
 @pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
-def test_large_batch_size_in_predict(batch_size, session_dir, torch_pca_algo):
+def test_large_batch_size_in_predict(batch_size, session_dir, torch_pca_algo, mocker):
     n_samples = 10
 
     x_train = np.zeros([n_samples, 3])
@@ -362,5 +362,10 @@ def test_large_batch_size_in_predict(batch_size, session_dir, torch_pca_algo):
 
     prediction_file = session_dir / "FedPCA_predictions"
 
+    spy = mocker.spy(torch.utils.data, "DataLoader")
+
     # Check that no MemoryError is thrown
     my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
+
+    assert spy.call_count == 1
+    assert spy.spy_return.batch_size == min(batch_size, n_samples)
