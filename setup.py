@@ -54,6 +54,7 @@ setup(
         "dev": [
             "pytest>=6.2.4",
             "pytest-cov>=2.12.0",
+            "pytest-mock",
             "pre-commit>=2.13.0",
             "types-PyYAML>=6.0.0",
             "torch>=1.9.1,!=1.12.0",  # bug in 1.12.0 (https://github.com/pytorch/pytorch/pull/80345)
