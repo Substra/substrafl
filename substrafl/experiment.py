@@ -16,6 +16,8 @@ import substratools
 
 import substrafl
 from substrafl.dependency import Dependency
+from substrafl.docker import FileIgnore
+from substrafl.docker import FileIgnoreDefault
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
@@ -34,6 +36,7 @@ def _register_operations(
     aggregation_node: Optional[AggregationNode],
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
+    ignored_files: FileIgnore,
 ) -> Tuple[List[dict], Dict[RemoteStruct, OperationKey]]:
     """Register the operations in Substra: define the algorithms we need and submit them
 
@@ -71,6 +74,7 @@ def _register_operations(
             permissions=permissions,
             cache=operation_cache,
             dependencies=dependencies,
+            ignored_files=ignored_files,
         )
 
         if train_data_node.init_task is not None:
@@ -85,6 +89,7 @@ def _register_operations(
                 permissions=permissions,
                 cache=predict_algo_cache,
                 dependencies=dependencies,
+                ignored_files=ignored_files,
             )
 
             tasks += test_data_node.predicttasks
@@ -217,6 +222,7 @@ def execute_experiment(
     aggregation_node: Optional[AggregationNode] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
+    ignored_files: FileIgnore,
     clean_models: bool = True,
     name: Optional[str] = None,
     additional_metadata: Optional[Dict] = None,
@@ -270,6 +276,9 @@ def execute_experiment(
     if dependencies is None:
         dependencies = Dependency()
 
+    if ignored_files is None:
+        ignored_files = FileIgnoreDefault()
+
     train_data_nodes = copy.deepcopy(train_data_nodes)
     aggregation_node = copy.deepcopy(aggregation_node)
     strategy = copy.deepcopy(strategy)
@@ -314,6 +323,7 @@ def execute_experiment(
         aggregation_node=aggregation_node,
         evaluation_strategy=evaluation_strategy,
         dependencies=dependencies,
+        ignored_files=ignored_files,
     )
 
     # Execute the compute plan

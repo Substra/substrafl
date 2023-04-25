@@ -20,6 +20,7 @@ from packaging import version
 import substrafl
 from substrafl import exceptions
 from substrafl.dependency import Dependency
+from substrafl.docker import FileIgnore
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels
@@ -166,6 +167,7 @@ def _create_substra_function_files(
     install_libraries: bool,
     dependencies: Dependency,
     operation_dir: Path,
+    ignored_files: FileIgnore,
 ) -> typing.Tuple[Path, Path]:
     """Creates the necessary files from the remote struct to register the associated function to substra, zip them into
         an archive (.tar.gz).
@@ -199,6 +201,8 @@ def _create_substra_function_files(
 
     # Build Substrafl, Substra and Substratools wheel if needed
     install_cmd = ""
+
+    ignored_files.write_file(operation_dir / ".ignored_files")
 
     if install_libraries:
         # Install either from pypi wheel or repo in editable mode
@@ -288,6 +292,7 @@ def register_function(
     inputs: typing.List[substra.sdk.schemas.FunctionInputSpec],
     outputs: typing.List[substra.sdk.schemas.FunctionOutputSpec],
     dependencies: Dependency,
+    ignored_files: FileIgnore,
 ) -> str:
     """Automatically creates the needed files to register the function associated to the remote_struct.
 
@@ -306,6 +311,7 @@ def register_function(
         archive_path, description_path = _create_substra_function_files(
             remote_struct,
             dependencies=dependencies,
+            ignored_files=ignored_files,
             install_libraries=client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS,
             operation_dir=Path(operation_dir),
         )
@@ -361,6 +367,7 @@ def add_metric(
     client: substra.Client,
     permissions: substra.sdk.schemas.Permissions,
     dependencies: Dependency,
+    ignored_files: FileIgnore,
     metric_function: typing.Callable,
     metric_name: typing.Optional[str] = None,
 ) -> str:
@@ -436,6 +443,7 @@ def add_metric(
         inputs=inputs_metrics,
         outputs=outputs_metrics,
         dependencies=dependencies,
+        ignored_files=ignored_files,
     )
 
     return key
