@@ -20,7 +20,7 @@ from packaging import version
 import substrafl
 from substrafl import exceptions
 from substrafl.dependency import Dependency
-from substrafl.docker import FileIgnore
+from substrafl.files import FileIgnore
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels

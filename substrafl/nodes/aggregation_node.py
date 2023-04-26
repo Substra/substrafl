@@ -6,7 +6,7 @@ from typing import TypeVar
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.docker import FileIgnore
+from substrafl.files import FileIgnore
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey

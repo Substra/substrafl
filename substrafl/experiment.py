@@ -16,11 +16,11 @@ import substratools
 
 import substrafl
 from substrafl.dependency import Dependency
-from substrafl.docker import FileIgnore
-from substrafl.docker import FileIgnoreDefault
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
+from substrafl.files import FileIgnore
+from substrafl.files import FileIgnoreDefault
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.train_data_node import TrainDataNode
