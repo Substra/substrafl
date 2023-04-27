@@ -24,7 +24,7 @@ EXCLUDED_PATHS_REGEX_DEFAULT = [
 ]
 
 
-class PathManagement(ABC):
+class DependencyPathManagement(ABC):
     @classmethod
     def expand_regexes(cls, regexes: List[str]) -> List[PosixPath]:
         current_path = PosixPath(".")
@@ -61,7 +61,7 @@ class PathManagement(ABC):
         pass
 
 
-class PathManagementDefault(PathManagement):
+class DependencyPathManagementDefault(DependencyPathManagement):
     @classmethod
     def get_excluded_paths(
         cls, *, excluded: List[PosixPath], excluded_regex: List[str], not_excluded: List[PosixPath]

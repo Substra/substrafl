@@ -6,9 +6,9 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+from substrafl.dependency.path_management import DependencyPathManagement
+from substrafl.dependency.path_management import DependencyPathManagementDefault
 from substrafl.exceptions import InvalidPathError
-from substrafl.files import PathManagement
-from substrafl.files import PathManagementDefault
 
 
 class Dependency(BaseModel):
@@ -38,7 +38,7 @@ class Dependency(BaseModel):
     excluded_paths: List[PosixPath] = Field(default_factory=list)
     excluded_regex: List[str] = Field(default_factory=list)
     not_excluded_paths: List[PosixPath] = Field(default_factory=list)
-    path_management: PathManagement = Field(default_factory=PathManagementDefault)
+    path_management: DependencyPathManagement = Field(default_factory=DependencyPathManagementDefault)
 
     class Config:
         arbitrary_types_allowed = True
