@@ -6,7 +6,6 @@ from typing import TypeVar
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.files import FileIgnore
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
@@ -107,7 +106,6 @@ class AggregationNode(Node):
         permissions: substra.sdk.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
-        ignored_files: FileIgnore,
     ) -> Dict[RemoteStruct, OperationKey]:
         """Define the functions for each operation and submit the aggregated task to substra.
 
@@ -138,7 +136,6 @@ class AggregationNode(Node):
                         remote_struct=remote_struct,
                         permissions=permissions,
                         dependencies=dependencies,
-                        ignored_files=ignored_files,
                         inputs=[
                             substra.schemas.FunctionInputSpec(
                                 identifier=InputIdentifiers.models,

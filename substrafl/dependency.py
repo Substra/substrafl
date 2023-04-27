@@ -7,6 +7,8 @@ from pydantic import Field
 from pydantic import validator
 
 from substrafl.exceptions import InvalidPathError
+from substrafl.files import PathManagement
+from substrafl.files import PathManagementDefault
 
 
 class Dependency(BaseModel):
@@ -33,6 +35,13 @@ class Dependency(BaseModel):
     pypi_dependencies: List[str] = Field(default_factory=list)
     local_dependencies: List[PosixPath] = Field(default_factory=list)
     local_code: List[PosixPath] = Field(default_factory=list)
+    excluded_paths: List[PosixPath] = Field(default_factory=list)
+    excluded_regex: List[str] = Field(default_factory=list)
+    not_excluded_paths: List[PosixPath] = Field(default_factory=list)
+    path_management: PathManagement = Field(default_factory=PathManagementDefault)
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @validator("local_dependencies", "local_code")
     def resolve_path(cls, v):  # noqa: N805
@@ -67,3 +76,21 @@ class Dependency(BaseModel):
                 f"But neither setup.py or pyproject.toml was found in :{', '.join([str(p) for p in not_installable])}"
             )
         return v
+
+    def copy_dependencies_local_package(self, *, dest_dir: PosixPath) -> list[PosixPath]:
+        return self.path_management.copy_paths(
+            dest_dir=dest_dir,
+            src=self.local_dependencies,
+            not_excluded=self.not_excluded_paths,
+            excluded=self.excluded_paths,
+            excluded_regex=self.excluded_regex,
+        )
+
+    def copy_dependencies_local_code(self, *, dest_dir: PosixPath) -> list[PosixPath]:
+        return self.path_management.copy_paths(
+            dest_dir=dest_dir,
+            src=self.local_code,
+            not_excluded=self.not_excluded_paths,
+            excluded=self.excluded_paths,
+            excluded_regex=self.excluded_regex,
+        )

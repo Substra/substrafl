@@ -5,7 +5,6 @@ from typing import List
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.files import FileIgnore
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
@@ -132,7 +131,6 @@ class TestDataNode(Node):
         permissions: substra.sdk.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
-        ignored_files: FileIgnore,
     ) -> Dict[RemoteStruct, OperationKey]:
         """Find the functions from the parent traintask of each predicttask and submit it with a dockerfile
         specifying the ``predict`` method as ``--function-name`` to execute.
@@ -163,7 +161,6 @@ class TestDataNode(Node):
                     remote_struct=remote_struct,
                     permissions=permissions,
                     dependencies=dependencies,
-                    ignored_files=ignored_files,
                     inputs=[
                         substra.schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.datasamples,

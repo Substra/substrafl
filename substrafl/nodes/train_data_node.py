@@ -8,7 +8,6 @@ from typing import Tuple
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.files import FileIgnore
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
 from substrafl.nodes.node import OperationKey
@@ -198,7 +197,6 @@ class TrainDataNode(Node):
         permissions: substra.sdk.schemas.Permissions,
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
-        ignored_files: FileIgnore,
     ) -> Dict[RemoteStruct, OperationKey]:
         """Define the functions for each operation and submit the train task to substra.
 
@@ -234,7 +232,6 @@ class TrainDataNode(Node):
                     ),
                 ],
                 dependencies=dependencies,
-                ignored_files=ignored_files,
             )
             self.init_task["function_key"] = function_key
             cache[init_remote_struct] = function_key
@@ -287,7 +284,6 @@ class TrainDataNode(Node):
                             ),
                         ],
                         dependencies=dependencies,
-                        ignored_files=ignored_files,
                     )
                     cache[remote_struct] = function_key
                 else:
