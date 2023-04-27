@@ -84,7 +84,7 @@ if __name__ == "__main__":
 """
 
 
-def iter_dockerfile_install_command(paths: list[Path], python_major_minor: str) -> str:
+def iter_dockerfile_install_command(paths: typing.List[Path], python_major_minor: str) -> str:
     for path in paths:
         yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {path} \n"
 
