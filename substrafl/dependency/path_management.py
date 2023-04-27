@@ -5,6 +5,7 @@ from abc import abstractmethod
 from pathlib import PosixPath
 from typing import List
 from typing import Optional
+from typing import Set
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class DependencyPathManagement(ABC):
         return paths
 
     @classmethod
-    def expand_paths(cls, paths: List[PosixPath]) -> set[PosixPath]:
+    def expand_paths(cls, paths: List[PosixPath]) -> Set[PosixPath]:
         unpacked_paths = set()
         for path in paths:
             if path.is_file():
@@ -65,7 +66,7 @@ class DependencyPathManagementDefault(DependencyPathManagement):
     @classmethod
     def get_excluded_paths(
         cls, *, excluded: List[PosixPath], excluded_regex: List[str], not_excluded: List[PosixPath]
-    ) -> set[PosixPath]:
+    ) -> Set[PosixPath]:
         expanded_excluded_regex = cls.expand_regexes(excluded_regex)
         expanded_excluded = cls.expand_paths(excluded + expanded_excluded_regex)
         expanded_not_excluded = cls.expand_paths(not_excluded)
