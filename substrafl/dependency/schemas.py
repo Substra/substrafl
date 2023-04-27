@@ -77,7 +77,7 @@ class Dependency(BaseModel):
             )
         return v
 
-    def copy_dependencies_local_package(self, *, dest_dir: PosixPath) -> list[PosixPath]:
+    def copy_dependencies_local_package(self, *, dest_dir: PosixPath) -> List[PosixPath]:
         return self.path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_dependencies,
@@ -86,7 +86,7 @@ class Dependency(BaseModel):
             excluded_regex=self.excluded_regex,
         )
 
-    def copy_dependencies_local_code(self, *, dest_dir: PosixPath) -> list[PosixPath]:
+    def copy_dependencies_local_code(self, *, dest_dir: PosixPath) -> List[PosixPath]:
         return self.path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_code,
