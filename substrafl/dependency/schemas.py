@@ -7,7 +7,6 @@ from pydantic import Field
 from pydantic import validator
 
 from substrafl.dependency.path_management import DependencyPathManagement
-from substrafl.dependency.path_management import DependencyPathManagementDefault
 from substrafl.exceptions import InvalidPathError
 
 
@@ -38,7 +37,6 @@ class Dependency(BaseModel):
     excluded_paths: List[PosixPath] = Field(default_factory=list)
     excluded_regex: List[str] = Field(default_factory=list)
     not_excluded_paths: List[PosixPath] = Field(default_factory=list)
-    path_management: DependencyPathManagement = Field(default_factory=DependencyPathManagementDefault)
 
     class Config:
         arbitrary_types_allowed = True
@@ -78,7 +76,7 @@ class Dependency(BaseModel):
         return v
 
     def copy_dependencies_local_package(self, *, dest_dir: PosixPath) -> List[PosixPath]:
-        return self.path_management.copy_paths(
+        return DependencyPathManagement.copy_paths(
             dest_dir=dest_dir,
             src=self.local_dependencies,
             not_excluded=self.not_excluded_paths,
@@ -87,7 +85,7 @@ class Dependency(BaseModel):
         )
 
     def copy_dependencies_local_code(self, *, dest_dir: PosixPath) -> List[PosixPath]:
-        return self.path_management.copy_paths(
+        return DependencyPathManagement.copy_paths(
             dest_dir=dest_dir,
             src=self.local_code,
             not_excluded=self.not_excluded_paths,
