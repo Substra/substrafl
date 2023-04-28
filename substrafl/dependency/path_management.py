@@ -14,14 +14,18 @@ EXCLUDED_PATHS_REGEX_DEFAULT = [
     # Common data extensions
     "*.csv",
     "*.xls",
+    "*.xlsx",
+    # Python data extensiosn
+    "*.npy",
     # Common image extensions
     "*.png",
     "*.jpg",
+    "*.jpeg",
     # Common folders
     ".git/*",
     # Others
     "local-worker/*",
-    TMP_SUBSTRAFL_PREFIX + "*",
+    TMP_SUBSTRAFL_PREFIX + "/*",
 ]
 
 
@@ -29,19 +33,20 @@ class BaseDependencyPathManagement(ABC):
     """Base class for different dependency paths management."""
 
     @classmethod
-    def expand_regexes(cls, regexes: List[str]) -> List[PosixPath]:
+    def expand_regexes(cls, regexes: List[str], src: List[PosixPath]) -> List[PosixPath]:
         """Find all paths corresponding to a list of regex
 
         Args:
-            regexes (List[str]): Regexes used to find strings
+            regexes (List[str]): Regexes used to find strings.
+            src (List[PosixPath]): Path from where the files are copied from.
 
         Returns:
             List[PosixPath]: All paths corresponding to any regex.
         """
-        current_path = PosixPath(".")
         paths: List[PosixPath] = []
-        for regex in regexes:
-            paths.extend(current_path.rglob(regex))
+        for input_path in src:
+            for regex in regexes:
+                paths.extend(input_path.rglob(regex))
 
         return paths
 
@@ -59,12 +64,12 @@ class BaseDependencyPathManagement(ABC):
         Returns:
             Set[PosixPath]: A set of unique files found in the paths
         """
-        unpacked_paths = set()
+        unpacked_paths: Set[PosixPath] = set()
         for path in paths:
             if path.is_file():
-                unpacked_paths.add(path)
+                unpacked_paths.add(path.absolute())
             elif path.is_dir():
-                unpacked_paths.update(path.name / p.relative_to(path) for p in path.rglob("*") if p.is_file())
+                unpacked_paths.update(p.absolute() for p in path.rglob("*") if p.is_file())
             else:
                 raise ValueError(f"Try to parse {path} that is neither a file or a dir.")
 
@@ -72,11 +77,17 @@ class BaseDependencyPathManagement(ABC):
 
     @classmethod
     def get_excluded_paths(
-        cls, *, excluded: List[PosixPath], excluded_regex: List[str], not_excluded: List[PosixPath]
+        cls,
+        *,
+        src: List[PosixPath],
+        excluded: List[PosixPath],
+        excluded_regex: List[str],
+        not_excluded: List[PosixPath],
     ) -> Set[PosixPath]:
         """_summary_
 
         Args:
+            src (List[PosixPath]): Path from where the files are copied from.
             excluded (List[PosixPath]): Paths to exclude from the `src` during the copy.
             excluded_regex (List[str]): Regex to find paths in `src` that will be excluded.
             not_excluded (List[PosixPath]): Paths to remove from the paths found in `excluded`/`not_excluded`.
@@ -84,7 +95,7 @@ class BaseDependencyPathManagement(ABC):
         Returns:
             Set[PosixPath]: Set of excluded files, after expanding regexes and respecting `not_excluded`.
         """
-        expanded_excluded_regex = cls.expand_regexes(excluded_regex)
+        expanded_excluded_regex = cls.expand_regexes(excluded_regex + EXCLUDED_PATHS_REGEX_DEFAULT, src)
         expanded_excluded = cls.expand_paths(excluded + expanded_excluded_regex)
         expanded_not_excluded = cls.expand_paths(not_excluded)
         return expanded_excluded - expanded_not_excluded
@@ -164,24 +175,23 @@ class DependencyPathManagement(BaseDependencyPathManagement):
             excluded = []
 
         if not excluded_regex:
-            excluded_regex = EXCLUDED_PATHS_REGEX_DEFAULT
-        else:
-            excluded_regex += EXCLUDED_PATHS_REGEX_DEFAULT
+            excluded_regex = []
 
         expanded_excluded = cls.get_excluded_paths(
-            excluded=excluded, excluded_regex=excluded_regex, not_excluded=not_excluded
+            src=src, excluded=excluded, excluded_regex=excluded_regex, not_excluded=not_excluded
         )
 
         output_files = []
         for input_path in src:
-            if input_path.is_file() and input_path not in expanded_excluded:
+            absolute_path = input_path.absolute()
+            if absolute_path.is_file() and absolute_path not in expanded_excluded:
                 output_path = dest_dir / input_path.name
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy(input_path, output_path)
-            elif input_path.is_dir():
-                for file in input_path.rglob("*"):
+                shutil.copy(absolute_path, output_path)
+            elif absolute_path.is_dir():
+                for file in absolute_path.rglob("*"):
                     if file.is_file() and file not in expanded_excluded:
-                        output_path = dest_dir / file.relative_to(input_path.parent)
+                        output_path = dest_dir / file.relative_to(absolute_path.parent)
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy(file, output_path)
             else:
