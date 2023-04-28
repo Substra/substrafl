@@ -154,6 +154,9 @@ class DependencyPathManagement(BaseDependencyPathManagement):
         Returns:
             List[PosixPath]: Copied paths.
         """
+        if dest_dir.is_file():
+            raise ValueError(f"{dest_dir=} is a file. Cannot copy in a file.")
+
         if not not_excluded:
             not_excluded = []
 
