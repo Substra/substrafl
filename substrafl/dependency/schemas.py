@@ -23,11 +23,19 @@ class Dependency(BaseModel):
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.
         dependencies (List[str]): Python packages installable from pypi.
-        local_dependencies (List[pathlib.Path]): Local installable packages. The command
+        local_dependencies (List[pathlib.PosixPath]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
-        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be pasted
-            to the level of the running script.
+        local_code (List[pathlib.PosixPath]): Local relative imports used by your script. All files / folders will be
+            pasted to the level of the running script.
+        excluded_paths (List[pathlib.PosixPath]): Local paths excluded from `local_dependencies` / `local_code`.
+            Default to [].
+        excluded_regex (List[pathlib.PosixPath]): Regex used to exclude files from `local_dependencies` / `local_code`.
+            Default to [].
+            Always includes common data formats (see
+            `substrafl.dependency.path_management.EXCLUDED_PATHS_REGEX_DEFAULT`).
+        not_excluded_paths (List[pathlib.PosixPath]): Unexclude files from the `excluded_paths` / `excluded_regex`
+            Default to []
     """
 
     editable_mode: bool = False
