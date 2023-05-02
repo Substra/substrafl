@@ -358,27 +358,34 @@ def _check_metric_function(metric_function: typing.Callable):
 
 def add_metric(
     *,
-    metric_function: typing.Callable,
-    metric_name: typing.Optional[str] = None,
+    client: substra.Client,
+    permissions: substra.sdk.schemas.Permissions,
+    dependencies: Dependency,
+    metric_functions: typing.List(typing.Callable),
 ) -> str:
-    """Adds a metric to the Substra platform using the given metric function as the
+    """Adds a function to the Substra platform using the given metric functions as the
     function to register.
-    The metric function must be of type function, and its signature must ONLY contains
+    Each metric function must be of type function, and their signature must ONLY contains
     `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
 
     Args:
         client (substra.Client): The substra client.
         permissions (substra.sdk.schemas.Permissions): Permissions for the metric function.
         dependencies (Dependency): Metric function dependencies.
-        metric_function (typing.Callable): function to compute the score from the datasamples and the predictions.
-            This function is registered in substra as a metric.
-        metric_name (str, Optional): Optional name chosen by the user to identify the metric. If None,
-            the metric name is set to the 'metric_{metric_function.__name__}'.
+        metric_functions (typing.List(typing.Callable)): function to compute the score from the datasamples and the
+            predictions. These functions are registered in substra as one function.
+
+    Returns:
+        function_key: the key of the Substra function containing all the given metric.
     """
+    metric_register = MetricRegister()
 
-    _check_metric_function(metric_function=metric_function)
+    for metric_func in metric_functions:
+        metric_register.add_metric(metric_function=metric_func)
 
-    metric_register.add_metric(metric_function=metric_function, metric_name=metric_name)
+    function_key = metric_register.register_metric(client=client, dependencies=dependencies, permissions=permissions)
+
+    return function_key
 
 
 class MetricRegister:
@@ -388,9 +395,10 @@ class MetricRegister:
     def add_metric(
         self,
         metric_function: typing.Callable,
-        metric_name: typing.Optional[str] = None,
     ):
-        metric_name = metric_name or metric_function.__name__
+        _check_metric_function(metric_function=metric_function)
+
+        metric_name = metric_function.__name__
         if metric_name not in self._metrics:
             self._metrics[metric_name] = metric_function
         else:
@@ -405,7 +413,7 @@ class MetricRegister:
         dependencies: Dependency,
         permissions: substra.sdk.schemas.Permissions,
     ):
-        metrics = metric_register.get_registered_functions()
+        metrics = self.get_registered_functions()
 
         class Metric:
             def score(self, datasamples, predictions_path, _skip=True):
@@ -470,6 +478,3 @@ class MetricRegister:
         )
 
         return key
-
-
-metric_register = MetricRegister()
