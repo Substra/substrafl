@@ -60,8 +60,12 @@ def instantiate_clients(
     if mode == substra.BackendType.REMOTE:
         clients = []
         for organization in conf:
-            client = substra.Client(backend_type=mode, url=organization.get("url"))
-            client.login(username=organization.get("username"), password=organization.get("password"))
+            client = substra.Client(
+                backend_type=mode,
+                url=organization.get("url"),
+                username=organization.get("username"),
+                password=organization.get("password"),
+            )
             clients.append(client)
     else:
         clients = [substra.Client(backend_type=mode) for _ in range(n_centers)]
