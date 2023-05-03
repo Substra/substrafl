@@ -53,7 +53,8 @@ def _register_operations(
     # `register_operations` methods from the different organizations store the id of the already registered
     # algorithm so we don't add them twice
     operation_cache = dict()
-    predict_algo_cache = dict()
+    predict_function_cache = dict()
+    test_function_cache = dict()
     tasks = list()
 
     train_data_organizations_id = {train_data_node.organization_id for train_data_node in train_data_nodes}
@@ -80,10 +81,16 @@ def _register_operations(
 
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
-            predict_algo_cache = test_data_node.register_predict_operations(
+            predict_function_cache = test_data_node.register_predict_operations(
                 client=client,
                 permissions=permissions,
-                cache=predict_algo_cache,
+                cache=predict_function_cache,
+                dependencies=dependencies,
+            )
+            test_function_cache = test_data_node.register_test_operation(
+                client=client,
+                permissions=permissions,
+                cache=test_function_cache,
                 dependencies=dependencies,
             )
 

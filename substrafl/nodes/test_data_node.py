@@ -1,6 +1,8 @@
 import uuid
+from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Union
 
 import substra
 
@@ -11,6 +13,7 @@ from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.register import register_function
+from substrafl.remote.register import register_metrics
 from substrafl.remote.remote_struct import RemoteStruct
 
 
@@ -21,9 +24,7 @@ class TestDataNode(Node):
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
         test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
-        metric_keys (List[str]):  Keys of the functions that implement the different metrics. See
-            :py:func:`~substrafl.remote.register.register.add_metric` for more information on how to register metric
-            functions.
+        metric_functions (List[Call]):  Function or list of functions that implement the different metrics.
     """
 
     def __init__(
@@ -31,14 +32,17 @@ class TestDataNode(Node):
         organization_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        metric_keys: List[str],
+        metric_functions: Union[List[Callable], Callable],
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys
 
-        if not isinstance(metric_keys, list):
-            raise TypeError("metric keys must be of type list")
-        self.metric_keys = metric_keys
+        if isinstance(metric_functions, list):
+            self.metric_functions = metric_functions
+        elif callable(metric_functions):
+            self.metric_functions = [metric_functions]
+        else:
+            raise TypeError("metric functions must be a callable or a list of callable")
 
         self.testtasks: List[Dict] = []
         self.predicttasks: List[Dict] = []
@@ -106,13 +110,13 @@ class TestDataNode(Node):
         predicttask["remote_operation"] = operation.remote_struct
         self.predicttasks.append(predicttask)
 
-        for metric_key in self.metric_keys:
+        for metric_function in self.metric_functions:
             testtask = substra.schemas.ComputePlanTaskSpec(
-                function_key=metric_key,
+                function_key=str(uuid.uuid4()),  # bogus function key
                 task_id=str(uuid.uuid4()),
                 inputs=data_inputs + test_input,
                 outputs={
-                    OutputIdentifiers.performance: substra.schemas.ComputeTaskOutputSpec(
+                    metric_function: substra.schemas.ComputeTaskOutputSpec(
                         permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
                         transient=False,
                     )
@@ -122,7 +126,35 @@ class TestDataNode(Node):
                 },
                 worker=self.organization_id,
             ).dict()
+            testtask.pop("function_key")
+            testtask["remote_operation"] = operation.remote_struct
             self.testtasks.append(testtask)
+
+    def register_test_operation(
+        self,
+        *,
+        client: substra.Client,
+        permissions: substra.sdk.schemas.Permissions,
+        cache: Dict[RemoteStruct, OperationKey],
+        dependencies: Dependency,
+    ):
+        for testtask in self.testtasks:
+            remote_struct: RemoteStruct = testtask["remote_operation"]
+            if remote_struct not in cache:
+                # Register the metrics
+                function_key = register_metrics(
+                    client=client,
+                    permissions=permissions,
+                    dependencies=dependencies,
+                    metric_functions=self.metric_functions,
+                )
+                testtask["function_key"] = function_key
+                cache[remote_struct] = function_key
+            else:
+                function_key = cache[remote_struct]
+                testtask["function_key"] = function_key
+
+        return cache
 
     def register_predict_operations(
         self,

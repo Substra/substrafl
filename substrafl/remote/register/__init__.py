@@ -1,7 +1,7 @@
-from substrafl.remote.register.register import add_metric
 from substrafl.remote.register.register import register_function
+from substrafl.remote.register.register import register_metrics
 
 __all__ = [
     "register_function",
-    "add_metric",
+    "register_metrics",
 ]
