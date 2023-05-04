@@ -12,7 +12,6 @@ from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
-from substrafl.remote import register
 from substrafl.schemas import FedPCAAveragedState
 from substrafl.strategies.fed_pca import FedPCA
 from tests import assets_factory
@@ -117,7 +116,6 @@ def train_linear_nodes_pca(network, numpy_datasets, train_linear_data_samples_pc
 def test_linear_nodes_pca(
     network,
     numpy_datasets,
-    abs_diff_metric,
     test_linear_data_samples_pca,
     session_dir,
 ):
@@ -134,6 +132,11 @@ def test_linear_nodes_pca(
           a mae metric.
     """
 
+    def abs_diff(datasamples, predictions_path):
+        y_true = datasamples[1]
+        y_pred = np.load(predictions_path)
+        return (abs(y_pred) - abs(y_true)).mean()
+
     linear_samples = assets_factory.add_numpy_samples(
         # We set the weights seeds to ensure that all contents are linearly linked with the same weights but
         # the noise is random so the data is not identical on every organization.
@@ -148,7 +151,7 @@ def test_linear_nodes_pca(
             network.msp_ids[0],
             numpy_datasets[0],
             linear_samples,
-            metric_keys=[abs_diff_metric],
+            metric_functions=abs_diff,
         )
     ]
 
@@ -181,22 +184,6 @@ def test_linear_data_samples_pca(numpy_pca_eigen_vectors):
 
     projected_data = np.matmul(test_inputs_data, numpy_pca_eigen_vectors.T)
     return [np.concatenate((test_inputs_data, projected_data), axis=1)]
-
-
-@pytest.fixture(scope="session")
-def abs_diff_metric(network, default_permissions, mae):
-    metric_deps = Dependency(pypi_dependencies=["numpy"], editable_mode=True)
-
-    def abs_diff(datasamples, predictions_path):
-        y_true = datasamples[1]
-        y_pred = np.load(predictions_path)
-        return (abs(y_pred) - abs(y_true)).mean()
-
-    metric_key = register.add_metric(
-        client=network.clients[0], metric_function=abs_diff, permissions=default_permissions, dependencies=metric_deps
-    )
-
-    return metric_key
 
 
 @pytest.fixture(scope="session")

@@ -44,9 +44,8 @@ class TestDataNode(Node):
         if isinstance(metric_functions, list):
             for metric_function in metric_functions:
                 _check_metric_function(metric_function)
-                if metric_function in self.metric_functions:
+                if metric_function.__name__ in self.metric_functions:
                     raise exceptions.ExistingRegisteredMetricError
-
                 self.metric_functions[metric_function.__name__] = metric_function
 
         elif callable(metric_functions):
@@ -54,7 +53,7 @@ class TestDataNode(Node):
             self.metric_functions[metric_functions.__name__] = metric_functions
 
         else:
-            raise TypeError("metric functions must be a callable or a list of callable")
+            raise exceptions.MetricFunctionTypeError("Metric functions must be a callable or a list of callable")
 
         self.testtasks: List[Dict] = []
         self.predicttasks: List[Dict] = []
@@ -271,7 +270,7 @@ def _check_metric_function(metric_function: Callable):
     """
 
     if not inspect.isfunction(metric_function):
-        raise exceptions.MetricFunctionTypeError("The metric_function() must be of type function.")
+        raise exceptions.MetricFunctionTypeError("Metric functions must be a callable or a list of callable")
 
     signature = inspect.signature(metric_function)
     parameters = signature.parameters

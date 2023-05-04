@@ -280,7 +280,7 @@ def compute_plan(
             network.msp_ids[0],
             numpy_datasets[0],
             [test_sample_nodes[0]],
-            metric_keys=[mae_metric],
+            metric_functions=mae_metric,
         )
     ]
 
