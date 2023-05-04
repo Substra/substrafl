@@ -122,25 +122,25 @@ class TestDataNode(Node):
         predicttask["remote_operation"] = operation.remote_struct
         self.predicttasks.append(predicttask)
 
-        for metric_function_id in self.metric_functions:
-            testtask = substra.schemas.ComputePlanTaskSpec(
-                function_key=str(uuid.uuid4()),  # bogus function key
-                task_id=str(uuid.uuid4()),
-                inputs=data_inputs + test_input,
-                outputs={
-                    metric_function_id: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
-                        transient=False,
-                    )
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                worker=self.organization_id,
-            ).dict()
-            testtask.pop("function_key")
-            testtask["remote_operation"] = operation.remote_struct
-            self.testtasks.append(testtask)
+        testtask = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=str(uuid.uuid4()),
+            inputs=data_inputs + test_input,
+            outputs={
+                metric_function_id: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
+                    transient=False,
+                )
+                for metric_function_id in self.metric_functions
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            worker=self.organization_id,
+        ).dict()
+        testtask.pop("function_key")
+        testtask["remote_operation"] = operation.remote_struct
+        self.testtasks.append(testtask)
 
     def register_test_operation(
         self,
@@ -252,7 +252,7 @@ class TestDataNode(Node):
             {
                 "data_manager_key": self.data_manager_key,
                 "data_sample_keys": self.test_data_sample_keys,
-                "metric_keys": self.metric_keys,
+                "metric_functions": list(self.metric_functions.keys()),
             }
         )
         return summary

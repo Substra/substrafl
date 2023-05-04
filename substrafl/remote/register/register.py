@@ -365,27 +365,25 @@ def register_metrics(
         ),
     ]
 
-    outputs_metrics = []
-
-    for metric_function_id in metric_functions:
-        outputs_metrics.append(
-            substra.sdk.schemas.FunctionOutputSpec(
-                identifier=metric_function_id,
-                kind=substra.sdk.schemas.AssetKind.performance,
-                multiple=False,
-            )
+    outputs_metrics = [
+        substra.sdk.schemas.FunctionOutputSpec(
+            identifier=metric_function_id,
+            kind=substra.sdk.schemas.AssetKind.performance,
+            multiple=False,
         )
+        for metric_function_id in metric_functions
+    ]
 
     class Metric:
         def score(self, datasamples, predictions_path, _skip=True):
             # The _skip argument is needed to match the default signature of methods executed
             # on substratools_methods.py.
-            output = {}
-            for metric_function_id in metric_functions:
-                output[metric_function_id] = metric_functions[metric_function_id](
+            return {
+                metric_function_id: metric_functions[metric_function_id](
                     datasamples=datasamples, predictions_path=predictions_path
                 )
-            return output
+                for metric_function_id in metric_functions
+            }
 
     remote_struct = RemoteStruct(
         cls=Metric,

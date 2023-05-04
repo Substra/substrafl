@@ -89,10 +89,15 @@ class RemoteMethod:
             self.save_model(method_output, outputs[OutputIdentifiers.shared])
 
         else:
-            for output in outputs:
+            for output_id in outputs:
                 # The performances are the only identifier user defined.
-                if output not in (OutputIdentifiers.shared, OutputIdentifiers.model, OutputIdentifiers.local):
-                    tools.save_performance(method_output[output], output)
+                if output_id not in (
+                    OutputIdentifiers.shared,
+                    OutputIdentifiers.model,
+                    OutputIdentifiers.local,
+                    OutputIdentifiers.predictions,
+                ):
+                    tools.save_performance(method_output[output_id], outputs[output_id])
 
     def generic_function(
         self,
