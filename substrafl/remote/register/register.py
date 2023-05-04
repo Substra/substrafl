@@ -1,7 +1,6 @@
 """
 Create the Substra function assets and register them to the platform.
 """
-import inspect
 import logging
 import os
 import shutil
@@ -322,45 +321,12 @@ def register_function(
         return key
 
 
-def _check_metric_function(metric_function: typing.Callable):
-    """Function to check the type and the signature of a given metric function.
-
-    Args:
-        metric_function (typing.Callable): function to check.
-
-    Raises:
-        exceptions.MetricFunctionTypeError: metric_function must be of type "function"
-        exceptions.MetricFunctionSignatureError: metric_function must ONLY contains
-            datasamples and predictions_path as parameters
-    """
-
-    if not inspect.isfunction(metric_function):
-        raise exceptions.MetricFunctionTypeError("The metric_function() must be of type function.")
-
-    signature = inspect.signature(metric_function)
-    parameters = signature.parameters
-
-    if "datasamples" not in parameters:
-        raise exceptions.MetricFunctionSignatureError(
-            f"The metric_function: {metric_function.__name__} must contain datasamples as parameter."
-        )
-    elif "predictions_path" not in parameters:
-        raise exceptions.MetricFunctionSignatureError(
-            "The metric_function: {metric_function.__name__}  must contain predictions_path as parameter."
-        )
-    elif len(parameters) != 2:
-        raise exceptions.MetricFunctionSignatureError(
-            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions_path as
-            parameters."""
-        )
-
-
 def register_metrics(
     *,
     client: substra.Client,
     dependencies: Dependency,
     permissions: substra.sdk.schemas.Permissions,
-    metric_functions: typing.List[typing.Callable],
+    metric_functions: typing.Dict,
 ):
     """Adds a function to the Substra platform using the given metric functions as the
     function to register.
@@ -371,7 +337,7 @@ def register_metrics(
         client (substra.Client): The substra client.
         permissions (substra.sdk.schemas.Permissions): Permissions for the metric function.
         dependencies (Dependency): Metric function dependencies.
-        metric_functions (typing.List(typing.Callable)): functions to compute the score from the datasamples and the
+        metric_functions (typing.Dict): functions to compute the score from the datasamples and the
             predictions. These functions are registered in substra as one function.
 
     Returns:
@@ -401,12 +367,10 @@ def register_metrics(
 
     outputs_metrics = []
 
-    for metric_function in metric_functions:
-        _check_metric_function(metric_function)
-
+    for metric_function_id in metric_functions:
         outputs_metrics.append(
             substra.sdk.schemas.FunctionOutputSpec(
-                identifier=metric_function.__name__,
+                identifier=metric_function_id,
                 kind=substra.sdk.schemas.AssetKind.performance,
                 multiple=False,
             )
@@ -417,8 +381,8 @@ def register_metrics(
             # The _skip argument is needed to match the default signature of methods executed
             # on substratools_methods.py.
             output = {}
-            for metric_function in metric_functions:
-                output[metric_function.__name__] = metric_function(
+            for metric_function_id in metric_functions:
+                output[metric_function_id] = metric_functions[metric_function_id](
                     datasamples=datasamples, predictions_path=predictions_path
                 )
             return output
