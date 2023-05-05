@@ -31,7 +31,7 @@ class Dependency(BaseModel):
             Default to [].
         excluded_regex (List[pathlib.Path]): Regex used to exclude files from `local_dependencies` / `local_code`.
             Default to [].
-            Always includes common data formats (see
+            Always excludes common data formats (see
             `substrafl.dependency.path_management.EXCLUDED_PATHS_REGEX_DEFAULT`).
         not_excluded_paths (List[pathlib.Path]): Unexclude files from the `excluded_paths` / `excluded_regex`
             Default to []

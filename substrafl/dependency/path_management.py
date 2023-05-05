@@ -52,8 +52,8 @@ class BaseDependencyPathManagement(ABC):
 
     @classmethod
     def expand_paths(cls, paths: List[Path]) -> Set[Path]:
-        """List all files belonging to a list of path. If the path is a file, simply ad dthe file.
-        If it is a folder, add all the file inside the folder.
+        """List all files belonging to a list of path. If the path is a file, simply add the file.
+        If it is a folder, add all the files inside the folder.
 
         Args:
             paths (List[Path]): All paths to search into.
