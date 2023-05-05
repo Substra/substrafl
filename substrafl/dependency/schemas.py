@@ -1,5 +1,4 @@
 from pathlib import Path
-from pathlib import PosixPath
 from typing import List
 
 from pydantic import BaseModel
@@ -23,28 +22,28 @@ class Dependency(BaseModel):
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.
         dependencies (List[str]): Python packages installable from pypi.
-        local_dependencies (List[pathlib.PosixPath]): Local installable packages. The command
+        local_dependencies (List[pathlib.Path]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
-        local_code (List[pathlib.PosixPath]): Local relative imports used by your script. All files / folders will be
+        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be
             pasted to the level of the running script.
-        excluded_paths (List[pathlib.PosixPath]): Local paths excluded from `local_dependencies` / `local_code`.
+        excluded_paths (List[pathlib.Path]): Local paths excluded from `local_dependencies` / `local_code`.
             Default to [].
-        excluded_regex (List[pathlib.PosixPath]): Regex used to exclude files from `local_dependencies` / `local_code`.
+        excluded_regex (List[pathlib.Path]): Regex used to exclude files from `local_dependencies` / `local_code`.
             Default to [].
             Always includes common data formats (see
             `substrafl.dependency.path_management.EXCLUDED_PATHS_REGEX_DEFAULT`).
-        not_excluded_paths (List[pathlib.PosixPath]): Unexclude files from the `excluded_paths` / `excluded_regex`
+        not_excluded_paths (List[pathlib.Path]): Unexclude files from the `excluded_paths` / `excluded_regex`
             Default to []
     """
 
     editable_mode: bool = False
     pypi_dependencies: List[str] = Field(default_factory=list)
-    local_dependencies: List[PosixPath] = Field(default_factory=list)
-    local_code: List[PosixPath] = Field(default_factory=list)
-    excluded_paths: List[PosixPath] = Field(default_factory=list)
+    local_dependencies: List[Path] = Field(default_factory=list)
+    local_code: List[Path] = Field(default_factory=list)
+    excluded_paths: List[Path] = Field(default_factory=list)
     excluded_regex: List[str] = Field(default_factory=list)
-    not_excluded_paths: List[PosixPath] = Field(default_factory=list)
+    not_excluded_paths: List[Path] = Field(default_factory=list)
 
     class Config:
         arbitrary_types_allowed = True
@@ -83,7 +82,7 @@ class Dependency(BaseModel):
             )
         return v
 
-    def copy_dependencies_local_package(self, *, dest_dir: PosixPath) -> List[PosixPath]:
+    def copy_dependencies_local_package(self, *, dest_dir: Path) -> List[Path]:
         return DependencyPathManagement.copy_paths(
             dest_dir=dest_dir,
             src=self.local_dependencies,
@@ -92,7 +91,7 @@ class Dependency(BaseModel):
             excluded_regex=self.excluded_regex,
         )
 
-    def copy_dependencies_local_code(self, *, dest_dir: PosixPath) -> List[PosixPath]:
+    def copy_dependencies_local_code(self, *, dest_dir: Path) -> List[Path]:
         return DependencyPathManagement.copy_paths(
             dest_dir=dest_dir,
             src=self.local_code,

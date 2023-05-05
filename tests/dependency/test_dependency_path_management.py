@@ -1,7 +1,7 @@
 import random
 import string
 import tempfile
-from pathlib import PosixPath
+from pathlib import Path
 from typing import Optional
 
 import pytest
@@ -12,8 +12,8 @@ from substrafl.dependency.path_management import DependencyPathManagement
 
 @pytest.fixture
 def tmp_dir():
-    with tempfile.TemporaryDirectory(dir=PosixPath.cwd()) as tmp_dir:
-        yield PosixPath(tmp_dir)
+    with tempfile.TemporaryDirectory(dir=Path.cwd()) as tmp_dir:
+        yield Path(tmp_dir)
 
 
 src_dir = tmp_dir
@@ -22,9 +22,9 @@ dest_dir = tmp_dir
 
 @pytest.fixture
 def create_random_path():
-    def _create_random_path(base_dir: PosixPath, *, path_name_length: int = 10) -> PosixPath:
+    def _create_random_path(base_dir: Path, *, path_name_length: int = 10) -> Path:
         path_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=path_name_length))
-        path = PosixPath(base_dir / path_name)
+        path = Path(base_dir / path_name)
         return path
 
     return _create_random_path
@@ -32,9 +32,7 @@ def create_random_path():
 
 @pytest.fixture
 def create_random_file(create_random_path):
-    def _create_random_file(
-        base_dir: PosixPath, *, path_name_length: int = 10, suffix: Optional[str] = None
-    ) -> PosixPath:
+    def _create_random_file(base_dir: Path, *, path_name_length: int = 10, suffix: Optional[str] = None) -> Path:
         path = create_random_path(base_dir, path_name_length=path_name_length)
         if suffix:
             path = path.with_suffix(suffix)
@@ -47,7 +45,7 @@ def create_random_file(create_random_path):
 
 @pytest.fixture
 def create_random_folder(create_random_path):
-    def _create_random_folder(base_dir: PosixPath, *, path_name_length: int = 10) -> PosixPath:
+    def _create_random_folder(base_dir: Path, *, path_name_length: int = 10) -> Path:
         path = create_random_path(base_dir, path_name_length=path_name_length)
         path.mkdir()
         return path
@@ -184,7 +182,7 @@ def test_copy_file_relative(src_dir, dest_dir, create_random_file, create_random
     subfolder = create_random_folder(src_dir)
     subfolder_file = create_random_file(subfolder)
 
-    local_path = PosixPath()
+    local_path = Path()
     local_src_file = src_dir.relative_to(local_path.absolute())
 
     DependencyPathManagement.copy_paths(

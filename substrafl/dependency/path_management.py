@@ -2,7 +2,7 @@ import logging
 import shutil
 from abc import ABC
 from abc import abstractmethod
-from pathlib import PosixPath
+from pathlib import Path
 from typing import List
 from typing import Optional
 from typing import Set
@@ -33,17 +33,17 @@ class BaseDependencyPathManagement(ABC):
     """Base class for different dependency paths management."""
 
     @classmethod
-    def expand_regexes(cls, regexes: List[str], src: List[PosixPath]) -> List[PosixPath]:
+    def expand_regexes(cls, regexes: List[str], src: List[Path]) -> List[Path]:
         """Find all paths corresponding to a list of regex
 
         Args:
             regexes (List[str]): Regexes used to find strings.
-            src (List[PosixPath]): Path from where the files are copied from.
+            src (List[Path]): Path from where the files are copied from.
 
         Returns:
-            List[PosixPath]: All paths corresponding to any regex.
+            List[Path]: All paths corresponding to any regex.
         """
-        paths: List[PosixPath] = []
+        paths: List[Path] = []
         for input_path in src:
             for regex in regexes:
                 paths.extend(input_path.rglob(regex))
@@ -51,20 +51,20 @@ class BaseDependencyPathManagement(ABC):
         return paths
 
     @classmethod
-    def expand_paths(cls, paths: List[PosixPath]) -> Set[PosixPath]:
+    def expand_paths(cls, paths: List[Path]) -> Set[Path]:
         """List all files belonging to a list of path. If the path is a file, simply ad dthe file.
         If it is a folder, add all the file inside the folder.
 
         Args:
-            paths (List[PosixPath]): All paths to search into.
+            paths (List[Path]): All paths to search into.
 
         Raises:
             ValueError: Provided a non-existing path.
 
         Returns:
-            Set[PosixPath]: A set of unique files found in the paths
+            Set[Path]: A set of unique files found in the paths
         """
-        unpacked_paths: Set[PosixPath] = set()
+        unpacked_paths: Set[Path] = set()
         for path in paths:
             if path.is_file():
                 unpacked_paths.add(path.absolute())
@@ -79,21 +79,21 @@ class BaseDependencyPathManagement(ABC):
     def get_excluded_paths(
         cls,
         *,
-        src: List[PosixPath],
-        excluded: List[PosixPath],
+        src: List[Path],
+        excluded: List[Path],
         excluded_regex: List[str],
-        not_excluded: List[PosixPath],
-    ) -> Set[PosixPath]:
+        not_excluded: List[Path],
+    ) -> Set[Path]:
         """_summary_
 
         Args:
-            src (List[PosixPath]): Path from where the files are copied from.
-            excluded (List[PosixPath]): Paths to exclude from the `src` during the copy.
+            src (List[Path]): Path from where the files are copied from.
+            excluded (List[Path]): Paths to exclude from the `src` during the copy.
             excluded_regex (List[str]): Regex to find paths in `src` that will be excluded.
-            not_excluded (List[PosixPath]): Paths to remove from the paths found in `excluded`/`not_excluded`.
+            not_excluded (List[Path]): Paths to remove from the paths found in `excluded`/`not_excluded`.
 
         Returns:
-            Set[PosixPath]: Set of excluded files, after expanding regexes and respecting `not_excluded`.
+            Set[Path]: Set of excluded files, after expanding regexes and respecting `not_excluded`.
         """
         expanded_excluded_regex = cls.expand_regexes(excluded_regex + EXCLUDED_PATHS_REGEX_DEFAULT, src)
         expanded_excluded = cls.expand_paths(excluded + expanded_excluded_regex)
@@ -105,29 +105,29 @@ class BaseDependencyPathManagement(ABC):
     def copy_paths(
         cls,
         *,
-        dest_dir: PosixPath,
-        src: List[PosixPath],
-        not_excluded: Optional[List[PosixPath]] = None,
-        excluded: Optional[List[PosixPath]] = None,
+        dest_dir: Path,
+        src: List[Path],
+        not_excluded: Optional[List[Path]] = None,
+        excluded: Optional[List[Path]] = None,
         excluded_regex: Optional[List[str]] = None,
-    ) -> List[PosixPath]:
+    ) -> List[Path]:
         """Copy paths from `src` to `dest_dir` respecting exlclusion/non-exclusion paths provided through `excluded_regex`,
             `excluded`, `not_excluded`.
 
         Args:
-            dest_dir (PosixPath): Directory where the file are going to be copied into.
-            src (List[PosixPath]): Path to copy
-            not_excluded (Optional[List[PosixPath]], optional): Paths to remove from the paths found in
+            dest_dir (Path): Directory where the file are going to be copied into.
+            src (List[Path]): Path to copy
+            not_excluded (Optional[List[Path]], optional): Paths to remove from the paths found in
                 `excluded`/`not_excluded`.
                 Defaults to None.
-            excluded (Optional[List[PosixPath]], optional): Paths to exclude from the `src` during the copy.
+            excluded (Optional[List[Path]], optional): Paths to exclude from the `src` during the copy.
                 Defaults to None.
             excluded_regex (Optional[List[str]], optional): Regex to find paths in `src` that will be excluded.
                 Always includes common data formats (see substrafl.dependency.EXCLUDED_PATHS_REGEX_DEFAULT)
                 Defaults to None.
 
         Returns:
-            List[PosixPath]: Copied paths.
+            List[Path]: Copied paths.
         """
         raise NotImplementedError("Abstract class do not provide implementation for this method")
 
@@ -137,22 +137,22 @@ class DependencyPathManagement(BaseDependencyPathManagement):
     def copy_paths(
         cls,
         *,
-        dest_dir: PosixPath,
-        src: List[PosixPath],
-        not_excluded: Optional[List[PosixPath]] = None,
-        excluded: Optional[List[PosixPath]] = None,
+        dest_dir: Path,
+        src: List[Path],
+        not_excluded: Optional[List[Path]] = None,
+        excluded: Optional[List[Path]] = None,
         excluded_regex: Optional[List[str]] = None,
-    ) -> List[PosixPath]:
+    ) -> List[Path]:
         """Copy paths from `src` to `dest_dir` respecting exlclusion/non-exclusion paths provided through `excluded_regex`,
             `excluded`, `not_excluded`
 
         Args:
-            dest_dir (PosixPath): Directory where the file are going to be copied into
-            src (List[PosixPath]): Path to copy
-            not_excluded (Optional[List[PosixPath]], optional): Paths to remove from the paths found in
+            dest_dir (Path): Directory where the file are going to be copied into
+            src (List[Path]): Path to copy
+            not_excluded (Optional[List[Path]], optional): Paths to remove from the paths found in
                 `excluded`/`not_excluded`.
                 Defaults to None.
-            excluded (Optional[List[PosixPath]], optional): Paths to exclude from the `src` during the copy.
+            excluded (Optional[List[Path]], optional): Paths to exclude from the `src` during the copy.
                 Defaults to None.
             excluded_regex (Optional[List[str]], optional): Regex to find paths in `src` that will be excluded.
                 Always includes common data formats (see substrafl.dependency.EXCLUDED_PATHS_REGEX_DEFAULT)
@@ -163,7 +163,7 @@ class DependencyPathManagement(BaseDependencyPathManagement):
             ValueError: One of the paths in `src` does not exist.
 
         Returns:
-            List[PosixPath]: Copied paths.
+            List[Path]: Copied paths.
         """
         if dest_dir.is_file():
             raise ValueError(f"{dest_dir=} is a file. Cannot copy in a file.")
