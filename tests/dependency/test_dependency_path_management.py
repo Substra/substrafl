@@ -16,14 +16,8 @@ def tmp_dir():
         yield PosixPath(tmp_dir)
 
 
-@pytest.fixture
-def src_dir(tmp_dir):
-    return tmp_dir
-
-
-@pytest.fixture
-def dest_dir(tmp_dir):
-    return tmp_dir
+src_dir = tmp_dir
+dest_dir = tmp_dir
 
 
 @pytest.fixture
@@ -160,5 +154,44 @@ def test_get_excluded_paths_not_excluded_file_relative(tmp_dir, create_random_fi
     assert paths == excluded_paths
 
 
-def test_get_excluded_paths_not_excluded_folder_relative(tmp_dir, create_random_file):
-    pass
+def test_get_excluded_paths_not_excluded_folder(tmp_dir, create_random_folder, create_random_file):
+    subfolder = create_random_folder(tmp_dir)
+    create_random_file(subfolder, suffix=".xls")
+    paths = set()
+    excluded_paths = DependencyPathManagement.get_excluded_paths(
+        src=[tmp_dir], excluded=[], not_excluded=[subfolder], excluded_regex=[]
+    )
+    assert paths == excluded_paths
+
+
+def test_copy_file_absolute(src_dir, dest_dir, create_random_file, create_random_folder):
+    file = create_random_file(src_dir)
+    subfolder = create_random_folder(src_dir)
+    subfolder_file = create_random_file(subfolder)
+    DependencyPathManagement.copy_paths(
+        src=[src_dir], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[]
+    )
+
+    to_be_copied = [src_dir, file, subfolder, subfolder_file]
+    to_be_copied_dest_dir = {dest_dir / f.relative_to(src_dir.parent) for f in to_be_copied}
+    copied_files = set(dest_dir.rglob("*"))
+
+    assert to_be_copied_dest_dir == copied_files
+
+
+def test_copy_file_relative(src_dir, dest_dir, create_random_file, create_random_folder):
+    file = create_random_file(src_dir)
+    subfolder = create_random_folder(src_dir)
+    subfolder_file = create_random_file(subfolder)
+
+    local_path = PosixPath()
+    local_src_file = src_dir.relative_to(local_path.absolute())
+
+    DependencyPathManagement.copy_paths(
+        src=[local_src_file], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[]
+    )
+
+    to_be_copied = [src_dir, file, subfolder, subfolder_file]
+    to_be_copied_dest_dir = {dest_dir / f.relative_to(src_dir.parent) for f in to_be_copied}
+    copied_files = set(dest_dir.rglob("*"))
+    assert to_be_copied_dest_dir == copied_files

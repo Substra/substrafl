@@ -88,8 +88,6 @@ def iter_dockerfile_install_command(paths: typing.List[Path], python_major_minor
     for path in paths:
         yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {path} \n"
 
-    return
-
 
 def _copy_local_packages(path: Path, python_major_minor: str, operation_dir: Path, dependencies: Dependency):
     """Copy the local libraries given by the user and generate the installation command."""

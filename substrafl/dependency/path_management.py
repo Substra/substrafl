@@ -24,8 +24,8 @@ EXCLUDED_PATHS_REGEX_DEFAULT = [
     # Common folders
     ".git/*",
     # Others
-    "local-worker/*",
-    TMP_SUBSTRAFL_PREFIX + "/*",
+    "local-worker*",
+    TMP_SUBSTRAFL_PREFIX + "*",
 ]
 
 
@@ -180,20 +180,18 @@ class DependencyPathManagement(BaseDependencyPathManagement):
         expanded_excluded = cls.get_excluded_paths(
             src=src, excluded=excluded, excluded_regex=excluded_regex, not_excluded=not_excluded
         )
-
         output_files = []
         for input_path in src:
-            absolute_path = input_path.absolute()
-            if absolute_path.is_file() and absolute_path not in expanded_excluded:
+            if input_path.is_file() and input_path not in expanded_excluded:
                 output_path = dest_dir / input_path.name
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy(absolute_path, output_path)
-            elif absolute_path.is_dir():
-                for file in absolute_path.rglob("*"):
+                shutil.copy(input_path.absolute(), output_path)
+            elif input_path.is_dir():
+                for file in input_path.rglob("*"):
                     if file.is_file() and file not in expanded_excluded:
-                        output_path = dest_dir / file.relative_to(absolute_path.parent)
+                        output_path = dest_dir / file.relative_to(input_path.parent)
                         output_path.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy(file, output_path)
+                        shutil.copy(file.absolute(), output_path)
             else:
                 raise ValueError(f"Try to parse {input_path} that does not exist.")
             output_files.append(input_path)
