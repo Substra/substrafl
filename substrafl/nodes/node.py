@@ -12,7 +12,6 @@ class InputIdentifiers(str, Enum):
     model = "model"
     models = "models"
     predictions = "predictions"
-    performance = "performance"
     opener = "opener"
     datasamples = "datasamples"
     rank = "rank"
@@ -25,7 +24,6 @@ class OutputIdentifiers(str, Enum):
     shared = "shared"
     model = "model"
     predictions = "predictions"
-    performance = "performance"
 
 
 class Node:

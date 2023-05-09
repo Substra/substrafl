@@ -26,7 +26,10 @@ class TestDataNode(Node):
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
         test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
-        metric_functions (List[Callable]):  Function or list of functions that implement the different metrics.
+        metric_functions (Union[Dict, List[Callable], Callable]): Dictionary of Function, Function or list of Functions
+            that implement the different metrics. If a Dict is given, the keys will be used to register the result of
+            the associated function. If a Function or a List is given, function.__name__ will be used to store the
+            result.
     """
 
     def __init__(
@@ -34,14 +37,18 @@ class TestDataNode(Node):
         organization_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        metric_functions: Union[List[Callable], Callable],
+        metric_functions: Union[Dict, List[Callable], Callable],
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys
 
-        self.metric_functions = {}
+        if isinstance(metric_functions, dict):
+            for metric_function in metric_functions.values():
+                _check_metric_function(metric_function)
+            self.metric_functions = metric_functions
 
-        if isinstance(metric_functions, list):
+        elif isinstance(metric_functions, list):
+            self.metric_functions = {}
             for metric_function in metric_functions:
                 _check_metric_function(metric_function)
                 if metric_function.__name__ in self.metric_functions:
@@ -49,6 +56,7 @@ class TestDataNode(Node):
                 self.metric_functions[metric_function.__name__] = metric_function
 
         elif callable(metric_functions):
+            self.metric_functions = {}
             _check_metric_function(metric_functions)
             self.metric_functions[metric_functions.__name__] = metric_functions
 

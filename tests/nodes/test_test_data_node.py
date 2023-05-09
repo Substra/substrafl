@@ -61,11 +61,20 @@ def test_several_metric_function():
 
     expected_results = {"f": f, "g": g, "h": h}
 
-    test_data_node = TestDataNode(
+    test_data_node_1 = TestDataNode(
         organization_id="fake_id",
         data_manager_key="fake_id",
         test_data_sample_keys=["fake_id"],
         metric_functions=[f, g, h],
     )
 
-    assert test_data_node.metric_functions == expected_results
+    assert test_data_node_1.metric_functions == expected_results
+
+    test_data_node_2 = TestDataNode(
+        organization_id="fake_id",
+        data_manager_key="fake_id",
+        test_data_sample_keys=["fake_id"],
+        metric_functions={"f": f, "g": g, "h": h},
+    )
+
+    assert test_data_node_2.metric_functions == expected_results
