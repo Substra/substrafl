@@ -341,7 +341,7 @@ def register_metrics(
             predictions. These functions are registered in substra as one function.
 
     Returns:
-        function_key: the key of the Substra function containing all the given metric.
+        str: Substra function containing all the given metric functions.
     """
 
     inputs_metrics = [
