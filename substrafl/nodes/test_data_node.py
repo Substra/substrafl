@@ -26,7 +26,7 @@ class TestDataNode(Node):
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
         test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
-        metric_functions (List[Call]):  Function or list of functions that implement the different metrics.
+        metric_functions (List[Callable]):  Function or list of functions that implement the different metrics.
     """
 
     def __init__(
