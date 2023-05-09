@@ -134,6 +134,14 @@ def mae():
 
 
 @pytest.fixture(scope="session")
+def dummy_metric():
+    def metric(datasamples, predictions_path):
+        return 1
+
+    return metric
+
+
+@pytest.fixture(scope="session")
 def mae_metric(mae):
     def mae_score(datasamples, predictions_path):
         y_true = datasamples[1]
