@@ -47,6 +47,10 @@ class InvalidPathError(Exception):
     """Invalid path."""
 
 
+class InvalidMetricIdentifierError(Exception):
+    """A metric name or identifier cannot be a SubstraFL Outputidentifier."""
+
+
 class KeyMetadataError(Exception):
     """``substrafl_version``, ``substra_version`` and ``substratools_version`` keys can't be added
     to the experiment metadata."""

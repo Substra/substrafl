@@ -43,14 +43,16 @@ class TestDataNode(Node):
         self.test_data_sample_keys = test_data_sample_keys
 
         if isinstance(metric_functions, dict):
-            for metric_function in metric_functions.values():
-                _check_metric_function(metric_function)
+            for metric_id in metric_functions:
+                _check_metric_function(metric_functions[metric_id])
+                _check_metric_identifier(metric_id)
             self.metric_functions = metric_functions
 
         elif isinstance(metric_functions, list):
             self.metric_functions = {}
             for metric_function in metric_functions:
                 _check_metric_function(metric_function)
+                _check_metric_identifier(metric_function.__name__)
                 if metric_function.__name__ in self.metric_functions:
                     raise exceptions.ExistingRegisteredMetricError
                 self.metric_functions[metric_function.__name__] = metric_function
@@ -58,10 +60,11 @@ class TestDataNode(Node):
         elif callable(metric_functions):
             self.metric_functions = {}
             _check_metric_function(metric_functions)
+            _check_metric_identifier(metric_function.__name__)
             self.metric_functions[metric_functions.__name__] = metric_functions
 
         else:
-            raise exceptions.MetricFunctionTypeError("Metric functions must be a callable or a list of callable")
+            raise exceptions.MetricFunctionTypeError("Metric functions must be of type dictionary, list or callable")
 
         self.testtasks: List[Dict] = []
         self.predicttasks: List[Dict] = []
@@ -295,4 +298,11 @@ def _check_metric_function(metric_function: Callable):
         raise exceptions.MetricFunctionSignatureError(
             """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions_path as
             parameters."""
+        )
+
+
+def _check_metric_identifier(identifier: str):
+    if identifier in list(OutputIdentifiers):
+        raise exceptions.InvalidMetricIdentifierError(
+            f" A metric name or identifier cannot be in {[id.value for id in list(OutputIdentifiers)]}"
         )

@@ -91,12 +91,7 @@ class RemoteMethod:
         else:
             for output_id in outputs:
                 # The performances are the only identifier user defined.
-                if output_id not in (
-                    OutputIdentifiers.shared,
-                    OutputIdentifiers.model,
-                    OutputIdentifiers.local,
-                    OutputIdentifiers.predictions,
-                ):
+                if output_id not in list(OutputIdentifiers):
                     tools.save_performance(method_output[output_id], outputs[output_id])
 
     def generic_function(
