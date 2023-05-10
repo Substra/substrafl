@@ -126,7 +126,7 @@ def substrafl_fed_avg(
             time.sleep(1)
 
     performances = clients[1].get_performances(compute_plan.key)
-    return performances.dict().values()
+    return dict(performances).values()
 
 
 def torch_fed_avg(

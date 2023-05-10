@@ -326,7 +326,7 @@ def register_metrics(
     client: substra.Client,
     dependencies: Dependency,
     permissions: substra.sdk.schemas.Permissions,
-    metric_functions: typing.Dict,
+    metric_functions: typing.Dict[str, callable],
 ):
     """Adds a function to the Substra platform using the given metric functions as the
     function to register.
@@ -337,8 +337,8 @@ def register_metrics(
         client (substra.Client): The substra client.
         permissions (substra.sdk.schemas.Permissions): Permissions for the metric function.
         dependencies (Dependency): Metric function dependencies.
-        metric_functions (typing.Dict): functions to compute the score from the datasamples and the
-            predictions. These functions are registered in substra as one function.
+        metric_functions (typing.Dict[str, typing.Callable]): functions to compute the score from the datasamples and
+            the predictions. These functions are registered in substra as one function.
 
     Returns:
         str: Substra function containing all the given metric functions.
