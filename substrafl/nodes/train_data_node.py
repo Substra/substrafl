@@ -54,24 +54,22 @@ class TrainDataNode(Node):
     ) -> LocalStateRef:
         op_id = str(uuid.uuid4())
 
-        init_task = dict(
-            substra.schemas.ComputePlanTaskSpec(
-                function_key=str(uuid.uuid4()),  # bogus function key
-                task_id=op_id,
-                inputs=[],
-                outputs={
-                    OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
-                        transient=clean_models,
-                    ),
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                tag="init",
-                worker=self.organization_id,
-            )
-        )
+        init_task = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=op_id,
+            inputs=[],
+            outputs={
+                OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                    transient=clean_models,
+                ),
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            tag="init",
+            worker=self.organization_id,
+        ).dict()
 
         init_task.pop("function_key")
         init_task["remote_operation"] = operation.remote_struct
@@ -161,31 +159,29 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
-        train_task = dict(
-            substra.schemas.ComputePlanTaskSpec(
-                function_key=str(uuid.uuid4()),  # bogus function key
-                task_id=op_id,
-                inputs=data_inputs + local_inputs + shared_inputs,
-                outputs={
-                    OutputIdentifiers.shared: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(
-                            public=False,
-                            authorized_ids=list(authorized_ids | set([aggregation_id] if aggregation_id else [])),
-                        ),
-                        transient=clean_models,
+        train_task = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=op_id,
+            inputs=data_inputs + local_inputs + shared_inputs,
+            outputs={
+                OutputIdentifiers.shared: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(
+                        public=False,
+                        authorized_ids=list(authorized_ids | set([aggregation_id] if aggregation_id else [])),
                     ),
-                    OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
-                        transient=clean_models,
-                    ),
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                tag="train",
-                worker=self.organization_id,
-            )
-        )
+                    transient=clean_models,
+                ),
+                OutputIdentifiers.local: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                    transient=clean_models,
+                ),
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            tag="train",
+            worker=self.organization_id,
+        ).dict()
 
         train_task.pop("function_key")
         train_task["remote_operation"] = operation.remote_struct

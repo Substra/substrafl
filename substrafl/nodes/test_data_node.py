@@ -113,46 +113,42 @@ class TestDataNode(Node):
             )
         ]
 
-        predicttask = dict(
-            substra.schemas.ComputePlanTaskSpec(
-                function_key=str(uuid.uuid4()),  # bogus function key
-                task_id=predicttask_id,
-                inputs=data_inputs + predict_input,
-                outputs={
-                    OutputIdentifiers.predictions: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
-                        transient=True,
-                    )
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                worker=self.organization_id,
-            )
-        )
+        predicttask = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=predicttask_id,
+            inputs=data_inputs + predict_input,
+            outputs={
+                OutputIdentifiers.predictions: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=[self.organization_id]),
+                    transient=True,
+                )
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            worker=self.organization_id,
+        ).dict()
 
         predicttask.pop("function_key")
         predicttask["remote_operation"] = operation.remote_struct
         self.predicttasks.append(predicttask)
 
-        testtask = dict(
-            substra.schemas.ComputePlanTaskSpec(
-                function_key=str(uuid.uuid4()),  # bogus function key
-                task_id=str(uuid.uuid4()),
-                inputs=data_inputs + test_input,
-                outputs={
-                    metric_function_id: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
-                        transient=False,
-                    )
-                    for metric_function_id in self.metric_functions
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                worker=self.organization_id,
-            )
-        )
+        testtask = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=str(uuid.uuid4()),
+            inputs=data_inputs + test_input,
+            outputs={
+                metric_function_id: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
+                    transient=False,
+                )
+                for metric_function_id in self.metric_functions
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            worker=self.organization_id,
+        ).dict()
         testtask.pop("function_key")
         testtask["remote_operation"] = operation.remote_struct
         self.testtasks.append(testtask)

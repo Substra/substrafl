@@ -330,7 +330,7 @@ def register_metrics(
 ):
     """Adds a function to the Substra platform using the given metric functions as the
     function to register.
-    Each metric function must be of type function, and there signature must ONLY contains
+    Each metric function must be of type function, and their signature must ONLY contains
     `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
 
     Args:
@@ -392,7 +392,7 @@ def register_metrics(
         remote_cls=RemoteMethod,
         method_name="score",
         method_parameters={},
-        algo_name="Testing",
+        algo_name="Evaluating",
     )
 
     key = register_function(

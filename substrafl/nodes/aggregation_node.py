@@ -75,24 +75,22 @@ class AggregationNode(Node):
             else None
         )
 
-        aggregate_task = dict(
-            substra.schemas.ComputePlanTaskSpec(
-                function_key=str(uuid.uuid4()),  # bogus function key
-                task_id=op_id,
-                inputs=inputs,
-                outputs={
-                    OutputIdentifiers.model: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
-                        transient=clean_models,
-                    )
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                tag="aggregate",
-                worker=self.organization_id,
-            )
-        )
+        aggregate_task = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=op_id,
+            inputs=inputs,
+            outputs={
+                OutputIdentifiers.model: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
+                    transient=clean_models,
+                )
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            tag="aggregate",
+            worker=self.organization_id,
+        ).dict()
 
         aggregate_task.pop("function_key")
         aggregate_task["remote_operation"] = operation.remote_struct
