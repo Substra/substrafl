@@ -60,7 +60,7 @@ class TestDataNode(Node):
         elif callable(metric_functions):
             self.metric_functions = {}
             _check_metric_function(metric_functions)
-            _check_metric_identifier(metric_function.__name__)
+            _check_metric_identifier(metric_functions.__name__)
             self.metric_functions[metric_functions.__name__] = metric_functions
 
         else:
