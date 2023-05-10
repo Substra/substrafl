@@ -4,6 +4,7 @@ import pytest
 
 from substrafl import exceptions
 from substrafl.nodes import TestDataNode
+from substrafl.nodes.node import OutputIdentifiers
 
 
 @pytest.mark.parametrize(
@@ -78,3 +79,14 @@ def test_several_metric_function():
     )
 
     assert test_data_node_2.metric_functions == expected_results
+
+
+@pytest.mark.parametrize("identifier", OutputIdentifiers)
+def test_metric_identifier_in_output_id(identifier):
+    with pytest.raises(exceptions.InvalidMetricIdentifierError):
+        TestDataNode(
+            organization_id="fake_id",
+            data_manager_key="fake_id",
+            test_data_sample_keys=["fake_id"],
+            metric_functions={identifier.value: lambda datasamples, predictions_path: "any_str"},
+        )
