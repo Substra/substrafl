@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Metrics are now given as functions a not as `metric_key`. The functions given as metric functions to test data nodes are automatically registered in a new Substra function by SubstraFL. ([#117](https://github.com/Substra/substrafl/pull/117)).
+- BREAKING: Metrics are now given as functions a not as `metric_key`. The functions given as metric functions to test data nodes are automatically registered in a new Substra function by SubstraFL. ([#117](https://github.com/Substra/substrafl/pull/117)).
   The new argument of the TestDataNode class `metric_functions` replace the `metric_keys`one and accept dictionary (using the key as the identifier of the function given as value), list of function or directly a function is there is only one metric to compute (`function.__name__` is then used as identifier).
   Installed dependencies are the  `algo_dependencies` passed to `execute_experiment`, and permissions are the same than the predict function.
 
