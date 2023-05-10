@@ -326,7 +326,7 @@ def register_metrics(
     client: substra.Client,
     dependencies: Dependency,
     permissions: substra.sdk.schemas.Permissions,
-    metric_functions: typing.Dict[str, callable],
+    metric_functions: typing.Dict[str, typing.Callable],
 ):
     """Adds a function to the Substra platform using the given metric functions as the
     function to register.
