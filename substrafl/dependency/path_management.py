@@ -47,8 +47,6 @@ EXCLUDED_PATHS_REGEX_DEFAULT = [
     ".spyproject",
     # Rope project settings
     ".ropeproject",
-    # mkdocs documentation
-    "/site",
     # mypy
     ".mypy_cache/*",
     ".dmypy.json",
