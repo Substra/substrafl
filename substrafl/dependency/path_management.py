@@ -80,7 +80,7 @@ EXCLUDED_PATHS_REGEX_DEFAULT = [
     # Common folders
     ".git/*",
     ".github/*",
-    # Others
+    # Substra internal files
     "local-worker*",
     TMP_SUBSTRAFL_PREFIX + "*",
 ]
@@ -149,7 +149,7 @@ class BaseDependencyPathManagement(ABC):
         excluded_regex: List[str],
         not_excluded: List[Path],
     ) -> Set[Path]:
-        """_summary_
+        """Get all paths to exclude, after expanding the regexes and respectful of non-exclusion list
 
         Args:
             src (List[Path]): Path from where the files are copied from.
