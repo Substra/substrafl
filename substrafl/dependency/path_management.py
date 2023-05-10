@@ -103,7 +103,15 @@ class BaseDependencyPathManagement(ABC):
         paths: List[Path] = []
         for input_path in src:
             for regex in regexes:
-                paths.extend(input_path.rglob(regex))
+                excluded_paths = list(input_path.rglob(regex))
+                paths.extend(excluded_paths)
+
+                excluded_paths_count = len(excluded_paths)
+                if excluded_paths_count > 0:
+                    logger.warn(f"Regex {regex} excludes {excluded_paths_count} file(s)")
+                    if logger.isEnabledFor(logging.DEBUG):
+                        formatted_paths = "\n\t".join(str(p) for p in excluded_paths)
+                        logger.debug(f"Regex {regex} excludes: {formatted_paths}")
 
         return paths
 
