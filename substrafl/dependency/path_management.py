@@ -79,7 +79,7 @@ EXCLUDED_PATHS_REGEX_DEFAULT = [
     "*.xlsx",
     # Common folders
     ".git/*",
-    ".github/*"
+    ".github/*",
     # Others
     "local-worker*",
     TMP_SUBSTRAFL_PREFIX + "*",
