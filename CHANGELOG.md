@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
           organization_id=org_id,
           data_manager_key=dataset_keys[org_id],
           test_data_sample_keys=[test_datasample_keys[org_id]],
-          metric_functions=accuracy,
+          metric_functions={"Accuracy": accuracy},
       )
       for org_id in DATA_PROVIDER_ORGS_ID
   ]
