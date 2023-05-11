@@ -12,6 +12,7 @@ from pure_substrafl.register_assets import get_clients
 from pure_substrafl.register_assets import load_asset_keys
 from pure_substrafl.register_assets import save_asset_keys
 from pure_torch.strategies import basic_fed_avg
+from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
 from substra.sdk.models import ComputePlanStatus
 from torch.utils.data import DataLoader
@@ -242,7 +243,8 @@ def torch_fed_avg(
 
             # Fusion, sigmoid and to numpy
             y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
-            metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
-            metrics.update({k: metric})
+            auc = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
+            acc = accuracy_score(y_true, np.round(y_pred)) if len(set(y_true)) > 1 else 0
+            metrics.update({k: {"ROC AUC": auc, "Accuracy": acc}})
 
     return metrics

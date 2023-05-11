@@ -38,7 +38,7 @@ class TestDataNode(Node):
         organization_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        metric_functions: Union[Dict, List[Callable], Callable],
+        metric_functions: Union[Dict[str, Callable], List[Callable], Callable],
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys

@@ -8,6 +8,7 @@ from typing import Optional
 import numpy as np
 import substra
 import yaml
+from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
@@ -229,6 +230,13 @@ def get_test_data_nodes(
         y_true = datasamples.y_true
         return roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
 
+    def accuracy(datasamples, predictions_path):
+        """Accuracy"""
+
+        y_pred = np.load(predictions_path)
+        y_true = datasamples.y_true
+        return accuracy_score(y_true, np.round(y_pred)) if len(set(y_true)) > 1 else 0
+
     test_data_nodes = []
 
     for client in clients:
@@ -247,7 +255,7 @@ def get_test_data_nodes(
                 organization_id=msp_id,
                 data_manager_key=asset_keys.get(msp_id)["dataset_key"],
                 test_data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
-                metric_functions=auc,
+                metric_functions={"ROC AUC": auc, "Accuracy": accuracy},
             )
         )
 

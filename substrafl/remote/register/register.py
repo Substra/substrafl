@@ -379,10 +379,8 @@ def register_metrics(
             # The _skip argument is needed to match the default signature of methods executed
             # on substratools_methods.py.
             return {
-                metric_function_id: metric_functions[metric_function_id](
-                    datasamples=datasamples, predictions_path=predictions_path
-                )
-                for metric_function_id in metric_functions
+                metric_function_id: metric_function(datasamples=datasamples, predictions_path=predictions_path)
+                for metric_function_id, metric_function in metric_functions.items()
             }
 
     remote_struct = RemoteStruct(

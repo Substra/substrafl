@@ -1,5 +1,6 @@
 from contextlib import nullcontext as does_not_raise
 
+import numpy as np
 import pytest
 
 from substrafl import exceptions
@@ -79,6 +80,24 @@ def test_several_metric_function():
     )
 
     assert test_data_node_2.metric_functions == expected_results
+
+    test_data_node_3 = TestDataNode(
+        organization_id="fake_id",
+        data_manager_key="fake_id",
+        test_data_sample_keys=["fake_id"],
+        metric_functions=np.array([f, g, h]),
+    )
+
+    assert test_data_node_3.metric_functions == expected_results
+
+    test_data_node_4 = TestDataNode(
+        organization_id="fake_id",
+        data_manager_key="fake_id",
+        test_data_sample_keys=["fake_id"],
+        metric_functions={f, g, h},
+    )
+
+    assert test_data_node_4.metric_functions == expected_results
 
 
 @pytest.mark.parametrize("identifier", OutputIdentifiers)
