@@ -86,9 +86,9 @@ def substrafl_fed_avg(
         seed=seed, learning_rate=learning_rate, num_workers=num_workers, index_generator=index_generator, model=model
     )
 
-    # Algo dependencies
+    # Dependencies
     base = Path(__file__).parent
-    algo_deps = Dependency(
+    dependencies = Dependency(
         pypi_dependencies=["torch", "numpy", "sklearn"],
         local_code=[base / "common", base / "weldon_fedavg.py"],
         editable_mode=False,
@@ -108,7 +108,7 @@ def substrafl_fed_avg(
         evaluation_strategy=evaluation,
         aggregation_node=aggregation_node,
         num_rounds=n_rounds,
-        dependencies=algo_deps,
+        dependencies=dependencies,
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
 
