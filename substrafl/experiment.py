@@ -35,7 +35,7 @@ def _register_operations(
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
 ) -> Tuple[List[dict], Dict[RemoteStruct, OperationKey]]:
-    """Register the operations in Substra: define the algorithms we need and submit them
+    """Register the operations in Substra: define the functions we need and submit them
 
     Args:
         client (substra.Client): substra client
@@ -44,16 +44,17 @@ def _register_operations(
             centralized strategies
         evaluation_strategy (typing.Optional[EvaluationStrategy]): the evaluation strategy
             if there is one dependencies
-        (Dependency): dependencies of the train algo
+        (Dependency): dependencies of the experiment
 
     Returns:
         typing.Tuple[typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
         tasks, operation_cache
     """
     # `register_operations` methods from the different organizations store the id of the already registered
-    # algorithm so we don't add them twice
+    # functions so we don't add them twice
     operation_cache = dict()
-    predict_algo_cache = dict()
+    predict_function_cache = dict()
+    test_function_cache = dict()
     tasks = list()
 
     train_data_organizations_id = {train_data_node.organization_id for train_data_node in train_data_nodes}
@@ -80,10 +81,16 @@ def _register_operations(
 
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
-            predict_algo_cache = test_data_node.register_predict_operations(
+            predict_function_cache = test_data_node.register_predict_operations(
                 client=client,
                 permissions=permissions,
-                cache=predict_algo_cache,
+                cache=predict_function_cache,
+                dependencies=dependencies,
+            )
+            test_function_cache = test_data_node.register_test_operations(
+                client=client,
+                permissions=permissions,
+                cache=test_function_cache,
                 dependencies=dependencies,
             )
 
@@ -223,10 +230,10 @@ def execute_experiment(
     task_submission_batch_size: int = 500,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the
-    `test_data_nodes`) your `algo` with the specified `strategy` `n_rounds` times and return the
+    `test_data_nodes`) the specified `strategy` `n_rounds` times and return the
     compute plan object from the Substra platform.
 
-    In substrafl, operations are linked to each other statically before being submitted to substra.
+    In SubstraFL, operations are linked to each other statically before being submitted to Substra.
 
     The execution of:
 
@@ -235,7 +242,7 @@ def execute_experiment(
 
     generate the static graph of operations.
 
-    Each element necessary for those operations (Tasks and Algorithms)
+    Each element necessary for those operations (Tasks and Functions)
     is registered to the Substra platform thanks to the specified client.
 
     Finally, the compute plan is sent and executed.
@@ -244,15 +251,15 @@ def execute_experiment(
 
     Args:
         client (substra.Client): A substra client to interact with the Substra platform
-        strategy (Strategy): The strategy by which your algorithm will be executed
+        strategy (Strategy): The strategy that will be executed
         train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
             occurs evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
         num_rounds (int): The number of time your strategy will be executed
-        dependencies (Dependency, Optional): Dependencies of the algorithm. It must be defined from
-            the substrafl Dependency class. Defaults None.
+        dependencies (Dependency, Optional): Dependencies of the experiment. It must be defined from
+            the SubstraFL Dependency class. Defaults None.
         experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
@@ -278,7 +285,7 @@ def execute_experiment(
     train_organization_ids = [train_data_node.organization_id for train_data_node in train_data_nodes]
 
     if len(train_organization_ids) != len(set(train_organization_ids)):
-        raise ValueError("Training multiple algorithms on the same organization is not supported right now.")
+        raise ValueError("Training multiple functions on the same organization is not supported right now.")
 
     if evaluation_strategy is not None:
         _check_evaluation_strategy(evaluation_strategy, num_rounds)
@@ -307,7 +314,7 @@ def execute_experiment(
     )
 
     # Computation graph is created
-    logger.info("Registering the algorithm to Substra.")
+    logger.info("Registering the functions to Substra.")
     tasks, operation_cache = _register_operations(
         client=client,
         train_data_nodes=train_data_nodes,

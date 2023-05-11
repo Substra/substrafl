@@ -1,9 +1,14 @@
+import inspect
 import uuid
+from collections.abc import Iterable
+from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Union
 
 import substra
 
+from substrafl import exceptions
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import Node
@@ -11,6 +16,7 @@ from substrafl.nodes.node import OperationKey
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.register import register_function
+from substrafl.remote.register import register_metrics
 from substrafl.remote.remote_struct import RemoteStruct
 
 
@@ -21,9 +27,10 @@ class TestDataNode(Node):
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
         test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
-        metric_keys (List[str]):  Keys of the functions that implement the different metrics. See
-            :py:func:`~substrafl.remote.register.register.add_metric` for more information on how to register metric
-            functions.
+        metric_functions (Union[Dict[str, Callable], List[Callable], Callable]): Dictionary of Functions, Function or
+            list of Functions that implement the different metrics. If a Dict is given, the keys will be used to
+            register the result of the associated function. If a Function or a List is given, function.__name__
+            will be used to store the result.
     """
 
     def __init__(
@@ -31,14 +38,34 @@ class TestDataNode(Node):
         organization_id: str,
         data_manager_key: str,
         test_data_sample_keys: List[str],
-        metric_keys: List[str],
+        metric_functions: Union[Dict[str, Callable], List[Callable], Callable],
     ):
         self.data_manager_key = data_manager_key
         self.test_data_sample_keys = test_data_sample_keys
 
-        if not isinstance(metric_keys, list):
-            raise TypeError("metric keys must be of type list")
-        self.metric_keys = metric_keys
+        if isinstance(metric_functions, dict):
+            for metric_id, metric_function in metric_functions.items():
+                _check_metric_function(metric_function)
+                _check_metric_identifier(metric_id)
+            self.metric_functions = metric_functions
+
+        elif isinstance(metric_functions, Iterable):
+            self.metric_functions = {}
+            for metric_function in metric_functions:
+                _check_metric_function(metric_function)
+                _check_metric_identifier(metric_function.__name__)
+                if metric_function.__name__ in self.metric_functions:
+                    raise exceptions.ExistingRegisteredMetricError
+                self.metric_functions[metric_function.__name__] = metric_function
+
+        elif callable(metric_functions):
+            self.metric_functions = {}
+            _check_metric_function(metric_functions)
+            _check_metric_identifier(metric_functions.__name__)
+            self.metric_functions[metric_functions.__name__] = metric_functions
+
+        else:
+            raise exceptions.MetricFunctionTypeError("Metric functions must be of type dictionary, list or callable")
 
         self.testtasks: List[Dict] = []
         self.predicttasks: List[Dict] = []
@@ -106,23 +133,51 @@ class TestDataNode(Node):
         predicttask["remote_operation"] = operation.remote_struct
         self.predicttasks.append(predicttask)
 
-        for metric_key in self.metric_keys:
-            testtask = substra.schemas.ComputePlanTaskSpec(
-                function_key=metric_key,
-                task_id=str(uuid.uuid4()),
-                inputs=data_inputs + test_input,
-                outputs={
-                    OutputIdentifiers.performance: substra.schemas.ComputeTaskOutputSpec(
-                        permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
-                        transient=False,
-                    )
-                },
-                metadata={
-                    "round_idx": round_idx,
-                },
-                worker=self.organization_id,
-            ).dict()
-            self.testtasks.append(testtask)
+        testtask = substra.schemas.ComputePlanTaskSpec(
+            function_key=str(uuid.uuid4()),  # bogus function key
+            task_id=str(uuid.uuid4()),
+            inputs=data_inputs + test_input,
+            outputs={
+                metric_function_id: substra.schemas.ComputeTaskOutputSpec(
+                    permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
+                    transient=False,
+                )
+                for metric_function_id in self.metric_functions
+            },
+            metadata={
+                "round_idx": round_idx,
+            },
+            worker=self.organization_id,
+        ).dict()
+        testtask.pop("function_key")
+        testtask["remote_operation"] = operation.remote_struct
+        self.testtasks.append(testtask)
+
+    def register_test_operations(
+        self,
+        *,
+        client: substra.Client,
+        permissions: substra.sdk.schemas.Permissions,
+        cache: Dict[RemoteStruct, OperationKey],
+        dependencies: Dependency,
+    ):
+        for testtask in self.testtasks:
+            remote_struct: RemoteStruct = testtask["remote_operation"]
+            if remote_struct not in cache:
+                # Register the metrics
+                function_key = register_metrics(
+                    client=client,
+                    permissions=permissions,
+                    dependencies=dependencies,
+                    metric_functions=self.metric_functions,
+                )
+                testtask["function_key"] = function_key
+                cache[remote_struct] = function_key
+            else:
+                function_key = cache[remote_struct]
+                testtask["function_key"] = function_key
+
+        return cache
 
     def register_predict_operations(
         self,
@@ -208,7 +263,58 @@ class TestDataNode(Node):
             {
                 "data_manager_key": self.data_manager_key,
                 "data_sample_keys": self.test_data_sample_keys,
-                "metric_keys": self.metric_keys,
+                "metric_functions": list(self.metric_functions.keys()),
             }
         )
         return summary
+
+
+def _check_metric_function(metric_function: Callable) -> None:
+    """Function to check the type and the signature of a given metric function.
+
+    Args:
+        metric_function (Callable): function to check.
+
+    Raises:
+        exceptions.MetricFunctionTypeError: metric_function must be of type "function"
+        exceptions.MetricFunctionSignatureError: metric_function must ONLY contains
+            datasamples and predictions_path as parameters
+    """
+
+    if not inspect.isfunction(metric_function):
+        raise exceptions.MetricFunctionTypeError("Metric functions must be a callable or a list of callable")
+
+    signature = inspect.signature(metric_function)
+    parameters = signature.parameters
+
+    if "datasamples" not in parameters:
+        raise exceptions.MetricFunctionSignatureError(
+            f"The metric_function: {metric_function.__name__} must contain datasamples as parameter."
+        )
+    elif "predictions_path" not in parameters:
+        raise exceptions.MetricFunctionSignatureError(
+            "The metric_function: {metric_function.__name__}  must contain predictions_path as parameter."
+        )
+    elif len(parameters) != 2:
+        raise exceptions.MetricFunctionSignatureError(
+            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions_path as
+            parameters."""
+        )
+
+
+def _check_metric_identifier(identifier: str) -> None:
+    """Check if the identifier used to register the user given function does not interfere with the value internally
+    used stored in the OutputIdentifiers enum.
+
+    Args:
+        identifier (str): identifier used for the registration of the metric function given by the user.
+
+    Raises:
+        exceptions.InvalidMetricIdentifierError: the identifier must not be in the OutputIdentifiers list used
+        internally by SubstraFL.
+    """
+    if identifier in list(OutputIdentifiers):
+        raise exceptions.InvalidMetricIdentifierError(
+            f" A metric name or identifier cannot be in {[id.value for id in list(OutputIdentifiers)]}. \
+            These values are used internally by SusbtraFL."
+        )

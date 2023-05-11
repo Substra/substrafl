@@ -97,7 +97,7 @@ def test_fed_pca_perform_round(dummy_algo_class):
     assert all([len(train_data_node.tasks) == 2 + 1 for train_data_node in train_data_nodes])
 
 
-def test_fed_pca_predict(dummy_algo_class):
+def test_fed_pca_predict(dummy_algo_class, dummy_metric):
     """Test that the predict function updates the TestDataNode tasks starting from round 3."""
 
     train_data_nodes = [
@@ -110,13 +110,13 @@ def test_fed_pca_predict(dummy_algo_class):
             "DummyNode0",
             "dummy_key",
             ["dummy_key"],
-            metric_keys=["dummy_key"],
+            metric_functions=dummy_metric,
         ),
         TestDataNode(
             "DummyNode1",
             "dummy_key",
             ["dummy_key"],
-            metric_keys=["dummy_key"],
+            metric_functions=dummy_metric,
         ),
     ]
 

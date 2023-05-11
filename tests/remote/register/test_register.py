@@ -5,10 +5,11 @@ from unittest.mock import patch
 import pytest
 import substra
 
-from substrafl import exceptions
 from substrafl.dependency import Dependency
+from substrafl.nodes import TestDataNode
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.register import register
+from substrafl.remote.register import register_metrics
 
 
 class RemoteClass:
@@ -107,34 +108,39 @@ def test_register_function_name(algo_name, result, default_permissions):
     assert substra.sdk.schemas.FunctionSpec.call_args[1]["name"] == result
 
 
-@pytest.mark.parametrize(
-    "metric_function, error",
-    [
-        (lambda wrong_arg: "any_str", exceptions.MetricFunctionSignatureError),
-        (lambda datasamples: "any_str", exceptions.MetricFunctionSignatureError),
-        (lambda predictions_path: "any_str", exceptions.MetricFunctionSignatureError),
-        (lambda datasamples, predictions_path, wrong_arg: "any_str", exceptions.MetricFunctionSignatureError),
-        ("not a function", exceptions.MetricFunctionTypeError),
-        (lambda datasamples, predictions_path: "any_str", None),
-    ],
-)
-def test_add_metric_wrong_metric_function(metric_function, error, default_permissions):
+@patch("substra.sdk.schemas.FunctionSpec", MagicMock(return_value=None))
+def test_register_metrics(default_permissions):
     client = DummyClient()
+    algo_deps = Dependency()
 
-    metric_deps = Dependency()
+    def f(datasamples, predictions_path):
+        return
 
-    if error is not None:
-        with pytest.raises(error):
-            register.add_metric(
-                client=client,
-                permissions=default_permissions,
-                dependencies=metric_deps,
-                metric_function=metric_function,
-            )
-    else:
-        register.add_metric(
-            client=client,
-            permissions=default_permissions,
-            dependencies=metric_deps,
-            metric_function=metric_function,
-        )
+    def g(datasamples, predictions_path):
+        return
+
+    def h(datasamples, predictions_path):
+        return
+
+    expected_identifier = ["f", "g", "h"]
+
+    test_data_node = TestDataNode(
+        organization_id="fake_id",
+        data_manager_key="fake_id",
+        test_data_sample_keys=["fake_id"],
+        metric_functions=[f, g, h],
+    )
+
+    _ = register_metrics(
+        client=client,
+        dependencies=algo_deps,
+        permissions=default_permissions,
+        metric_functions=test_data_node.metric_functions,
+    )
+
+    list_identifiers = []
+
+    for output in substra.sdk.schemas.FunctionSpec.call_args[1]["outputs"]:
+        assert output.kind == substra.sdk.schemas.AssetKind.performance
+        list_identifiers.append(output.identifier)
+    assert list_identifiers == expected_identifier

@@ -13,11 +13,9 @@ from substra.sdk.schemas import Permissions
 
 import docker
 from substrafl.algorithms.algo import Algo
-from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
-from substrafl.remote import register
 from substrafl.remote.decorators import remote_data
 from substrafl.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
@@ -136,19 +134,21 @@ def mae():
 
 
 @pytest.fixture(scope="session")
-def mae_metric(network, default_permissions, mae):
-    metric_deps = Dependency(pypi_dependencies=["numpy"], editable_mode=True)
+def dummy_metric():
+    def metric(datasamples, predictions_path):
+        return 1
 
+    return metric
+
+
+@pytest.fixture(scope="session")
+def mae_metric(mae):
     def mae_score(datasamples, predictions_path):
         y_true = datasamples[1]
         y_pred = np.load(predictions_path)
         return mae(y_pred, y_true)
 
-    metric_key = register.add_metric(
-        client=network.clients[0], metric_function=mae_score, permissions=default_permissions, dependencies=metric_deps
-    )
-
-    return metric_key
+    return mae_score
 
 
 @pytest.fixture(scope="session")
@@ -297,7 +297,7 @@ def test_linear_nodes(
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_keys=[mae_metric])]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_functions=mae_metric)]
 
     return test_data_nodes
 

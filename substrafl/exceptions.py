@@ -27,6 +27,10 @@ class EmptySharedStatesError(Exception):
     StrategySharedState object."""
 
 
+class ExistingRegisteredMetricError(Exception):
+    """A metric with the same name is already registered."""
+
+
 class IncompatibleAlgoStrategyError(Exception):
     """This algo is not compatible with this strategy."""
 
@@ -41,6 +45,10 @@ class IndexGeneratorUpdateError(Exception):
 
 class InvalidPathError(Exception):
     """Invalid path."""
+
+
+class InvalidMetricIdentifierError(Exception):
+    """A metric name or identifier cannot be a SubstraFL Outputidentifier."""
 
 
 class KeyMetadataError(Exception):

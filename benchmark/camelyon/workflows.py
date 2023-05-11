@@ -12,6 +12,7 @@ from pure_substrafl.register_assets import get_clients
 from pure_substrafl.register_assets import load_asset_keys
 from pure_substrafl.register_assets import save_asset_keys
 from pure_torch.strategies import basic_fed_avg
+from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
 from substra.sdk.models import ComputePlanStatus
 from torch.utils.data import DataLoader
@@ -85,9 +86,9 @@ def substrafl_fed_avg(
         seed=seed, learning_rate=learning_rate, num_workers=num_workers, index_generator=index_generator, model=model
     )
 
-    # Algo dependencies
+    # Dependencies
     base = Path(__file__).parent
-    algo_deps = Dependency(
+    dependencies = Dependency(
         pypi_dependencies=["torch", "numpy", "sklearn"],
         local_code=[base / "common", base / "weldon_fedavg.py"],
         editable_mode=False,
@@ -107,7 +108,7 @@ def substrafl_fed_avg(
         evaluation_strategy=evaluation,
         aggregation_node=aggregation_node,
         num_rounds=n_rounds,
-        dependencies=algo_deps,
+        dependencies=dependencies,
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
 
@@ -242,7 +243,8 @@ def torch_fed_avg(
 
             # Fusion, sigmoid and to numpy
             y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
-            metric = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
-            metrics.update({k: metric})
+            auc = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
+            acc = accuracy_score(y_true, np.round(y_pred)) if len(set(y_true)) > 1 else 0
+            metrics.update({k: {"ROC AUC": auc, "Accuracy": acc}})
 
     return metrics

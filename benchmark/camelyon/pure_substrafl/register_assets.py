@@ -1,27 +1,23 @@
 import json
 import os
-import tarfile
 from copy import deepcopy
 from pathlib import Path
 from typing import List
 from typing import Optional
 
+import numpy as np
 import substra
 import yaml
-from substra.sdk.schemas import AssetKind
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_auc_score
 from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
-from substra.sdk.schemas import FunctionInputSpec
-from substra.sdk.schemas import FunctionOutputSpec
-from substra.sdk.schemas import FunctionSpec
 from substra.sdk.schemas import Permissions
 from tqdm import tqdm
 
 from substrafl.nodes import AggregationNode
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import OutputIdentifiers
 
 CURRENT_DIRECTORY = Path(__file__).parent
 
@@ -123,7 +119,6 @@ def add_duplicated_dataset(
                         "train_data_sample_keys": ["766d2029-f90b-440e-8b39-2389ab04041d"]
                     },
                     ...
-                    "metric_key": "e5a99be6-0138-461a-92fe-23f685cdc9e1"
                 }
         msp_id (str): asset_keys key where to find the registered assets for the given client
         kind (str, optional): Kind of data sample to add, either train or test.  Defaults to "train".
@@ -210,53 +205,6 @@ def get_train_data_nodes(
     return train_data_nodes
 
 
-def register_metric(client: substra.Client) -> str:
-    """Register a default metric.
-
-    Args:
-        client (substra.Client): Substra client to register the metric.
-
-    Returns:
-        str: Substra returned key of the registered metric.
-    """
-
-    metric_archive_path = ASSETS_DIRECTORY / "metric.tar.gz"
-
-    with tarfile.open(metric_archive_path, "w:gz") as tar:
-        tar.add(ASSETS_DIRECTORY / "Dockerfile", arcname="Dockerfile")
-        tar.add(ASSETS_DIRECTORY / "metric.py", arcname="metrics.py")
-
-    metric_spec = FunctionSpec(
-        inputs=[
-            FunctionInputSpec(
-                identifier=InputIdentifiers.datasamples,
-                kind=AssetKind.data_sample.value,
-                optional=False,
-                multiple=True,
-            ),
-            FunctionInputSpec(
-                identifier=InputIdentifiers.opener, kind=AssetKind.data_manager.value, optional=False, multiple=False
-            ),
-            FunctionInputSpec(
-                identifier=InputIdentifiers.predictions, kind=AssetKind.model.value, optional=False, multiple=False
-            ),
-        ],
-        outputs=[
-            FunctionOutputSpec(
-                identifier=OutputIdentifiers.performance, kind=AssetKind.performance.value, multiple=False
-            )
-        ],
-        name="ROC",
-        description=ASSETS_DIRECTORY / "description.md",
-        file=metric_archive_path,
-        permissions=PUBLIC_PERMISSIONS,
-    )
-
-    metric_key = client.add_function(metric_spec)
-
-    return metric_key
-
-
 def get_test_data_nodes(
     clients: List[substra.Client], test_folder: Path, asset_keys: dict, nb_data_sample
 ) -> TestDataNode:
@@ -274,13 +222,20 @@ def get_test_data_nodes(
     Returns:
         TestDataNode: Substrafl test data.
     """
-    # only one metric is needed as permissions are public
-    metric_key = asset_keys.get("metric_key") or register_metric(clients[0])
-    asset_keys.update(
-        {
-            "metric_key": metric_key,
-        }
-    )
+
+    def auc(datasamples, predictions_path):
+        """AUC"""
+
+        y_pred = np.load(predictions_path)
+        y_true = datasamples.y_true
+        return roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
+
+    def accuracy(datasamples, predictions_path):
+        """Accuracy"""
+
+        y_pred = np.load(predictions_path)
+        y_true = datasamples.y_true
+        return accuracy_score(y_true, np.round(y_pred)) if len(set(y_true)) > 1 else 0
 
     test_data_nodes = []
 
@@ -300,7 +255,7 @@ def get_test_data_nodes(
                 organization_id=msp_id,
                 data_manager_key=asset_keys.get(msp_id)["dataset_key"],
                 test_data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
-                metric_keys=[metric_key],
+                metric_functions={"ROC AUC": auc, "Accuracy": accuracy},
             )
         )
 
