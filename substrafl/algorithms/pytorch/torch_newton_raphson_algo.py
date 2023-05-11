@@ -13,9 +13,9 @@ from substrafl.exceptions import CriterionReductionError
 from substrafl.exceptions import NegativeHessianMatrixError
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.remote import remote_data
-from substrafl.schemas import NewtonRaphsonAveragedStates
-from substrafl.schemas import NewtonRaphsonSharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import NewtonRaphsonAveragedStates
+from substrafl.strategies.schemas import NewtonRaphsonSharedState
+from substrafl.strategies.schemas import StrategyName
 
 
 class TorchNewtonRaphsonAlgo(TorchAlgo):
@@ -58,7 +58,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo.load` function, before the
         ``train`` or ``predict`` function is ran.
 
-        ``TorchNewtonRaphsonAlgo`` computes its :py:class:`~substrafl.schemas.NewtonRaphsonSharedState`
+        ``TorchNewtonRaphsonAlgo`` computes its :py:class:`~substrafl.strategies.schemas.NewtonRaphsonSharedState`
         (gradients and Hessian matrix) on all the samples of the dataset. Data might be split into mini-batches to
         prevent loading too much data at once.
 

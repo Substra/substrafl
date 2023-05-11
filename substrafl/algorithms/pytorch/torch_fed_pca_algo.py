@@ -10,9 +10,9 @@ from substrafl.algorithms.pytorch import weight_manager
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.remote import remote_data
-from substrafl.schemas import FedPCAAveragedState
-from substrafl.schemas import FedPCASharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import FedPCAAveragedState
+from substrafl.strategies.schemas import FedPCASharedState
+from substrafl.strategies.schemas import StrategyName
 
 
 class TorchLinearModel(torch.nn.Module):

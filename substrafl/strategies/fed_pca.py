@@ -12,9 +12,9 @@ from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
-from substrafl.schemas import FedPCAAveragedState
-from substrafl.schemas import FedPCASharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import FedPCAAveragedState
+from substrafl.strategies.schemas import FedPCASharedState
+from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)

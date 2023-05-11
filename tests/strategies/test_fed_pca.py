@@ -5,8 +5,8 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
-from substrafl.schemas import FedPCASharedState
 from substrafl.strategies import FedPCA
+from substrafl.strategies.schemas import FedPCASharedState
 
 
 @pytest.mark.parametrize(

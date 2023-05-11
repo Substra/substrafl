@@ -5,9 +5,9 @@ import pytest
 
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.train_data_node import TrainDataNode
-from substrafl.schemas import ScaffoldAveragedStates
-from substrafl.schemas import ScaffoldSharedState
 from substrafl.strategies import Scaffold
+from substrafl.strategies.schemas import ScaffoldAveragedStates
+from substrafl.strategies.schemas import ScaffoldSharedState
 
 logger = getLogger("tests")
 

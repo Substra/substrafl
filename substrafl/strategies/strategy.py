@@ -10,7 +10,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import StrategyName
 
 SharedState = TypeVar("SharedState")
 

@@ -11,9 +11,9 @@ from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
-from substrafl.schemas import FedAvgAveragedState
-from substrafl.schemas import FedAvgSharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import FedAvgAveragedState
+from substrafl.strategies.schemas import FedAvgSharedState
+from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 

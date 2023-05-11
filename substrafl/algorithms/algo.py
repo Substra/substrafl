@@ -4,7 +4,7 @@ from typing import Any
 from typing import List
 
 from substrafl.remote.decorators import remote
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import StrategyName
 
 
 class Algo(abc.ABC):

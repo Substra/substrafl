@@ -10,9 +10,9 @@ from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
-from substrafl.schemas import ScaffoldAveragedStates
-from substrafl.schemas import ScaffoldSharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import ScaffoldAveragedStates
+from substrafl.strategies.schemas import ScaffoldSharedState
+from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 

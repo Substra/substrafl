@@ -19,11 +19,11 @@ from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.serializers import PickleSerializer
-from substrafl.schemas import StrategyName
 from substrafl.strategies import FedAvg
 from substrafl.strategies import NewtonRaphson
 from substrafl.strategies import Scaffold
 from substrafl.strategies import SingleOrganization
+from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 from tests import utils
 from tests.conftest import LINEAR_N_COL

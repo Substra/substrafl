@@ -8,8 +8,8 @@ from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote_data
-from substrafl.schemas import FedAvgSharedState
 from substrafl.strategies import FedAvg
+from substrafl.strategies.schemas import FedAvgSharedState
 
 from .. import utils
 

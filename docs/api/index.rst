@@ -14,5 +14,4 @@ API reference
    index_generator
    nodes
    remote
-   schemas
    strategies
