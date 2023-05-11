@@ -153,7 +153,7 @@ class TestDataNode(Node):
         testtask["remote_operation"] = operation.remote_struct
         self.testtasks.append(testtask)
 
-    def register_test_operation(
+    def register_test_operations(
         self,
         *,
         client: substra.Client,
