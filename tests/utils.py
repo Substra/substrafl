@@ -90,7 +90,7 @@ def download_train_task_models_by_rank(network, session_dir, my_algo, compute_pl
             if identifier != OutputIdentifiers.local:
                 continue
             model_path = client.download_model(output.value.key, session_dir)
-            model = my_algo.load(model_path)
+            model = my_algo.load_local_state(model_path)
             # Move the torch model to CPU
             model.model.to("cpu")
             local_models.append(model)

@@ -82,8 +82,8 @@ class TrainDataNode(Node):
         self,
         operation: RemoteDataOperation,
         *,
-        round_idx: int,
         authorized_ids: Set[str],
+        round_idx: Optional[int] = None,
         aggregation_id: Optional[str] = None,
         clean_models: bool = False,
         local_state: Optional[LocalStateRef] = None,
@@ -98,9 +98,9 @@ class TrainDataNode(Node):
             operation (RemoteDataOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote_data` decorator. This allows to register an
                 operation and execute it later on.
-            round_idx (int): Round number, it starts at 1. In case of a centralized strategy,
-                it is preceded by an initialization round tagged: 0.
             authorized_ids (typing.Set[str]): Authorized org to access the output model.
+            round_idx (int): Used in case of learning compute plans. Round number, it starts at 1.
+                In case of a centralized strategy, it is preceded by an initialization round tagged: 0. Default to None
             aggregation_id (str): Aggregation node id to authorize access to the shared model. Defaults to None.
             clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
@@ -159,6 +159,7 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
+        task_metadata = {"round_idx": round_idx} if round_idx is not None else {}
         train_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
@@ -176,9 +177,7 @@ class TrainDataNode(Node):
                     transient=clean_models,
                 ),
             },
-            metadata={
-                "round_idx": round_idx,
-            },
+            metadata=task_metadata,
             tag="train",
             worker=self.organization_id,
         ).dict()

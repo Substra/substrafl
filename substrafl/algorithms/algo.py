@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import abc
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import List
 
 from substrafl.remote.decorators import remote
-from substrafl.strategies.schemas import StrategyName
+
+if TYPE_CHECKING:
+    from substrafl.strategies.schemas import StrategyName
 
 
 class Algo(abc.ABC):
@@ -45,7 +50,8 @@ class Algo(abc.ABC):
         aggregator if there is one, and returns a shared state (state to send to the aggregator). Any variable that
         needs to be saved and updated from one round to another should be an attribute of ``self``
         (e.g. ``self._my_local_state_variable``), and be saved and loaded in the
-        :py:func:`~substrafl.algorithms.algo.Algo.save` and :py:func:`~substrafl.algorithms.algo.Algo.load` functions.
+        :py:func:`~substrafl.algorithms.algo.Algo.save_local_state` and
+        :py:func:`~substrafl.algorithms.algo.Algo.load_local_state` functions.
 
         Args:
             datasamples (typing.Any): The output of the ``get_data`` method of the opener.
@@ -81,7 +87,7 @@ class Algo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def load(self, path: Path) -> Any:
+    def load_local_state(self, path: Path) -> Any:
         """Executed at the beginning of each step of the computation graph so for each organization, at each step of
         the computation graph the previous local state can be retrieved.
 
@@ -98,7 +104,7 @@ class Algo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def save(self, path: Path):
+    def save_local_state(self, path: Path):
         """Executed at the end of each step of the computation graph so for each organization,
         the local state can be saved.
 

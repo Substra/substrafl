@@ -1,5 +1,6 @@
 import uuid
 from typing import Dict
+from typing import Optional
 from typing import Set
 from typing import TypeVar
 
@@ -28,8 +29,8 @@ class AggregationNode(Node):
         self,
         operation: RemoteOperation,
         *,
-        round_idx: int,
         authorized_ids: Set[str],
+        round_idx: Optional[int] = None,
         clean_models: bool = False,
     ) -> SharedStateRef:
         """Adding an aggregated task to the list of operations to be executed by the node during the compute plan.
@@ -41,7 +42,7 @@ class AggregationNode(Node):
             operation (RemoteOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote` decorator. This allows to register an
                 operation and execute it later on.
-            round_idx (int): Round number, it starts at 1.
+            round_idx (int): Used in case of learning compute plans. Round number, it starts at 1. Default to None.
             authorized_ids (Set[str]): Authorized org to access the output model.
             clean_models (bool): Whether outputs of this operation are transient (deleted when they are not used
                 anymore) or not. Defaults to False.
@@ -75,6 +76,7 @@ class AggregationNode(Node):
             else None
         )
 
+        task_metadata = {"round_idx": round_idx} if round_idx is not None else {}
         aggregate_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
@@ -85,9 +87,7 @@ class AggregationNode(Node):
                     transient=clean_models,
                 )
             },
-            metadata={
-                "round_idx": round_idx,
-            },
+            metadata=task_metadata,
             tag="aggregate",
             worker=self.organization_id,
         ).dict()

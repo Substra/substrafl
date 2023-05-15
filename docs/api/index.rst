@@ -15,3 +15,4 @@ API reference
    nodes
    remote
    strategies
+   compute_plan_builder

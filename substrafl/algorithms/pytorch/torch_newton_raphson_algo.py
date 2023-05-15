@@ -55,7 +55,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         """The ``__init__`` function is called at each call of the ``train`` or ``predict`` function.
 
         For ``round>=2``, some attributes will then be overwritten by their previous states in the
-        :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo.load` function, before the
+        :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo.load_local_state` function, before the
         ``train`` or ``predict`` function is ran.
 
         ``TorchNewtonRaphsonAlgo`` computes its :py:class:`~substrafl.strategies.schemas.NewtonRaphsonSharedState`

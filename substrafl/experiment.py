@@ -15,6 +15,7 @@ import substra
 import substratools
 
 import substrafl
+from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
@@ -23,7 +24,6 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ def _register_operations(
 def _save_experiment_summary(
     experiment_folder: Path,
     compute_plan_key: str,
-    strategy: Strategy,
+    strategy: ComputePlanBuilder,
     num_rounds: int,
     operation_cache: Dict[RemoteStruct, OperationKey],
     train_data_nodes: TrainDataNode,
@@ -217,10 +217,10 @@ def _get_packages_versions() -> dict:
 def execute_experiment(
     *,
     client: substra.Client,
-    strategy: Strategy,
+    strategy: ComputePlanBuilder,
     train_data_nodes: List[TrainDataNode],
-    num_rounds: int,
     experiment_folder: Union[str, Path],
+    num_rounds: Optional[int] = None,
     aggregation_node: Optional[AggregationNode] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
@@ -301,11 +301,12 @@ def execute_experiment(
     cp_metadata.update(_get_packages_versions())
 
     # Adding rounds metadata to cp_meta_data
-    cp_metadata["num_rounds"] = num_rounds
+    if num_rounds is not None:
+        cp_metadata["num_rounds"] = num_rounds
 
     logger.info("Building the compute plan.")
 
-    strategy.build_graph(
+    strategy.build_compute_plan(
         train_data_nodes=train_data_nodes,
         aggregation_node=aggregation_node,
         evaluation_strategy=evaluation_strategy,

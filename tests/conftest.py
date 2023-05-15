@@ -407,10 +407,10 @@ def dummy_algo_class():
         def predict(self, datasamples: np.array, shared_state):
             return dict(datasamples=datasamples, shared_state=shared_state)
 
-        def load(self, path: Path):
+        def load_local_state(self, path: Path):
             return self
 
-        def save(self, path: Path):
+        def save_local_state(self, path: Path):
             assert path.parent.exists()
             with path.open("w") as f:
                 f.write("test")

@@ -6,4 +6,4 @@ from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.single_organization import SingleOrganization
 from substrafl.strategies.strategy import Strategy
 
-__all__ = ["Strategy", "StrategyName", "FedAvg", "FedPCA", "SingleOrganization", "Scaffold", "NewtonRaphson"]
+__all__ = ["StrategyName", "Strategy", "FedAvg", "FedPCA", "SingleOrganization", "Scaffold", "NewtonRaphson"]

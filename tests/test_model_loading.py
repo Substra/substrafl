@@ -148,7 +148,7 @@ def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_
     subprocess.check_output([sys.executable, "-m", "pip", "install", "."], cwd=str(FILE_PATH / "installable_library"))
 
     class MyAlgo(dummy_algo_class):
-        def load(self, path):
+        def load_local_state(self, path):
             import substrafltestlibrary
 
             return substrafltestlibrary.dummy_string_function("hello ", "world")
@@ -257,7 +257,7 @@ def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
             super().__init__()
             self._updated = False
 
-        def load(self, path):
+        def load_local_state(self, path):
             self._updated = eval(Path(path).read_text())
 
             return self
