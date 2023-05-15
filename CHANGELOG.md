@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.36.0](https://github.com/Substra/substrafl/releases/tag/0.36.0) - 2023-05-11
+
 ### Fixed
 
 - Close issue [#114](https://github.com/Substra/substrafl/issues/114). Large batch size are set to the number of samples in predict for NR and FedPCA. ([#115](https://github.com/Substra/substrafl/pull/115))
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: Metrics are now given as `metric_functions` and not as `metric_key`. The functions given as metric functions to test data nodes are automatically registered in a new Substra function by SubstraFL. ([#117](https://github.com/Substra/substrafl/pull/117)).
   The new argument of the TestDataNode class `metric_functions` replaces the `metric_keys` one and accepts a dictionary (using the key as the identifier of the function given as value), a list of functions or directly a function if there is only one metric to compute (`function.__name__` is then used as identifier).
-  Installed dependencies are the  `algo_dependencies` passed to `execute_experiment`, and permissions are the same as the predict function.
+  Installed dependencies are the `algo_dependencies` passed to `execute_experiment`, and permissions are the same as the predict function.
 
   From a user point of view, the metric registration changes from:
 
@@ -80,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Change order of layers in the Dockerfile: files are copied as needed before the installation layers, and the final copy
-is made last. ([#110](https://github.com/Substra/substrafl/pull/110))
+  is made last. ([#110](https://github.com/Substra/substrafl/pull/110))
 
 ## [0.35.0](https://github.com/Substra/substrafl/releases/tag/0.35.0) - 2023-03-31
 
