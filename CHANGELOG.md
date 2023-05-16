@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Added
+
+- Check and test on string used as metric name in test data nodes ([#122](https://github.com/Substra/substrafl/pull/122)).
+
 ## [0.36.0](https://github.com/Substra/substrafl/releases/tag/0.36.0) - 2023-05-11
 
 ### Fixed
