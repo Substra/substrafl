@@ -1,6 +1,7 @@
 import inspect
 import uuid
 from collections.abc import Iterable
+from string import printable
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -313,8 +314,20 @@ def _check_metric_identifier(identifier: str) -> None:
         exceptions.InvalidMetricIdentifierError: the identifier must not be in the OutputIdentifiers list used
         internally by SubstraFL.
     """
+
     if identifier in list(OutputIdentifiers):
         raise exceptions.InvalidMetricIdentifierError(
-            f" A metric name or identifier cannot be in {[id.value for id in list(OutputIdentifiers)]}. \
+            f"A metric name or identifier cannot be in {[id.value for id in list(OutputIdentifiers)]}. \
             These values are used internally by SusbtraFL."
         )
+
+    unauthorised_characters = set(identifier).difference(set(printable) - {"|"})
+    if unauthorised_characters:  # | is used in the backend as a separator for identifier
+        raise exceptions.InvalidMetricIdentifierError(
+            f"{unauthorised_characters} cannot be used to define a metric name."
+        )
+
+    if identifier == "":
+        raise exceptions.InvalidMetricIdentifierError("A metric name cannot be an empty string.")
+    elif len(identifier) > 36:  # Max length is the uuid4 length.
+        raise exceptions.InvalidMetricIdentifierError("A metric name must be of length inferior to 36.")

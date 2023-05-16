@@ -1,3 +1,4 @@
+import uuid
 from contextlib import nullcontext as does_not_raise
 
 import numpy as np
@@ -108,4 +109,40 @@ def test_metric_identifier_in_output_id(identifier):
             data_manager_key="fake_id",
             test_data_sample_keys=["fake_id"],
             metric_functions={identifier.value: lambda datasamples, predictions_path: "any_str"},
+        )
+
+
+@pytest.mark.parametrize(
+    "metric_name, expectation",
+    [
+        ("hello world", does_not_raise()),
+        ("hellô", pytest.raises(exceptions.InvalidMetricIdentifierError)),
+        ("|hello", pytest.raises(exceptions.InvalidMetricIdentifierError)),
+    ],
+)
+def test_metric_identifier_unauthorised_characters(metric_name, expectation):
+    with expectation:
+        TestDataNode(
+            organization_id="fake_id",
+            data_manager_key="fake_id",
+            test_data_sample_keys=["fake_id"],
+            metric_functions={metric_name: lambda datasamples, predictions_path: "any_str"},
+        )
+
+
+@pytest.mark.parametrize(
+    "metric_name, expectation",
+    [
+        (str(uuid.uuid4()), does_not_raise()),
+        ("", pytest.raises(exceptions.InvalidMetricIdentifierError)),
+        (str(uuid.uuid4()) + "too_many_char", pytest.raises(exceptions.InvalidMetricIdentifierError)),
+    ],
+)
+def test_metric_identifier_wrong_length(metric_name, expectation):
+    with expectation:
+        TestDataNode(
+            organization_id="fake_id",
+            data_manager_key="fake_id",
+            test_data_sample_keys=["fake_id"],
+            metric_functions={metric_name: lambda datasamples, predictions_path: "any_str"},
         )
