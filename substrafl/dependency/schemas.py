@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
-from substrafl.dependency.path_management import DependencyPathManagement
+from substrafl.dependency import path_management
 from substrafl.exceptions import InvalidPathError
 
 
@@ -83,7 +83,7 @@ class Dependency(BaseModel):
         return v
 
     def copy_dependencies_local_package(self, *, dest_dir: Path) -> List[Path]:
-        return DependencyPathManagement.copy_paths(
+        return path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_dependencies,
             not_excluded=self.not_excluded_paths,
@@ -92,7 +92,7 @@ class Dependency(BaseModel):
         )
 
     def copy_dependencies_local_code(self, *, dest_dir: Path) -> List[Path]:
-        return DependencyPathManagement.copy_paths(
+        return path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_code,
             not_excluded=self.not_excluded_paths,
