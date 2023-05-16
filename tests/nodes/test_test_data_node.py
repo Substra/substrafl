@@ -120,7 +120,7 @@ def test_metric_identifier_in_output_id(identifier):
         ("|hello", pytest.raises(exceptions.InvalidMetricIdentifierError)),
     ],
 )
-def test_metric_identifier_unauthorised_characters(metric_name, expectation):
+def test_metric_identifier_unauthorized_characters(metric_name, expectation):
     with expectation:
         TestDataNode(
             organization_id="fake_id",
