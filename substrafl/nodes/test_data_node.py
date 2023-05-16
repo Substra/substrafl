@@ -321,8 +321,10 @@ def _check_metric_identifier(identifier: str) -> None:
             These values are used internally by SusbtraFL."
         )
 
-    unauthorized_characters = set(identifier).difference(set(printable) - {"|"})
-    if unauthorized_characters:  # | is used in the backend as a separator for identifiers.
+    unauthorized_characters = set(identifier).difference(
+        set(printable) - {"|"}
+    )  # | is used in the backend as a separator for identifiers.
+    if unauthorized_characters:
         raise exceptions.InvalidMetricIdentifierError(
             f"{unauthorized_characters} cannot be used to define a metric name."
         )
