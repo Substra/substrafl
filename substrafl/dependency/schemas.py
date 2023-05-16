@@ -33,7 +33,8 @@ class Dependency(BaseModel):
             Default to [].
             Always excludes common data formats (see
             `substrafl.dependency.path_management.EXCLUDED_PATHS_REGEX_DEFAULT`).
-        not_excluded_paths (List[pathlib.Path]): Unexclude files from the `excluded_paths` / `excluded_regex`
+        force_included_paths (List[pathlib.Path]): Force include files otherwise excluded by `excluded_paths`
+            and `excluded_regex`
             Default to []
     """
 
@@ -43,7 +44,7 @@ class Dependency(BaseModel):
     local_code: List[Path] = Field(default_factory=list)
     excluded_paths: List[Path] = Field(default_factory=list)
     excluded_regex: List[str] = Field(default_factory=list)
-    not_excluded_paths: List[Path] = Field(default_factory=list)
+    force_included_paths: List[Path] = Field(default_factory=list)
 
     class Config:
         arbitrary_types_allowed = True
@@ -86,7 +87,7 @@ class Dependency(BaseModel):
         return path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_dependencies,
-            not_excluded=self.not_excluded_paths,
+            not_excluded=self.force_included_paths,
             excluded=self.excluded_paths,
             excluded_regex=self.excluded_regex,
         )
@@ -95,7 +96,7 @@ class Dependency(BaseModel):
         return path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_code,
-            not_excluded=self.not_excluded_paths,
+            not_excluded=self.force_included_paths,
             excluded=self.excluded_paths,
             excluded_regex=self.excluded_regex,
         )
