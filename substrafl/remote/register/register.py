@@ -1,6 +1,7 @@
 """
 Create the Substra function assets and register them to the platform.
 """
+
 import logging
 import os
 import tarfile
@@ -20,6 +21,8 @@ from substrafl import exceptions
 from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
+from substrafl.remote.register.generate_wheel import _compile_requirements
+from substrafl.remote.register.generate_wheel import build_user_dependency_wheel
 from substrafl.remote.register.generate_wheel import local_lib_wheels
 from substrafl.remote.register.generate_wheel import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
@@ -41,19 +44,19 @@ FROM {docker_image}
 # install dependencies
 RUN python{python_version} -m pip install -U pip
 
-# Install substrafl, substra (and substratools if editable mode)
-{cl_deps}
+# Copy local wheels
+{copy_wheels}
 
-# PyPi dependencies
-{pypi_dependencies}
+# Copy requirements.txt
+COPY requirements.txt requirements.txt
 
-# Install local dependencies
-{local_dependencies}
+# Install requirements
+RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
-
+# Copy all other files
 COPY . .
 
+ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
 """
 
 FUNCTION = """
@@ -92,10 +95,18 @@ def _copy_local_packages(path: Path, python_major_minor: str, operation_dir: Pat
     """Copy the local libraries given by the user and generate the installation command."""
     path.mkdir(exist_ok=True)
     dependencies_paths = dependencies.copy_dependencies_local_package(dest_dir=operation_dir)
-
-    local_dependencies_cmd = "\n".join(iter_dockerfile_install_command(dependencies_paths, python_major_minor))
-
-    return local_dependencies_cmd
+    wheel_paths = []
+    for dependency in dependencies_paths:
+        if dependency.__str__().endswith(".whl"):
+            wheel_paths.append(dependency)
+        else:
+            wheel_paths.append(
+                build_user_dependency_wheel(
+                    Path(dependency),
+                    operation_dir=operation_dir,
+                )
+            )
+    return wheel_paths
 
 
 def _create_archive(archive_path: Path, src_path: Path):
@@ -129,6 +140,79 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
     return substratools_image
 
 
+def _generate_copy_wheel(wheel_list):
+    return "\n".join([f"COPY {wheel_name} {wheel_name}" for wheel_name in wheel_list])
+
+
+def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operation_dir: Path, method_name: str) -> str:
+
+    substrafl_internal = operation_dir / SUBSTRAFL_FOLDER
+    substrafl_internal.mkdir(exist_ok=True)
+
+    # get Python version
+    # Required to select the correct version of python inside the docker Image
+    # Cloudpickle will crash if we don't deserialize with the same major.minor
+    python_major_minor = ".".join(python_version().split(".")[:2])
+
+    # Get the base Docker image
+    substratools_image = _get_base_docker_image(
+        python_major_minor=python_major_minor, editable_mode=dependencies.editable_mode
+    )
+
+    # Build Substrafl, Substra and Substratools, and local dependencies wheels if necessary
+    if install_libraries:
+        # Substrafl, Substra and Substratools
+        # Install either from pypi wheel or repo in editable mode
+        if dependencies.editable_mode or util.strtobool(os.environ.get("SUBSTRA_FORCE_EDITABLE_MODE", "False")):
+            substra_dependencies = local_lib_wheels(
+                lib_modules=[
+                    substrafl,
+                    substra,
+                    substratools,
+                ],  # We reinstall substratools in editable mode to overwrite the installed version
+                operation_dir=operation_dir,
+                python_major_minor=python_major_minor,
+                dest_dir=f"{SUBSTRAFL_FOLDER}/dist",
+            )
+        else:
+            substra_dependencies = pypi_lib_wheels(
+                lib_modules=[substrafl, substra],
+                operation_dir=operation_dir,
+                python_major_minor=python_major_minor,
+                dest_dir=f"{SUBSTRAFL_FOLDER}/dist",
+            )
+        # user-defined local dependencies
+        dependencies.copy_dependencies_local_code(dest_dir=operation_dir)
+
+        local_dep_dir = substrafl_internal / "local_dependencies"
+        local_dependencies = _copy_local_packages(
+            path=local_dep_dir,
+            dependencies=dependencies,
+            python_major_minor=python_major_minor,
+            operation_dir=operation_dir,
+        )
+
+        # generate the copy wheel command
+        copy_wheels_cmd = _generate_copy_wheel(substra_dependencies + local_dependencies)
+
+        # create a requirements.in with all requirements (substra libs and user-defined)
+        dependency_list = substra_dependencies + dependencies.pypi_dependencies + local_dependencies
+
+    else:
+        dependency_list = []
+        copy_wheels_cmd = ""
+
+    # pip-compile the requirements.in into a requirements.txt
+    _compile_requirements(dependency_list, operation_dir)
+
+    return DOCKERFILE_TEMPLATE.format(
+        docker_image=substratools_image,
+        python_version=python_major_minor,
+        copy_wheels=copy_wheels_cmd,
+        method_name=method_name,
+    )
+
+
 def _create_substra_function_files(
     remote_struct: RemoteStruct,
     install_libraries: bool,
@@ -160,53 +244,17 @@ def _create_substra_function_files(
 
     remote_struct.save(dest=substrafl_internal)
 
-    # get Python version
-    # Required to select the correct version of python inside the docker Image
-    # Cloudpickle will crash if we don't deserialize with the same major.minor
-    python_major_minor = ".".join(python_version().split(".")[:2])
 
-    # Build Substrafl, Substra and Substratools wheel if needed
-    install_cmd = ""
-    if install_libraries:
-        # Install either from pypi wheel or repo in editable mode
-        if dependencies.editable_mode or util.strtobool(os.environ.get("SUBSTRA_FORCE_EDITABLE_MODE", "False")):
-            install_cmd = local_lib_wheels(
-                lib_modules=[
-                    substrafl,
-                    substra,
-                    substratools,
-                ],  # We reinstall substratools in editable mode to overwrite the installed version
-                operation_dir=operation_dir,
-                python_major_minor=python_major_minor,
-                dest_dir=f"{SUBSTRAFL_FOLDER}/dist",
-            )
-        else:
-            install_cmd = pypi_lib_wheels(
-                lib_modules=[substrafl, substra],
-                operation_dir=operation_dir,
-                python_major_minor=python_major_minor,
-                dest_dir=f"{SUBSTRAFL_FOLDER}/dist",
-            )
-
-    # Pypi dependencies docker command if specified by the user
-    pypi_dependencies_cmd = (
-        f"RUN python{python_major_minor} -m pip install --no-cache-dir {' '.join(dependencies.pypi_dependencies)}"
-        if dependencies is not None and len(dependencies.pypi_dependencies) > 0
-        else ""
+    # Write dockerfile based on template
+    dockerfile_path = operation_dir / "Dockerfile"
+    dockerfile_path.write_text(
+        _create_dockerfile(
+            install_libraries=install_libraries,
+            dependencies=dependencies,
+            operation_dir=operation_dir,
+            method_name=remote_struct._method_name,
+        )
     )
-
-    # The files to copy to the container must be in the same folder as the Dockerfile
-    local_dependencies_cmd = ""
-    if dependencies is not None:
-        dependencies.copy_dependencies_local_code(dest_dir=operation_dir)
-        if install_libraries:
-            local_dep_dir = substrafl_internal / "local_dependencies"
-            local_dependencies_cmd = _copy_local_packages(
-                path=local_dep_dir,
-                dependencies=dependencies,
-                python_major_minor=python_major_minor,
-                operation_dir=operation_dir,
-            )
 
     # Write template to function.py
     function_path = operation_dir / "function.py"
@@ -220,27 +268,10 @@ def _create_substra_function_files(
     description_path = substrafl_internal / "description.md"
     description_path.write_text("# Substrafl Operation")
 
-    # Get the base Docker image
-    substratools_image = _get_base_docker_image(
-        python_major_minor=python_major_minor, editable_mode=dependencies.editable_mode
-    )
-
-    # Write dockerfile based on template
-    dockerfile_path = operation_dir / "Dockerfile"
-    dockerfile_path.write_text(
-        DOCKERFILE_TEMPLATE.format(
-            docker_image=substratools_image,
-            python_version=python_major_minor,
-            cl_deps=install_cmd,
-            pypi_dependencies=pypi_dependencies_cmd,
-            local_dependencies=local_dependencies_cmd,
-            method_name=remote_struct._method_name,
-        )
-    )
-
     # Create necessary archive to register the operation on substra
     archive_path = operation_dir / "function.tar.gz"
     _create_archive(archive_path=archive_path, src_path=operation_dir)
+
     return archive_path, description_path
 
 

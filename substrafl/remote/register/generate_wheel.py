@@ -2,6 +2,7 @@
 Generate wheels for the Substra algo.
 """
 import logging
+import re
 import shutil
 import subprocess
 import sys
@@ -13,7 +14,29 @@ logger = logging.getLogger(__name__)
 LOCAL_WHEELS_FOLDER = Path.home() / ".substrafl"
 
 
-def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
+def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
+    # sys.executable takes the Python interpreter run by the code and not the default one on the computer
+    ret = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "wheel",
+            ".",
+            "--no-deps",
+        ],
+        cwd=str(operation_dir / lib_path),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    wheel_name = re.findall(r"filename=(\S*)", ret.stdout)[0]
+    shutil.copy(operation_dir / lib_path / wheel_name, operation_dir)
+
+    return wheel_name
+
+
+def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> List[str]:
     """Prepares the private modules from lib_modules list to be installed in a Docker image and generates the
     appropriated install command for a dockerfile. It first creates the wheel for each library. Each of the
     libraries must be already installed in the correct version locally. Use command:
@@ -30,8 +53,8 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
     Returns:
         str: dockerfile command for installing the given modules
     """
-    install_cmds = []
-    wheels_dir = operation_dir / dest_dir
+    wheel_names = []
+    wheels_dir = operation_dir
     wheels_dir.mkdir(exist_ok=True, parents=True)
     for lib_module in lib_modules:
         if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
@@ -44,7 +67,7 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
         wheel_path = LOCAL_WHEELS_FOLDER / wheel_name
-        # Recreate the wheel only if it does not exist
+        # Recreate the wheel only if it does not exist
         if wheel_path.exists():
             logger.warning(
                 f"Existing wheel {wheel_path} will be used to build {lib_name}. "
@@ -55,7 +78,7 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
             # if the right version of substra or substratools is not found, it will search if they are already
             # installed in 'dist' and take them from there.
             # sys.executable takes the Python interpreter run by the code and not the default one on the computer
-            extra_args: list = list()
+            extra_args: list = []
             if lib_name == "substrafl":
                 extra_args = [
                     "--find-links",
@@ -79,19 +102,12 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
             )
 
         shutil.copy(wheel_path, wheels_dir / wheel_name)
+        wheel_names.append(wheel_name)
 
-        # Necessary command to install the wheel in the docker image
-        force_reinstall = "--force-reinstall " if lib_name in ["substratools", "substra"] else ""
-        install_cmd = (
-            f"COPY {dest_dir}/{wheel_name} . \n"
-            + f"RUN python{python_major_minor} -m pip install {force_reinstall}{wheel_name}\n"
-        )
-        install_cmds.append(install_cmd)
-
-    return "\n".join(install_cmds)
+    return wheel_names
 
 
-def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> str:
+def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> List[str]:
     """Retrieves lib_modules' wheels to be installed in a Docker image and generates
     the appropriated install command for a dockerfile.
 
@@ -104,8 +120,8 @@ def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_mino
     Returns:
         str: dockerfile command for installing the given modules
     """
-    install_cmds = []
-    wheels_dir = operation_dir / dest_dir
+    wheel_names = []
+    wheels_dir = operation_dir
     wheels_dir.mkdir(exist_ok=True, parents=True)
 
     LOCAL_WHEELS_FOLDER.mkdir(exist_ok=True)
@@ -136,7 +152,29 @@ def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_mino
 
         # Get wheel name based on current version
         shutil.copy(LOCAL_WHEELS_FOLDER / wheel_name, wheels_dir / wheel_name)
-        install_cmd = f"COPY {dest_dir}/{wheel_name} . \n RUN python{python_major_minor} -m pip install {wheel_name}\n"
-        install_cmds.append(install_cmd)
+        wheel_names.append(wheel_name)
 
-    return "\n".join(install_cmds)
+    return wheel_names
+
+
+def _compile_requirements(dependency_list, operation_dir):
+    requirements_in = operation_dir / "requirements.in"
+
+    requirements = ""
+    for dependency in dependency_list:
+        if dependency.endswith(".whl"):
+            requirements += f"file:{dependency}\n"
+        else:
+            requirements += f"{dependency}\n"
+
+    requirements_in.write_text(requirements)
+    subprocess.check_output(
+        [
+            sys.executable,
+            "-m",
+            "piptools",
+            "compile",
+            requirements_in,
+        ],
+        cwd=operation_dir,
+    )

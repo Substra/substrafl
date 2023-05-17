@@ -181,9 +181,7 @@ def _check_evaluation_strategy(
 
 
 def _check_additional_metadata(additional_metadata: Dict):
-    unauthorized_keys = set(
-        ("substrafl_version", "substra_version", "substratools_version", "python_version", "num_rounds")
-    )
+    unauthorized_keys = {"substrafl_version", "substra_version", "substratools_version", "python_version", "num_rounds"}
     invalid_keys = set(additional_metadata.keys()).intersection(unauthorized_keys)
 
     if len(invalid_keys) > 0:
@@ -257,6 +255,7 @@ def execute_experiment(
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
+        evaluation_strategy: Optional[EvaluationStrategy]
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, Optional): Dependencies of the experiment. It must be defined from
             the SubstraFL Dependency class. Defaults None.
