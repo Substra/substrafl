@@ -126,9 +126,9 @@ def expand_paths(paths: List[Path]) -> Set[Path]:
     unpacked_paths: Set[Path] = set()
     for path in paths:
         if path.is_file():
-            unpacked_paths.add(path.absolute())
+            unpacked_paths.add(path.resolve())
         elif path.is_dir():
-            unpacked_paths.update(p.absolute() for p in path.rglob("*") if p.is_file())
+            unpacked_paths.update(p.resolve() for p in path.rglob("*") if p.is_file())
         else:
             raise ValueError(f"Try to parse {path} that is neither a file or a dir.")
 
@@ -207,17 +207,29 @@ def copy_paths(
     output_files = []
     dest_dir.mkdir(parents=True, exist_ok=True)
     for input_path in src:
+        input_resolved_path = input_path.resolve()
         if input_path.is_file() and input_path not in expanded_excluded:
-            output_path = dest_dir / input_path.name
-            shutil.copy(input_path.absolute(), output_path)
+            output_path = dest_dir / input_resolved_path.name
+            shutil.copy(input_path, output_path)
         elif input_path.is_dir():
-            for file in input_path.rglob("*"):
-                if file.is_file() and file not in expanded_excluded:
-                    output_path = dest_dir / file.relative_to(input_path.parent)
-                    output_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(file.absolute(), output_path)
+            output_path = dest_dir / input_resolved_path.name
+            shutil.copytree(
+                input_path, output_path, dirs_exist_ok=True, ignore=_ignore_files(expanded_excluded, dest_dir)
+            )
         else:
             raise ValueError(f"Try to parse {input_path} that does not exist.")
         output_files.append(input_path.name)
 
     return list(output_files)
+
+
+def _ignore_files(expanded_excluded, dest_dir):
+    def _ignore_files(path: str, names: List[str]) -> Set[str]:
+        p = Path(path).resolve()
+
+        if p.is_relative_to(dest_dir.resolve()):
+            return set(names)
+
+        return set(name for name in names if p / name in expanded_excluded)
+
+    return _ignore_files

@@ -186,3 +186,25 @@ def test_copy_file_relative(src_dir, dest_dir, create_random_file, create_random
     to_be_copied_dest_dir = {dest_dir / f.relative_to(src_dir.parent) for f in to_be_copied}
     copied_files = set(dest_dir.rglob("*"))
     assert to_be_copied_dest_dir == copied_files
+
+
+def test_copy_file_relative_parent(src_dir, dest_dir, create_random_file, create_random_folder):
+    parent_path = Path("..")
+
+    copied_paths = path_management.copy_paths(
+        src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[]
+    )
+
+    to_be_copied = [str(parent_path)]
+    assert to_be_copied == copied_paths
+
+
+def test_copy_file_absolute_parent(src_dir, dest_dir, create_random_file, create_random_folder):
+    parent_path = Path("..").resolve()
+
+    copied_paths = path_management.copy_paths(
+        src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[]
+    )
+
+    to_be_copied = [str(parent_path.name)]
+    assert to_be_copied == copied_paths
