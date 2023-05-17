@@ -102,7 +102,7 @@ def expand_regexes(regexes: List[str], src: List[Path]) -> List[Path]:
 
             excluded_paths_count = len(excluded_paths)
             if excluded_paths_count > 0:
-                logger.warn(f"Regex {regex} excludes {excluded_paths_count} file(s)")
+                logger.warning(f"Regex {regex} excludes {excluded_paths_count} file(s)")
                 if logger.isEnabledFor(logging.DEBUG):
                     formatted_paths = "\n\t".join(str(p) for p in excluded_paths)
                     logger.debug(f"Regex {regex} excludes: {formatted_paths}")
@@ -205,10 +205,10 @@ def copy_paths(
         src=src, excluded=excluded, excluded_regex=excluded_regex, not_excluded=not_excluded
     )
     output_files = []
+    dest_dir.mkdir(parents=True, exist_ok=True)
     for input_path in src:
         if input_path.is_file() and input_path not in expanded_excluded:
             output_path = dest_dir / input_path.name
-            output_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(input_path.absolute(), output_path)
         elif input_path.is_dir():
             for file in input_path.rglob("*"):
@@ -218,6 +218,6 @@ def copy_paths(
                     shutil.copy(file.absolute(), output_path)
         else:
             raise ValueError(f"Try to parse {input_path} that does not exist.")
-        output_files.append(input_path)
+        output_files.append(output_path.relative_to(dest_dir))
 
     return list(output_files)
