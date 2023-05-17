@@ -218,6 +218,6 @@ def copy_paths(
                     shutil.copy(file.absolute(), output_path)
         else:
             raise ValueError(f"Try to parse {input_path} that does not exist.")
-        output_files.append(output_path.relative_to(dest_dir))
+        output_files.append(input_path.name)
 
     return list(output_files)
