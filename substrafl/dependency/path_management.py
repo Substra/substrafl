@@ -227,9 +227,12 @@ def _ignore_files(expanded_excluded, dest_dir):
     def _ignore_files(path: str, names: List[str]) -> Set[str]:
         p = Path(path).resolve()
 
-        if p.is_relative_to(dest_dir.resolve()):
+        # Replicate is_relative_to, added in Python 3.9
+        try:
+            p.relative_to(dest_dir.resolve())
+        except ValueError:
+            return set(name for name in names if p / name in expanded_excluded)
+        else:
             return set(names)
-
-        return set(name for name in names if p / name in expanded_excluded)
 
     return _ignore_files
