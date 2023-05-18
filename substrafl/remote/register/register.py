@@ -18,6 +18,7 @@ from packaging import version
 
 import substrafl
 from substrafl import exceptions
+from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.nodes.node import OutputIdentifiers
@@ -30,8 +31,6 @@ logger = logging.getLogger(__name__)
 
 # Substra tools version for which the image naming scheme changed
 MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
-
-TMP_SUBSTRAFL_PREFIX = "tmp_substrafl"
 
 _DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
 {substratools_version}-nvidiacuda11.8.0-base-ubuntu22.04-python{python_version}"

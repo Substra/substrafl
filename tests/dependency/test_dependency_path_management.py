@@ -6,6 +6,7 @@ from typing import Optional
 
 import pytest
 
+from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import path_management
 
 
@@ -91,7 +92,7 @@ def test_get_excluded_paths_default(tmp_dir, create_random_file):
     jpeg_file = create_random_file(tmp_dir, suffix=".jpeg")
     git_file = create_random_file(tmp_dir / ".git")
     local_worker_file = create_random_file(tmp_dir / "local-worker")
-    tmp_file = create_random_file(tmp_dir / path_management.TMP_SUBSTRAFL_PREFIX)
+    tmp_file = create_random_file(tmp_dir / TMP_SUBSTRAFL_PREFIX)
 
     paths = {
         csv_file,
