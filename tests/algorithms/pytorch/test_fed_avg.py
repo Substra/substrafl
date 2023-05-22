@@ -9,8 +9,8 @@ from substrafl.algorithms.pytorch.weight_manager import increment_parameters
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.strategies import FedAvg
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal

@@ -21,12 +21,12 @@ from substrafl.exceptions import LoadAlgoMetadataError
 from substrafl.exceptions import MultipleTrainTaskError
 from substrafl.exceptions import TrainTaskNotFoundError
 from substrafl.exceptions import UnfinishedTrainTaskError
-from substrafl.model_loading import ALGO_DICT_KEY
-from substrafl.model_loading import LOCAL_STATE_DICT_KEY
-from substrafl.model_loading import METADATA_FILE
-from substrafl.model_loading import REQUIRED_KEYS
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import ALGO_DICT_KEY
+from substrafl.load import LOCAL_STATE_DICT_KEY
+from substrafl.load import METADATA_FILE
+from substrafl.load import REQUIRED_KEYS
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.remote.register.register import _create_substra_function_files
 
 FILE_PATH = Path(__file__).resolve().parent

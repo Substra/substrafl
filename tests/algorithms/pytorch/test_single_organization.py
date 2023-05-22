@@ -8,8 +8,8 @@ from substrafl.algorithms.pytorch import TorchSingleOrganizationAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.strategies import SingleOrganization
 from tests import utils
 

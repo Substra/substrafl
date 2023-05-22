@@ -89,37 +89,40 @@ class TorchScaffoldAlgoParametersUpdateError(Exception):
     """
 
 
-class TrainTaskNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The provided compute plan must
+class TaskNotFoundError(Exception):
+    """When using the :func:`~substrafl.load.download_algo_files` function. The provided compute plan must
     contain a task:
 
         - hosted by the worker associated to the given client
-        - tagged with the given round_idx
+        - tagged with the given round_idx or rank_idx
     """
 
 
-class MultipleTrainTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function in remote mode. The experiment to
-    get the algo files from can't have multiple TrainDataNodes hosted on the same organization."""
+class MultipleTaskError(Exception):
+    """When using the :func:`~substrafl.load.download_algo_files` function in remote mode. The experiment to
+    get the algo files from can't have multiple task tagged with the given round_idx or rank_idx hosted on the
+    same organization."""
 
 
-class UnfinishedTrainTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The task to get the algo files
+class UnfinishedTaskError(Exception):
+    """When using the :func:`~substrafl.load.download_algo_files` function. The task to get the algo files
     from shall be in status ``STATUS_DONE``."""
 
 
 class LoadAlgoMetadataError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the metadata.json file within the folder given as
+    """When using the :func:`~substrafl.load.load_algo`, the metadata.json file within the folder given as
     input must contain a ``local_state_file``"""
+
+    # blabla
 
 
 class LoadAlgoFileNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the given folder must contains the following files:
+    """When using the :func:`~substrafl.load.load_algo`, the given folder must contains the following files:
     function.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
 
 
 class LoadAlgoLocalDependencyError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, all dependencies from the local input folder should be
+    """When using the :func:`~substrafl.load.load_algo`, all dependencies from the local input folder should be
     install by the user."""
 
 

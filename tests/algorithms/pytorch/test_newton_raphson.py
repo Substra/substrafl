@@ -8,8 +8,8 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import CriterionReductionError
 from substrafl.exceptions import NegativeHessianMatrixError
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.strategies import NewtonRaphson
