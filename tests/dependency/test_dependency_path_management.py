@@ -59,9 +59,12 @@ def _get_relative_path(path: Path, src_dir: Path) -> Path:
 
 
 def test_expand_regex_file(tmp_path, create_random_file):
-    path = create_random_file(tmp_path)
+    path_1 = create_random_file(tmp_path)
+    path_2 = create_random_file(tmp_path)
+    path_3 = create_random_file(tmp_path / "subfolder")
+    path_4 = create_random_file(tmp_path / "subfolder")
     paths = path_management.expand_regexes("*", [tmp_path])
-    assert paths == [path]
+    assert paths == [path_1, path_2, path_3, path_4]
 
 
 def test_expand_regex_folder(tmp_path, create_random_folder, create_random_file):
@@ -99,6 +102,9 @@ def test_get_excluded_paths_default(tmp_path, create_random_file):
     local_worker_file = create_random_file(tmp_path / "local-worker")
     tmp_file = create_random_file(tmp_path / TMP_SUBSTRAFL_PREFIX)
 
+    # Not excluded file
+    create_random_file(tmp_path)
+
     paths = {
         csv_file,
         csv_subfolder_file,
@@ -112,14 +118,16 @@ def test_get_excluded_paths_default(tmp_path, create_random_file):
         local_worker_file,
         tmp_file,
     }
-    excluded_paths = path_management.get_excluded_paths(src=[tmp_path], excluded=[], not_excluded=[], excluded_regex=[])
+    excluded_paths = path_management.get_excluded_paths(
+        src=[tmp_path], excluded=[], force_included=[], excluded_regex=[]
+    )
     assert paths == excluded_paths
 
 
 def test_get_excluded_paths_excluded_file_absolute(tmp_path, create_random_file):
     path_excluded = create_random_file(tmp_path)
     excluded_paths = path_management.get_excluded_paths(
-        src=[tmp_path], excluded=[path_excluded], not_excluded=[], excluded_regex=[]
+        src=[tmp_path], excluded=[path_excluded], force_included=[], excluded_regex=[]
     )
     assert {path_excluded} == excluded_paths
 
@@ -128,39 +136,39 @@ def test_get_excluded_paths_excluded_file_relative(tmp_path, create_random_file)
     path_excluded = create_random_file(tmp_path)
     path_excluded_relative = _get_relative_path(path_excluded, tmp_path)
     excluded_paths = path_management.get_excluded_paths(
-        src=[tmp_path], excluded=[path_excluded_relative], not_excluded=[], excluded_regex=[]
+        src=[tmp_path], excluded=[path_excluded_relative], force_included=[], excluded_regex=[]
     )
     assert {path_excluded} == excluded_paths
 
 
-def test_get_excluded_paths_not_excluded_file_absolute(tmp_path, create_random_file):
+def test_get_excluded_paths_force_included_file_absolute(tmp_path, create_random_file):
     csv_subfolder_file = create_random_file(tmp_path / "subfolder", suffix=".csv")
     xls_file = create_random_file(tmp_path, suffix=".xls")
 
     paths = {csv_subfolder_file}
     excluded_paths = path_management.get_excluded_paths(
-        src=[tmp_path], excluded=[], not_excluded=[xls_file], excluded_regex=[]
+        src=[tmp_path], excluded=[], force_included=[xls_file], excluded_regex=[]
     )
     assert paths == excluded_paths
 
 
-def test_get_excluded_paths_not_excluded_file_relative(tmp_path, create_random_file):
+def test_get_excluded_paths_force_included_file_relative(tmp_path, create_random_file):
     csv_subfolder_file = create_random_file(tmp_path / "subfolder", suffix=".csv")
     xls_file = create_random_file(tmp_path, suffix=".xls")
     xls_file_relative = _get_relative_path(xls_file, tmp_path)
     paths = {csv_subfolder_file}
     excluded_paths = path_management.get_excluded_paths(
-        src=[tmp_path], excluded=[], not_excluded=[xls_file_relative], excluded_regex=[]
+        src=[tmp_path], excluded=[], force_included=[xls_file_relative], excluded_regex=[]
     )
     assert paths == excluded_paths
 
 
-def test_get_excluded_paths_not_excluded_folder(tmp_path, create_random_folder, create_random_file):
+def test_get_excluded_paths_force_included_folder(tmp_path, create_random_folder, create_random_file):
     subfolder = create_random_folder(tmp_path)
     create_random_file(subfolder, suffix=".xls")
     paths = set()
     excluded_paths = path_management.get_excluded_paths(
-        src=[tmp_path], excluded=[], not_excluded=[subfolder], excluded_regex=[]
+        src=[tmp_path], excluded=[], force_included=[subfolder], excluded_regex=[]
     )
     assert paths == excluded_paths
 
@@ -169,7 +177,7 @@ def test_copy_file_absolute(src_dir, dest_dir, create_random_file, create_random
     file = create_random_file(src_dir)
     subfolder = create_random_folder(src_dir)
     subfolder_file = create_random_file(subfolder)
-    path_management.copy_paths(src=[src_dir], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[])
+    path_management.copy_paths(src=[src_dir], dest_dir=dest_dir, excluded=[], excluded_regex=[], force_included=[])
 
     to_be_copied = [src_dir / src_dir.name, file, subfolder, subfolder_file]
     to_be_copied_dest_dir = {dest_dir / f.relative_to(src_dir) for f in to_be_copied}
@@ -184,7 +192,9 @@ def test_copy_file_relative(src_dir, dest_dir, create_random_file, create_random
     subfolder_file = create_random_file(subfolder)
 
     local_src_file = _get_relative_path(src_dir, src_dir / "..")
-    path_management.copy_paths(src=[local_src_file], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[])
+    path_management.copy_paths(
+        src=[local_src_file], dest_dir=dest_dir, excluded=[], excluded_regex=[], force_included=[]
+    )
 
     to_be_copied = [src_dir / src_dir.name, file, subfolder, subfolder_file]
     to_be_copied_dest_dir = {dest_dir / f.relative_to(src_dir) for f in to_be_copied}
@@ -192,24 +202,25 @@ def test_copy_file_relative(src_dir, dest_dir, create_random_file, create_random
     assert to_be_copied_dest_dir == copied_files
 
 
-# @pytest.mark.slow
-# def test_copy_file_relative_parent(src_dir, dest_dir, create_random_file, create_random_folder):
-#     parent_path = Path("..")
+@pytest.mark.slow
+def test_copy_file_relative_parent(src_dir, dest_dir, create_random_file, create_random_folder):
+    parent_path = Path("..")
 
-#     copied_paths = path_management.copy_paths(
-#         src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[]
-#     )
+    copied_paths = path_management.copy_paths(
+        src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], force_included=[]
+    )
 
-#     to_be_copied = [str(parent_path)]
-#     assert to_be_copied == copied_paths
+    to_be_copied = [str(parent_path)]
+    assert to_be_copied == copied_paths
 
-# @pytest.mark.slow
-# def test_copy_file_absolute_parent(src_dir, dest_dir, create_random_file, create_random_folder):
-#     parent_path = Path("..").resolve()
 
-#     copied_paths = path_management.copy_paths(
-#         src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], not_excluded=[]
-#     )
+@pytest.mark.slow
+def test_copy_file_absolute_parent(src_dir, dest_dir, create_random_file, create_random_folder):
+    parent_path = Path("..").resolve()
 
-#     to_be_copied = [str(parent_path.name)]
-#     assert to_be_copied == copied_paths
+    copied_paths = path_management.copy_paths(
+        src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], force_included=[]
+    )
+
+    to_be_copied = [str(parent_path.name)]
+    assert to_be_copied == copied_paths

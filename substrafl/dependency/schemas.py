@@ -87,7 +87,7 @@ class Dependency(BaseModel):
         return path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_dependencies,
-            not_excluded=self.force_included_paths,
+            force_included=self.force_included_paths,
             excluded=self.excluded_paths,
             excluded_regex=self.excluded_regex,
         )
@@ -96,7 +96,7 @@ class Dependency(BaseModel):
         return path_management.copy_paths(
             dest_dir=dest_dir,
             src=self.local_code,
-            not_excluded=self.force_included_paths,
+            force_included=self.force_included_paths,
             excluded=self.excluded_paths,
             excluded_regex=self.excluded_regex,
         )

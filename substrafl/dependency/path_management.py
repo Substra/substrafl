@@ -66,7 +66,7 @@ def get_excluded_paths(
     src: List[Path],
     excluded: List[Path],
     excluded_regex: List[str],
-    not_excluded: List[Path],
+    force_included: List[Path],
 ) -> Set[Path]:
     """Get all paths to exclude, after expanding the regexes and respectful of non-exclusion list
 
@@ -74,39 +74,39 @@ def get_excluded_paths(
         src (List[Path]): Path from where the files are copied from.
         excluded (List[Path]): Paths to exclude from the `src` during the copy.
         excluded_regex (List[str]): Regex to find paths in `src` that will be excluded.
-        not_excluded (List[Path]): Paths to remove from the paths found in `excluded`/`not_excluded`.
+        force_included (List[Path]): Paths to remove from the paths found in `excluded`/`force_included`.
 
     Returns:
-        Set[Path]: Set of excluded files, after expanding regexes and respecting `not_excluded`.
+        Set[Path]: Set of excluded files, after expanding regexes and respecting `force_included`.
     """
     expanded_excluded_regex = expand_regexes(excluded_regex + EXCLUDED_PATHS_REGEX_DEFAULT, src)
     expanded_excluded = expand_paths(excluded + expanded_excluded_regex)
-    expanded_not_excluded = expand_paths(not_excluded)
-    return expanded_excluded - expanded_not_excluded
+    expanded_force_included = expand_paths(force_included)
+    return expanded_excluded - expanded_force_included
 
 
 def copy_paths(
     *,
     dest_dir: Path,
     src: List[Path],
-    not_excluded: Optional[List[Path]] = None,
+    force_included: Optional[List[Path]] = None,
     excluded: Optional[List[Path]] = None,
     excluded_regex: Optional[List[str]] = None,
 ) -> List[Path]:
     """Copy paths from `src` to `dest_dir` respecting exclusion/non-exclusion paths provided through `excluded_regex`,
-        `excluded`, `not_excluded`
+        `excluded`, `force_included`
 
     Args:
         dest_dir (Path): Directory where the file are going to be copied into
         src (List[Path]): Path to copy
-        not_excluded (Optional[List[Path]], optional): Paths to remove from the paths found in
-            `excluded`/`not_excluded`.
+        force_included (Optional[List[Path]], optional): Paths to remove from the paths found in
+            `excluded`/`force_included`.
             Defaults to None.
         excluded (Optional[List[Path]], optional): Paths to exclude from the `src` during the copy.
             Defaults to None.
         excluded_regex (Optional[List[str]], optional): Regex to find paths in `src` that will be excluded.
             Always includes common data formats (see substrafl.dependency.EXCLUDED_PATHS_REGEX_DEFAULT)
-            Defaults to None.
+            Defaults to None (only substrafl.dependency.EXCLUDED_PATHS_REGEX_DEFAULT are excluded).
 
     Raises:
         ValueError: `dest_dir` is a file.
@@ -118,8 +118,8 @@ def copy_paths(
     if dest_dir.is_file():
         raise ValueError(f"{dest_dir=} is a file. Cannot copy in a file.")
 
-    if not not_excluded:
-        not_excluded = []
+    if not force_included:
+        force_included = []
 
     if not excluded:
         excluded = []
@@ -128,7 +128,7 @@ def copy_paths(
         excluded_regex = []
 
     expanded_excluded = get_excluded_paths(
-        src=src, excluded=excluded, excluded_regex=excluded_regex, not_excluded=not_excluded
+        src=src, excluded=excluded, excluded_regex=excluded_regex, force_included=force_included
     )
     output_files = []
     dest_dir.mkdir(parents=True, exist_ok=True)
