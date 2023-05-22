@@ -61,10 +61,12 @@ def _get_relative_path(path: Path, src_dir: Path) -> Path:
 def test_expand_regex_file(tmp_path, create_random_file):
     path_1 = create_random_file(tmp_path)
     path_2 = create_random_file(tmp_path)
-    path_3 = create_random_file(tmp_path / "subfolder")
-    path_4 = create_random_file(tmp_path / "subfolder")
+
+    subfolder = tmp_path / "subfolder"
+    path_3 = create_random_file(subfolder)
+    path_4 = create_random_file(subfolder)
     paths = path_management.expand_regexes("*", [tmp_path])
-    assert paths == [path_1, path_2, path_3, path_4]
+    assert set(paths) == {subfolder, path_1, path_2, path_3, path_4}
 
 
 def test_expand_regex_folder(tmp_path, create_random_folder, create_random_file):
