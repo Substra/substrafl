@@ -8,8 +8,8 @@ from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
 from substrafl.strategies.fed_pca import FedPCA
@@ -256,6 +256,7 @@ def test_download_load_algo(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         round_idx=None,
+        task_type="train",
         dest_folder=session_dir,
     )
     my_algo = load_algo(input_folder=session_dir)

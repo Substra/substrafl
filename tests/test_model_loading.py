@@ -14,19 +14,14 @@ import substra
 import substratools
 
 import substrafl
+from substrafl import exceptions
 from substrafl.dependency import Dependency
-from substrafl.exceptions import LoadAlgoFileNotFoundError
-from substrafl.exceptions import LoadAlgoLocalDependencyError
-from substrafl.exceptions import LoadAlgoMetadataError
-from substrafl.exceptions import MultipleTrainTaskError
-from substrafl.exceptions import TrainTaskNotFoundError
-from substrafl.exceptions import UnfinishedTrainTaskError
-from substrafl.model_loading import ALGO_DICT_KEY
-from substrafl.model_loading import LOCAL_STATE_DICT_KEY
-from substrafl.model_loading import METADATA_FILE
-from substrafl.model_loading import REQUIRED_KEYS
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import ALGO_DICT_KEY
+from substrafl.load import LOCAL_STATE_DICT_KEY
+from substrafl.load import METADATA_FILE
+from substrafl.load import REQUIRED_KEYS
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.remote.register.register import _create_substra_function_files
 
 FILE_PATH = Path(__file__).resolve().parent
@@ -173,7 +168,9 @@ def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog
     expected_metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
 
     caplog.clear()
-    download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+    download_algo_files(
+        client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+    )
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
 
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
@@ -190,7 +187,9 @@ def test_environment_compatibility_error(fake_client, fake_compute_plan, to_remo
 
     del fake_compute_plan.metadata[to_remove]
     with pytest.raises(NotImplementedError):
-        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_algo_files(
+            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+        )
 
 
 def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir, caplog):
@@ -202,7 +201,9 @@ def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir
         name = pkg_version.split("_")[0]
 
         caplog.clear()
-        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_algo_files(
+            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+        )
         assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 1
         assert name in caplog.records[0].msg
 
@@ -211,16 +212,20 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
     """Error if no train task are found."""
     dest_folder = session_dir / str(uuid.uuid4())
     fake_client.list_task = MagicMock(return_value=[])
-    with pytest.raises(TrainTaskNotFoundError):
-        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+    with pytest.raises(exceptions.TaskNotFoundError):
+        download_algo_files(
+            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+        )
 
 
 def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_local_train_task):
     """Error if multiple train tasks are found."""
     dest_folder = session_dir / str(uuid.uuid4())
     fake_client.list_task = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
-    with pytest.raises(MultipleTrainTaskError):
-        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+    with pytest.raises(exceptions.MultipleTaskError):
+        download_algo_files(
+            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+        )
 
 
 def _create_algo_files(input_folder, algo, metadata):
@@ -289,7 +294,7 @@ def test_missing_file_error(session_dir, fake_compute_plan, dummy_algo_class, to
     _create_algo_files(input_folder, dummy_algo_class(), metadata)
 
     os.remove(input_folder / to_remove)
-    with pytest.raises(LoadAlgoFileNotFoundError):
+    with pytest.raises(exceptions.LoadAlgoFileNotFoundError):
         load_algo(input_folder)
 
 
@@ -302,7 +307,7 @@ def test_missing_local_state_key_error(session_dir, fake_compute_plan, dummy_alg
 
     _create_algo_files(input_folder, dummy_algo_class(), metadata)
 
-    with pytest.raises(LoadAlgoMetadataError):
+    with pytest.raises(exceptions.LoadAlgoMetadataError):
         load_algo(input_folder)
 
 
@@ -313,7 +318,7 @@ def test_load_model_dependency(algo_files_with_local_dependency, is_dependency_u
     input_folder = algo_files_with_local_dependency
 
     if is_dependency_uninstalled:
-        with pytest.raises(LoadAlgoLocalDependencyError):
+        with pytest.raises(exceptions.LoadAlgoLocalDependencyError):
             load_algo(input_folder)
 
     else:
@@ -324,8 +329,12 @@ def test_load_model_dependency(algo_files_with_local_dependency, is_dependency_u
 @pytest.mark.parametrize("status", [e.value for e in substra.models.Status if e.value != substra.models.Status.done])
 def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_task, status, session_dir):
     """Raise error if the task status is not done"""
-    with pytest.raises(UnfinishedTrainTaskError):
+    with pytest.raises(exceptions.UnfinishedTaskError):
         fake_local_train_task.status = status
         download_algo_files(
-            client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=session_dir, round_idx=None
+            client=fake_client,
+            task_type="train",
+            compute_plan_key=fake_compute_plan.key,
+            dest_folder=session_dir,
+            round_idx=None,
         )

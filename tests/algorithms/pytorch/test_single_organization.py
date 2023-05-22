@@ -8,8 +8,8 @@ from substrafl.algorithms.pytorch import TorchSingleOrganizationAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.load import download_algo_files
+from substrafl.load import load_algo
 from substrafl.strategies import SingleOrganization
 from tests import utils
 
@@ -113,7 +113,11 @@ def test_one_organization_algo_performance(
 
 def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
     download_algo_files(
-        client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
+        client=network.clients[0],
+        task_type="train",
+        compute_plan_key=compute_plan.key,
+        round_idx=None,
+        dest_folder=session_dir,
     )
     model = load_algo(input_folder=session_dir)._model
 
