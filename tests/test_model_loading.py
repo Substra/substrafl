@@ -16,12 +16,12 @@ import substratools
 import substrafl
 from substrafl import exceptions
 from substrafl.dependency import Dependency
-from substrafl.load import ALGO_DICT_KEY
-from substrafl.load import LOCAL_STATE_DICT_KEY
-from substrafl.load import METADATA_FILE
-from substrafl.load import REQUIRED_KEYS
-from substrafl.load import download_algo_files
-from substrafl.load import load_algo
+from substrafl.model_loading import ALGO_DICT_KEY
+from substrafl.model_loading import LOCAL_STATE_DICT_KEY
+from substrafl.model_loading import METADATA_FILE
+from substrafl.model_loading import REQUIRED_KEYS
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
 from substrafl.remote.register.register import _create_substra_function_files
 
 FILE_PATH = Path(__file__).resolve().parent
@@ -214,7 +214,11 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
     fake_client.list_task = MagicMock(return_value=[])
     with pytest.raises(exceptions.TaskNotFoundError):
         download_algo_files(
-            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+            client=fake_client,
+            task_type="train",
+            compute_plan_key=fake_compute_plan.key,
+            dest_folder=dest_folder,
+            round_idx=fake_compute_plan.metadata["num_rounds"],
         )
 
 
@@ -224,7 +228,11 @@ def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, 
     fake_client.list_task = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
     with pytest.raises(exceptions.MultipleTaskError):
         download_algo_files(
-            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
+            client=fake_client,
+            task_type="train",
+            compute_plan_key=fake_compute_plan.key,
+            dest_folder=dest_folder,
+            round_idx=fake_compute_plan.metadata["num_rounds"],
         )
 
 
@@ -336,5 +344,4 @@ def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_
             task_type="train",
             compute_plan_key=fake_compute_plan.key,
             dest_folder=session_dir,
-            round_idx=None,
         )

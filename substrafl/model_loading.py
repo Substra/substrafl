@@ -62,11 +62,11 @@ def _check_environment_compatibility(metadata: dict):
 
 def _validate_load_algo_inputs(folder: Path) -> dict:
     """Checks if the input folder is containing the necessary files to load a model with the
-    :func:`~substrafl.load.load_algo` function. It can be generated with the
-    :func:`~substrafl.load.download_algo_files` function.
+    :func:`~substrafl.model_loading.load_algo` function. It can be generated with the
+    :func:`~substrafl.model_loading.download_algo_files` function.
 
     Args:
-        folder (Path): Folder generated with the :func:`~substrafl.load.download_algo_files` function.
+        folder (Path): Folder generated with the :func:`~substrafl.model_loading.download_algo_files` function.
 
     Returns:
         dict: execution environment metadata of the model stored in the given folder
@@ -327,7 +327,7 @@ def load_algo(input_folder: os.PathLike) -> Any:
         - metadata.json
         - the file specified in metadata.local_state_file
 
-    This kind of folder can be generated with the :func:`~substrafl.load.download_algo_files`
+    This kind of folder can be generated with the :func:`~substrafl.model_loading.download_algo_files`
     function.
 
     Args:

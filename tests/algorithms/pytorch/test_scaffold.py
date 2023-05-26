@@ -13,8 +13,8 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import NumUpdatesValueError
 from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.load import download_algo_files
-from substrafl.load import load_algo
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
 from substrafl.strategies import Scaffold
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 current_folder = Path(__file__).parent
 
 EXPECTED_PERFORMANCE = 0.0127768706
+NUM_ROUNDS = 3
 
 
 def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_scheduler=False):
@@ -73,8 +74,6 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
 
 @pytest.fixture(scope="module")
 def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
-    NUM_ROUNDS = 3
-
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
@@ -351,7 +350,7 @@ def test_download_load_algo(network, compute_plan, session_dir, test_linear_data
         client=network.clients[0],
         task_type="train",
         compute_plan_key=compute_plan.key,
-        round_idx=None,
+        round_idx=NUM_ROUNDS,
         dest_folder=session_dir,
     )
     model = load_algo(input_folder=session_dir)._model

@@ -9,7 +9,7 @@ API reference
    algorithms
    dependency
    evaluation_strategy
-   load
+   model_loading
    exceptions
    index_generator
    nodes

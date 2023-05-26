@@ -8,8 +8,8 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import CriterionReductionError
 from substrafl.exceptions import NegativeHessianMatrixError
-from substrafl.load import download_algo_files
-from substrafl.load import load_algo
+from substrafl.model_loading import download_algo_files
+from substrafl.model_loading import load_algo
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.strategies import NewtonRaphson
@@ -20,6 +20,7 @@ from ... import assets_factory
 # For a convex problem and with damping_factor = 1, Newton Raphson is supposed to reach the global optimum
 # in one round.
 EXPECTED_PERFORMANCE = 0
+NUM_ROUNDS = 1
 
 
 @pytest.fixture(scope="module")
@@ -245,7 +246,6 @@ def compute_plan(
     """Compute plan for e2e test"""
 
     DAMPING_FACTOR = 1
-    NUM_ROUNDS = 1
     BATCH_SIZE = 1
 
     torch.manual_seed(seed)
@@ -360,7 +360,7 @@ def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, ma
         client=network.clients[0],
         task_type="train",
         compute_plan_key=compute_plan.key,
-        round_idx=None,
+        round_idx=NUM_ROUNDS,
         dest_folder=session_dir,
     )
     model = load_algo(input_folder=session_dir)._model
