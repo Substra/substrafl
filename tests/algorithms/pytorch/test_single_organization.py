@@ -16,6 +16,7 @@ from tests import utils
 logger = logging.getLogger(__name__)
 
 EXPECTED_PERFORMANCE = 0.2774176577698596
+N_ROUND = 2
 
 
 @pytest.fixture(scope="module")
@@ -35,7 +36,6 @@ def compute_plan(
     )
     BATCH_SIZE = 32
     N_UPDATES = 1
-    N_ROUND = 2
 
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
@@ -116,7 +116,7 @@ def test_download_load_algo(network, compute_plan, session_dir, test_linear_data
         client=network.clients[0],
         task_type="train",
         compute_plan_key=compute_plan.key,
-        round_idx=None,
+        round_idx=N_ROUND,
         dest_folder=session_dir,
     )
     model = load_algo(input_folder=session_dir)._model
