@@ -1,11 +1,11 @@
 from pathlib import Path
-from pathlib import PosixPath
 from typing import List
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+from substrafl.dependency import path_management
 from substrafl.exceptions import InvalidPathError
 
 
@@ -25,14 +25,29 @@ class Dependency(BaseModel):
         local_dependencies (List[pathlib.Path]): Local installable packages. The command
             `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
             folder.
-        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be pasted
-            to the level of the running script.
+        local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be
+            pasted to the level of the running script.
+        excluded_paths (List[pathlib.Path]): Local paths excluded from `local_dependencies` / `local_code`.
+            Default to [].
+        excluded_regex (List[pathlib.Path]): Regex used to exclude files from `local_dependencies` / `local_code`.
+            Default to [].
+            Always excludes common data formats (see
+            `substrafl.dependency.path_management.EXCLUDED_PATHS_REGEX_DEFAULT`).
+        force_included_paths (List[pathlib.Path]): Force include files otherwise excluded by `excluded_paths`
+            and `excluded_regex`
+            Default to []
     """
 
     editable_mode: bool = False
     pypi_dependencies: List[str] = Field(default_factory=list)
-    local_dependencies: List[PosixPath] = Field(default_factory=list)
-    local_code: List[PosixPath] = Field(default_factory=list)
+    local_dependencies: List[Path] = Field(default_factory=list)
+    local_code: List[Path] = Field(default_factory=list)
+    excluded_paths: List[Path] = Field(default_factory=list)
+    excluded_regex: List[str] = Field(default_factory=list)
+    force_included_paths: List[Path] = Field(default_factory=list)
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @validator("local_dependencies", "local_code")
     def resolve_path(cls, v):  # noqa: N805
@@ -67,3 +82,21 @@ class Dependency(BaseModel):
                 f"But neither setup.py or pyproject.toml was found in :{', '.join([str(p) for p in not_installable])}"
             )
         return v
+
+    def copy_dependencies_local_package(self, *, dest_dir: Path) -> List[Path]:
+        return path_management.copy_paths(
+            dest_dir=dest_dir,
+            src=self.local_dependencies,
+            force_included=self.force_included_paths,
+            excluded=self.excluded_paths,
+            excluded_regex=self.excluded_regex,
+        )
+
+    def copy_dependencies_local_code(self, *, dest_dir: Path) -> List[Path]:
+        return path_management.copy_paths(
+            dest_dir=dest_dir,
+            src=self.local_code,
+            force_included=self.force_included_paths,
+            excluded=self.excluded_paths,
+            excluded_regex=self.excluded_regex,
+        )

@@ -23,7 +23,7 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
 
     Args:
         lib_modules (list): list of modules to be installed.
-        operation_dir (pathlib.Path): PosixPath to the operation directory
+        operation_dir (pathlib.Path): Path to the operation directory
         python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
         dest_dir (str): relative directory where the wheels are saved
 
@@ -97,7 +97,7 @@ def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_mino
 
     Args:
         lib_modules (list): list of modules to be installed.
-        operation_dir (pathlib.Path): PosixPath to the operation directory
+        operation_dir (pathlib.Path): Path to the operation directory
         python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
         dest_dir (str): relative directory where the wheels are saved
 

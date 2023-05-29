@@ -3,7 +3,6 @@ Create the Substra function assets and register them to the platform.
 """
 import logging
 import os
-import shutil
 import tarfile
 import tempfile
 import typing
@@ -18,6 +17,7 @@ from packaging import version
 
 import substrafl
 from substrafl import exceptions
+from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.remote.register.generate_wheel import local_lib_wheels
@@ -29,8 +29,6 @@ logger = logging.getLogger(__name__)
 
 # Substra tools version for which the image naming scheme changed
 MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
-
-TMP_SUBSTRAFL_PREFIX = "tmp_substrafl"
 
 _DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
 {substratools_version}-nvidiacuda11.8.0-base-ubuntu22.04-python{python_version}"
@@ -83,49 +81,19 @@ if __name__ == "__main__":
 """
 
 
-def _copy_local_packages(
-    path: Path, local_dependencies: typing.List[Path], python_major_minor: str, operation_dir: Path
-):
+def iter_dockerfile_install_command(paths: typing.List[Path], python_major_minor: str) -> str:
+    for path in paths:
+        yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {path} \n"
+
+
+def _copy_local_packages(path: Path, python_major_minor: str, operation_dir: Path, dependencies: Dependency):
     """Copy the local libraries given by the user and generate the installation command."""
-    dependencies_buffer = []
     path.mkdir(exist_ok=True)
-    for dependency_path in local_dependencies:
-        dest_path = path / dependency_path.name
-        if dependency_path.is_dir():
-            shutil.copytree(
-                dependency_path,
-                dest_path,
-                ignore=shutil.ignore_patterns(
-                    "local-worker",
-                    TMP_SUBSTRAFL_PREFIX + "*",
-                ),
-            )
-        elif dependency_path.is_file():
-            shutil.copy(dependency_path, dest_path)
-        else:
-            raise ValueError(f"Does not exist {dependency_path}")
+    dependencies_paths = dependencies.copy_dependencies_local_package(dest_dir=operation_dir)
 
-        dependencies_buffer.append(f"{dest_path.relative_to(operation_dir)}")
-
-    local_dependencies_cmd = "\n".join(
-        [
-            f"COPY {dependency}  {dependency} \n"
-            + f"RUN python{python_major_minor} -m pip install --no-cache-dir {dependency} \n"
-            for dependency in dependencies_buffer
-        ]
-    )
+    local_dependencies_cmd = "\n".join(iter_dockerfile_install_command(dependencies_paths, python_major_minor))
 
     return local_dependencies_cmd
-
-
-def _copy_local_code(path: Path, operation_dir: Path):
-    """Copy the local code given by the user to the operation directory."""
-    if path.is_dir():
-        shutil.copytree(path, operation_dir / path.name)
-    elif path.is_file():
-        shutil.copy(path, operation_dir / path.name)
-    else:
-        raise ValueError(f"Does not exist {path}")
 
 
 def _create_archive(archive_path: Path, src_path: Path):
@@ -229,14 +197,12 @@ def _create_substra_function_files(
     # The files to copy to the container must be in the same folder as the Dockerfile
     local_dependencies_cmd = ""
     if dependencies is not None:
-        for path in dependencies.local_code:
-            _copy_local_code(path=path, operation_dir=operation_dir)
-
+        dependencies.copy_dependencies_local_code(dest_dir=operation_dir)
         if install_libraries:
             local_dep_dir = substrafl_internal / "local_dependencies"
             local_dependencies_cmd = _copy_local_packages(
                 path=local_dep_dir,
-                local_dependencies=dependencies.local_dependencies,
+                dependencies=dependencies,
                 python_major_minor=python_major_minor,
                 operation_dir=operation_dir,
             )
@@ -274,7 +240,6 @@ def _create_substra_function_files(
     # Create necessary archive to register the operation on substra
     archive_path = operation_dir / "function.tar.gz"
     _create_archive(archive_path=archive_path, src_path=operation_dir)
-
     return archive_path, description_path
 
 
