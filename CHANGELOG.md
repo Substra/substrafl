@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   # Become
   from substrafl.strategies.schemas import FedAvgSharedState
   ```
+### Fixed
+
+- New dependencies copy method in Docker mode.[#130](https://github.com/Substra/substrafl/pull/130)
 
 ## [0.36.0](https://github.com/Substra/substrafl/releases/tag/0.36.0) - 2023-05-11
 
