@@ -83,7 +83,9 @@ if __name__ == "__main__":
 
 def iter_dockerfile_install_command(paths: typing.List[Path], python_major_minor: str) -> str:
     for path in paths:
-        yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {path} \n"
+        # Do not work with path.is_dir(), surely a race condition
+        formatted_path = (str(path) + "/") if not path.is_file() else path
+        yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {formatted_path} \n"
 
 
 def _copy_local_packages(path: Path, python_major_minor: str, operation_dir: Path, dependencies: Dependency):
