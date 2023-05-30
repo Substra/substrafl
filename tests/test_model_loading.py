@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import uuid
+from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 from platform import python_version
 from unittest.mock import MagicMock
@@ -16,12 +17,14 @@ import substratools
 import substrafl
 from substrafl import exceptions
 from substrafl.dependency import Dependency
-from substrafl.model_loading import ALGO_DICT_KEY
-from substrafl.model_loading import LOCAL_STATE_DICT_KEY
+from substrafl.model_loading import FUNCTION_DICT_KEY
 from substrafl.model_loading import METADATA_FILE
+from substrafl.model_loading import MODEL_DICT_KEY
 from substrafl.model_loading import REQUIRED_KEYS
+from substrafl.model_loading import download_aggregate_files
 from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_from_files
+from substrafl.model_loading import download_shared_files
+from substrafl.model_loading import load_algo
 from substrafl.remote.register.register import _create_substra_function_files
 
 FILE_PATH = Path(__file__).resolve().parent
@@ -34,6 +37,12 @@ class AssetKeys(str, enum.Enum):
     trunk_model = "chosen"
     local_train_task = "one"
     invalid_head_model = "Anakin"
+    aggregate_task = "PS: don't forget your ventolin"
+
+
+@pytest.fixture(params=(download_shared_files, download_aggregate_files, download_algo_files))
+def download_utils_functions(request):
+    return request.param
 
 
 @pytest.fixture
@@ -86,7 +95,30 @@ def fake_local_train_task(trunk_model):
 
 
 @pytest.fixture
-def fake_client(fake_compute_plan, fake_local_train_task):
+def fake_aggregate_task(trunk_model):
+    function = Mock(spec=substra.models.Function)
+    function.key = AssetKeys.function
+
+    model = Mock(spec=substra.models.OutModel)
+    model.key = AssetKeys.valid_head_model
+
+    aggregate_task = Mock(spec=substra.models.Task)
+    aggregate_task.rank = 3
+    aggregate_task.key = AssetKeys.aggregate_task
+    aggregate_task.function = function
+    aggregate_task.tag = "aggregate"
+    aggregate_task.outputs = {
+        "model": substra.models.ComputeTaskOutput(
+            permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=model
+        ),
+    }
+    aggregate_task.status = substra.models.Status.done
+
+    return aggregate_task
+
+
+@pytest.fixture
+def fake_client(fake_compute_plan, fake_local_train_task, fake_aggregate_task):
     def download_model_from_task(task_key, identifier, folder):
         path = Path(folder) / f"model_{AssetKeys.valid_head_model}"
         path.write_text("General Kenobi ...")
@@ -111,7 +143,7 @@ def fake_client(fake_compute_plan, fake_local_train_task):
             orchestrator_version="",
         )
     )
-    client.list_task = MagicMock(return_value=[fake_local_train_task])
+    client.list_task = MagicMock(return_value=[fake_local_train_task, fake_aggregate_task])
     client.download_function = MagicMock(
         side_effect=lambda key, destination_folder: download_function(key, destination_folder)
     )
@@ -131,14 +163,14 @@ def is_dependency_uninstalled(request):
 
 @pytest.fixture
 def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_class, is_dependency_uninstalled):
-    """Check that function load_from_files raises a custom error in case of non-installed dependency and that it works with
+    """Check that function load_algo raises a custom error in case of non-installed dependency and that it works with
     installed dependencies."""
     input_folder = session_dir / str(uuid.uuid4())
     input_folder.mkdir()
 
     metadata = fake_compute_plan.metadata
-    metadata.update({LOCAL_STATE_DICT_KEY: "model"})
-    metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
+    metadata.update({MODEL_DICT_KEY: "model"})
+    metadata.update({FUNCTION_DICT_KEY: "function.tar.gz"})
 
     subprocess.check_output([sys.executable, "-m", "pip", "install", "."], cwd=str(FILE_PATH / "installable_library"))
 
@@ -150,7 +182,7 @@ def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_
 
     my_algo = MyAlgo()
 
-    _create_algo_files(input_folder, my_algo, metadata)
+    _create_files(input_folder, my_algo, metadata)
 
     if is_dependency_uninstalled:
         subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "substrafltestlibrary"], check=True)
@@ -159,36 +191,62 @@ def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_
     subprocess.run([sys.executable, "-m", "pip", "uninstall", "--yes", "substrafltestlibrary"])
 
 
-def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog):
+def test_download_utils_files(fake_client, fake_compute_plan, session_dir, caplog, download_utils_functions):
     """No warning and expected files matching the given names in the metadata.json"""
     dest_folder = session_dir / str(uuid.uuid4())
 
     expected_metadata = fake_compute_plan.metadata
-    expected_metadata.update({LOCAL_STATE_DICT_KEY: f"model_{AssetKeys.valid_head_model}"})
-    expected_metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
+    expected_metadata.update({MODEL_DICT_KEY: f"model_{AssetKeys.valid_head_model}"})
+    expected_metadata.update({FUNCTION_DICT_KEY: "function.tar.gz"})
 
     caplog.clear()
-    download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+    download_utils_functions(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
 
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
 
     assert expected_metadata == metadata
-    assert (dest_folder / metadata.get(ALGO_DICT_KEY)).exists()
-    assert (dest_folder / metadata.get(LOCAL_STATE_DICT_KEY)).exists()
+    assert (dest_folder / metadata.get(FUNCTION_DICT_KEY)).exists()
+    assert (dest_folder / metadata.get(MODEL_DICT_KEY)).exists()
+
+
+@pytest.mark.parametrize(
+    "round_idx, rank_idx, expectation",
+    (
+        [None, None, does_not_raise()],
+        [1, 1, pytest.raises(exceptions.ArgumentConflictError)],
+        [1, None, does_not_raise()],
+        [None, 1, does_not_raise()],
+    ),
+)
+def test_round_idx_vs_rank_idx(
+    fake_client, fake_compute_plan, session_dir, download_utils_functions, round_idx, rank_idx, expectation
+):
+    dest_folder = session_dir / str(uuid.uuid4())
+
+    with expectation:
+        download_utils_functions(
+            client=fake_client,
+            compute_plan_key=fake_compute_plan.key,
+            dest_folder=dest_folder,
+            round_idx=round_idx,
+            rank_idx=rank_idx,
+        )
 
 
 @pytest.mark.parametrize("to_remove", list(REQUIRED_KEYS))
-def test_environment_compatibility_error(fake_client, fake_compute_plan, to_remove, session_dir):
+def test_environment_compatibility_error(
+    fake_client, fake_compute_plan, to_remove, download_utils_functions, session_dir
+):
     """Error if one of the required key is not in the metadata."""
     dest_folder = session_dir / str(uuid.uuid4())
 
     del fake_compute_plan.metadata[to_remove]
     with pytest.raises(NotImplementedError):
-        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_utils_functions(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
 
-def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir, caplog):
+def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir, download_utils_functions, caplog):
     """Warning if there is a difference of version between the running env and the one specified in the metadata."""
     dest_folder = session_dir / str(uuid.uuid4())
     pkg_versions = list(filter(lambda x: x.endswith("_version"), REQUIRED_KEYS))
@@ -197,17 +255,17 @@ def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir
         name = pkg_version.split("_")[0]
 
         caplog.clear()
-        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
+        download_utils_functions(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
         assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 1
         assert name in caplog.records[0].msg
 
 
-def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
+def test_task_not_found(fake_client, fake_compute_plan, session_dir, download_utils_functions):
     """Error if no train task are found."""
     dest_folder = session_dir / str(uuid.uuid4())
     fake_client.list_task = MagicMock(return_value=[])
     with pytest.raises(exceptions.TaskNotFoundError):
-        download_algo_files(
+        download_utils_functions(
             client=fake_client,
             compute_plan_key=fake_compute_plan.key,
             dest_folder=dest_folder,
@@ -215,12 +273,16 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
         )
 
 
-def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, fake_local_train_task):
+def test_multiple_task_error(
+    fake_client, fake_compute_plan, session_dir, fake_local_train_task, fake_aggregate_task, download_utils_functions
+):
     """Error if multiple train tasks are found."""
     dest_folder = session_dir / str(uuid.uuid4())
-    fake_client.list_task = MagicMock(return_value=[fake_local_train_task, fake_local_train_task])
+    fake_client.list_task = MagicMock(
+        return_value=[fake_local_train_task, fake_local_train_task, fake_aggregate_task, fake_aggregate_task]
+    )
     with pytest.raises(exceptions.MultipleTaskError):
-        download_algo_files(
+        download_utils_functions(
             client=fake_client,
             compute_plan_key=fake_compute_plan.key,
             dest_folder=dest_folder,
@@ -228,14 +290,14 @@ def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, 
         )
 
 
-def _create_algo_files(input_folder, algo, metadata):
+def _create_files(input_folder, algo, metadata):
     # model file
-    if metadata.get(LOCAL_STATE_DICT_KEY):
-        (input_folder / metadata.get(LOCAL_STATE_DICT_KEY)).write_text("True")
+    if metadata.get(MODEL_DICT_KEY):
+        (input_folder / metadata.get(MODEL_DICT_KEY)).write_text("True")
 
     # algo file
-    if metadata.get(ALGO_DICT_KEY):
-        (input_folder / metadata.get(ALGO_DICT_KEY)).write_text("True")
+    if metadata.get(FUNCTION_DICT_KEY):
+        (input_folder / metadata.get(FUNCTION_DICT_KEY)).write_text("True")
 
     # metadata.json file
     (input_folder / METADATA_FILE).write_text(json.dumps(metadata))
@@ -251,7 +313,7 @@ def _create_algo_files(input_folder, algo, metadata):
 
 
 def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
-    """Checks that the load_from_files method can load the file given by substrafl to substra
+    """Checks that the load_algo method can load the file given by substrafl to substra
     and that the state of the algo is properly updated"""
 
     input_folder = session_dir / str(uuid.uuid4())
@@ -270,32 +332,32 @@ def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
     my_algo = MyAlgo()
 
     metadata = fake_compute_plan.metadata
-    metadata.update({LOCAL_STATE_DICT_KEY: "model"})
-    metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
+    metadata.update({MODEL_DICT_KEY: "model"})
+    metadata.update({FUNCTION_DICT_KEY: "function.tar.gz"})
 
-    _create_algo_files(input_folder, my_algo, metadata)
+    _create_files(input_folder, my_algo, metadata)
 
     caplog.clear()
-    my_loaded_algo = load_from_files(input_folder)
+    my_loaded_algo = load_algo(input_folder)
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
     assert my_loaded_algo._updated
 
 
 @pytest.mark.parametrize("to_remove", ["function.tar.gz", METADATA_FILE, "model"])
 def test_missing_file_error(session_dir, fake_compute_plan, dummy_algo_class, to_remove):
-    """Checks that the load_from_files method raises an error if one of the needed file is not found."""
+    """Checks that the load_algo method raises an error if one of the needed file is not found."""
     input_folder = session_dir / str(uuid.uuid4())
     input_folder.mkdir()
 
     metadata = fake_compute_plan.metadata
-    metadata.update({LOCAL_STATE_DICT_KEY: "model"})
-    metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
+    metadata.update({MODEL_DICT_KEY: "model"})
+    metadata.update({FUNCTION_DICT_KEY: "function.tar.gz"})
 
-    _create_algo_files(input_folder, dummy_algo_class(), metadata)
+    _create_files(input_folder, dummy_algo_class(), metadata)
 
     os.remove(input_folder / to_remove)
     with pytest.raises(exceptions.LoadFileNotFoundError):
-        load_from_files(input_folder)
+        load_algo(input_folder)
 
 
 def test_missing_local_state_key_error(session_dir, fake_compute_plan, dummy_algo_class):
@@ -305,33 +367,42 @@ def test_missing_local_state_key_error(session_dir, fake_compute_plan, dummy_alg
 
     metadata = fake_compute_plan.metadata
 
-    _create_algo_files(input_folder, dummy_algo_class(), metadata)
+    _create_files(input_folder, dummy_algo_class(), metadata)
 
     with pytest.raises(exceptions.LoadMetadataError):
-        load_from_files(input_folder)
+        load_algo(input_folder)
 
 
 def test_load_model_dependency(algo_files_with_local_dependency, is_dependency_uninstalled):
-    """Check that function load_from_files raises a custom error in case of the use of an un installed dependency
+    """Check that function load_algo raises a custom error in case of the use of an un installed dependency
     and that it works with installed dependencies."""
 
     input_folder = algo_files_with_local_dependency
 
     if is_dependency_uninstalled:
         with pytest.raises(exceptions.LoadLocalDependencyError):
-            load_from_files(input_folder)
+            load_algo(input_folder)
 
     else:
-        res = load_from_files(input_folder)
+        res = load_algo(input_folder)
         assert res == "hello world"
 
 
 @pytest.mark.parametrize("status", [e.value for e in substra.models.Status if e.value != substra.models.Status.done])
-def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_task, status, session_dir):
+def test_unfinished_task_error(
+    fake_client,
+    fake_compute_plan,
+    fake_local_train_task,
+    fake_aggregate_task,
+    status,
+    session_dir,
+    download_utils_functions,
+):
     """Raise error if the task status is not done"""
     with pytest.raises(exceptions.UnfinishedTaskError):
         fake_local_train_task.status = status
-        download_algo_files(
+        fake_aggregate_task.status = status
+        download_utils_functions(
             client=fake_client,
             compute_plan_key=fake_compute_plan.key,
             dest_folder=session_dir,

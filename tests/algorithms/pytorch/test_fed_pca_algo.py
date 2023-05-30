@@ -9,7 +9,7 @@ from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_from_files
+from substrafl.model_loading import load_algo
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
 from substrafl.strategies.fed_pca import FedPCA
@@ -258,7 +258,7 @@ def test_download_load_algo(
         round_idx=NUM_ROUNDS,
         dest_folder=session_dir,
     )
-    my_algo = load_from_files(input_folder=session_dir)
+    my_algo = load_algo(input_folder=session_dir)
 
     # Align eigen values using their collinear coefficient
     assert np.array(

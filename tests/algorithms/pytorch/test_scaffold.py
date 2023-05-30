@@ -14,7 +14,7 @@ from substrafl.exceptions import NumUpdatesValueError
 from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_from_files
+from substrafl.model_loading import load_algo
 from substrafl.strategies import Scaffold
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -352,7 +352,7 @@ def test_download_load_algo(network, compute_plan, session_dir, test_linear_data
         round_idx=NUM_ROUNDS,
         dest_folder=session_dir,
     )
-    model = load_from_files(input_folder=session_dir)._model
+    model = load_algo(input_folder=session_dir)._model
 
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1:].reshape(-1)

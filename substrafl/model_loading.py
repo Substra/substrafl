@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 REQUIRED_LIBS = [substrafl, substra, substratools]
 REQUIRED_KEYS = set([lib.__name__ + "_version" for lib in REQUIRED_LIBS] + ["python_version", "num_rounds"])
 METADATA_FILE = "metadata.json"
-ALGO_DICT_KEY = "algo_file"
-LOCAL_STATE_DICT_KEY = "local_state_file"
+FUNCTION_DICT_KEY = "function_file"
+MODEL_DICT_KEY = "model_file"
 
 
 def _check_environment_compatibility(metadata: dict):
@@ -62,7 +62,7 @@ def _check_environment_compatibility(metadata: dict):
 
 def _validate_load_algo_inputs(folder: Path) -> dict:
     """Checks if the input folder is containing the necessary files to load a model with the
-    :func:`~substrafl.model_loading.load_from_files` function. It can be generated with the
+    :func:`~substrafl.model_loading.load_algo` function. It can be generated with the
     :func:`~substrafl.model_loading.download_algo_files` function.
 
     Args:
@@ -72,7 +72,7 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
         dict: execution environment metadata of the model stored in the given folder
     """
     metadata_path = folder / METADATA_FILE
-    local_state_file = None
+    model_file = None
 
     missing = []
     end_of_msg = (
@@ -86,27 +86,27 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
     else:
         metadata = json.loads(metadata_path.read_text())
 
-        # if metadata file exist we check that the LOCAL_STATE_DICT_KEY key is provided
-        if LOCAL_STATE_DICT_KEY not in metadata:
+        # if metadata file exist we check that the MODEL_DICT_KEY key is provided
+        if MODEL_DICT_KEY not in metadata:
             raise exceptions.LoadMetadataError(
-                f"The {METADATA_FILE} file from the specified folder should contain a `{LOCAL_STATE_DICT_KEY}` key"
+                f"The {METADATA_FILE} file from the specified folder should contain a `{MODEL_DICT_KEY}` key"
                 "pointing the downloaded local state of the model to load within memory."
             )
 
-        # if metadata file exist we check that the ALGO_DICT_KEY key is provided
-        elif ALGO_DICT_KEY not in metadata:
+        # if metadata file exist we check that the FUNCTION_DICT_KEY key is provided
+        elif FUNCTION_DICT_KEY not in metadata:
             raise exceptions.LoadMetadataError(
-                f"The {METADATA_FILE} file from the specified folder should contain an `{ALGO_DICT_KEY}` key"
+                f"The {METADATA_FILE} file from the specified folder should contain an `{FUNCTION_DICT_KEY}` key"
                 "pointing the downloaded algo file to load within memory."
             )
 
-        local_state_file = metadata[LOCAL_STATE_DICT_KEY]
-        algo_path = metadata[ALGO_DICT_KEY]
+        model_file = metadata[MODEL_DICT_KEY]
+        algo_path = metadata[FUNCTION_DICT_KEY]
 
         # And that the pointed files exists
-        if not ((folder / local_state_file).exists()):
-            missing.append(local_state_file)
-            end_of_msg += f", `{local_state_file}`"
+        if not ((folder / model_file).exists()):
+            missing.append(model_file)
+            end_of_msg += f", `{model_file}`"
 
         if not ((folder / algo_path).exists()):
             missing.append(algo_path)
@@ -188,22 +188,23 @@ def _get_task_from_rank(
         local_tasks = client.list_task(filters=filters)
         local_tagged_tasks = [t for t in local_tasks if t.tag == tag]
 
-        if len(local_tagged_tasks) == 0:
-            raise exceptions.TaskNotFoundError(
-                f"The given compute plan `{compute_plan_key}` has no {tag} task of rank {rank_idx} "
-                f"hosted on the organization {org_id}"
-            )
-
-        elif len(local_tagged_tasks) > 1:
-            raise exceptions.MultipleTaskError(
-                f"The given compute plan has {len(local_tagged_tasks)} local {tag} tasks of rank {rank_idx}. "
-            )
-        local_task = local_tagged_tasks[0]
-
     else:
         filters = {"compute_plan_key": [compute_plan_key], "worker": [org_id]}
         local_tasks = client.list_task(filters=filters, order_by="end_date")
-        local_task = [t for t in local_tasks if t.tag == tag][-1]
+        local_tagged_tasks = [t for t in local_tasks if t.tag == tag]
+
+    if len(local_tagged_tasks) == 0:
+        raise exceptions.TaskNotFoundError(
+            f"The given compute plan `{compute_plan_key}` has no {tag} task of rank {rank_idx} "
+            f"hosted on the organization {org_id}"
+        )
+
+    elif len(local_tagged_tasks) > 1:
+        raise exceptions.MultipleTaskError(
+            f"The given compute plan has {len(local_tagged_tasks)} local {tag} tasks of rank {rank_idx}. "
+        )
+    local_task = local_tagged_tasks[0]
+
     return local_task
 
 
@@ -220,7 +221,6 @@ def _load_instance(gz_path: Path, extraction_folder: Path) -> Any:
     Returns:
         Any: The loaded SubstraFL object into memory.
     """
-
     with tarfile.open(gz_path, "r:gz") as tar:
         tar.extractall(path=extraction_folder)
 
@@ -229,6 +229,19 @@ def _load_instance(gz_path: Path, extraction_folder: Path) -> Any:
     remote_struct = RemoteStruct.load(src=extraction_folder / SUBSTRAFL_FOLDER)
 
     instance = remote_struct.get_instance()
+
+    return instance
+
+
+def _load_remote_instance(gz_path: Path, extraction_folder: Path) -> Any:
+    with tarfile.open(gz_path, "r:gz") as tar:
+        tar.extractall(path=extraction_folder)
+
+    sys.path.append(str(extraction_folder))  # for local dependencies
+
+    remote_struct = RemoteStruct.load(src=extraction_folder / SUBSTRAFL_FOLDER)
+
+    instance = remote_struct.get_remote_instance()
 
     return instance
 
@@ -307,15 +320,15 @@ def _download_task_output_files(
             f"Can't download algo files form task {task.key} as it is " f"in status {task.status}"
         )
 
-    algo_file = client.download_function(task.function.key, destination_folder=folder)
+    function_file = client.download_function(task.function.key, destination_folder=folder)
 
-    # Get the associated head model (local state)
-    local_state_file = client.download_model_from_task(task.key, folder=folder, identifier=identifier)
+    # Get the associated model
+    model_file = client.download_model_from_task(task.key, folder=folder, identifier=identifier)
 
     # Environment requirements and local state path
     metadata = {k: v for k, v in compute_plan.metadata.items() if k in REQUIRED_KEYS}
-    metadata[LOCAL_STATE_DICT_KEY] = str(local_state_file.relative_to(folder))
-    metadata[ALGO_DICT_KEY] = str(algo_file.relative_to(folder))
+    metadata[MODEL_DICT_KEY] = str(model_file.relative_to(folder))
+    metadata[FUNCTION_DICT_KEY] = str(function_file.relative_to(folder))
     metadata_path = folder / METADATA_FILE
     metadata_path.write_text(json.dumps(metadata))
 
@@ -444,12 +457,35 @@ def download_aggregate_files(
     )
 
 
-def load_from_files(input_folder: os.PathLike) -> Any:
+def load_model(input_folder: os.PathLike) -> Any:
+    folder = Path(input_folder)
+
+    metadata = _validate_load_algo_inputs(folder=folder)
+
+    _check_environment_compatibility(metadata=metadata)
+
+    try:
+        remote_instance = _load_remote_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder)
+
+        loaded_shared = remote_instance.load_model(folder / metadata[MODEL_DICT_KEY])
+
+    except ModuleNotFoundError as e:
+        raise exceptions.LoadLocalDependencyError(
+            "The instance from the given input folder requires the installation of "
+            "additional dependencies. Those can be found in "
+            f"{str(folder / 'substrafl_internal' / 'installable_library')}"
+            f"\nFull trace of the error: {e}"
+        )
+
+    return loaded_shared
+
+
+def load_algo(input_folder: os.PathLike) -> Any:
     """Loads an instance from a specified folder. This folder should contains:
 
         - function.tar.gz
         - metadata.json
-        - the file specified in metadata.local_state_file
+        - the file specified in metadata.model_file
 
     This kind of folder can be generated with the :func:`~substrafl.model_loading.download_algo_files`
     function for instance.
@@ -458,7 +494,7 @@ def load_from_files(input_folder: os.PathLike) -> Any:
         input_folder (os.PathLike): Path to folder containing the required files.
 
     Raises:
-        exceptions.LoadMetadataError: The metadata file must contains the local_state_file key
+        exceptions.LoadMetadataError: The metadata file must contains the model_file key
         exceptions.LoadFileNotFoundError: At least one of the required file to load the instance is not found
         exceptions.LoadLocalDependencyError: One of the dependency used by the instance is not installed within the
           used environment
@@ -474,8 +510,9 @@ def load_from_files(input_folder: os.PathLike) -> Any:
     _check_environment_compatibility(metadata=metadata)
 
     try:
-        instance = _load_instance(gz_path=folder / metadata[ALGO_DICT_KEY], extraction_folder=folder)
-        loaded_instance = instance.load_local_state(folder / metadata[LOCAL_STATE_DICT_KEY])
+        instance = _load_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder)
+
+        loaded_instance = instance.load_local_state(folder / metadata[MODEL_DICT_KEY])
 
     except ModuleNotFoundError as e:
         raise exceptions.LoadLocalDependencyError(
