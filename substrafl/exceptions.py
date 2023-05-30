@@ -109,19 +109,20 @@ class UnfinishedTaskError(Exception):
     from shall be in status ``STATUS_DONE``."""
 
 
-class LoadAlgoMetadataError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the metadata.json file within the folder given as
-    input must contain a ``local_state_file``"""
+class LoadMetadataError(Exception):
+    """When using the :func:`~substrafl.model_loading.load_from_files`, the metadata.json file within the folder given
+    as input must contain a ``local_state_file``"""
 
 
-class LoadAlgoFileNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the given folder must contains the following files:
-    function.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
+class LoadFileNotFoundError(Exception):
+    """When using the :func:`~substrafl.model_loading.load_from_files`, the given folder must contains the
+    following files: function.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary.
+    """
 
 
-class LoadAlgoLocalDependencyError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, all dependencies from the local input folder should be
-    install by the user."""
+class LoadLocalDependencyError(Exception):
+    """When using the :func:`~substrafl.model_loading.load_from_files`, all dependencies from the local input folder
+    should be install by the user."""
 
 
 class UnsupportedPytorchVersionError(Exception):

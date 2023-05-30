@@ -9,7 +9,7 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import load_from_files
 from substrafl.strategies import SingleOrganization
 from tests import utils
 
@@ -119,7 +119,7 @@ def test_download_load_algo(network, compute_plan, session_dir, test_linear_data
         round_idx=N_ROUND,
         dest_folder=session_dir,
     )
-    model = load_algo(input_folder=session_dir)._model
+    model = load_from_files(input_folder=session_dir)._model
 
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1:].reshape(-1)

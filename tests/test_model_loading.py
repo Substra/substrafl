@@ -21,7 +21,7 @@ from substrafl.model_loading import LOCAL_STATE_DICT_KEY
 from substrafl.model_loading import METADATA_FILE
 from substrafl.model_loading import REQUIRED_KEYS
 from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import load_from_files
 from substrafl.remote.register.register import _create_substra_function_files
 
 FILE_PATH = Path(__file__).resolve().parent
@@ -131,7 +131,7 @@ def is_dependency_uninstalled(request):
 
 @pytest.fixture
 def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_class, is_dependency_uninstalled):
-    """Check that function load_algo raises a custom error in case of non-installed dependency and that it works with
+    """Check that function load_from_files raises a custom error in case of non-installed dependency and that it works with
     installed dependencies."""
     input_folder = session_dir / str(uuid.uuid4())
     input_folder.mkdir()
@@ -259,7 +259,7 @@ def _create_algo_files(input_folder, algo, metadata):
 
 
 def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
-    """Checks that the load_algo method can load the file given by substrafl to substra
+    """Checks that the load_from_files method can load the file given by substrafl to substra
     and that the state of the algo is properly updated"""
 
     input_folder = session_dir / str(uuid.uuid4())
@@ -284,14 +284,14 @@ def test_load_algo(session_dir, fake_compute_plan, dummy_algo_class, caplog):
     _create_algo_files(input_folder, my_algo, metadata)
 
     caplog.clear()
-    my_loaded_algo = load_algo(input_folder)
+    my_loaded_algo = load_from_files(input_folder)
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
     assert my_loaded_algo._updated
 
 
 @pytest.mark.parametrize("to_remove", ["function.tar.gz", METADATA_FILE, "model"])
 def test_missing_file_error(session_dir, fake_compute_plan, dummy_algo_class, to_remove):
-    """Checks that the load_algo method raises an error if one of the needed file is not found."""
+    """Checks that the load_from_files method raises an error if one of the needed file is not found."""
     input_folder = session_dir / str(uuid.uuid4())
     input_folder.mkdir()
 
@@ -302,8 +302,8 @@ def test_missing_file_error(session_dir, fake_compute_plan, dummy_algo_class, to
     _create_algo_files(input_folder, dummy_algo_class(), metadata)
 
     os.remove(input_folder / to_remove)
-    with pytest.raises(exceptions.LoadAlgoFileNotFoundError):
-        load_algo(input_folder)
+    with pytest.raises(exceptions.LoadFileNotFoundError):
+        load_from_files(input_folder)
 
 
 def test_missing_local_state_key_error(session_dir, fake_compute_plan, dummy_algo_class):
@@ -315,22 +315,22 @@ def test_missing_local_state_key_error(session_dir, fake_compute_plan, dummy_alg
 
     _create_algo_files(input_folder, dummy_algo_class(), metadata)
 
-    with pytest.raises(exceptions.LoadAlgoMetadataError):
-        load_algo(input_folder)
+    with pytest.raises(exceptions.LoadMetadataError):
+        load_from_files(input_folder)
 
 
 def test_load_model_dependency(algo_files_with_local_dependency, is_dependency_uninstalled):
-    """Check that function load_algo raises a custom error in case of the use of an un installed dependency
+    """Check that function load_from_files raises a custom error in case of the use of an un installed dependency
     and that it works with installed dependencies."""
 
     input_folder = algo_files_with_local_dependency
 
     if is_dependency_uninstalled:
-        with pytest.raises(exceptions.LoadAlgoLocalDependencyError):
-            load_algo(input_folder)
+        with pytest.raises(exceptions.LoadLocalDependencyError):
+            load_from_files(input_folder)
 
     else:
-        res = load_algo(input_folder)
+        res = load_from_files(input_folder)
         assert res == "hello world"
 
 

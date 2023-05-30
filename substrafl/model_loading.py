@@ -62,7 +62,7 @@ def _check_environment_compatibility(metadata: dict):
 
 def _validate_load_algo_inputs(folder: Path) -> dict:
     """Checks if the input folder is containing the necessary files to load a model with the
-    :func:`~substrafl.model_loading.load_algo` function. It can be generated with the
+    :func:`~substrafl.model_loading.load_from_files` function. It can be generated with the
     :func:`~substrafl.model_loading.download_algo_files` function.
 
     Args:
@@ -88,14 +88,14 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
 
         # if metadata file exist we check that the LOCAL_STATE_DICT_KEY key is provided
         if LOCAL_STATE_DICT_KEY not in metadata:
-            raise exceptions.LoadAlgoMetadataError(
+            raise exceptions.LoadMetadataError(
                 f"The {METADATA_FILE} file from the specified folder should contain a `{LOCAL_STATE_DICT_KEY}` key"
                 "pointing the downloaded local state of the model to load within memory."
             )
 
         # if metadata file exist we check that the ALGO_DICT_KEY key is provided
         elif ALGO_DICT_KEY not in metadata:
-            raise exceptions.LoadAlgoMetadataError(
+            raise exceptions.LoadMetadataError(
                 f"The {METADATA_FILE} file from the specified folder should contain an `{ALGO_DICT_KEY}` key"
                 "pointing the downloaded algo file to load within memory."
             )
@@ -113,7 +113,7 @@ def _validate_load_algo_inputs(folder: Path) -> dict:
             end_of_msg += f", `{algo_path}`"
 
     if len(missing) > 0:
-        raise exceptions.LoadAlgoFileNotFoundError(
+        raise exceptions.LoadFileNotFoundError(
             ", ".join(missing) + f" not found within the provided input folder `{folder}`.\n" + end_of_msg
         )
 
@@ -233,12 +233,13 @@ def _load_instance(gz_path: Path, extraction_folder: Path) -> Any:
     return instance
 
 
-def download_algo_files(
+def _download_task_output_files(
     *,
     client: substra.Client,
     compute_plan_key: str,
     dest_folder: os.PathLike,
     task_type: str,
+    identifier: OutputIdentifiers,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
 ):
@@ -253,17 +254,16 @@ def download_algo_files(
     Those files are:
 
         - the function used for this task
-        - the output local state of the task
+        - the output state of the task
         - a metadata.json
-
-    Important:
-        This function supports only strategies with one train task for a given organization and round.
 
     Args:
         client (substra.Client): Substra client where to fetch the model from.
         compute_plan_key (str): Compute plan key to fetch the model from.
         dest_folder (os.PathLike): Folder where to download the files.
         task_type (str): Type of the task to fetch. Allowed value are "init", "train" and "aggregate".
+        identifier (OutputIdentifiers): Identifier of the output to fetch. Must be a valid OutputIdentifiers regarding
+            the ``task_type``.
         round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
             the rank_idx will be used. (Defaults to None)
         rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
@@ -310,7 +310,7 @@ def download_algo_files(
     algo_file = client.download_function(task.function.key, destination_folder=folder)
 
     # Get the associated head model (local state)
-    local_state_file = client.download_model_from_task(task.key, folder=folder, identifier=OutputIdentifiers.local)
+    local_state_file = client.download_model_from_task(task.key, folder=folder, identifier=identifier)
 
     # Environment requirements and local state path
     metadata = {k: v for k, v in compute_plan.metadata.items() if k in REQUIRED_KEYS}
@@ -320,27 +320,151 @@ def download_algo_files(
     metadata_path.write_text(json.dumps(metadata))
 
 
-def load_algo(input_folder: os.PathLike) -> Any:
-    """Loads an algo from a specified folder. This folder should contains:
+def download_algo_files(
+    client: substra.Client,
+    compute_plan_key: str,
+    dest_folder: os.PathLike,
+    round_idx: Optional[int] = None,
+    rank_idx: Optional[int] = None,
+):
+    """Download all the files needed to load the SubstraFL Algo:
+
+        - hosted on the client organization
+        - being part of the given compute plan
+        - being the result of the associated strategy after `round_idx` steps or at rank `rank_idx`
+
+    into memory.
+
+    Those files are:
+
+        - the function used for this task
+        - the output state of the task
+        - a metadata.json
+
+    Args:
+        client (substra.Client): Substra client where to fetch the model from.
+        compute_plan_key (str): Compute plan key to fetch the model from.
+        dest_folder (os.PathLike): Folder where to download the files.
+        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
+            the rank_idx will be used. (Defaults to None)
+        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
+            (with the highest rank) will be used. (Defaults to None)
+    """
+
+    _download_task_output_files(
+        client=client,
+        compute_plan_key=compute_plan_key,
+        dest_folder=dest_folder,
+        round_idx=round_idx,
+        rank_idx=rank_idx,
+        task_type="train",
+        identifier=OutputIdentifiers.local,
+    )
+
+
+def download_shared_files(
+    client: substra.Client,
+    compute_plan_key: str,
+    dest_folder: os.PathLike,
+    round_idx: Optional[int] = None,
+    rank_idx: Optional[int] = None,
+):
+    """Download all the files needed to load the SubstraFL shared state:
+
+        - hosted on the client organization
+        - being part of the given compute plan
+        - being the result of the associated strategy after `round_idx` steps or at rank `rank_idx`
+
+    into memory.
+
+    Those files are:
+
+        - the function used for this task
+        - the output state of the task
+        - a metadata.json
+
+    Args:
+        client (substra.Client): Substra client where to fetch the model from.
+        compute_plan_key (str): Compute plan key to fetch the model from.
+        dest_folder (os.PathLike): Folder where to download the files.
+        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
+            the rank_idx will be used. (Defaults to None)
+        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
+            (with the highest rank) will be used. (Defaults to None)
+    """
+    _download_task_output_files(
+        client=client,
+        compute_plan_key=compute_plan_key,
+        dest_folder=dest_folder,
+        round_idx=round_idx,
+        rank_idx=rank_idx,
+        task_type="train",
+        identifier=OutputIdentifiers.shared,
+    )
+
+
+def download_aggregate_files(
+    client: substra.Client,
+    compute_plan_key: str,
+    dest_folder: os.PathLike,
+    round_idx: Optional[int] = None,
+    rank_idx: Optional[int] = None,
+):
+    """Download all the files needed to load the SubstraFL aggregated state:
+
+        - hosted on the client organization
+        - being part of the given compute plan
+        - being the result of the associated strategy after `round_idx` steps or at rank `rank_idx`
+
+    into memory.
+
+    Those files are:
+
+        - the function used for this task
+        - the output state of the task
+        - a metadata.json
+
+    Args:
+        client (substra.Client): Substra client where to fetch the model from.
+        compute_plan_key (str): Compute plan key to fetch the model from.
+        dest_folder (os.PathLike): Folder where to download the files.
+        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
+            the rank_idx will be used. (Defaults to None)
+        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
+            (with the highest rank) will be used. (Defaults to None)
+    """
+    _download_task_output_files(
+        client=client,
+        compute_plan_key=compute_plan_key,
+        dest_folder=dest_folder,
+        round_idx=round_idx,
+        rank_idx=rank_idx,
+        task_type="aggregate",
+        identifier=OutputIdentifiers.model,
+    )
+
+
+def load_from_files(input_folder: os.PathLike) -> Any:
+    """Loads an instance from a specified folder. This folder should contains:
 
         - function.tar.gz
         - metadata.json
         - the file specified in metadata.local_state_file
 
     This kind of folder can be generated with the :func:`~substrafl.model_loading.download_algo_files`
-    function.
+    function for instance.
 
     Args:
         input_folder (os.PathLike): Path to folder containing the required files.
 
     Raises:
-        exceptions.LoadAlgoMetadataError: The metadata file must contains the local_state_file key
-        exceptions.LoadAlgoFileNotFoundError: At least one of the required file to load the model is not found
-        exceptions.LoadAlgoLocalDependencyError: One of the dependency used by the algo is not installed within the
+        exceptions.LoadMetadataError: The metadata file must contains the local_state_file key
+        exceptions.LoadFileNotFoundError: At least one of the required file to load the instance is not found
+        exceptions.LoadLocalDependencyError: One of the dependency used by the instance is not installed within the
           used environment
 
     Returns:
-        Any: The serialized algo within the input_folder
+        Any: The serialized instance within the input_folder
     """
 
     folder = Path(input_folder)
@@ -350,15 +474,15 @@ def load_algo(input_folder: os.PathLike) -> Any:
     _check_environment_compatibility(metadata=metadata)
 
     try:
-        algo = _load_instance(gz_path=folder / metadata[ALGO_DICT_KEY], extraction_folder=folder)
-        local_state = algo.load_local_state(folder / metadata[LOCAL_STATE_DICT_KEY])
+        instance = _load_instance(gz_path=folder / metadata[ALGO_DICT_KEY], extraction_folder=folder)
+        loaded_instance = instance.load_local_state(folder / metadata[LOCAL_STATE_DICT_KEY])
 
     except ModuleNotFoundError as e:
-        raise exceptions.LoadAlgoLocalDependencyError(
-            "The algo from the given input folder requires the installation of "
+        raise exceptions.LoadLocalDependencyError(
+            "The instance from the given input folder requires the installation of "
             "additional dependencies. Those can be found in "
             f"{str(folder / 'substrafl_internal' / 'installable_library')}"
             f"\nFull trace of the error: {e}"
         )
 
-    return local_state
+    return loaded_instance

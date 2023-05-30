@@ -7,7 +7,7 @@ from substrafl.experiment import execute_experiment
 from substrafl.index_generator.np_index_generator import NpIndexGenerator
 from substrafl.logger import set_logging_level
 from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import load_from_files
 from substrafl.schemas import StrategyName
 
 set_logging_level(loglevel=logging.INFO)
@@ -17,7 +17,8 @@ __all__ = [
     "set_logging_level",
     "NpIndexGenerator",
     "EvaluationStrategy",
-    "load_algo",
+    "StrategyName",
+    "load_from_files",
     "download_algo_files",
     "ComputePlanBuilder",
 ]
