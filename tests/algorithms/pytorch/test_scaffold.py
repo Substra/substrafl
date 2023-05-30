@@ -348,7 +348,6 @@ def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_u
 def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
     download_algo_files(
         client=network.clients[0],
-        task_type="train",
         compute_plan_key=compute_plan.key,
         round_idx=NUM_ROUNDS,
         dest_folder=session_dir,

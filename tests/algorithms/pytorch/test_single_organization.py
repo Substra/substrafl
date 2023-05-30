@@ -114,7 +114,6 @@ def test_one_organization_algo_performance(
 def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
     download_algo_files(
         client=network.clients[0],
-        task_type="train",
         compute_plan_key=compute_plan.key,
         round_idx=N_ROUND,
         dest_folder=session_dir,

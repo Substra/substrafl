@@ -168,9 +168,7 @@ def test_download_algo_files(fake_client, fake_compute_plan, session_dir, caplog
     expected_metadata.update({ALGO_DICT_KEY: "function.tar.gz"})
 
     caplog.clear()
-    download_algo_files(
-        client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
-    )
+    download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
 
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
@@ -187,9 +185,7 @@ def test_environment_compatibility_error(fake_client, fake_compute_plan, to_remo
 
     del fake_compute_plan.metadata[to_remove]
     with pytest.raises(NotImplementedError):
-        download_algo_files(
-            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
-        )
+        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
 
 
 def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir, caplog):
@@ -201,9 +197,7 @@ def test_retro_compatibility_warning(fake_client, fake_compute_plan, session_dir
         name = pkg_version.split("_")[0]
 
         caplog.clear()
-        download_algo_files(
-            client=fake_client, task_type="train", compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder
-        )
+        download_algo_files(client=fake_client, compute_plan_key=fake_compute_plan.key, dest_folder=dest_folder)
         assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 1
         assert name in caplog.records[0].msg
 
@@ -215,7 +209,6 @@ def test_train_task_not_found(fake_client, fake_compute_plan, session_dir):
     with pytest.raises(exceptions.TaskNotFoundError):
         download_algo_files(
             client=fake_client,
-            task_type="train",
             compute_plan_key=fake_compute_plan.key,
             dest_folder=dest_folder,
             round_idx=fake_compute_plan.metadata["num_rounds"],
@@ -229,7 +222,6 @@ def test_multiple_train_task_error(fake_client, fake_compute_plan, session_dir, 
     with pytest.raises(exceptions.MultipleTaskError):
         download_algo_files(
             client=fake_client,
-            task_type="train",
             compute_plan_key=fake_compute_plan.key,
             dest_folder=dest_folder,
             round_idx=fake_compute_plan.metadata["num_rounds"],
@@ -341,7 +333,6 @@ def test_unfinished_task_error(fake_client, fake_compute_plan, fake_local_train_
         fake_local_train_task.status = status
         download_algo_files(
             client=fake_client,
-            task_type="train",
             compute_plan_key=fake_compute_plan.key,
             dest_folder=session_dir,
         )

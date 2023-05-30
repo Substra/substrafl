@@ -358,7 +358,6 @@ def test_pytorch_nr_algo_performance(
 def test_download_load_algo(network, compute_plan, session_dir, nr_test_data, mae, rtol):
     download_algo_files(
         client=network.clients[0],
-        task_type="train",
         compute_plan_key=compute_plan.key,
         round_idx=NUM_ROUNDS,
         dest_folder=session_dir,

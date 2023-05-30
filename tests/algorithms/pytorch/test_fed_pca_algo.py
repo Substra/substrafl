@@ -256,7 +256,6 @@ def test_download_load_algo(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         round_idx=NUM_ROUNDS,
-        task_type="train",
         dest_folder=session_dir,
     )
     my_algo = load_from_files(input_folder=session_dir)
