@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
 def iter_dockerfile_install_command(paths: typing.List[Path], python_major_minor: str) -> str:
     for path in paths:
-        # Do not work with path.is_dir(), surely a race condition
+        # Do not work with path.is_dir(), surely a race condition. Should be removed in  #123
         formatted_path = (str(path) + "/") if not path.is_file() else path
         yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {formatted_path} \n"
 
