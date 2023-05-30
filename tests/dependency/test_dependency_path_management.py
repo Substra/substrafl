@@ -212,7 +212,7 @@ def test_copy_file_relative_parent(src_dir, dest_dir, create_random_file, create
         src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], force_included=[]
     )
 
-    to_be_copied = [str(parent_path)]
+    to_be_copied = [parent_path]
     assert to_be_copied == copied_paths
 
 
@@ -224,5 +224,5 @@ def test_copy_file_absolute_parent(src_dir, dest_dir, create_random_file, create
         src=[parent_path], dest_dir=dest_dir, excluded=[], excluded_regex=[], force_included=[]
     )
 
-    to_be_copied = [str(parent_path.name)]
+    to_be_copied = [Path(parent_path.name)]
     assert to_be_copied == copied_paths
