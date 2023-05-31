@@ -36,7 +36,7 @@ class ComputePlanBuilder(abc.ABC):
         evaluation_strategy: Optional[EvaluationStrategy],
         num_rounds: Optional[int],
         clean_models: Optional[bool] = True,
-    ) -> Any:
+    ) -> None:
         """Build the compute plan to be executed. All arguments are optional and will be feed within the
         :func:`~substrafl.experiment.execute_experiment` function.
 
@@ -50,16 +50,22 @@ class ComputePlanBuilder(abc.ABC):
             clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
                 if you want to download or re-use intermediary models. This causes the disk space to fill
                 quickly so should be set to True unless needed. Defaults to True.
+
+        Returns:
+            None
         """
         pass
 
     @abc.abstractmethod
-    def save_local_state(self, path: Path) -> Any:
+    def save_local_state(self, path: Path) -> None:
         """Executed at the end of each step of the computation graph to save
         the local state locally on each organization.
 
         Args:
             path (pathlib.Path): The path where the previous local state has been saved.
+
+        Returns:
+            None
         """
         pass
 

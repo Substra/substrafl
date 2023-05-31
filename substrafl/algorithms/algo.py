@@ -104,7 +104,7 @@ class Algo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def save_local_state(self, path: Path):
+    def save_local_state(self, path: Path) -> None:
         """Executed at the end of each step of the computation graph so for each organization,
         the local state can be saved.
 
@@ -113,6 +113,9 @@ class Algo(abc.ABC):
 
         Raises:
             NotImplementedError
+
+        Returns:
+            None
         """
 
         raise NotImplementedError

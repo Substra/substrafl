@@ -195,7 +195,7 @@ class Strategy(ComputePlanBuilder):
                     round_idx=round_idx,
                 )
 
-    def save_local_state(self, path: Path) -> Any:
+    def save_local_state(self, path: Path) -> None:
         self.algo.save_local_state(path)
 
     def load_local_state(self, path: Path) -> Any:
