@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ComputePlanBuilder base class to define which method are needed to implement a custom strategy in SubstraFL.
   These methods are `build_compute_plan`, `load_local_states` and `save_local_states`. [#120](https://github.com/Substra/substrafl/pull/120)
 - Check and test on string used as metric name in test data nodes ([#122](https://github.com/Substra/substrafl/pull/122)).
+- Add default exclusion patterns when copying file to avoid creating large Docker images ([#118](https://github.com/Substra/substrafl/pull/118))
 
 ## Changed
 
@@ -23,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   # Become
   from substrafl.strategies.schemas import FedAvgSharedState
   ```
+- Way to copy function files ([#118](https://github.com/Substra/substrafl/pull/118))
+
+### Fixed
+
+- New dependencies copy method in Docker mode.([#130](https://github.com/Substra/substrafl/pull/130))
 
 ## [0.36.0](https://github.com/Substra/substrafl/releases/tag/0.36.0) - 2023-05-11
 
@@ -89,12 +95,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Enforce kwargs for user facing function with more than 3 parameters ([#109](https://github.com/Substra/substrafl/pull/109))
 - Remove references to `composite`. Replace by `train_task`. ([#108](https://github.com/Substra/substrafl/pull/108))
-- Way to copy function files ([#118](https://github.com/Substra/substrafl/pull/118))
 
 ### Added
 
 - Add the Federated Principal Component Analysis strategy ([#97](https://github.com/Substra/substrafl/pull/97))
-- Add default exclusion patterns when copying file to avoid creating large Docker images ([#118](https://github.com/Substra/substrafl/pull/118))
 
 ## [0.35.1](https://github.com/Substra/substrafl/releases/tag/0.35.1) - 2023-04-11
 

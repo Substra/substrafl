@@ -144,7 +144,7 @@ def copy_paths(
             )
         else:
             raise ValueError(f"Try to parse {input_path} that does not exist.")
-        output_files.append(input_path.name)
+        output_files.append(Path(input_path.name))
 
     return list(output_files)
 
