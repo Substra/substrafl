@@ -15,6 +15,15 @@ LOCAL_WHEELS_FOLDER = Path.home() / ".substrafl"
 
 
 def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
+    """Builds the wheel for user dependencies passed as a local module.
+
+    Args:
+        lib_path (Path): where the module is located
+        operation_dir (Path): where the wheel needs to be copied
+
+    Returns:
+        str: the filename of the wheel
+    """
     # sys.executable takes the Python interpreter run by the code and not the default one on the computer
     ret = subprocess.run(
         [
@@ -22,16 +31,15 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
             "-m",
             "pip",
             "wheel",
-            ".",
+            str(lib_path) + "/",
             "--no-deps",
         ],
-        cwd=str(operation_dir / lib_path),
+        cwd=str(operation_dir),
         check=True,
         capture_output=True,
         text=True,
     )
     wheel_name = re.findall(r"filename=(\S*)", ret.stdout)[0]
-    shutil.copy(operation_dir / lib_path / wheel_name, operation_dir)
 
     return wheel_name
 
@@ -51,7 +59,7 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
         dest_dir (str): relative directory where the wheels are saved
 
     Returns:
-        str: dockerfile command for installing the given modules
+        List[str]: dockerfile command for installing the given modules
     """
     wheel_names = []
     wheels_dir = operation_dir
@@ -162,7 +170,7 @@ def _compile_requirements(dependency_list, operation_dir):
 
     requirements = ""
     for dependency in dependency_list:
-        if dependency.endswith(".whl"):
+        if dependency.__str__().endswith(".whl"):
             requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"

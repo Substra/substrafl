@@ -90,7 +90,6 @@ if __name__ == "__main__":
 """
 
 
-
 def _copy_local_packages(path: Path, operation_dir: Path, dependencies: Dependency):
     """Copy the local libraries given by the user and generate the installation command."""
     path.mkdir(exist_ok=True)

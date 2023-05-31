@@ -1,13 +1,39 @@
+import os
 import sys
 import tempfile
 from pathlib import Path
 
 import substratools
 
+from substrafl.remote.register.manage_dependencies import build_user_dependency_wheel
 from substrafl.remote.register.manage_dependencies import local_lib_wheels
 from substrafl.remote.register.manage_dependencies import pypi_lib_wheels
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
+
+
+SETUP_CONTENT = """from setuptools import setup, find_packages
+
+setup(
+    name='mymodule',
+    version='1.0.2',
+    author='Author Name',
+    description='Description of my package',
+    packages=find_packages(),
+    install_requires=['numpy >= 1.11.1', 'matplotlib >= 3.5.1'],
+)"""
+
+
+def test_build_user_dependency_wheel(tmp_path):
+    operation_dir = tmp_path / "local_dir"
+    os.mkdir(operation_dir)
+    module_root = operation_dir / "my_module"
+    os.mkdir(module_root)
+    setup_file = module_root / "setup.py"
+    setup_file.write_text(SETUP_CONTENT)
+    wheel_name = build_user_dependency_wheel(module_root, operation_dir)
+    assert wheel_name == "mymodule-1.0.2-py3-none-any.whl"
+    assert (operation_dir / wheel_name).exists()
 
 
 def test_generate_local_lib_wheel(session_dir):
@@ -25,9 +51,7 @@ def test_generate_local_lib_wheel(session_dir):
     wheels_created = []
 
     for lib in libs:
-        wheels_created.append(
-            (operation_dir / f"substrafl_internal/dist/{lib.__name__}-{lib.__version__}-py3-none-any.whl").exists()
-        )
+        wheels_created.append((operation_dir / f"{lib.__name__}-{lib.__version__}-py3-none-any.whl").exists())
 
     assert all(wheels_created)
 
