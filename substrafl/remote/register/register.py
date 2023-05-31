@@ -20,6 +20,7 @@ import substrafl
 from substrafl import exceptions
 from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
+from substrafl.exceptions import UnsupportedPythonVersionError
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.remote.register.manage_dependencies import _compile_requirements
 from substrafl.remote.register.manage_dependencies import build_user_dependency_wheel
@@ -32,6 +33,11 @@ logger = logging.getLogger(__name__)
 
 # Substra tools version for which the image naming scheme changed
 MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
+
+# minimal and maximal values of Python 3 minor versions supported
+# we need to store this as integer, else "3.10" < "3.9" (string comparison)
+MINIMAL_PYTHON_VERSION = 8  # 3.8
+MAXIMAL_PYTHON_VERSION = 10  # 3.10
 
 _DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
 {substratools_version}-nvidiacuda11.8.0-base-ubuntu22.04-python{python_version}"
@@ -84,14 +90,8 @@ if __name__ == "__main__":
 """
 
 
-def iter_dockerfile_install_command(paths: typing.List[Path], python_major_minor: str) -> str:
-    for path in paths:
-        # Does not work with path.is_dir(), surely a race condition. Should be removed in  #123
-        formatted_path = (str(path) + "/") if not path.is_file() else path
-        yield f"COPY {path}  {path} \nRUN python{python_major_minor} -m pip install --no-cache-dir {formatted_path} \n"
 
-
-def _copy_local_packages(path: Path, python_major_minor: str, operation_dir: Path, dependencies: Dependency):
+def _copy_local_packages(path: Path, operation_dir: Path, dependencies: Dependency):
     """Copy the local libraries given by the user and generate the installation command."""
     path.mkdir(exist_ok=True)
     dependencies_paths = dependencies.copy_dependencies_local_package(dest_dir=operation_dir)
@@ -117,7 +117,16 @@ def _create_archive(archive_path: Path, src_path: Path):
                 tar.add(filepath, arcname=filepath.name, recursive=True)
 
 
-def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
+def _check_python_version(python_major_minor: str) -> None:
+    """Raises UnsupportedPythonVersionError exception if the Python version is not supported"""
+    major, minor = python_major_minor.split(".")
+    if major != "3":
+        raise UnsupportedPythonVersionError("Only Python 3 is supported")
+    if int(minor) < MINIMAL_PYTHON_VERSION or int(minor) > MAXIMAL_PYTHON_VERSION:
+        raise UnsupportedPythonVersionError(f"The current Python version is {python_major_minor}")
+
+
+def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
     """Get the base Docker image for the Dockerfile"""
 
     substratools_image_version = substratools.__version__
@@ -132,6 +141,9 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool):
                 stacklevel=2,
             )
         substratools_image_version = MINIMAL_DOCKER_SUBSTRATOOLS_VERSION
+
+    _check_python_version(python_major_minor)
+
     substratools_image = _DEFAULT_SUBSTRATOOLS_IMAGE.format(
         substratools_version=substratools_image_version,
         python_version=python_major_minor,
@@ -145,7 +157,6 @@ def _generate_copy_wheel(wheel_list):
 
 
 def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operation_dir: Path, method_name: str) -> str:
-
     substrafl_internal = operation_dir / SUBSTRAFL_FOLDER
     substrafl_internal.mkdir(exist_ok=True)
 
@@ -188,7 +199,6 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
         local_dependencies = _copy_local_packages(
             path=local_dep_dir,
             dependencies=dependencies,
-            python_major_minor=python_major_minor,
             operation_dir=operation_dir,
         )
 

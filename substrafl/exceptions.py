@@ -10,6 +10,10 @@ class SubstraToolsDeprecationWarning(DeprecationWarning):
     """The substratools version used is deprecated."""
 
 
+class UnsupportedPythonVersionError(Exception):
+    """The Python version used is not supported by Substra."""
+
+
 class CriterionReductionError(Exception):
     """The criterion reduction must be set to 'mean' to use the Newton-Raphson strategy."""
 

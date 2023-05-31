@@ -6,6 +6,7 @@ import pytest
 import substra
 
 from substrafl.dependency import Dependency
+from substrafl.exceptions import UnsupportedPythonVersionError
 from substrafl.nodes import TestDataNode
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.register import register
@@ -27,6 +28,12 @@ class DummyClient:
 
     def add_function(*args):
         pass
+
+
+@pytest.mark.parametrize("version", ["2.7", "3.7", "3.18"])
+def test_check_python_version(version):
+    with pytest.raises(UnsupportedPythonVersionError):
+        register._check_python_version(version)
 
 
 @pytest.mark.parametrize("use_latest", [True, False])
