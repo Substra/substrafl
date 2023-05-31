@@ -9,9 +9,9 @@ from substrafl.algorithms.pytorch import weight_manager
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
 from substrafl.index_generator import BaseIndexGenerator
 from substrafl.remote import remote_data
-from substrafl.schemas import FedAvgAveragedState
-from substrafl.schemas import FedAvgSharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import FedAvgAveragedState
+from substrafl.strategies.schemas import FedAvgSharedState
+from substrafl.strategies.schemas import StrategyName
 
 logger = logging.getLogger(__name__)
 

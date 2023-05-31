@@ -149,7 +149,7 @@ class RemoteMethod:
         Returns:
             Any: loaded instance
         """
-        return self.instance.load(Path(path))
+        return self.instance.load_local_state(Path(path))
 
     def save_instance(self, path: str) -> None:
         """Save the instance
@@ -158,7 +158,7 @@ class RemoteMethod:
             model (Any): Instance to save
             path (str): Path where to save the instance
         """
-        self.instance.save(Path(path))
+        self.instance.save_local_state(Path(path))
 
     def register_substratools_function(self):
         """Register the function that can be accessed and executed by substratools."""

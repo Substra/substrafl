@@ -299,7 +299,7 @@ def load_algo(input_folder: os.PathLike) -> Any:
 
     try:
         algo = _load_algo(algo_path=folder / metadata[ALGO_DICT_KEY], extraction_folder=folder)
-        local_state = algo.load(folder / metadata[LOCAL_STATE_DICT_KEY])
+        local_state = algo.load_local_state(folder / metadata[LOCAL_STATE_DICT_KEY])
 
     except ModuleNotFoundError as e:
         raise LoadAlgoLocalDependencyError(

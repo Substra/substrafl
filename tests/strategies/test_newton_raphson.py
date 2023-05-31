@@ -7,9 +7,9 @@ from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.decorators import remote_data
-from substrafl.schemas import NewtonRaphsonAveragedStates
-from substrafl.schemas import NewtonRaphsonSharedState
 from substrafl.strategies import NewtonRaphson
+from substrafl.strategies.schemas import NewtonRaphsonAveragedStates
+from substrafl.strategies.schemas import NewtonRaphsonSharedState
 
 
 @pytest.mark.parametrize(

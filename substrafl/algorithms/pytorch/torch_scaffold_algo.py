@@ -14,9 +14,9 @@ from substrafl.exceptions import ScaffoldLearningRateError
 from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import BaseIndexGenerator
 from substrafl.remote import remote_data
-from substrafl.schemas import ScaffoldAveragedStates
-from substrafl.schemas import ScaffoldSharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import ScaffoldAveragedStates
+from substrafl.strategies.schemas import ScaffoldSharedState
+from substrafl.strategies.schemas import StrategyName
 
 logger = logging.getLogger(__name__)
 

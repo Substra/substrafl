@@ -10,7 +10,7 @@ import torch
 from substrafl.algorithms.pytorch.torch_base_algo import TorchAlgo
 from substrafl.index_generator import BaseIndexGenerator
 from substrafl.remote import remote_data
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import StrategyName
 
 logger = logging.getLogger(__name__)
 

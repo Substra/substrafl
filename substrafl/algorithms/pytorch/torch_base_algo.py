@@ -280,7 +280,7 @@ class TorchAlgo(Algo):
 
         return checkpoint
 
-    def load(self, path: Path) -> "TorchAlgo":
+    def load_local_state(self, path: Path) -> "TorchAlgo":
         """Load the stateful arguments of this class.
         Child classes do not need to override that function.
 
@@ -356,12 +356,15 @@ class TorchAlgo(Algo):
                 "The __init__() function of the torch Dataset must contain is_inference as parameter."
             )
 
-    def save(self, path: Path):
+    def save_local_state(self, path: Path) -> None:
         """Saves all the stateful elements of the class to the specified path.
         Child classes do not need to override that function.
 
         Args:
             path (pathlib.Path): A path where to save the class.
+
+        Returns:
+            None
         """
         torch.save(
             self._get_state_to_save(),

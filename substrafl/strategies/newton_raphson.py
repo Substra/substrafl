@@ -13,9 +13,9 @@ from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
-from substrafl.schemas import NewtonRaphsonAveragedStates
-from substrafl.schemas import NewtonRaphsonSharedState
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import NewtonRaphsonAveragedStates
+from substrafl.strategies.schemas import NewtonRaphsonSharedState
+from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 

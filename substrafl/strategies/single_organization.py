@@ -7,7 +7,7 @@ from substrafl.nodes import AggregationNode
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
 from substrafl.nodes.references.local_state import LocalStateRef
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
 
 logger = logging.getLogger(__name__)

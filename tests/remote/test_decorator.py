@@ -28,10 +28,10 @@ class RemoteClass:
         self.local_state = sum(datasamples) + shared_state + extra_arg
         return self.local_state
 
-    def save(self, path):
+    def save_local_state(self, path):
         np.save(str(path) + ".npy", self.local_state)
 
-    def load(self, path):
+    def load_local_state(self, path):
         return np.load(str(path) + ".npy")
 
 

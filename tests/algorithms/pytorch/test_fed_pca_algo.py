@@ -12,8 +12,8 @@ from substrafl.model_loading import download_algo_files
 from substrafl.model_loading import load_algo
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
-from substrafl.schemas import FedPCAAveragedState
 from substrafl.strategies.fed_pca import FedPCA
+from substrafl.strategies.schemas import FedPCAAveragedState
 from tests import assets_factory
 from tests import utils
 

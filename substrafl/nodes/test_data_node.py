@@ -5,6 +5,7 @@ from string import printable
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Union
 
 import substra
@@ -77,7 +78,7 @@ class TestDataNode(Node):
         self,
         traintask_id: str,
         operation: RemoteDataOperation,
-        round_idx: int,
+        round_idx: Optional[int] = None,
     ):
         """Creating a test task based on the node characteristic.
 
@@ -86,7 +87,7 @@ class TestDataNode(Node):
             operation (RemoteDataOperation): Automatically generated structure returned by
                 the :py:func:`~substrafl.remote.decorators.remote_data` decorator. This allows to register an
                 operation and execute it later on.
-            round_idx: (int): Round number of the strategy starting at 1.
+            round_idx (int): Used in case of learning compute plans. Round number, it starts at 1. Default to None.
 
         """
 
@@ -113,6 +114,7 @@ class TestDataNode(Node):
                 parent_task_output_identifier=OutputIdentifiers.predictions,
             )
         ]
+        task_metadata = {"round_idx": round_idx} if round_idx is not None else {}
 
         predicttask = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
@@ -124,9 +126,7 @@ class TestDataNode(Node):
                     transient=True,
                 )
             },
-            metadata={
-                "round_idx": round_idx,
-            },
+            metadata=task_metadata,
             worker=self.organization_id,
         ).dict()
 
@@ -145,9 +145,7 @@ class TestDataNode(Node):
                 )
                 for metric_function_id in self.metric_functions
             },
-            metadata={
-                "round_idx": round_idx,
-            },
+            metadata=task_metadata,
             worker=self.organization_id,
         ).dict()
         testtask.pop("function_key")

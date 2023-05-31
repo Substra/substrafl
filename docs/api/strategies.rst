@@ -32,3 +32,8 @@ Strategies Base Class
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: substrafl.strategies.strategy.Strategy
+
+Schemas
+^^^^^^^
+.. automodule:: substrafl.strategies.schemas
+    :private-members:

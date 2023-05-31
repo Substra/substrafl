@@ -1,21 +1,23 @@
-from abc import ABC
 from abc import abstractmethod
+from pathlib import Path
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import TypeVar
 
 from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
+from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
-from substrafl.schemas import StrategyName
+from substrafl.strategies.schemas import StrategyName
 
 SharedState = TypeVar("SharedState")
 
 
-class Strategy(ABC):
+class Strategy(ComputePlanBuilder):
     """Base strategy to be inherited from SubstraFL strategies."""
 
     def __init__(self, algo: Algo, *args, **kwargs):
@@ -29,7 +31,7 @@ class Strategy(ABC):
 
                 class MyStrat(Strategy):
                     def __init__(self, algo, my_custom_arg):
-                        super.__init__(algo=algo, my_custom_arg=my_custom_arg)
+                        super().__init__(algo=algo, my_custom_arg=my_custom_arg)
 
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
@@ -37,10 +39,8 @@ class Strategy(ABC):
         Raises:
             exceptions.IncompatibleAlgoStrategyError: Raise an error if the strategy name is not in ``algo.strategies``.
         """
-        self.args = args
-        self.kwargs = kwargs
 
-        self.kwargs.update({"algo": algo})
+        super().__init__(algo=algo, *args, **kwargs)
 
         self.algo = algo
 
@@ -141,15 +141,15 @@ class Strategy(ABC):
         """
         raise NotImplementedError
 
-    def build_graph(
+    def build_compute_plan(
         self,
         train_data_nodes: List[TrainDataNode],
         aggregation_node: Optional[List[AggregationNode]],
         evaluation_strategy: Optional[EvaluationStrategy],
         num_rounds: int,
-        clean_models: Optional[bool],
-    ):
-        """Build the computation graph of the strategy.
+        clean_models: Optional[bool] = True,
+    ) -> None:
+        """Build the compute plan of the strategy.
         The built graph will be stored by side effect in the given train_data_nodes,
         aggregation_nodes and evaluation_strategy.
         This function create a graph be first calling the initialization_round method of the strategy
@@ -161,11 +161,14 @@ class Strategy(ABC):
             train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
             aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
                 centralized strategy, unused otherwise
-            evaluation_strategy (Optional[EvaluationStrategy]): _description_
-            num_rounds (int): _description_
+            evaluation_strategy (Optional[EvaluationStrategy]): evaluation strategy to follow for testing models.
+            num_rounds (int): Number of times to repeat the compute plan sub-graph (define in perform round).
             clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
                 if you want to download or re-use intermediary models. This causes the disk space to fill
                 quickly so should be set to True unless needed. Defaults to True.
+
+        Returns:
+            None
         """
         additional_orgs_permissions = (
             evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
@@ -194,3 +197,9 @@ class Strategy(ABC):
                     test_data_nodes=evaluation_strategy.test_data_nodes,
                     round_idx=round_idx,
                 )
+
+    def save_local_state(self, path: Path) -> None:
+        self.algo.save_local_state(path)
+
+    def load_local_state(self, path: Path) -> Any:
+        return self.algo.load_local_state(path)
