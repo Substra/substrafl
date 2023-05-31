@@ -148,7 +148,7 @@ class Strategy(ComputePlanBuilder):
         evaluation_strategy: Optional[EvaluationStrategy],
         num_rounds: int,
         clean_models: Optional[bool] = True,
-    ):
+    ) -> None:
         """Build the compute plan of the strategy.
         The built graph will be stored by side effect in the given train_data_nodes,
         aggregation_nodes and evaluation_strategy.
@@ -166,6 +166,9 @@ class Strategy(ComputePlanBuilder):
             clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
                 if you want to download or re-use intermediary models. This causes the disk space to fill
                 quickly so should be set to True unless needed. Defaults to True.
+
+        Returns:
+            None
         """
         additional_orgs_permissions = (
             evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
