@@ -4,8 +4,8 @@ from pathlib import Path
 
 import substratools
 
-from substrafl.remote.register.generate_wheel import local_lib_wheels
-from substrafl.remote.register.generate_wheel import pypi_lib_wheels
+from substrafl.remote.register.manage_dependencies import local_lib_wheels
+from substrafl.remote.register.manage_dependencies import pypi_lib_wheels
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
