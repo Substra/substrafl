@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pytest
 import torch
 
@@ -157,24 +158,51 @@ def test_download_load_algo(network, compute_plan, test_linear_data_samples, mae
 @pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_shared(network, compute_plan):
-    shared_state = download_shared_state(
+def test_download_shared(network, compute_plan, rtol):
+    shared_state_from_rank = download_shared_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        rank_idx=(NUM_ROUNDS * 2) + 1,
+    )
+
+    assert type(shared_state_from_rank) is FedAvgSharedState
+
+    shared_state_from_round = download_shared_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         round_idx=NUM_ROUNDS,
     )
 
-    assert type(shared_state) is FedAvgSharedState
+    assert type(shared_state_from_round) is FedAvgSharedState
+
+    assert shared_state_from_rank.n_samples == shared_state_from_round.n_samples
+    for param_from_rank, param_from_round in zip(
+        shared_state_from_rank.parameters_update, shared_state_from_round.parameters_update
+    ):
+        assert np.allclose(param_from_rank, param_from_round, rtol=rtol)
 
 
 @pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_aggregate(network, compute_plan):
-    averaged_state = download_aggregate_state(
+def test_download_aggregate(network, compute_plan, rtol):
+    averaged_state_from_rank = download_aggregate_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        rank_idx=(NUM_ROUNDS * 2),
+    )
+
+    assert type(averaged_state_from_rank) is FedAvgAveragedState
+
+    averaged_state_from_round = download_aggregate_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         round_idx=NUM_ROUNDS,
     )
 
-    assert type(averaged_state) is FedAvgAveragedState
+    assert type(averaged_state_from_round) is FedAvgAveragedState
+
+    for param_from_rank, param_from_round in zip(
+        averaged_state_from_rank.avg_parameters_update, averaged_state_from_round.avg_parameters_update
+    ):
+        assert np.allclose(param_from_rank, param_from_round, rtol=rtol)

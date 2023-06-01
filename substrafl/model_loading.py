@@ -200,7 +200,7 @@ def _get_task_from_rank(
 
     elif len(local_tagged_tasks) > 1:
         raise exceptions.MultipleTaskError(
-            f"The given compute plan has {len(local_tagged_tasks)} local {tag} tasks of rank {rank_idx}. "
+            f"The given compute plan has {len(local_tagged_tasks)} {tag} tasks of rank {rank_idx}. "
         )
     local_task = local_tagged_tasks[0]
 
@@ -351,7 +351,7 @@ def _download_task_output_files(
         task = _get_task_from_rank(
             client=client,
             compute_plan_key=compute_plan_key,
-            rank_idx=round_idx,
+            rank_idx=rank_idx,
             tag=task_type,
         )
     if task.status is not Status.done:
