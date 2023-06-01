@@ -21,10 +21,11 @@ class Dependency(BaseModel):
             Dockerfiles submitted to Substra platform will be taken from pypi.
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.
-        dependencies (List[str]): Python packages installable from pypi.
-        local_dependencies (List[pathlib.Path]): Local installable packages. The command
-            `pip install -e .` will be executed in each of those folders hence a `setup.py` must be present in each
-            folder.
+        pypi_dependencies (List[str]): Python packages installable from PyPI.
+        local_dependencies (List[pathlib.Path]): Local installable packages.
+            It can either be a wheel or a local folder. If it's a local folder, the command
+            `python -m pip wheel .` will be run, so each folder needs to be a valid Python module (containing a valid
+            `setup.py` or `pyproject.toml`). See the documentation of pip wheel for more details.
         local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be
             pasted to the level of the running script.
         excluded_paths (List[pathlib.Path]): Local paths excluded from `local_dependencies` / `local_code`.
