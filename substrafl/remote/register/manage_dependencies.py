@@ -9,6 +9,9 @@ import sys
 from pathlib import Path
 from typing import List
 
+from substrafl.exceptions import IncompatibleDependenciesError
+from substrafl.exceptions import InvalidUserModuleError
+
 logger = logging.getLogger(__name__)
 
 LOCAL_WHEELS_FOLDER = Path.home() / ".substrafl"
@@ -25,20 +28,23 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
         str: the filename of the wheel
     """
     # sys.executable takes the Python interpreter run by the code and not the default one on the computer
-    ret = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "wheel",
-            str(lib_path) + "/",
-            "--no-deps",
-        ],
-        cwd=str(operation_dir),
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        ret = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "wheel",
+                str(lib_path) + "/",
+                "--no-deps",
+            ],
+            cwd=str(operation_dir),
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise InvalidUserModuleError(e.stdout + e.stderr)
     wheel_name = re.findall(r"filename=(\S*)", ret.stdout)[0]
 
     return wheel_name
@@ -176,13 +182,17 @@ def _compile_requirements(dependency_list, operation_dir):
             requirements += f"{dependency}\n"
 
     requirements_in.write_text(requirements)
-    subprocess.check_output(
-        [
-            sys.executable,
-            "-m",
-            "piptools",
-            "compile",
-            requirements_in,
-        ],
-        cwd=operation_dir,
-    )
+    try:
+        subprocess.check_output(
+            [
+                sys.executable,
+                "-m",
+                "piptools",
+                "compile",
+                "--resolver=backtracking",
+                requirements_in,
+            ],
+            cwd=operation_dir,
+        )
+    except subprocess.CalledProcessError as e:
+        raise IncompatibleDependenciesError((e.stdout or "") + (e.stderr or ""))

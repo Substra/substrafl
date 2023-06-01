@@ -3,8 +3,12 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
 import substratools
 
+from substrafl.exceptions import IncompatibleDependenciesError
+from substrafl.exceptions import InvalidUserModuleError
+from substrafl.remote.register.manage_dependencies import _compile_requirements
 from substrafl.remote.register.manage_dependencies import build_user_dependency_wheel
 from substrafl.remote.register.manage_dependencies import local_lib_wheels
 from substrafl.remote.register.manage_dependencies import pypi_lib_wheels
@@ -34,6 +38,17 @@ def test_build_user_dependency_wheel(tmp_path):
     wheel_name = build_user_dependency_wheel(module_root, operation_dir)
     assert wheel_name == "mymodule-1.0.2-py3-none-any.whl"
     assert (operation_dir / wheel_name).exists()
+
+
+def test_build_user_dependency_wheel_invalid_wheel(tmp_path):
+    operation_dir = tmp_path / "local_dir"
+    os.mkdir(operation_dir)
+    module_root = operation_dir / "my_module"
+    os.mkdir(module_root)
+    setup_file = module_root / "setup.py"
+    setup_file.write_text("foobar")
+    with pytest.raises(InvalidUserModuleError):
+        build_user_dependency_wheel(module_root, operation_dir)
 
 
 def test_generate_local_lib_wheel(session_dir):
@@ -86,3 +101,17 @@ def test_generate_pypi_lib_wheel(session_dir):
     substratools.__version__ = substratools_version
 
     assert all(wheels_created)
+
+
+def test_compile_requirements(tmp_path):
+    _compile_requirements(["substrafl", "substra", "substratools", "numpy"], tmp_path)
+    requirements_path = tmp_path / "requirements.txt"
+    assert requirements_path.exists()
+    assert "substrafl" in requirements_path.read_text()
+    assert "numpy" in requirements_path.read_text()
+
+
+def test_compile_requirements_incompatible_versions(tmp_path):
+    dependency_list = ["numpy == 1.11", "numpy == 1.12"]
+    with pytest.raises(IncompatibleDependenciesError):
+        _compile_requirements(dependency_list, tmp_path)

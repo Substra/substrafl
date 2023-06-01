@@ -14,6 +14,14 @@ class UnsupportedPythonVersionError(Exception):
     """The Python version used is not supported by Substra."""
 
 
+class InvalidUserModuleError(Exception):
+    """The local folder passed by the user as a dependency is not a valid Python module."""
+
+
+class IncompatibleDependenciesError(Exception):
+    """The set of constraints given on dependencies cannot be solved."""
+
+
 class CriterionReductionError(Exception):
     """The criterion reduction must be set to 'mean' to use the Newton-Raphson strategy."""
 
