@@ -6,7 +6,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.experiment import execute_experiment
 from substrafl.index_generator.np_index_generator import NpIndexGenerator
 from substrafl.logger import set_logging_level
-from substrafl.model_loading import download_aggregate_state
+from substrafl.model_loading import download_aggregated_state
 from substrafl.model_loading import download_algo_state
 from substrafl.model_loading import download_shared_state
 from substrafl.strategies.schemas import StrategyName
@@ -19,7 +19,7 @@ __all__ = [
     "NpIndexGenerator",
     "EvaluationStrategy",
     "StrategyName",
-    "download_aggregate_state",
+    "download_aggregated_state",
     "download_shared_state",
     "download_algo_state",
     "ComputePlanBuilder",

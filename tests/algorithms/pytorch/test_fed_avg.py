@@ -10,7 +10,7 @@ from substrafl.algorithms.pytorch.weight_manager import increment_parameters
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_aggregate_state
+from substrafl.model_loading import download_aggregated_state
 from substrafl.model_loading import download_algo_state
 from substrafl.model_loading import download_shared_state
 from substrafl.strategies import FedAvg
@@ -186,7 +186,7 @@ def test_download_shared(network, compute_plan, rtol):
 @pytest.mark.slow
 @pytest.mark.substra
 def test_download_aggregate(network, compute_plan, rtol):
-    averaged_state_from_rank = download_aggregate_state(
+    averaged_state_from_rank = download_aggregated_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         rank_idx=(NUM_ROUNDS * 2),
@@ -194,7 +194,7 @@ def test_download_aggregate(network, compute_plan, rtol):
 
     assert type(averaged_state_from_rank) is FedAvgAveragedState
 
-    averaged_state_from_round = download_aggregate_state(
+    averaged_state_from_round = download_aggregated_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
         round_idx=NUM_ROUNDS,

@@ -442,7 +442,7 @@ def download_shared_state(
     return shared
 
 
-def download_aggregate_state(
+def download_aggregated_state(
     client: substra.Client,
     compute_plan_key: str,
     round_idx: Optional[int] = None,
