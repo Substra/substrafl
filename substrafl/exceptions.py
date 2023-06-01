@@ -94,39 +94,33 @@ class TorchScaffoldAlgoParametersUpdateError(Exception):
 
 
 class TaskNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The provided compute plan must
-    contain a task:
+    """The provided compute plan must contain a task:
 
-        - hosted by the worker associated to the given client
-        - tagged with the given round_idx or rank_idx
+    - hosted by the worker associated to the given client
+    - tagged with the given round_idx or rank_idx
     """
 
 
 class MultipleTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function in remote mode. The experiment to
-    get the algo files from can't have multiple task tagged with the given round_idx or rank_idx hosted on the
-    same organization."""
+    """The experiment to get the algo files from can't have multiple task tagged with the given round_idx or rank_idx
+    hosted on the same organization."""
 
 
 class UnfinishedTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The task to get the algo files
-    from shall be in status ``STATUS_DONE``."""
+    """The task to get the algo files from shall be in status ``STATUS_DONE``."""
 
 
 class LoadMetadataError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the metadata.json file within the folder given
-    as input must contain a ``model_file``"""
+    """The metadata.json file within the folder given as input must contain a ``model_file``"""
 
 
 class LoadFileNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the given folder must contains the
-    following files: function.tar.gz, metadata.json, the file entered in the ``model_file`` key of the dictionary.
-    """
+    """The given folder must contains the following files: function.tar.gz, metadata.json, the file entered in the
+    ``model_file`` key of the dictionary."""
 
 
 class LoadLocalDependencyError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, all dependencies from the local input folder
-    should be install by the user."""
+    """All dependencies from the local input folder should be install by the user."""
 
 
 class UnsupportedPytorchVersionError(Exception):
