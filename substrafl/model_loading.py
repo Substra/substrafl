@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import tarfile
+import tempfile
 from pathlib import Path
 from platform import python_version
 from typing import Any
@@ -208,7 +209,7 @@ def _get_task_from_rank(
     return local_task
 
 
-def _load_instance(gz_path: Path, extraction_folder: Path) -> Any:
+def _load_instance(gz_path: Path, extraction_folder: Path, remote: bool) -> Any:
     """Load into memory a serialized (and compressed (.tar.gz)) SubstraFL Remote Struct instance within the
     given path.
     This kind of file is usually the result of the ``substra.Client.download_function`` function applied to
@@ -217,6 +218,7 @@ def _load_instance(gz_path: Path, extraction_folder: Path) -> Any:
     Args:
         gz_path (Path): A file being the tar.gz compression of a SubstraFL RemoteStruct instance
         extraction_folder (Path): Where to unpack the folder.
+        remote (bool): Whether to return the instance or the remote instance from the loaded remote_struct.
 
     Returns:
         Any: The loaded SubstraFL object into memory.
@@ -228,22 +230,61 @@ def _load_instance(gz_path: Path, extraction_folder: Path) -> Any:
 
     remote_struct = RemoteStruct.load(src=extraction_folder / SUBSTRAFL_FOLDER)
 
-    instance = remote_struct.get_instance()
+    if not remote:
+        instance = remote_struct.get_instance()
+    else:
+        instance = remote_struct.get_remote_instance()
 
     return instance
 
 
-def _load_remote_instance(gz_path: Path, extraction_folder: Path) -> Any:
-    with tarfile.open(gz_path, "r:gz") as tar:
-        tar.extractall(path=extraction_folder)
+def _load_from_files(input_folder: os.PathLike, remote: bool = False) -> Any:
+    """Loads an instance from a specified folder. This folder should contains:
 
-    sys.path.append(str(extraction_folder))  # for local dependencies
+        - function.tar.gz
+        - metadata.json
+        - the file specified in metadata.model_file
 
-    remote_struct = RemoteStruct.load(src=extraction_folder / SUBSTRAFL_FOLDER)
+    This kind of folder can be generated with the :func:`~substrafl.model_loading.download_algo_files`
+    function for instance.
 
-    instance = remote_struct.get_remote_instance()
+    Args:
+        input_folder (os.PathLike): Path to folder containing the required files.
+        remote (bool): Wether the the instance to load is to load using a local method or a remote method.
 
-    return instance
+    Raises:
+        exceptions.LoadMetadataError: The metadata file must contains the model_file key
+        exceptions.LoadFileNotFoundError: At least one of the required file to load the instance is not found
+        exceptions.LoadLocalDependencyError: One of the dependency used by the instance is not installed within the
+          used environment
+
+    Returns:
+        Any: The serialized instance within the input_folder
+    """
+
+    folder = Path(input_folder)
+
+    metadata = _validate_load_algo_inputs(folder=folder)
+
+    _check_environment_compatibility(metadata=metadata)
+
+    try:
+        instance = _load_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder, remote=remote)
+
+        if not remote:
+            loaded_instance = instance.load_local_state(folder / metadata[MODEL_DICT_KEY])
+        else:
+            loaded_instance = instance.load_model(folder / metadata[MODEL_DICT_KEY])
+
+    except ModuleNotFoundError as e:
+        raise exceptions.LoadLocalDependencyError(
+            "The instance from the given input folder requires the installation of "
+            "additional dependencies. Those can be found in "
+            f"{str(folder / 'substrafl_internal' / 'installable_library')}"
+            f"\nFull trace of the error: {e}"
+        )
+
+    return loaded_instance
 
 
 def _download_task_output_files(
@@ -255,7 +296,7 @@ def _download_task_output_files(
     identifier: OutputIdentifiers,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
-):
+) -> None:
     """Download all the files needed to load the SubstraFL instance:
 
         - hosted on the client organization
@@ -290,6 +331,9 @@ def _download_task_output_files(
             TrainDataNodes hosted on the same organization. In practice this means the presence of multiple
             train tasks with the same round number on the same rank.
         exceptions.UnfinishedTaskError: The task from which the files are trying to be downloaded is not done.
+
+    Returns:
+        None
     """
     compute_plan = client.get_compute_plan(compute_plan_key)
 
@@ -333,193 +377,103 @@ def _download_task_output_files(
     metadata_path.write_text(json.dumps(metadata))
 
 
-def download_algo_files(
+def download_algo_state(
     client: substra.Client,
     compute_plan_key: str,
-    dest_folder: os.PathLike,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
 ):
-    """Download all the files needed to load the SubstraFL Algo:
-
-        - hosted on the client organization
-        - being part of the given compute plan
-        - being the result of the associated strategy after `round_idx` steps or at rank `rank_idx`
-
-    into memory.
-
-    Those files are:
-
-        - the function used for this task
-        - the output state of the task
-        - a metadata.json
+    """Download a SubstraFL Algo instance at a given state:
 
     Args:
         client (substra.Client): Substra client where to fetch the model from.
         compute_plan_key (str): Compute plan key to fetch the model from.
-        dest_folder (os.PathLike): Folder where to download the files.
         round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
             the rank_idx will be used. (Defaults to None)
         rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
             (with the highest rank) will be used. (Defaults to None)
-    """
-
-    _download_task_output_files(
-        client=client,
-        compute_plan_key=compute_plan_key,
-        dest_folder=dest_folder,
-        round_idx=round_idx,
-        rank_idx=rank_idx,
-        task_type="train",
-        identifier=OutputIdentifiers.local,
-    )
-
-
-def download_shared_files(
-    client: substra.Client,
-    compute_plan_key: str,
-    dest_folder: os.PathLike,
-    round_idx: Optional[int] = None,
-    rank_idx: Optional[int] = None,
-):
-    """Download all the files needed to load the SubstraFL shared state:
-
-        - hosted on the client organization
-        - being part of the given compute plan
-        - being the result of the associated strategy after `round_idx` steps or at rank `rank_idx`
-
-    into memory.
-
-    Those files are:
-
-        - the function used for this task
-        - the output state of the task
-        - a metadata.json
-
-    Args:
-        client (substra.Client): Substra client where to fetch the model from.
-        compute_plan_key (str): Compute plan key to fetch the model from.
-        dest_folder (os.PathLike): Folder where to download the files.
-        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
-            the rank_idx will be used. (Defaults to None)
-        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
-            (with the highest rank) will be used. (Defaults to None)
-    """
-    _download_task_output_files(
-        client=client,
-        compute_plan_key=compute_plan_key,
-        dest_folder=dest_folder,
-        round_idx=round_idx,
-        rank_idx=rank_idx,
-        task_type="train",
-        identifier=OutputIdentifiers.shared,
-    )
-
-
-def download_aggregate_files(
-    client: substra.Client,
-    compute_plan_key: str,
-    dest_folder: os.PathLike,
-    round_idx: Optional[int] = None,
-    rank_idx: Optional[int] = None,
-):
-    """Download all the files needed to load the SubstraFL aggregated state:
-
-        - hosted on the client organization
-        - being part of the given compute plan
-        - being the result of the associated strategy after `round_idx` steps or at rank `rank_idx`
-
-    into memory.
-
-    Those files are:
-
-        - the function used for this task
-        - the output state of the task
-        - a metadata.json
-
-    Args:
-        client (substra.Client): Substra client where to fetch the model from.
-        compute_plan_key (str): Compute plan key to fetch the model from.
-        dest_folder (os.PathLike): Folder where to download the files.
-        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
-            the rank_idx will be used. (Defaults to None)
-        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
-            (with the highest rank) will be used. (Defaults to None)
-    """
-    _download_task_output_files(
-        client=client,
-        compute_plan_key=compute_plan_key,
-        dest_folder=dest_folder,
-        round_idx=round_idx,
-        rank_idx=rank_idx,
-        task_type="aggregate",
-        identifier=OutputIdentifiers.model,
-    )
-
-
-def load_model(input_folder: os.PathLike) -> Any:
-    folder = Path(input_folder)
-
-    metadata = _validate_load_algo_inputs(folder=folder)
-
-    _check_environment_compatibility(metadata=metadata)
-
-    try:
-        remote_instance = _load_remote_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder)
-
-        loaded_shared = remote_instance.load_model(folder / metadata[MODEL_DICT_KEY])
-
-    except ModuleNotFoundError as e:
-        raise exceptions.LoadLocalDependencyError(
-            "The instance from the given input folder requires the installation of "
-            "additional dependencies. Those can be found in "
-            f"{str(folder / 'substrafl_internal' / 'installable_library')}"
-            f"\nFull trace of the error: {e}"
-        )
-
-    return loaded_shared
-
-
-def load_algo(input_folder: os.PathLike) -> Any:
-    """Loads an instance from a specified folder. This folder should contains:
-
-        - function.tar.gz
-        - metadata.json
-        - the file specified in metadata.model_file
-
-    This kind of folder can be generated with the :func:`~substrafl.model_loading.download_algo_files`
-    function for instance.
-
-    Args:
-        input_folder (os.PathLike): Path to folder containing the required files.
-
-    Raises:
-        exceptions.LoadMetadataError: The metadata file must contains the model_file key
-        exceptions.LoadFileNotFoundError: At least one of the required file to load the instance is not found
-        exceptions.LoadLocalDependencyError: One of the dependency used by the instance is not installed within the
-          used environment
 
     Returns:
-        Any: The serialized instance within the input_folder
+        Any: The serialized algo instance fetch from the given state.
     """
 
-    folder = Path(input_folder)
-
-    metadata = _validate_load_algo_inputs(folder=folder)
-
-    _check_environment_compatibility(metadata=metadata)
-
-    try:
-        instance = _load_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder)
-
-        loaded_instance = instance.load_local_state(folder / metadata[MODEL_DICT_KEY])
-
-    except ModuleNotFoundError as e:
-        raise exceptions.LoadLocalDependencyError(
-            "The instance from the given input folder requires the installation of "
-            "additional dependencies. Those can be found in "
-            f"{str(folder / 'substrafl_internal' / 'installable_library')}"
-            f"\nFull trace of the error: {e}"
+    with tempfile.TemporaryDirectory() as temp_folder:
+        _download_task_output_files(
+            client=client,
+            compute_plan_key=compute_plan_key,
+            dest_folder=temp_folder,
+            round_idx=round_idx,
+            rank_idx=rank_idx,
+            task_type="train",
+            identifier=OutputIdentifiers.local,
         )
 
-    return loaded_instance
+        algo = _load_from_files(input_folder=temp_folder, remote=False)
+
+    return algo
+
+
+def download_shared_state(
+    client: substra.Client,
+    compute_plan_key: str,
+    round_idx: Optional[int] = None,
+    rank_idx: Optional[int] = None,
+):
+    """Download a SubstraFL shared object at a given state:
+
+    Args:
+        client (substra.Client): Substra client where to fetch the model from.
+        compute_plan_key (str): Compute plan key to fetch the model from.
+        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
+            the rank_idx will be used. (Defaults to None)
+        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
+            (with the highest rank) will be used. (Defaults to None)
+
+    Returns:
+        Any: The serialized shared instance fetch from the given state
+    """
+    with tempfile.TemporaryDirectory() as temp_folder:
+        _download_task_output_files(
+            client=client,
+            compute_plan_key=compute_plan_key,
+            dest_folder=temp_folder,
+            round_idx=round_idx,
+            rank_idx=rank_idx,
+            task_type="train",
+            identifier=OutputIdentifiers.shared,
+        )
+        shared = _load_from_files(input_folder=temp_folder, remote=True)
+
+    return shared
+
+
+def download_aggregate_state(
+    client: substra.Client,
+    compute_plan_key: str,
+    round_idx: Optional[int] = None,
+    rank_idx: Optional[int] = None,
+):
+    """Download a SubstraFL aggregated object at a given state:
+
+    Args:
+        client (substra.Client): Substra client where to fetch the model from.
+        compute_plan_key (str): Compute plan key to fetch the model from.
+        round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
+            the rank_idx will be used. (Defaults to None)
+        rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
+            (with the highest rank) will be used. (Defaults to None)
+
+    """
+    with tempfile.TemporaryDirectory() as temp_folder:
+        _download_task_output_files(
+            client=client,
+            compute_plan_key=compute_plan_key,
+            dest_folder=temp_folder,
+            round_idx=round_idx,
+            rank_idx=rank_idx,
+            task_type="aggregate",
+            identifier=OutputIdentifiers.model,
+        )
+        aggregated = _load_from_files(input_folder=temp_folder, remote=True)
+
+    return aggregated
