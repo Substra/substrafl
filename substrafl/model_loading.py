@@ -61,7 +61,7 @@ def _check_environment_compatibility(metadata: dict):
         )
 
 
-def _validate_load_algo_inputs(folder: Path) -> dict:
+def _validate_folder_content(folder: Path) -> dict:
     """Checks if the input folder is containing the necessary files to load a task output.
 
     Args:
@@ -157,8 +157,8 @@ def _get_task_from_round(
         raise exceptions.MultipleTaskError(
             f"The given compute plan has {len(local_tagged_tasks)} local {tag} tasks of round {round_idx}. "
         )
-    local_train_task = local_tagged_tasks[0]
-    return local_train_task
+    local_task = local_tagged_tasks[0]
+    return local_task
 
 
 def _get_task_from_rank(
@@ -211,7 +211,7 @@ def _load_instance(gz_path: Path, extraction_folder: Path, remote: bool) -> Any:
     """Load into memory a serialized (and compressed (.tar.gz)) SubstraFL Remote Struct instance within the
     given path.
     This kind of file is usually the result of the ``substra.Client.download_function`` function applied to
-    a train task being part of a SubstraFL experiment.
+    a task being part of a SubstraFL experiment.
 
     Args:
         gz_path (Path): A file being the tar.gz compression of a SubstraFL RemoteStruct instance
@@ -259,7 +259,7 @@ def _load_from_files(input_folder: os.PathLike, remote: bool = False) -> Any:
 
     folder = Path(input_folder)
 
-    metadata = _validate_load_algo_inputs(folder=folder)
+    metadata = _validate_folder_content(folder=folder)
 
     _check_environment_compatibility(metadata=metadata)
 
@@ -321,10 +321,10 @@ def _download_task_output_files(
     Raises:
         NotImplementedError: The given compute plan must have been submitted to Substra through the
             :func:`~substrafl.experiment.execute_experiment` function.
-        exceptions.TaskNotFoundError: If no train task matches the given requirements.
+        exceptions.TaskNotFoundError: If no task matches the given requirements.
         exceptions.MultipleTaskError: The experiment to get the model from can't have multiple
             TrainDataNodes hosted on the same organization. In practice this means the presence of multiple
-            train tasks with the same round number on the same rank.
+            tasks with the same round number on the same rank.
         exceptions.UnfinishedTaskError: The task from which the files are trying to be downloaded is not done.
 
     Returns:
