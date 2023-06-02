@@ -6,9 +6,11 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import List
 
+from substrafl.dependency import Dependency
 from substrafl.exceptions import IncompatibleDependenciesError
 from substrafl.exceptions import InvalidUserModuleError
 
@@ -50,26 +52,53 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
     return wheel_name
 
 
-def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> List[str]:
-    """Prepares the private modules from lib_modules list to be installed in a Docker image and generates the
-    appropriated install command for a dockerfile. It first creates the wheel for each library. Each of the
-    libraries must be already installed in the correct version locally. Use command:
-    ``pip install -e library-name`` in the directory of each library.
+def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
+    """Copy the local modules given by the user, generating the wheel if necessary.
+
+    Args:
+        path: the path where the local wheels will be copied.
+        dependencies: Dependency object from which the list of local installable dependencies (wheels or modules) will
+            be extracted.
+
+    Returns: list of wheel paths relative to `path`
+    """
+    path.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir_name:
+        tmp_dir = Path(tmp_dir_name)
+        dependencies_paths = dependencies.copy_dependencies_local_package(dest_dir=tmp_dir)
+        wheel_paths = []
+        for dependency in dependencies_paths:
+            if dependency.__str__().endswith(".whl"):
+                wheel_paths.append(dependency)
+                shutil.copy(tmp_dir / dependency, path)
+            else:
+                wheel_name = build_user_dependency_wheel(
+                    Path(dependency),
+                    operation_dir=tmp_dir,
+                )
+                wheel_paths.append(wheel_name)
+                shutil.copy(tmp_dir / wheel_name, path)
+    return wheel_paths
+
+
+def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
+    """Generates wheels for the private modules from lib_modules list and returns the list of names for each wheel.
+
+     It first creates the wheel for each library. Each of the libraries must be already installed in the correct
+     version locally. Use command: ``pip install -e library-name`` in the directory of each library.
+     Then it copies the wheels to the dest_dir.
 
     This allows one user to use custom version of the passed modules.
 
     Args:
         lib_modules (list): list of modules to be installed.
-        operation_dir (pathlib.Path): Path to the operation directory
-        python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
         dest_dir (str): relative directory where the wheels are saved
 
     Returns:
-        List[str]: dockerfile command for installing the given modules
+        List[str]: wheel names for the given modules
     """
     wheel_names = []
-    wheels_dir = operation_dir
-    wheels_dir.mkdir(exist_ok=True, parents=True)
+    dest_dir.mkdir(exist_ok=True, parents=True)
     for lib_module in lib_modules:
         if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
             msg = ", ".join([lib.__name__ for lib in lib_modules])
@@ -96,9 +125,9 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
             if lib_name == "substrafl":
                 extra_args = [
                     "--find-links",
-                    operation_dir / "dist/substra",
+                    dest_dir.parent / "substra",
                     "--find-links",
-                    operation_dir / "dist/substratools",
+                    dest_dir.parent / "substratools",
                 ]
             subprocess.check_output(
                 [
@@ -115,64 +144,43 @@ def local_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_min
                 cwd=str(lib_path),
             )
 
-        shutil.copy(wheel_path, wheels_dir / wheel_name)
+        shutil.copy(wheel_path, dest_dir / wheel_name)
         wheel_names.append(wheel_name)
 
     return wheel_names
 
 
-def pypi_lib_wheels(lib_modules: List, *, operation_dir: Path, python_major_minor: str, dest_dir: str) -> List[str]:
-    """Retrieves lib_modules' wheels to be installed in a Docker image and generates
-    the appropriated install command for a dockerfile.
+def substra_libraries_pypi_dependencies(lib_modules: List) -> List[str]:
+    """Retrieves the version of the substra libraries installed to generate the dependency list
 
     Args:
         lib_modules (list): list of modules to be installed.
-        operation_dir (pathlib.Path): Path to the operation directory
-        python_major_minor (str): version which is to be used in the dockerfile. Eg: '3.8'
-        dest_dir (str): relative directory where the wheels are saved
 
     Returns:
-        str: dockerfile command for installing the given modules
+        list(str): list of dependencies to install in the Docker container
     """
-    wheel_names = []
-    wheels_dir = operation_dir
-    wheels_dir.mkdir(exist_ok=True, parents=True)
-
-    LOCAL_WHEELS_FOLDER.mkdir(exist_ok=True)
-
-    for lib_module in lib_modules:
-        wheel_name = f"{lib_module.__name__}-{lib_module.__version__}-py3-none-any.whl"
-
-        # Download only if exists
-        if not ((LOCAL_WHEELS_FOLDER / wheel_name).exists()):
-            subprocess.check_output(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "download",
-                    "--only-binary",
-                    ":all:",
-                    "--python-version",
-                    python_major_minor,
-                    "--no-deps",
-                    "--implementation",
-                    "py",
-                    "-d",
-                    LOCAL_WHEELS_FOLDER,
-                    f"{lib_module.__name__}=={lib_module.__version__}",
-                ]
-            )
-
-        # Get wheel name based on current version
-        shutil.copy(LOCAL_WHEELS_FOLDER / wheel_name, wheels_dir / wheel_name)
-        wheel_names.append(wheel_name)
-
-    return wheel_names
+    return [f"{lib_module.__name__}=={lib_module.__version__}" for lib_module in lib_modules]
 
 
-def _compile_requirements(dependency_list, operation_dir):
-    requirements_in = operation_dir / "requirements.in"
+def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub_dir: Path) -> None:
+    """Compiles a list of requirements using pip-compile to generate a set of fully pinned third parties requirements
+
+    Writes down a `requirements.in` file with the list of explicit dependencies, then generates a `requirements.txt`
+    file using pip-compile. The `requirements.txt` file contains a set of fully pinned dependencies, including indirect
+    dependencies.
+
+    Args:
+        dependency_list: list of dependencies to install; acceptable formats are library names (eg "substrafl"),
+            any constraint expression accepted by pip("substrafl==0.36.0" or "substrafl < 1.0") or wheel names
+            ("substrafl-0.36.0-py3-none-any.whl")
+        operation_dir: path to the root dir
+        sub_dir: sub directory of the root dir where the `requirements.in` and `requirements.txt` files will be created
+
+    Raises:
+        IncompatibleDependenciesError if pip-compile does not find a set of compatible dependencies
+
+    """
+    requirements_in = operation_dir / sub_dir / "requirements.in"
 
     requirements = ""
     for dependency in dependency_list:
@@ -195,4 +203,4 @@ def _compile_requirements(dependency_list, operation_dir):
             cwd=operation_dir,
         )
     except subprocess.CalledProcessError as e:
-        raise IncompatibleDependenciesError((e.stdout or "") + (e.stderr or ""))
+        raise IncompatibleDependenciesError from e

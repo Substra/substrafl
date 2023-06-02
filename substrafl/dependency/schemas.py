@@ -70,7 +70,7 @@ class Dependency(BaseModel):
 
     @validator("local_dependencies")
     def check_setup(cls, v):  # noqa: N805
-        """Check the presence of a setup.py file in the provided paths."""
+        """Check the presence of a setup.py file or a pyproject.toml in the provided paths."""
         not_installable = list()
         for dependency_path in v:
             installable_dir = (dependency_path / "setup.py").is_file() or (dependency_path / "pyproject.toml").is_file()
