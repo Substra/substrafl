@@ -298,25 +298,24 @@ class TestLocalDependency:
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, train_task)
 
-    @pytest.mark.parametrize("force_editable", [True, False])
     @pytest.mark.docker_only
     @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
     def test_force_editable_mode(
         self,
-        force_editable,
         monkeypatch,
         network,
         session_dir,
         dummy_algo_class,
     ):
-        monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(force_editable))
         client = network.clients[0]
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=False)
-        self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
 
-        if force_editable:
-            assert substrafl.remote.register.register.local_lib_wheels.call_count == 1
-        else:
-            assert substrafl.remote.register.register.local_lib_wheels.call_count == 0
+        monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(True))
+        self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
+        assert substrafl.remote.register.register.local_lib_wheels.call_count == 1
 
         substrafl.remote.register.register.local_lib_wheels.reset_mock()
+
+        monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(False))
+        self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
+        assert substrafl.remote.register.register.local_lib_wheels.call_count == 0
