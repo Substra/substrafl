@@ -25,6 +25,7 @@ from substrafl.model_loading import _download_task_output_files
 from substrafl.model_loading import _load_from_files
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.register import _create_substra_function_files
+from substrafl.schemas import TaskType
 
 FILE_PATH = Path(__file__).resolve().parent
 
@@ -85,7 +86,7 @@ def fake_local_train_task(trunk_model):
     local_train_task.rank = 2
     local_train_task.key = AssetKeys.local_train_task
     local_train_task.function = function
-    local_train_task.tag = "train"
+    local_train_task.tag = TaskType.TRAIN
     local_train_task.outputs = {
         "local": substra.models.ComputeTaskOutput(
             permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=head_model
@@ -111,7 +112,7 @@ def fake_aggregate_task(trunk_model):
     aggregate_task.rank = 3
     aggregate_task.key = AssetKeys.aggregate_task
     aggregate_task.function = function
-    aggregate_task.tag = "aggregate"
+    aggregate_task.tag = TaskType.AGGREGATE
     aggregate_task.outputs = {
         "model": substra.models.ComputeTaskOutput(
             permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=model

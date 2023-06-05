@@ -1,4 +1,4 @@
-class ArgumentConflictError(Exception):
+class ArgumentConflictError(ValueError):
     """Incompatible value in the given arguments."""
 
 
@@ -102,12 +102,12 @@ class TaskNotFoundError(Exception):
 
 
 class MultipleTaskError(Exception):
-    """The experiment to get the algo files from can't have multiple task tagged with the given round_idx or rank_idx
-    hosted on the same organization."""
+    """The experiment from which to get the algo files can't have multiple task tagged with the given round_idx or
+    rank_idx hosted on the same organization."""
 
 
 class UnfinishedTaskError(Exception):
-    """The task to get the algo files from shall be in status ``STATUS_DONE``."""
+    """The task from which to get the algo files shall be in status ``STATUS_DONE``."""
 
 
 class LoadMetadataError(Exception):

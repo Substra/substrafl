@@ -1,5 +1,5 @@
-Model Loading
-=============
+Model Downloading
+=================
 
 Examples on how to use download utils function are available in the SubstraFL examples.
 

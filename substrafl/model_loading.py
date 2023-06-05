@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import sys
 import tarfile
 import tempfile
@@ -18,6 +17,7 @@ from substrafl import exceptions
 from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.register.register import SUBSTRAFL_FOLDER
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.schemas import TaskType
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,7 @@ def _get_task_from_rank(
         client (substra.Client): Substra client where to fetch the task from.
         compute_plan_key (str): Compute plan key to fetch the task from.
         rank_idx (int): Rank of the strategy to fetch the task from. If set to None,
-            the last ending task will be considered. (Default to None)
+            the last ending task will be returned. (Default to None)
         tag (str): Tag of the task to get.
 
     Returns:
@@ -198,10 +198,11 @@ def _get_task_from_rank(
             f"hosted on the organization {org_id}"
         )
 
-    elif len(local_tagged_tasks) > 1:
+    elif len(local_tagged_tasks) > 1 and rank_idx is not None:
         raise exceptions.MultipleTaskError(
             f"The given compute plan has {len(local_tagged_tasks)} {tag} tasks of rank {rank_idx}. "
         )
+
     local_task = local_tagged_tasks[0]
 
     return local_task
@@ -236,7 +237,7 @@ def _load_instance(gz_path: Path, extraction_folder: Path, remote: bool) -> Any:
     return instance
 
 
-def _load_from_files(input_folder: os.PathLike, remote: bool = False) -> Any:
+def _load_from_files(input_folder: Path, remote: bool = False) -> Any:
     """Loads an instance from a specified folder. This folder should contains:
 
         - function.tar.gz
@@ -244,7 +245,7 @@ def _load_from_files(input_folder: os.PathLike, remote: bool = False) -> Any:
         - the file specified in metadata.model_file
 
     Args:
-        input_folder (os.PathLike): Path to folder containing the required files.
+        input_folder (Path): Path to folder containing the required files.
         remote (bool): Wether the the instance to load is to load using a local method or a remote method.
 
     Raises:
@@ -263,21 +264,21 @@ def _load_from_files(input_folder: os.PathLike, remote: bool = False) -> Any:
 
     _check_environment_compatibility(metadata=metadata)
 
-    try:
-        instance = _load_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder, remote=remote)
+    instance = _load_instance(gz_path=folder / metadata[FUNCTION_DICT_KEY], extraction_folder=folder, remote=remote)
 
-        if not remote:
+    if not remote:
+        try:
             loaded_instance = instance.load_local_state(folder / metadata[MODEL_DICT_KEY])
-        else:
-            loaded_instance = instance.load_model(folder / metadata[MODEL_DICT_KEY])
+        except ModuleNotFoundError as e:
+            raise exceptions.LoadLocalDependencyError(
+                "The instance from the given input folder requires the installation of "
+                "additional dependencies. Those can be found in "
+                f"{str(folder / 'substrafl_internal' / 'installable_library')}"
+                f"\nFull trace of the error: {e}"
+            )
 
-    except ModuleNotFoundError as e:
-        raise exceptions.LoadLocalDependencyError(
-            "The instance from the given input folder requires the installation of "
-            "additional dependencies. Those can be found in "
-            f"{str(folder / 'substrafl_internal' / 'installable_library')}"
-            f"\nFull trace of the error: {e}"
-        )
+    else:
+        loaded_instance = instance.load_model(folder / metadata[MODEL_DICT_KEY])
 
     return loaded_instance
 
@@ -286,8 +287,8 @@ def _download_task_output_files(
     *,
     client: substra.Client,
     compute_plan_key: str,
-    dest_folder: os.PathLike,
-    task_type: str,
+    dest_folder: Path,
+    task_type: TaskType,
     identifier: OutputIdentifiers,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
@@ -309,8 +310,8 @@ def _download_task_output_files(
     Args:
         client (substra.Client): Substra client where to fetch the model from.
         compute_plan_key (str): Compute plan key to fetch the model from.
-        dest_folder (os.PathLike): Folder where to download the files.
-        task_type (str): Type of the task to fetch. Allowed value are "init", "train" and "aggregate".
+        dest_folder (Path): Folder where to download the files.
+        task_type (TaskType): Type of the task to fetch. Must be a valid SubstraFL TaskType
         identifier (OutputIdentifiers): Identifier of the output to fetch. Must be a valid OutputIdentifiers regarding
             the ``task_type``.
         round_idx (Optional[int], None): Round of the strategy to fetch the model from. If set to ``None``,
@@ -399,7 +400,7 @@ def download_algo_state(
             dest_folder=temp_folder,
             round_idx=round_idx,
             rank_idx=rank_idx,
-            task_type="train",
+            task_type=TaskType.TRAIN,
             identifier=OutputIdentifiers.local,
         )
 
@@ -434,7 +435,7 @@ def download_shared_state(
             dest_folder=temp_folder,
             round_idx=round_idx,
             rank_idx=rank_idx,
-            task_type="train",
+            task_type=TaskType.TRAIN,
             identifier=OutputIdentifiers.shared,
         )
         shared = _load_from_files(input_folder=temp_folder, remote=True)
@@ -466,7 +467,7 @@ def download_aggregated_state(
             dest_folder=temp_folder,
             round_idx=round_idx,
             rank_idx=rank_idx,
-            task_type="aggregate",
+            task_type=TaskType.AGGREGATE,
             identifier=OutputIdentifiers.model,
         )
         aggregated = _load_from_files(input_folder=temp_folder, remote=True)

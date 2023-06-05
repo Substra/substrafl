@@ -5,6 +5,7 @@ from substra.sdk.models import ComputePlanStatus
 from substra.sdk.models import Status
 
 from substrafl.nodes.node import OutputIdentifiers
+from substrafl.schemas import TaskType
 
 FUTURE_TIMEOUT = 3600
 FUTURE_POLLING_PERIOD = 1
@@ -99,7 +100,7 @@ def download_train_task_models_by_rank(network, session_dir, my_algo, compute_pl
 
 def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: int):
     aggregate_tasks = network.clients[0].list_task(filters={"compute_plan_key": [compute_plan.key], "rank": [rank]})
-    aggregate_tasks = [t for t in aggregate_tasks if t.tag == "aggregate"]
+    aggregate_tasks = [t for t in aggregate_tasks if t.tag == TaskType.AGGREGATE]
     assert len(aggregate_tasks) == 1
     model_path = network.clients[0].download_model_from_task(
         aggregate_tasks[0].key, identifier=OutputIdentifiers.model, folder=session_dir
