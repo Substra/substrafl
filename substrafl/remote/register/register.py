@@ -242,7 +242,6 @@ def _create_substra_function_files(
 
     remote_struct.save(dest=substrafl_internal)
 
-
     # Write dockerfile based on template
     dockerfile_path = operation_dir / "Dockerfile"
     dockerfile_path.write_text(
