@@ -348,7 +348,6 @@ def test_download_load_algo(network, compute_plan, test_linear_data_samples, mae
     algo = download_algo_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
-        round_idx=NUM_ROUNDS,
     )
     model = algo.model
 

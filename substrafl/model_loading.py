@@ -341,7 +341,8 @@ def _download_task_output_files(
     # Get the task associated to user inputs
     if round_idx is not None and rank_idx is not None:
         raise exceptions.ArgumentConflictError("Only one out of round_idx and rank_idx must be specified.")
-    elif round_idx is not None:
+
+    if round_idx is not None:
         task = _get_task_from_round(
             client=client,
             compute_plan_key=compute_plan_key,
@@ -378,7 +379,7 @@ def download_algo_state(
     compute_plan_key: str,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
-):
+) -> Any:
     """Download a SubstraFL Algo instance at a given state:
 
     Args:
@@ -414,7 +415,7 @@ def download_shared_state(
     compute_plan_key: str,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
-):
+) -> Any:
     """Download a SubstraFL shared object at a given state:
 
     Args:
@@ -426,7 +427,7 @@ def download_shared_state(
             (with the highest rank) will be used. (Defaults to None)
 
     Returns:
-        Any: The serialized shared instance fetch from the given state
+        Any: The serialized shared instance fetch from the given state.
     """
     with tempfile.TemporaryDirectory() as temp_folder:
         _download_task_output_files(
@@ -448,7 +449,7 @@ def download_aggregated_state(
     compute_plan_key: str,
     round_idx: Optional[int] = None,
     rank_idx: Optional[int] = None,
-):
+) -> Any:
     """Download a SubstraFL aggregated object at a given state:
 
     Args:
@@ -459,6 +460,8 @@ def download_aggregated_state(
         rank_idx (Optional[int], None): Rank of the strategy to fetch the model from. If set to ``None``, the last task
             (with the highest rank) will be used. (Defaults to None)
 
+    Returns:
+        Any: The serialized aggregated instance fetch from the given state.
     """
     with tempfile.TemporaryDirectory() as temp_folder:
         _download_task_output_files(
