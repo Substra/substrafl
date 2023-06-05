@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   These methods are `build_compute_plan`, `load_local_states` and `save_local_states`. [#120](https://github.com/Substra/substrafl/pull/120)
 - Check and test on string used as metric name in test data nodes ([#122](https://github.com/Substra/substrafl/pull/122)).
 - Add default exclusion patterns when copying file to avoid creating large Docker images ([#118](https://github.com/Substra/substrafl/pull/118))
+- Add the possibility to force the Dependency editable_mode through the environment variable SUBSTRA_FORCE_EDITABLE_MODE ([#131](https://github.com/Substra/substrafl/pull/131))
 
 ## Changed
 
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   # Become
   from substrafl.strategies.schemas import FedAvgSharedState
   ```
+
 - Way to copy function files ([#118](https://github.com/Substra/substrafl/pull/118))
 
 ### Fixed

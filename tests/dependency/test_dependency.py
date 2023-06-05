@@ -2,12 +2,15 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 import substra
 from pydantic import ValidationError
 
+import substrafl
 from substrafl.dependency import Dependency
 from substrafl.exceptions import InvalidPathError
 from substrafl.nodes.node import InputIdentifiers
@@ -294,3 +297,25 @@ class TestLocalDependency:
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
         utils.wait(client, train_task)
+
+    @pytest.mark.docker_only
+    @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
+    def test_force_editable_mode(
+        self,
+        monkeypatch,
+        network,
+        session_dir,
+        dummy_algo_class,
+    ):
+        client = network.clients[0]
+        algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=False)
+
+        monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(True))
+        self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
+        assert substrafl.remote.register.register.local_lib_wheels.call_count == 1
+
+        substrafl.remote.register.register.local_lib_wheels.reset_mock()
+
+        monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(False))
+        self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
+        assert substrafl.remote.register.register.local_lib_wheels.call_count == 0

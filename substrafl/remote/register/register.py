@@ -167,10 +167,9 @@ def _create_substra_function_files(
 
     # Build Substrafl, Substra and Substratools wheel if needed
     install_cmd = ""
-
     if install_libraries:
         # Install either from pypi wheel or repo in editable mode
-        if dependencies.editable_mode:
+        if dependencies.editable_mode or util.strtobool(os.environ.get("SUBSTRA_FORCE_EDITABLE_MODE", "False")):
             install_cmd = local_lib_wheels(
                 lib_modules=[
                     substrafl,
