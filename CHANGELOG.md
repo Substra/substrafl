@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
 - Way to copy function files ([#118](https://github.com/Substra/substrafl/pull/118))
+- `download_train_task_models_by_rank` uses new function `list_task_output_assets` instead of using `value` that has been removed ([#129](https://github.com/Substra/substrafl/pull/129))
 
 ### Fixed
 
