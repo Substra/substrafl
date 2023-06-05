@@ -4,7 +4,6 @@ import os
 import subprocess
 import sys
 import uuid
-from contextlib import nullcontext as does_not_raise
 from pathlib import Path
 from platform import python_version
 from unittest.mock import MagicMock
@@ -223,31 +222,55 @@ def test_download_utils_files(fake_client, fake_compute_plan, session_dir, caplo
     assert (dest_folder / metadata.get(MODEL_DICT_KEY)).exists()
 
 
-@pytest.mark.parametrize(
-    "round_idx, rank_idx, expectation",
-    (
-        [None, None, does_not_raise()],
-        [1, 1, pytest.raises(exceptions.ArgumentConflictError)],
-        [1, None, does_not_raise()],
-        [None, 1, does_not_raise()],
-    ),
-)
-def test_round_idx_vs_rank_idx(
-    fake_client, fake_compute_plan, session_dir, output_parameters, round_idx, rank_idx, expectation
-):
+def test_round_rank_conflict(fake_client, fake_compute_plan, session_dir, output_parameters):
     dest_folder = session_dir / str(uuid.uuid4())
     task_type, identifier = output_parameters
 
-    with expectation:
+    with pytest.raises(exceptions.ArgumentConflictError):
         _download_task_output_files(
             client=fake_client,
             compute_plan_key=fake_compute_plan.key,
             task_type=task_type,
             identifier=identifier,
             dest_folder=dest_folder,
-            round_idx=round_idx,
-            rank_idx=rank_idx,
+            round_idx=1,
+            rank_idx=1,
         )
+
+
+@pytest.mark.parametrize(
+    "round_idx, rank_idx, , called_function",
+    (
+        [None, None, "_get_task_from_rank"],
+        [1, None, "_get_task_from_round"],
+        [None, 1, "_get_task_from_rank"],
+    ),
+)
+def test_round_idx_vs_rank_idx(
+    fake_client,
+    fake_compute_plan,
+    session_dir,
+    output_parameters,
+    round_idx,
+    rank_idx,
+    called_function,
+    mocker,
+):
+    dest_folder = session_dir / str(uuid.uuid4())
+    task_type, identifier = output_parameters
+    spy = mocker.spy(substrafl.model_loading, called_function)
+
+    _download_task_output_files(
+        client=fake_client,
+        compute_plan_key=fake_compute_plan.key,
+        task_type=task_type,
+        identifier=identifier,
+        dest_folder=dest_folder,
+        round_idx=round_idx,
+        rank_idx=rank_idx,
+    )
+
+    assert spy.called
 
 
 @pytest.mark.parametrize("to_remove", list(REQUIRED_KEYS))
