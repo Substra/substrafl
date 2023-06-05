@@ -17,6 +17,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 
+- BREAKING: depreciate the usage of `model_loading.download_algo_files` and `model_loading.load_algo` functions. New utils functions are now available.  ([#125](https://github.com/Substra/substrafl/pull/125))
+  `model_loading.download_algo_state` to download a SubstraFL algo of a given round or rank.
+  `model_loading.download_shared_state` to download a SubstraFL shared object of a given round or rank.
+  `model_loading.download_aggregated_state` to download a SubstraFL aggregated of a given round or rank.
+  The API change goes from:
+
+  ```py
+  algo_files_folder = str(pathlib.Path.cwd() / "tmp" / "algo_files")
+
+  download_algo_files(
+    client=client_to_download_from,
+    compute_plan_key=compute_plan.key,
+    round_idx=round_idx,
+    dest_folder=algo_files_folder,
+  )
+
+  model = load_algo(input_folder=algo_files_folder).model
+  ```
+
+  to
+
+  ```py
+  algo = download_algo_state(
+    client=client_to_download_from  ,
+    compute_plan_key=compute_plan.key,
+    round_idx=round_idx,
+  )
+
+  model = algo.model
+  ```
+
 - BREAKING: rename `build_graph` to `build_compute_plan`. ([#120](https://github.com/Substra/substrafl/pull/120))
 - BREAKING: move `schema.py` into the `strategy` module. ([#120](https://github.com/Substra/substrafl/pull/120))
 

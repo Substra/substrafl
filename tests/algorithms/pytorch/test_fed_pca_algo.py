@@ -8,8 +8,7 @@ from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import download_algo_state
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
 from substrafl.strategies.fed_pca import FedPCA
@@ -249,16 +248,11 @@ def test_torch_fed_pca_performance(network, compute_plan, rtol):
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_load_algo(
-    network, compute_plan, session_dir, test_linear_data_samples_pca, numpy_pca_eigen_vectors, rtol
-):
-    download_algo_files(
+def test_download_load_algo(network, compute_plan, test_linear_data_samples_pca, numpy_pca_eigen_vectors, rtol):
+    my_algo = download_algo_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
-        round_idx=None,
-        dest_folder=session_dir,
     )
-    my_algo = load_algo(input_folder=session_dir)
 
     # Align eigen values using their collinear coefficient
     assert np.array(

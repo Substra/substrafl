@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pytest
 import torch
 
@@ -9,9 +10,12 @@ from substrafl.algorithms.pytorch.weight_manager import increment_parameters
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import download_aggregated_state
+from substrafl.model_loading import download_algo_state
+from substrafl.model_loading import download_shared_state
 from substrafl.strategies import FedAvg
+from substrafl.strategies.schemas import FedAvgAveragedState
+from substrafl.strategies.schemas import FedAvgSharedState
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
 
@@ -19,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 EXPECTED_PERFORMANCE = 0.0127768361
+NUM_ROUNDS = 3
 
 
 @pytest.fixture(scope="module")
@@ -48,8 +53,6 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
 
 @pytest.fixture(scope="module")
 def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
-    NUM_ROUNDS = 3
-
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
@@ -137,17 +140,68 @@ def test_pytorch_fedavg_algo_performance(
 @pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
-    download_algo_files(
+def test_download_load_algo(network, compute_plan, test_linear_data_samples, mae, rtol):
+    algo = download_algo_state(
         client=network.clients[0],
         compute_plan_key=compute_plan.key,
-        round_idx=None,
-        dest_folder=session_dir,
     )
-    model = load_algo(input_folder=session_dir)._model
+    model = algo.model
 
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1]
     performance = mae(y_pred, y_true)
 
     assert performance == pytest.approx(EXPECTED_PERFORMANCE, rel=rtol)
+
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.substra
+def test_download_shared(network, compute_plan, rtol):
+    shared_state_from_rank = download_shared_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        rank_idx=(NUM_ROUNDS * 2) + 1,
+    )
+
+    assert type(shared_state_from_rank) is FedAvgSharedState
+
+    shared_state_from_round = download_shared_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        round_idx=NUM_ROUNDS,
+    )
+
+    assert type(shared_state_from_round) is FedAvgSharedState
+
+    assert shared_state_from_rank.n_samples == shared_state_from_round.n_samples
+    for param_from_rank, param_from_round in zip(
+        shared_state_from_rank.parameters_update, shared_state_from_round.parameters_update
+    ):
+        assert np.allclose(param_from_rank, param_from_round, rtol=rtol)
+
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.substra
+def test_download_aggregate(network, compute_plan, rtol):
+    averaged_state_from_rank = download_aggregated_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        rank_idx=(NUM_ROUNDS * 2),
+    )
+
+    assert type(averaged_state_from_rank) is FedAvgAveragedState
+
+    averaged_state_from_round = download_aggregated_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
+        round_idx=NUM_ROUNDS,
+    )
+
+    assert type(averaged_state_from_round) is FedAvgAveragedState
+
+    for param_from_rank, param_from_round in zip(
+        averaged_state_from_rank.avg_parameters_update, averaged_state_from_round.avg_parameters_update
+    ):
+        assert np.allclose(param_from_rank, param_from_round, rtol=rtol)

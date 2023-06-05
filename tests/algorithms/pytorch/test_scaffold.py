@@ -13,8 +13,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import NumUpdatesValueError
 from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import download_algo_state
 from substrafl.strategies import Scaffold
 from tests import utils
 from tests.algorithms.pytorch.torch_tests_utils import assert_model_parameters_equal
@@ -25,6 +24,7 @@ logger = logging.getLogger(__name__)
 current_folder = Path(__file__).parent
 
 EXPECTED_PERFORMANCE = 0.0127768706
+NUM_ROUNDS = 3
 
 
 def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_scheduler=False):
@@ -73,8 +73,6 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
 
 @pytest.fixture(scope="module")
 def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
-    NUM_ROUNDS = 3
-
     algo_deps = Dependency(
         pypi_dependencies=["torch", "numpy"],
         editable_mode=True,
@@ -346,11 +344,12 @@ def test_update_parameters_call(nb_update_params_call, torch_linear_model, num_u
 
 @pytest.mark.slow
 @pytest.mark.substra
-def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
-    download_algo_files(
-        client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
+def test_download_load_algo(network, compute_plan, test_linear_data_samples, mae, rtol):
+    algo = download_algo_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
     )
-    model = load_algo(input_folder=session_dir)._model
+    model = algo.model
 
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1:].reshape(-1)

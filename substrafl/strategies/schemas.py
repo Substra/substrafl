@@ -1,4 +1,4 @@
-"""Schemas used in the application.
+"""Schemas used in the strategies.
 """
 from enum import Enum
 from typing import List

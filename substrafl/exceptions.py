@@ -1,3 +1,7 @@
+class ArgumentConflictError(ValueError):
+    """Incompatible value in the given arguments."""
+
+
 class BatchSizeNotFoundError(Exception):
     """No batch size found."""
 
@@ -89,38 +93,34 @@ class TorchScaffoldAlgoParametersUpdateError(Exception):
     """
 
 
-class TrainTaskNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The provided compute plan must
-    contain a task:
+class TaskNotFoundError(Exception):
+    """The provided compute plan must contain a task:
 
-        - hosted by the worker associated to the given client
-        - tagged with the given round_idx
+    - hosted by the worker associated to the given client
+    - tagged with the given round_idx or rank_idx
     """
 
 
-class MultipleTrainTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function in remote mode. The experiment to
-    get the algo files from can't have multiple TrainDataNodes hosted on the same organization."""
+class MultipleTaskError(Exception):
+    """The experiment from which to get the algo files can't have multiple task tagged with the given round_idx or
+    rank_idx hosted on the same organization."""
 
 
-class UnfinishedTrainTaskError(Exception):
-    """When using the :func:`~substrafl.model_loading.download_algo_files` function. The task to get the algo files
-    from shall be in status ``STATUS_DONE``."""
+class UnfinishedTaskError(Exception):
+    """The task from which to get the algo files shall be in status ``STATUS_DONE``."""
 
 
-class LoadAlgoMetadataError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the metadata.json file within the folder given as
-    input must contain a ``local_state_file``"""
+class LoadMetadataError(Exception):
+    """The metadata.json file within the folder given as input must contain a ``model_file``"""
 
 
-class LoadAlgoFileNotFoundError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, the given folder must contains the following files:
-    function.tar.gz, metadata.json, the file entered in the ``local_state_file`` key of the dictionary."""
+class LoadFileNotFoundError(Exception):
+    """The given folder must contains the following files: function.tar.gz, metadata.json, the file entered in the
+    ``model_file`` key of the dictionary."""
 
 
-class LoadAlgoLocalDependencyError(Exception):
-    """When using the :func:`~substrafl.model_loading.load_algo`, all dependencies from the local input folder should be
-    install by the user."""
+class LoadLocalDependencyError(Exception):
+    """All dependencies from the local input folder should be install by the user."""
 
 
 class UnsupportedPytorchVersionError(Exception):

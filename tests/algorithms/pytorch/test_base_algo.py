@@ -19,6 +19,7 @@ from substrafl.nodes.node import OutputIdentifiers
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.serializers import PickleSerializer
+from substrafl.schemas import TaskType
 from substrafl.strategies import FedAvg
 from substrafl.strategies import NewtonRaphson
 from substrafl.strategies import Scaffold
@@ -303,7 +304,7 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
     output_model = {}
 
     for task in network.clients[0].list_task(filters={"compute_plan_key": [cp.key]}):
-        if task.tag == "train":
+        if task.tag == TaskType.TRAIN:
             download_path = network.clients[0].download_model_from_task(
                 task.key,
                 folder=session_dir,

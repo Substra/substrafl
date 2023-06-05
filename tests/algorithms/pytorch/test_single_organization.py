@@ -8,14 +8,14 @@ from substrafl.algorithms.pytorch import TorchSingleOrganizationAlgo
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.model_loading import download_algo_files
-from substrafl.model_loading import load_algo
+from substrafl.model_loading import download_algo_state
 from substrafl.strategies import SingleOrganization
 from tests import utils
 
 logger = logging.getLogger(__name__)
 
 EXPECTED_PERFORMANCE = 0.2774176577698596
+N_ROUND = 2
 
 
 @pytest.fixture(scope="module")
@@ -35,7 +35,6 @@ def compute_plan(
     )
     BATCH_SIZE = 32
     N_UPDATES = 1
-    N_ROUND = 2
 
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
@@ -111,11 +110,12 @@ def test_one_organization_algo_performance(
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
-def test_download_load_algo(network, compute_plan, session_dir, test_linear_data_samples, mae, rtol):
-    download_algo_files(
-        client=network.clients[0], compute_plan_key=compute_plan.key, round_idx=None, dest_folder=session_dir
+def test_download_load_algo(network, compute_plan, test_linear_data_samples, mae, rtol):
+    algo = download_algo_state(
+        client=network.clients[0],
+        compute_plan_key=compute_plan.key,
     )
-    model = load_algo(input_folder=session_dir)._model
+    model = algo.model
 
     y_pred = model(torch.from_numpy(test_linear_data_samples[0][:, :-1]).float()).detach().numpy().reshape(-1)
     y_true = test_linear_data_samples[0][:, -1:].reshape(-1)
