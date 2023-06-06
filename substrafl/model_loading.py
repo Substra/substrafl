@@ -189,7 +189,7 @@ def _get_task_from_rank(
 
     else:
         filters = {"compute_plan_key": [compute_plan_key], "worker": [org_id]}
-        local_tasks = client.list_task(filters=filters, order_by="end_date")
+        local_tasks = client.list_task(filters=filters, order_by="end_date", ascending=True)
         local_tagged_tasks = [t for t in local_tasks if t.tag == tag]
 
     if len(local_tagged_tasks) == 0:
