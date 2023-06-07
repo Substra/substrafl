@@ -10,8 +10,8 @@ from substrafl.exceptions import IncompatibleDependenciesError
 from substrafl.exceptions import InvalidUserModuleError
 from substrafl.remote.register.manage_dependencies import build_user_dependency_wheel
 from substrafl.remote.register.manage_dependencies import compile_requirements
+from substrafl.remote.register.manage_dependencies import get_pypi_dependencies_versions
 from substrafl.remote.register.manage_dependencies import local_lib_wheels
-from substrafl.remote.register.manage_dependencies import substra_libraries_pypi_dependencies
 
 PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
@@ -73,7 +73,7 @@ def test_generate_local_lib_wheel(session_dir):
     assert all(wheels_created)
 
 
-def test_generate_pypi_lib_wheel():
+def test_get_pypi_dependencies_versions():
     # Test that pypi wheel can be downloaded
     libs = [substratools]
 
@@ -83,13 +83,9 @@ def test_generate_pypi_lib_wheel():
 
     # save the current versions the libs to set them back later
     substratools_version = substratools.__version__
-    substratools.__version__ = "0.7.0"
 
-    try:
-        dependencies = substra_libraries_pypi_dependencies(lib_modules=libs)
-        assert dependencies == ["substratools==0.7.0"]
-    finally:
-        substratools.__version__ = substratools_version
+    dependencies = get_pypi_dependencies_versions(lib_modules=libs)
+    assert dependencies == [f"substratools=={substratools_version}"]
 
 
 def test_compile_requirements(tmp_path):

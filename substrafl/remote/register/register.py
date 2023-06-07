@@ -24,8 +24,8 @@ from substrafl.exceptions import UnsupportedPythonVersionError
 from substrafl.nodes.node import InputIdentifiers
 from substrafl.remote.register.manage_dependencies import compile_requirements
 from substrafl.remote.register.manage_dependencies import copy_local_wheels
+from substrafl.remote.register.manage_dependencies import get_pypi_dependencies_versions
 from substrafl.remote.register.manage_dependencies import local_lib_wheels
-from substrafl.remote.register.manage_dependencies import substra_libraries_pypi_dependencies
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.substratools_methods import RemoteMethod
 
@@ -102,12 +102,15 @@ def _create_archive(archive_path: Path, src_path: Path):
 
 
 def _check_python_version(python_major_minor: str) -> None:
-    """Raises UnsupportedPythonVersionError exception if the Python version is not supported"""
+    """Raise UnsupportedPythonVersionError exception if the Python version is not supported"""
     major, minor = python_major_minor.split(".")
     if major != "3":
         raise UnsupportedPythonVersionError("Only Python 3 is supported")
     if int(minor) < MINIMAL_PYTHON_VERSION or int(minor) > MAXIMAL_PYTHON_VERSION:
-        raise UnsupportedPythonVersionError(f"The current Python version is {python_major_minor}")
+        raise UnsupportedPythonVersionError(
+            f"The current Python version is {python_major_minor}, which is unsupported;"
+            f"supported versions are 3.{MINIMAL_PYTHON_VERSION} to 3.{MAXIMAL_PYTHON_VERSION}"
+        )
 
 
 def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
@@ -172,7 +175,7 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
             )
             wheels += [substra_wheel_dir.relative_to(operation_dir) / wheel_name for wheel_name in substra_wheels]
         else:
-            pypi_dependencies += substra_libraries_pypi_dependencies(
+            pypi_dependencies += get_pypi_dependencies_versions(
                 lib_modules=[substrafl],
             )
 
@@ -227,6 +230,23 @@ def _create_substra_function_files(
             - the Dockerfile
             - the description.md
             - the function.py entrypoint
+
+        Target tree structure:
+            ├── Dockerfile
+            ├── function.py
+            ├── function.tar.gz
+            ├── local_code.py
+            └── substrafl_internal
+                ├── cls_cloudpickle
+                ├── description.md
+                ├── dist
+                │   ├── substra-0.44.0-py3-none-any.whl
+                │   ├── substrafl-0.36.0-py3-none-any.whl
+                │   └── substratools-0.20.0-py3-none-any.whl
+                ├── local_dependencies
+                │   └── local-module-1.6.1-py3-none-any.whl
+                ├── requirements.in
+                └── requirements.txt
 
     Args:
         remote_struct (RemoteStruct): A representation of a substra algorithm.

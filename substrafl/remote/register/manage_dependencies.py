@@ -1,5 +1,5 @@
 """
-Generate wheels for the Substra algo.
+Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
 import logging
 import re
@@ -20,7 +20,7 @@ LOCAL_WHEELS_FOLDER = Path.home() / ".substrafl"
 
 
 def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
-    """Builds the wheel for user dependencies passed as a local module.
+    """Build the wheel for user dependencies passed as a local module.
 
     Args:
         lib_path (Path): where the module is located
@@ -29,7 +29,7 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
     Returns:
         str: the filename of the wheel
     """
-    # sys.executable takes the Python interpreter run by the code and not the default one on the computer
+    # sys.executable takes the current Python interpreter instead of the default one on the computer
     try:
         ret = subprocess.run(
             [
@@ -56,9 +56,9 @@ def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
     """Copy the local modules given by the user, generating the wheel if necessary.
 
     Args:
-        path: the path where the local wheels will be copied.
-        dependencies: Dependency object from which the list of local installable dependencies (wheels or modules) will
-            be extracted.
+        path (Path): the path where the local wheels will be copied.
+        dependencies (Dependency): Dependency object from which the list of local installable dependencies
+            (wheels or modules) will be extracted.
 
     Returns: list of wheel paths relative to `path`
     """
@@ -82,7 +82,7 @@ def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
 
 
 def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
-    """Generates wheels for the private modules from lib_modules list and returns the list of names for each wheel.
+    """Generate wheels for the private modules from lib_modules list and returns the list of names for each wheel.
 
      It first creates the wheel for each library. Each of the libraries must be already installed in the correct
      version locally. Use command: ``pip install -e library-name`` in the directory of each library.
@@ -100,13 +100,13 @@ def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
     wheel_names = []
     dest_dir.mkdir(exist_ok=True, parents=True)
     for lib_module in lib_modules:
-        if not (Path(lib_module.__file__).parents[1] / "setup.py").exists():
+        lib_path = Path(lib_module.__file__).parents[1]
+        if not (lib_path / "setup.py").exists():
             msg = ", ".join([lib.__name__ for lib in lib_modules])
             raise NotImplementedError(
                 f"You must install {msg} in editable mode.\n" "eg `pip install -e substra` in the substra directory"
             )
         lib_name = lib_module.__name__
-        lib_path = Path(lib_module.__file__).parents[1]
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
         wheel_path = LOCAL_WHEELS_FOLDER / wheel_name
@@ -120,7 +120,7 @@ def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
         else:
             # if the right version of substra or substratools is not found, it will search if they are already
             # installed in 'dist' and take them from there.
-            # sys.executable takes the Python interpreter run by the code and not the default one on the computer
+            # sys.executable takes the current Python interpreter instead of the default one on the computer
             extra_args: list = []
             if lib_name == "substrafl":
                 extra_args = [
@@ -150,8 +150,8 @@ def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
     return wheel_names
 
 
-def substra_libraries_pypi_dependencies(lib_modules: List) -> List[str]:
-    """Retrieves the version of the substra libraries installed to generate the dependency list
+def get_pypi_dependencies_versions(lib_modules: List) -> List[str]:
+    """Retrieve the version of the PyPI libraries installed to generate the dependency list
 
     Args:
         lib_modules (list): list of modules to be installed.
@@ -163,7 +163,7 @@ def substra_libraries_pypi_dependencies(lib_modules: List) -> List[str]:
 
 
 def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub_dir: Path) -> None:
-    """Compiles a list of requirements using pip-compile to generate a set of fully pinned third parties requirements
+    """Compile a list of requirements using pip-compile to generate a set of fully pinned third parties requirements
 
     Writes down a `requirements.in` file with the list of explicit dependencies, then generates a `requirements.txt`
     file using pip-compile. The `requirements.txt` file contains a set of fully pinned dependencies, including indirect

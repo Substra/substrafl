@@ -36,6 +36,12 @@ def test_check_python_version(version):
         register._check_python_version(version)
 
 
+@pytest.mark.parametrize("version", ["3.8", "3.9", "3.10"])
+def test_check_python_version_valid(version):
+    """Does not raise for supported versions"""
+    register._check_python_version(version)
+
+
 @pytest.mark.parametrize("use_latest", [True, False])
 def test_latest_substratools_image_selection(use_latest, monkeypatch, default_permissions):
     monkeypatch.setenv("USE_LATEST_SUBSTRATOOLS", str(use_latest))

@@ -23,7 +23,7 @@ class Dependency(BaseModel):
             Defaults to False.
         pypi_dependencies (List[str]): Python packages installable from PyPI.
         local_installable_dependencies (List[pathlib.Path]): Local installable packages.
-            It can either be a wheel or a local folder. If it's a local folder, the command
+            Each one can either be a wheel or a local folder. If it's a local folder, the command
             `python -m pip wheel .` will be run, so each folder needs to be a valid Python module (containing a valid
             `setup.py` or `pyproject.toml`). See the documentation of pip wheel for more details.
         local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be
