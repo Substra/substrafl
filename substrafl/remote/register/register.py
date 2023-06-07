@@ -139,7 +139,7 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
     return substratools_image
 
 
-def _generate_copy_local_files(local_files):
+def _generate_copy_local_files(local_files: typing.List[str]) -> str:
     return "\n".join([f"COPY {file} {file}" for file in local_files])
 
 
@@ -198,8 +198,8 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
         copy_wheels_cmd = ""
 
     # user-defined local dependencies
-    dependencies.copy_dependencies_local_code(dest_dir=operation_dir)
-    copy_local_code_cmd = _generate_copy_local_files(dependencies.local_code)
+    local_paths = dependencies.copy_dependencies_local_code(dest_dir=operation_dir)
+    copy_local_code_cmd = _generate_copy_local_files(local_paths)
 
     # pip-compile the requirements.in into a requirements.txt
     compile_requirements(dependency_list, operation_dir=operation_dir, sub_dir=SUBSTRAFL_FOLDER)

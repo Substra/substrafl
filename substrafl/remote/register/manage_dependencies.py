@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List
 
 from substrafl.dependency import Dependency
-from substrafl.exceptions import IncompatibleDependenciesError
+from substrafl.exceptions import InvalidDependenciesError
 from substrafl.exceptions import InvalidUserModuleError
 
 logger = logging.getLogger(__name__)
@@ -23,8 +23,8 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
     """Build the wheel for user dependencies passed as a local module.
 
     Args:
-        lib_path (Path): where the module is located
-        operation_dir (Path): where the wheel needs to be copied
+        lib_path (Path): where the module is located.
+        operation_dir (Path): where the wheel needs to be copied.
 
     Returns:
         str: the filename of the wheel
@@ -46,7 +46,7 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
             text=True,
         )
     except subprocess.CalledProcessError as e:
-        raise InvalidUserModuleError(e.stdout + e.stderr)
+        raise InvalidUserModuleError from e
     wheel_name = re.findall(r"filename=(\S*)", ret.stdout)[0]
 
     return wheel_name
@@ -69,7 +69,7 @@ def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
         wheel_paths = []
         for dependency in dependencies_paths:
             if dependency.__str__().endswith(".whl"):
-                wheel_paths.append(dependency)
+                wheel_paths.append(str(dependency))
                 shutil.copy(tmp_dir / dependency, path)
             else:
                 wheel_name = build_user_dependency_wheel(
@@ -177,7 +177,7 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
         sub_dir: sub directory of the root dir where the `requirements.in` and `requirements.txt` files will be created
 
     Raises:
-        IncompatibleDependenciesError if pip-compile does not find a set of compatible dependencies
+        InvalidDependenciesError: if pip-compile does not find a set of compatible dependencies
 
     """
     requirements_in = operation_dir / sub_dir / "requirements.in"
@@ -203,4 +203,4 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
             cwd=operation_dir,
         )
     except subprocess.CalledProcessError as e:
-        raise IncompatibleDependenciesError from e
+        raise InvalidDependenciesError from e

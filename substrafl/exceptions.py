@@ -18,8 +18,8 @@ class InvalidUserModuleError(Exception):
     """The local folder passed by the user as a dependency is not a valid Python module."""
 
 
-class IncompatibleDependenciesError(Exception):
-    """The set of constraints given on dependencies cannot be solved."""
+class InvalidDependenciesError(Exception):
+    """The set of constraints given on dependencies cannot be solved or is otherwise invalid (wrong package name)."""
 
 
 class CriterionReductionError(Exception):
