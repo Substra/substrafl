@@ -18,6 +18,7 @@ from tqdm import tqdm
 from substrafl.nodes import AggregationNode
 from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
+from substrafl.schemas import TaskType
 
 CURRENT_DIRECTORY = Path(__file__).parent
 
@@ -94,7 +95,7 @@ def add_duplicated_dataset(
     data_sample_folder: os.PathLike,
     asset_keys: dict,
     msp_id: str,
-    kind: str = "train",
+    kind: str = TaskType.TRAIN,
 ) -> dict:
     """Update asset_keys.msp_id.{kind}_data_sample_keys so there is exactly `nb_data_sample` keys
     by adding the `data_sample_folder` as a data sample with the provided `client` as many times as it's need
@@ -121,7 +122,8 @@ def add_duplicated_dataset(
                     ...
                 }
         msp_id (str): asset_keys key where to find the registered assets for the given client
-        kind (str, optional): Kind of data sample to add, either train or test.  Defaults to "train".
+        kind (str, optional): Kind of data sample to add, either train or test.  Defaults to
+        TaskType.TRAIN.
 
     Returns:
         dict: The updated asset_keys.
@@ -191,7 +193,7 @@ def get_train_data_nodes(
             data_sample_folder=train_folder,
             asset_keys=asset_keys,
             msp_id=msp_id,
-            kind="train",
+            kind=TaskType.TRAIN,
         )
 
         train_data_nodes.append(
