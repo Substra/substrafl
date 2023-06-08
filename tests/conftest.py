@@ -58,8 +58,7 @@ def set_multiprocessing_variable():
         multiprocessing.set_start_method("fork")
 
 
-@pytest.fixture(scope="session")
-def docker_client():
+def get_docker_client():
     try:
         docker_client = docker.from_env()
         return docker_client
@@ -72,12 +71,13 @@ def docker_client():
 
 
 @pytest.fixture(scope="module", autouse=True)
-def prune_docker_image(request, docker_client):
+def prune_docker_image(request):
     yield
     backend_type = substra.BackendType(request.config.getoption("--mode"))
     prune_docker = request.config.getoption("--prune-docker")
 
     if backend_type == substra.BackendType.LOCAL_DOCKER and prune_docker:
+        docker_client = get_docker_client()
         docker_client.containers.prune()
         docker_client.images.prune(filters={"dangling": False})
 
