@@ -18,6 +18,7 @@ from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.schemas import TaskType
 
 
 class TrainDataNode(Node):
@@ -67,7 +68,7 @@ class TrainDataNode(Node):
             metadata={
                 "round_idx": round_idx,
             },
-            tag="init",
+            tag=TaskType.INITIALIZATION,
             worker=self.organization_id,
         ).dict()
 
@@ -178,7 +179,7 @@ class TrainDataNode(Node):
                 ),
             },
             metadata=task_metadata,
-            tag="train",
+            tag=TaskType.TRAIN,
             worker=self.organization_id,
         ).dict()
 
