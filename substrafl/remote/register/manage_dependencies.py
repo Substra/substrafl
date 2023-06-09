@@ -77,7 +77,7 @@ def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
                     Path(dependency),
                     operation_dir=tmp_dir,
                 )
-                wheel_paths.append(wheel_name)
+                wheel_paths.append(Path(wheel_name))
                 shutil.copy(tmp_dir / wheel_name, path)
     return wheel_paths
 
