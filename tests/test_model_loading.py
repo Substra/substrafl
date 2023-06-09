@@ -41,9 +41,9 @@ class AssetKeys(str, enum.Enum):
 
 @pytest.fixture(
     params=(
-        ("train", OutputIdentifiers.local),
-        ("train", OutputIdentifiers.shared),
-        ("aggregate", OutputIdentifiers.model),
+        (TaskType.TRAIN, OutputIdentifiers.local),
+        (TaskType.TRAIN, OutputIdentifiers.shared),
+        (TaskType.AGGREGATE, OutputIdentifiers.model),
     )
 )
 def output_parameters(request):
