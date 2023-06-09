@@ -323,7 +323,6 @@ def test_task_not_found(fake_client, fake_compute_plan, session_dir, output_para
             dest_folder=dest_folder,
             task_type=task_type,
             identifier=identifier,
-            round_idx=fake_compute_plan.metadata["num_rounds"],
         )
 
 
@@ -344,7 +343,6 @@ def test_multiple_task_error(
             dest_folder=dest_folder,
             task_type=task_type,
             identifier=identifier,
-            round_idx=fake_compute_plan.metadata["num_rounds"],
         )
 
 
