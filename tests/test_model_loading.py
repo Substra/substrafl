@@ -59,7 +59,6 @@ def fake_compute_plan():
         "substra_version": substra.__version__,
         "substratools_version": substratools.__version__,
         "python_version": python_version(),
-        "num_rounds": "4",
     }
 
     return compute_plan
@@ -82,7 +81,7 @@ def fake_local_train_task(trunk_model):
     head_model.key = AssetKeys.valid_head_model
 
     local_train_task = Mock(spec=substra.models.Task)
-    local_train_task.rank = 2
+    local_train_task.rank = 1
     local_train_task.key = AssetKeys.local_train_task
     local_train_task.function = function
     local_train_task.tag = TaskType.TRAIN
@@ -108,7 +107,7 @@ def fake_aggregate_task(trunk_model):
     model.key = AssetKeys.valid_head_model
 
     aggregate_task = Mock(spec=substra.models.Task)
-    aggregate_task.rank = 3
+    aggregate_task.rank = 1
     aggregate_task.key = AssetKeys.aggregate_task
     aggregate_task.function = function
     aggregate_task.tag = TaskType.AGGREGATE
@@ -216,7 +215,6 @@ def test_download_utils_files(fake_client, fake_compute_plan, session_dir, caplo
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
 
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
-
     assert expected_metadata == metadata
     assert (dest_folder / metadata.get(FUNCTION_DICT_KEY)).exists()
     assert (dest_folder / metadata.get(MODEL_DICT_KEY)).exists()
@@ -325,7 +323,6 @@ def test_task_not_found(fake_client, fake_compute_plan, session_dir, output_para
             dest_folder=dest_folder,
             task_type=task_type,
             identifier=identifier,
-            round_idx=fake_compute_plan.metadata["num_rounds"],
         )
 
 
@@ -346,7 +343,7 @@ def test_multiple_task_error(
             dest_folder=dest_folder,
             task_type=task_type,
             identifier=identifier,
-            round_idx=fake_compute_plan.metadata["num_rounds"],
+            rank_idx=1,
         )
 
 
