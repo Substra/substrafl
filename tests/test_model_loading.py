@@ -59,7 +59,6 @@ def fake_compute_plan():
         "substra_version": substra.__version__,
         "substratools_version": substratools.__version__,
         "python_version": python_version(),
-        "num_rounds": "4",
     }
 
     return compute_plan
@@ -216,7 +215,6 @@ def test_download_utils_files(fake_client, fake_compute_plan, session_dir, caplo
     assert len(list(filter(lambda x: x.levelname == "WARNING", caplog.records))) == 0
 
     metadata = json.loads((dest_folder / METADATA_FILE).read_text())
-
     assert expected_metadata == metadata
     assert (dest_folder / metadata.get(FUNCTION_DICT_KEY)).exists()
     assert (dest_folder / metadata.get(MODEL_DICT_KEY)).exists()
