@@ -81,6 +81,7 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
         assert "latest" not in str(lines[1])
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="does not run on windows")
 def test_create_dockerfile(tmp_path, mocker, local_installable_module):
     mocker.patch("substrafl.remote.register.register._get_base_docker_image", return_value="substratools-mocked")
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"

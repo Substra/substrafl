@@ -2,8 +2,6 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -299,14 +297,17 @@ class TestLocalDependency:
         utils.wait(client, train_task)
 
     @pytest.mark.docker_only
-    @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value=["INSTALL IN EDITABLE MODE"]))
     def test_force_editable_mode(
         self,
+        mocker,
         monkeypatch,
         network,
         session_dir,
         dummy_algo_class,
     ):
+        mocker.patch("substrafl.remote.register.register.local_lib_wheels", return_value=["INSTALL IN EDITABLE MODE"])
+        mocker.patch("substrafl.remote.register.register.compile_requirements")
+
         client = network.clients[0]
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=False)
 

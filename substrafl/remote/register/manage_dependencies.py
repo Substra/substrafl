@@ -1,6 +1,8 @@
 """
 Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
+from __future__ import annotations
+
 import logging
 import os
 import re
@@ -165,7 +167,7 @@ def get_pypi_dependencies_versions(lib_modules: List) -> List[str]:
     return [f"{lib_module.__name__}=={lib_module.__version__}" for lib_module in lib_modules]
 
 
-def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub_dir: Path) -> None:
+def compile_requirements(dependency_list: List[str | Path], *, operation_dir: Path, sub_dir: Path) -> None:
     """Compile a list of requirements using pip-compile to generate a set of fully pinned third parties requirements
 
     Writes down a `requirements.in` file with the list of explicit dependencies, then generates a `requirements.txt`
