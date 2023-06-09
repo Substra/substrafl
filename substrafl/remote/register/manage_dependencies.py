@@ -180,17 +180,15 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
 
     Raises:
         InvalidDependenciesError: if pip-compile does not find a set of compatible dependencies
-
     """
     requirements_in = operation_dir / sub_dir / "requirements.in"
 
-    requirements = ""
-    for dependency in dependency_list:
-        if dependency.name.endswith(".whl"):
-            requirements += f"file:{dependency}\n"
-        else:
-            requirements += f"{dependency}\n"
-    requirements_in.write_text(requirements)
+    with open(requirements_in, "a") as f:
+        for dependency in dependency_list:
+            if dependency.name.endswith(".whl"):
+                f.write(f"file:{dependency}\n")
+            else:
+                f.write(f"{dependency}\n")
     try:
         subprocess.check_output(
             [
