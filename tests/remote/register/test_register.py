@@ -1,15 +1,20 @@
+import sys
 import tarfile
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
 import substra
+import substratools
 
+import substrafl
 from substrafl.dependency import Dependency
+from substrafl.exceptions import UnsupportedPythonVersionError
 from substrafl.nodes import TestDataNode
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.register import register
 from substrafl.remote.register import register_metrics
+from substrafl.remote.register.register import _create_dockerfile
 
 
 class RemoteClass:
@@ -27,6 +32,18 @@ class DummyClient:
 
     def add_function(*args):
         pass
+
+
+@pytest.mark.parametrize("version", ["2.7", "3.7", "3.18"])
+def test_check_python_version(version):
+    with pytest.raises(UnsupportedPythonVersionError):
+        register._check_python_version(version)
+
+
+@pytest.mark.parametrize("version", ["3.8", "3.9", "3.10"])
+def test_check_python_version_valid(version):
+    """Does not raise for supported versions"""
+    register._check_python_version(version)
 
 
 @pytest.mark.parametrize("use_latest", [True, False])
@@ -62,6 +79,56 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
         assert "latest" in str(lines[1])
     else:
         assert "latest" not in str(lines[1])
+
+
+def test_create_dockerfile(tmp_path, mocker, local_installable_module):
+    mocker.patch("substrafl.remote.register.register._get_base_docker_image", return_value="substratools-mocked")
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    substrafl_wheel = f"substrafl_internal/dist/substrafl-{substrafl.__version__}-py3-none-any.whl"
+    substra_wheel = f"substrafl_internal/dist/substra-{substra.__version__}-py3-none-any.whl"
+    substratools_wheel = f"substrafl_internal/dist/substratools-{substratools.__version__}-py3-none-any.whl"
+    local_installable_dependencies = local_installable_module(tmp_path)
+    local_installable_wheel = "substrafl_internal/local_dependencies/mymodule-1.0.2-py3-none-any.whl"
+    local_code_folder = tmp_path / "local"
+    local_code_folder.mkdir()
+    local_code = local_code_folder / "foo.py"
+    local_code.touch()
+
+    dependencies = Dependency(
+        editable_mode=True,
+        pypi_dependencies=[],
+        local_installable_dependencies=[local_installable_dependencies],
+        local_code=[local_code_folder],
+    )
+
+    expected_dockerfile = f"""
+FROM substratools-mocked
+
+# install dependencies
+RUN python{python_version} -m pip install -U pip
+
+# Copy local wheels
+COPY {substrafl_wheel} {substrafl_wheel}
+COPY {substra_wheel} {substra_wheel}
+COPY {substratools_wheel} {substratools_wheel}
+COPY {local_installable_wheel} {local_installable_wheel}
+
+# Copy requirements.txt
+COPY substrafl_internal/requirements.txt requirements.txt
+
+# Install requirements
+RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+
+# Copy all other files
+COPY function.py .
+COPY substrafl_internal/cls_cloudpickle substrafl_internal/
+COPY substrafl_internal/description.md substrafl_internal/
+COPY local local
+
+ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "foo_bar"]
+"""
+    dockerfile = _create_dockerfile(True, dependencies, tmp_path, "foo_bar")
+    assert dockerfile == expected_dockerfile
 
 
 @pytest.mark.parametrize("algo_name, result", [("Dummy Algo Name", "Dummy Algo Name"), (None, "foo_RemoteClass")])
