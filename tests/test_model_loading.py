@@ -41,9 +41,9 @@ class AssetKeys(str, enum.Enum):
 
 @pytest.fixture(
     params=(
-        (TaskType.TRAIN, OutputIdentifiers.local),
-        (TaskType.TRAIN, OutputIdentifiers.shared),
-        (TaskType.AGGREGATE, OutputIdentifiers.model),
+        ("train", OutputIdentifiers.local),
+        ("train", OutputIdentifiers.shared),
+        ("aggregate", OutputIdentifiers.model),
     )
 )
 def output_parameters(request):
@@ -81,7 +81,7 @@ def fake_local_train_task(trunk_model):
     head_model.key = AssetKeys.valid_head_model
 
     local_train_task = Mock(spec=substra.models.Task)
-    local_train_task.rank = 2
+    local_train_task.rank = 1
     local_train_task.key = AssetKeys.local_train_task
     local_train_task.function = function
     local_train_task.tag = TaskType.TRAIN
@@ -107,7 +107,7 @@ def fake_aggregate_task(trunk_model):
     model.key = AssetKeys.valid_head_model
 
     aggregate_task = Mock(spec=substra.models.Task)
-    aggregate_task.rank = 3
+    aggregate_task.rank = 1
     aggregate_task.key = AssetKeys.aggregate_task
     aggregate_task.function = function
     aggregate_task.tag = TaskType.AGGREGATE
@@ -343,6 +343,7 @@ def test_multiple_task_error(
             dest_folder=dest_folder,
             task_type=task_type,
             identifier=identifier,
+            rank_idx=1,
         )
 
 
