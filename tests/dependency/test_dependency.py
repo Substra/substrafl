@@ -299,7 +299,7 @@ class TestLocalDependency:
         utils.wait(client, train_task)
 
     @pytest.mark.docker_only
-    @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
+    @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value=["INSTALL IN EDITABLE MODE"]))
     def test_force_editable_mode(
         self,
         monkeypatch,

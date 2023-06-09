@@ -187,28 +187,35 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
 
     requirements = ""
     for dependency in dependency_list:
-        if dependency.__str__().endswith(".whl"):
-            if os.name == "nt":  # windows
-                dependency = dependency.__str__().replace("/", "\\")
+        if str(dependency).endswith(".whl"):
+            if isinstance(dependency, Path):
+                # the following is necessary for pip-compile to run on Windows
+                dependency = "/".join(dependency.parts)
             requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"
 
     requirements_in.write_text(requirements)
+    print(requirements)
+    command = [
+        sys.executable,
+        "-m",
+        "piptools",
+        "compile",
+        "--resolver=backtracking",
+        str(requirements_in),
+    ]
     try:
         subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "piptools",
-                "compile",
-                "--resolver=backtracking",
-                requirements_in,
-            ],
+            command,
             cwd=operation_dir,
             check=True,
             capture_output=True,
             text=True,
         )
     except subprocess.CalledProcessError as e:
-        raise InvalidDependenciesError from e
+        print(e.stdout)
+        print(e.stderr)
+        raise InvalidDependenciesError(
+            f"Error in command {' '.join(command)}\nstdout: {e.stdout}\nstderr: {e.stderr}"
+        ) from e
