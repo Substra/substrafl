@@ -146,7 +146,8 @@ def _save_experiment_summary(
     # add attributes of interest and summaries of the classes to the experiment summary
     experiment_summary["compute_plan_key"] = compute_plan_key
     experiment_summary["strategy"] = type(strategy).__name__
-    experiment_summary["num_rounds"] = num_rounds
+    if num_rounds is not None:
+        experiment_summary["num_rounds"] = num_rounds
     experiment_summary["function_keys"] = {
         operation_cache[remote_struct]: remote_struct.summary() for remote_struct in operation_cache
     }
@@ -181,7 +182,7 @@ def _check_evaluation_strategy(
 
 
 def _check_additional_metadata(additional_metadata: Dict):
-    unauthorized_keys = {"substrafl_version", "substra_version", "substratools_version", "python_version", "num_rounds"}
+    unauthorized_keys = {"substrafl_version", "substra_version", "substratools_version", "python_version"}
     invalid_keys = set(additional_metadata.keys()).intersection(unauthorized_keys)
 
     if len(invalid_keys) > 0:
@@ -298,10 +299,6 @@ def execute_experiment(
 
     # Adding substrafl, substratools and substra versions to the cp metadata
     cp_metadata.update(_get_packages_versions())
-
-    # Adding rounds metadata to cp_meta_data
-    if num_rounds is not None:
-        cp_metadata["num_rounds"] = num_rounds
 
     logger.info("Building the compute plan.")
 
