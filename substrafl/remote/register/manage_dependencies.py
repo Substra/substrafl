@@ -2,7 +2,6 @@
 Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
 import logging
-import os
 import re
 import shutil
 import subprocess
@@ -187,37 +186,22 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
 
     requirements = ""
     for dependency in dependency_list:
-        if dependency.__str__().endswith(".whl"):
+        if dependency.name.endswith(".whl"):
             requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"
-
     requirements_in.write_text(requirements)
     try:
-        if os.name == "nt":
-            subprocess.check_output(
-                [
-                    "py",
-                    "-X.Y",
-                    "-m",
-                    "piptools",
-                    "compile",
-                    "--resolver=backtracking",
-                    requirements_in,
-                ],
-                cwd=str(operation_dir),
-            )
-        else:
-            subprocess.check_output(
-                [
-                    sys.executable,
-                    "-m",
-                    "piptools",
-                    "compile",
-                    "--resolver=backtracking",
-                    requirements_in,
-                ],
-                cwd=str(operation_dir),
-            )
+        subprocess.check_output(
+            [
+                sys.executable,
+                "-m",
+                "piptools",
+                "compile",
+                "--resolver=backtracking",
+                requirements_in,
+            ],
+            cwd=str(operation_dir),
+        )
     except subprocess.CalledProcessError as e:
         raise InvalidDependenciesError from e

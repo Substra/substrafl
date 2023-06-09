@@ -54,6 +54,7 @@ jobs:
         run: |
           cd substrafl
           pytest tests/remote/register/test_manage_dependencies.py --mode=subprocess
+          pytest tests/test_model_loading.py --mode=subprocess
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
