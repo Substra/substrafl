@@ -2,6 +2,7 @@
 Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -38,7 +39,7 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
                 "-m",
                 "pip",
                 "wheel",
-                str(lib_path) + "/",
+                str(lib_path) + os.sep,
                 "--no-deps",
             ],
             cwd=str(operation_dir),
@@ -187,13 +188,15 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
     requirements = ""
     for dependency in dependency_list:
         if dependency.__str__().endswith(".whl"):
+            if os.name == "nt":  # windows
+                dependency = dependency.__str__().replace("/", "\\")
             requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"
 
     requirements_in.write_text(requirements)
     try:
-        subprocess.check_output(
+        subprocess.run(
             [
                 sys.executable,
                 "-m",
@@ -203,6 +206,9 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
                 requirements_in,
             ],
             cwd=operation_dir,
+            check=True,
+            capture_output=True,
+            text=True,
         )
     except subprocess.CalledProcessError as e:
         raise InvalidDependenciesError from e
