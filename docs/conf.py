@@ -194,6 +194,7 @@ nitpick_ignore = [
     ("py:class", "substra.sdk.schemas.FunctionInputSpec"),
     ("py:class", "ComputePlan"),
     ("py:class", "Path"),
+    ("py:class", "module"),
 ]
 
 html_css_files = [

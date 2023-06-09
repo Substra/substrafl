@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from types import ModuleType
 from typing import List
 
 from substrafl.dependency import Dependency
@@ -81,7 +82,7 @@ def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
     return wheel_paths
 
 
-def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
+def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[str]:
     """Generate wheels for the private modules from lib_modules list and returns the list of names for each wheel.
 
      It first creates the wheel for each library. Each of the libraries must be already installed in the correct
@@ -101,6 +102,7 @@ def local_lib_wheels(lib_modules: List, *, dest_dir: Path) -> List[str]:
     dest_dir.mkdir(exist_ok=True, parents=True)
     for lib_module in lib_modules:
         lib_path = Path(lib_module.__file__).parents[1]
+        # this function is in practice only called on substra libraries, and we know we use a setup.py
         if not (lib_path / "setup.py").exists():
             msg = ", ".join([lib.__name__ for lib in lib_modules])
             raise NotImplementedError(
