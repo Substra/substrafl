@@ -202,7 +202,7 @@ def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub
                 "--resolver=backtracking",
                 requirements_in,
             ],
-            cwd=operation_dir,
+            cwd=str(operation_dir),
         )
     except subprocess.CalledProcessError as e:
         raise InvalidDependenciesError from e
