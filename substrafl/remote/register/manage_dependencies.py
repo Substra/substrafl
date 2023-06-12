@@ -1,8 +1,6 @@
 """
 Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
-from __future__ import annotations
-
 import logging
 import os
 import re
@@ -13,6 +11,7 @@ import tempfile
 from pathlib import Path
 from types import ModuleType
 from typing import List
+from typing import Union
 
 from substrafl.dependency import Dependency
 from substrafl.exceptions import InvalidDependenciesError
@@ -167,7 +166,7 @@ def get_pypi_dependencies_versions(lib_modules: List) -> List[str]:
     return [f"{lib_module.__name__}=={lib_module.__version__}" for lib_module in lib_modules]
 
 
-def compile_requirements(dependency_list: List[str | Path], *, operation_dir: Path, sub_dir: Path) -> None:
+def compile_requirements(dependency_list: List[Union[str, Path]], *, operation_dir: Path, sub_dir: Path) -> None:
     """Compile a list of requirements using pip-compile to generate a set of fully pinned third parties requirements
 
     Writes down a `requirements.in` file with the list of explicit dependencies, then generates a `requirements.txt`
@@ -190,15 +189,13 @@ def compile_requirements(dependency_list: List[str | Path], *, operation_dir: Pa
     requirements = ""
     for dependency in dependency_list:
         if str(dependency).endswith(".whl"):
-            if isinstance(dependency, Path):
-                # the following is necessary for pip-compile to run on Windows
-                dependency = "/".join(dependency.parts)
+            # if isinstance(dependency, Path):
+            #     # the following is necessary for pip-compile to run on Windows
+            #     dependency = "/".join(dependency.parts)
             requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"
-
     requirements_in.write_text(requirements)
-    print(requirements)
     command = [
         sys.executable,
         "-m",
