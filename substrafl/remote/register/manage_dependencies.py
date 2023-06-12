@@ -190,7 +190,8 @@ def compile_requirements(dependency_list: List[Union[str, Path]], *, operation_d
     requirements = ""
     for dependency in dependency_list:
         if str(dependency).endswith(".whl"):
-            requirements += f"file:{PurePosixPath(dependency)}\n"
+            # pip compile require '/', even on windows. The double conversion resolves that.
+            requirements += f"file:{PurePosixPath(Path(dependency))}\n"
         else:
             requirements += f"{dependency}\n"
     requirements_in.write_text(requirements)
@@ -211,8 +212,6 @@ def compile_requirements(dependency_list: List[Union[str, Path]], *, operation_d
             text=True,
         )
     except subprocess.CalledProcessError as e:
-        print(e.stdout)
-        print(e.stderr)
         raise InvalidDependenciesError(
             f"Error in command {' '.join(command)}\nstdout: {e.stdout}\nstderr: {e.stderr}"
         ) from e
