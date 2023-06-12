@@ -10,6 +10,7 @@ import typing
 import warnings
 from distutils import util
 from pathlib import Path
+from pathlib import PurePosixPath
 from platform import python_version
 
 import substra
@@ -140,7 +141,7 @@ def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
 
 
 def _generate_copy_local_files(local_files: typing.List[str]) -> str:
-    return "\n".join([f"COPY {file} {file}" for file in local_files])
+    return "\n".join([f"COPY {PurePosixPath(file)} {PurePosixPath(file)}" for file in local_files])
 
 
 def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operation_dir: Path, method_name: str) -> str:

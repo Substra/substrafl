@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from pathlib import PurePosixPath
 from types import ModuleType
 from typing import List
 from typing import Union
@@ -189,9 +190,9 @@ def compile_requirements(dependency_list: List[Union[str, Path]], *, operation_d
     requirements = ""
     for dependency in dependency_list:
         if str(dependency).endswith(".whl"):
-            # if isinstance(dependency, Path):
-            #     # the following is necessary for pip-compile to run on Windows
-            #     dependency = "/".join(dependency.parts)
+            if isinstance(dependency, Path):
+                # the following is necessary for pip-compile to run on Windows
+                dependency = PurePosixPath(dependency)
             requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"
