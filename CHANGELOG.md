@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
+
 ### Added
 
 - ComputePlanBuilder base class to define which method are needed to implement a custom strategy in SubstraFL.
