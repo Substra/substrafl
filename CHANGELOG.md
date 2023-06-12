@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
+
 ### Added
 
 - ComputePlanBuilder base class to define which method are needed to implement a custom strategy in SubstraFL.
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Check and test on string used as metric name in test data nodes ([#122](https://github.com/Substra/substrafl/pull/122)).
 - Add default exclusion patterns when copying file to avoid creating large Docker images ([#118](https://github.com/Substra/substrafl/pull/118))
 - Add the possibility to force the Dependency editable_mode through the environment variable SUBSTRA_FORCE_EDITABLE_MODE ([#131](https://github.com/Substra/substrafl/pull/131))
-- Check on the Python version used before generating the Dockerfile ([#123])(https://github.com/Substra/substrafl/pull/123)).
+- Check on the Python version used before generating the Dockerfile ([#123])(<https://github.com/Substra/substrafl/pull/123>)).
 
 ## Changed
 
@@ -60,11 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Way to copy function files ([#118](https://github.com/Substra/substrafl/pull/118))
 - `download_train_task_models_by_rank` uses new function `list_task_output_assets` instead of using `value` that has been removed ([#129](https://github.com/Substra/substrafl/pull/129))
-- Python dependencies are resolved using pip compile during function registration ([#123])(https://github.com/Substra/substrafl/pull/123)).
-- BREAKING: local_dependencies is renamed local_installable_dependencies([#123])(https://github.com/Substra/substrafl/pull/123)).
-- BREAKING: local_installable_dependencies are now limited to local modules or Python wheels (no support for bdist, sdist...)([#123])(https://github.com/Substra/substrafl/pull/123)).
+- Python dependencies are resolved using pip compile during function registration ([#123])(<https://github.com/Substra/substrafl/pull/123>)).
+- BREAKING: local_dependencies is renamed local_installable_dependencies([#123])(<https://github.com/Substra/substrafl/pull/123>)).
+- BREAKING: local_installable_dependencies are now limited to local modules or Python wheels (no support for bdist, sdist...)([#123])(<https://github.com/Substra/substrafl/pull/123>)).
 
 ### Fixed
+
 - New dependencies copy method in Docker mode.([#130](https://github.com/Substra/substrafl/pull/130))
 
 ## [0.36.0](https://github.com/Substra/substrafl/releases/tag/0.36.0) - 2023-05-11
