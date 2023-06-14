@@ -2,6 +2,8 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -36,13 +38,13 @@ def test_dependency_validators_file_not_exist():
 def test_dependency_validators_not_valid_path():
     with pytest.raises(ValidationError):
         # Can't pass non parsable object.
-        Dependency(local_installable_dependencies=[{"a_random_test": 3}], editable_mode=True)
+        Dependency(local_dependencies=[{"a_random_test": 3}], editable_mode=True)
 
 
 def test_dependency_validators_no_setup_file():
     with pytest.raises(InvalidPathError):
-        # :arg:local_installable_dependencies folders must contain a setup.py.
-        Dependency(local_installable_dependencies=[CURRENT_FILE.parent], editable_mode=True)
+        # :arg:local_dependencies folders must contain a setup.py.
+        Dependency(local_dependencies=[CURRENT_FILE.parent], editable_mode=True)
 
 
 @pytest.mark.slow
@@ -288,7 +290,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_installable_dependencies=[CURRENT_FILE.parent / pkg_path for pkg_path in pkg_paths],
+            local_dependencies=[CURRENT_FILE.parent / pkg_path for pkg_path in pkg_paths],
             editable_mode=True,
         )
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
@@ -297,17 +299,14 @@ class TestLocalDependency:
         utils.wait(client, train_task)
 
     @pytest.mark.docker_only
+    @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
     def test_force_editable_mode(
         self,
-        mocker,
         monkeypatch,
         network,
         session_dir,
         dummy_algo_class,
     ):
-        mocker.patch("substrafl.remote.register.register.local_lib_wheels", return_value=["INSTALL IN EDITABLE MODE"])
-        mocker.patch("substrafl.remote.register.register.compile_requirements")
-
         client = network.clients[0]
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=False)
 

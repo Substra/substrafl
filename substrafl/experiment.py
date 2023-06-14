@@ -256,7 +256,6 @@ def execute_experiment(
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
-        evaluation_strategy: Optional[EvaluationStrategy]
         num_rounds (int): The number of time your strategy will be executed
         dependencies (Dependency, Optional): Dependencies of the experiment. It must be defined from
             the SubstraFL Dependency class. Defaults None.
