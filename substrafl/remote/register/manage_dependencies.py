@@ -64,7 +64,7 @@ def copy_local_wheels(path: Path, dependencies: Dependency) -> List[str]:
     Returns: list of wheel paths relative to `path`
     """
     path.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmp_dir_name:
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir_name:
         tmp_dir = Path(tmp_dir_name)
         dependencies_paths = dependencies.copy_dependencies_local_package(dest_dir=tmp_dir)
         wheel_paths = []
