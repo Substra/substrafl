@@ -2,17 +2,14 @@
 Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
 import logging
-import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from pathlib import PurePosixPath
 from types import ModuleType
 from typing import List
-from typing import Union
 
 from substrafl.dependency import Dependency
 from substrafl.exceptions import InvalidDependenciesError
@@ -41,7 +38,7 @@ def build_user_dependency_wheel(lib_path: Path, operation_dir: Path) -> str:
                 "-m",
                 "pip",
                 "wheel",
-                str(lib_path) + os.sep,
+                str(lib_path) + "/",
                 "--no-deps",
             ],
             cwd=str(operation_dir),
@@ -167,7 +164,7 @@ def get_pypi_dependencies_versions(lib_modules: List) -> List[str]:
     return [f"{lib_module.__name__}=={lib_module.__version__}" for lib_module in lib_modules]
 
 
-def compile_requirements(dependency_list: List[Union[str, Path]], *, operation_dir: Path, sub_dir: Path) -> None:
+def compile_requirements(dependency_list: List[str], *, operation_dir: Path, sub_dir: Path) -> None:
     """Compile a list of requirements using pip-compile to generate a set of fully pinned third parties requirements
 
     Writes down a `requirements.in` file with the list of explicit dependencies, then generates a `requirements.txt`
@@ -189,29 +186,23 @@ def compile_requirements(dependency_list: List[Union[str, Path]], *, operation_d
 
     requirements = ""
     for dependency in dependency_list:
-        if str(dependency).endswith(".whl"):
-            # pip compile require '/', even on windows. The double conversion resolves that.
-            requirements += f"file:{PurePosixPath(Path(dependency))}\n"
+        if dependency.__str__().endswith(".whl"):
+            requirements += f"file:{dependency}\n"
         else:
             requirements += f"{dependency}\n"
+
     requirements_in.write_text(requirements)
-    command = [
-        sys.executable,
-        "-m",
-        "piptools",
-        "compile",
-        "--resolver=backtracking",
-        str(requirements_in),
-    ]
     try:
-        subprocess.run(
-            command,
+        subprocess.check_output(
+            [
+                sys.executable,
+                "-m",
+                "piptools",
+                "compile",
+                "--resolver=backtracking",
+                requirements_in,
+            ],
             cwd=operation_dir,
-            check=True,
-            capture_output=True,
-            text=True,
         )
     except subprocess.CalledProcessError as e:
-        raise InvalidDependenciesError(
-            f"Error in command {' '.join(command)}\nstdout: {e.stdout}\nstderr: {e.stderr}"
-        ) from e
+        raise InvalidDependenciesError from e
