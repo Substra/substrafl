@@ -1,3 +1,4 @@
+from collections import Iterable
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -49,15 +50,17 @@ class RemoteMethod:
             self.instance = self.load_instance(instance_path)
 
         if InputIdentifiers.shared in inputs:
-            if isinstance(inputs[OutputIdentifiers.shared], str):
-                loaded_inputs["shared_state"] = (
-                    self.load_shared(inputs[InputIdentifiers.shared]) if inputs[InputIdentifiers.shared] else None
-                )
-            else:
+            if isinstance(inputs[InputIdentifiers.shared], str):
+                loaded_inputs["shared_state"] = self.load_shared(inputs[InputIdentifiers.shared])
+
+            elif isinstance(inputs[InputIdentifiers.shared], Iterable):
                 shared_states = []
-                for m_path in inputs[OutputIdentifiers.shared]:
+                for m_path in inputs[InputIdentifiers.shared]:
                     shared_states.append(self.load_shared(m_path))
                 loaded_inputs["shared_states"] = shared_states
+
+            elif not inputs[InputIdentifiers.shared]:
+                loaded_inputs["shared_state"] = None
 
         if InputIdentifiers.datasamples in inputs:
             loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
