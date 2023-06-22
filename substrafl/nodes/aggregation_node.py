@@ -67,7 +67,7 @@ class AggregationNode(Node):
         inputs = (
             [
                 substra.schemas.InputRef(
-                    identifier=InputIdentifiers.models,
+                    identifier=InputIdentifiers.shared,
                     parent_task_key=ref.key,
                     parent_task_output_identifier=OutputIdentifiers.shared,
                 )
@@ -83,7 +83,7 @@ class AggregationNode(Node):
             task_id=op_id,
             inputs=inputs,
             outputs={
-                OutputIdentifiers.model: substra.schemas.ComputeTaskOutputSpec(
+                OutputIdentifiers.shared: substra.schemas.ComputeTaskOutputSpec(
                     permissions=substra.schemas.Permissions(public=False, authorized_ids=list(authorized_ids)),
                     transient=clean_models,
                 )
@@ -139,7 +139,7 @@ class AggregationNode(Node):
                         dependencies=dependencies,
                         inputs=[
                             substra.schemas.FunctionInputSpec(
-                                identifier=InputIdentifiers.models,
+                                identifier=InputIdentifiers.shared,
                                 kind=substra.schemas.AssetKind.model.value,
                                 optional=False,
                                 multiple=True,
@@ -147,7 +147,7 @@ class AggregationNode(Node):
                         ],
                         outputs=[
                             substra.schemas.FunctionOutputSpec(
-                                identifier=OutputIdentifiers.model,
+                                identifier=OutputIdentifiers.shared,
                                 kind=substra.schemas.AssetKind.model.value,
                                 multiple=False,
                             )

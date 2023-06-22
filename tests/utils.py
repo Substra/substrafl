@@ -104,7 +104,7 @@ def download_aggregate_model_by_rank(network, session_dir, compute_plan, rank: i
     aggregate_tasks = [t for t in aggregate_tasks if t.tag == TaskType.AGGREGATE]
     assert len(aggregate_tasks) == 1
     model_path = network.clients[0].download_model_from_task(
-        aggregate_tasks[0].key, identifier=OutputIdentifiers.model, folder=session_dir
+        aggregate_tasks[0].key, identifier=OutputIdentifiers.shared, folder=session_dir
     )
     aggregate_model = pickle.loads(model_path.read_bytes())
 

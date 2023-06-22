@@ -143,7 +143,7 @@ class TrainDataNode(Node):
                 substra.schemas.InputRef(
                     identifier=InputIdentifiers.shared,
                     parent_task_key=operation.shared_state.key,
-                    parent_task_output_identifier=OutputIdentifiers.model,
+                    parent_task_output_identifier=OutputIdentifiers.shared,
                 )
             ]
 
