@@ -410,7 +410,7 @@ def download_algo_state(
     return algo
 
 
-def download_shared_state(
+def download_train_shared_state(
     client: substra.Client,
     compute_plan_key: str,
     round_idx: Optional[int] = None,
@@ -444,7 +444,7 @@ def download_shared_state(
     return shared
 
 
-def download_aggregated_state(
+def download_aggregate_shared_state(
     client: substra.Client,
     compute_plan_key: str,
     round_idx: Optional[int] = None,
