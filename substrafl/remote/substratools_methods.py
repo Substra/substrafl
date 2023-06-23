@@ -4,6 +4,7 @@ from typing import Any
 from typing import Dict
 from typing import Type
 from typing import TypedDict
+from typing import Union
 
 import substratools as tools
 
@@ -50,15 +51,16 @@ class RemoteMethod:
             self.instance = self.load_instance(instance_path)
 
         if InputIdentifiers.shared in inputs:
-            if inputs[InputIdentifiers.shared] is None:
+            input_shared = inputs[InputIdentifiers.shared]
+            if input_shared is None:
                 loaded_inputs["shared_state"] = None
 
-            elif isinstance(inputs[InputIdentifiers.shared], str) or isinstance(inputs[InputIdentifiers.shared], Path):
-                loaded_inputs["shared_state"] = self.load_shared(inputs[InputIdentifiers.shared])
+            elif isinstance(input_shared, str) or isinstance(input_shared, Path):
+                loaded_inputs["shared_state"] = self.load_shared(input_shared)
 
-            elif isinstance(inputs[InputIdentifiers.shared], Iterable):
+            elif isinstance(input_shared, Iterable):
                 shared_states = []
-                for m_path in inputs[InputIdentifiers.shared]:
+                for m_path in input_shared:
                     shared_states.append(self.load_shared(m_path))
                 loaded_inputs["shared_states"] = shared_states
 
@@ -120,43 +122,43 @@ class RemoteMethod:
 
         self.save_method_output(method_output, outputs)
 
-    def load_shared(self, path: str) -> Any:
+    def load_shared(self, path: Union[str, Path]) -> Any:
         """Load the shared state from disk
 
         Args:
-            path (str): path to the saved shared state
+            path (Union[str, Path]): path to the saved shared state
 
         Returns:
             Any: loaded shared state
         """
         return self.shared_state_serializer.load(Path(path))
 
-    def save_shared(self, shared_state, path: str) -> None:
+    def save_shared(self, shared_state, path: Union[str, Path]) -> None:
         """Save the shared state
 
         Args:
             model (Any): Shared state to save
-            path (str): Path where to save the model
+            path (Union[str, Path]): Path where to save the model
         """
         self.shared_state_serializer.save(shared_state, Path(path))
 
-    def load_instance(self, path: str) -> Any:
+    def load_instance(self, path: Union[str, Path]) -> Any:
         """Load the instance from disk
 
         Args:
-            path (str): path to the saved instance
+            path (Union[str, Path]): path to the saved instance
 
         Returns:
             Any: loaded instance
         """
         return self.instance.load_local_state(Path(path))
 
-    def save_instance(self, path: str) -> None:
+    def save_instance(self, path: Union[str, Path]) -> None:
         """Save the instance
 
         Args:
             model (Any): Instance to save
-            path (str): Path where to save the instance
+            path (Union[str, Path]): Path where to save the instance
         """
         self.instance.save_local_state(Path(path))
 
