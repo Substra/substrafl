@@ -40,7 +40,7 @@ setup(
     # that release is private and in the Docker container
     # it has access only to the public PyPi
     install_requires=[
-        "numpy>=1.20.3,!=1.24.*",
+        "numpy>=1.20.3, <1.24",
         "cloudpickle>=1.6.0",
         "substra~=0.45.0",
         "substratools~=0.20.0",
