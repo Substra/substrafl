@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
 - BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
+- Numpy < 1.24 in dependencies to keep pickle compatibility with substra-tools numpy version ([#144](https://github.com/Substra/substrafl/pull/144))
 
 ## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
 
