@@ -55,7 +55,18 @@ class TorchAlgo(Algo):
         For round>2, some attributes will then be overwritten by their previous states in the `load()` function,
         before the `train()` or `predict()` function is ran.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+            model=model,
+            criterion=criterion,
+            index_generator=index_generator,
+            dataset=dataset,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            seed=seed,
+            use_gpu=use_gpu,
+        )
 
         if seed is not None:
             torch.manual_seed(seed)
