@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -122,43 +123,43 @@ class RemoteMethod:
 
         self.save_method_output(method_output, outputs)
 
-    def load_shared(self, path: Union[str, Path]) -> Any:
+    def load_shared(self, path: Union[str, os.PathLike]) -> Any:
         """Load the shared state from disk
 
         Args:
-            path (Union[str, Path]): path to the saved shared state
+            path (Union[str, os.PathLike]): path to the saved shared state
 
         Returns:
             Any: loaded shared state
         """
         return self.shared_state_serializer.load(Path(path))
 
-    def save_shared(self, shared_state, path: Union[str, Path]) -> None:
+    def save_shared(self, shared_state, path: Union[str, os.PathLike]) -> None:
         """Save the shared state
 
         Args:
             model (Any): Shared state to save
-            path (Union[str, Path]): Path where to save the model
+            path (Union[str, os.PathLike]): Path where to save the model
         """
         self.shared_state_serializer.save(shared_state, Path(path))
 
-    def load_instance(self, path: Union[str, Path]) -> Any:
+    def load_instance(self, path: Union[str, os.PathLike]) -> Any:
         """Load the instance from disk
 
         Args:
-            path (Union[str, Path]): path to the saved instance
+            path (Union[str, os.PathLike]): path to the saved instance
 
         Returns:
             Any: loaded instance
         """
         return self.instance.load_local_state(Path(path))
 
-    def save_instance(self, path: Union[str, Path]) -> None:
+    def save_instance(self, path: Union[str, os.PathLike]) -> None:
         """Save the instance
 
         Args:
             model (Any): Instance to save
-            path (Union[str, Path]): Path where to save the instance
+            path (Union[str, os.PathLike]): Path where to save the instance
         """
         self.instance.save_local_state(Path(path))
 
