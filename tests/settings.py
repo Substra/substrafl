@@ -1,4 +1,5 @@
 """Global settings for all tests environment."""
+import functools
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -14,6 +15,9 @@ DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "remo
 CI_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "ci.yaml"
 
 MIN_ORGANIZATIONS = 2
+
+FUTURE_TIMEOUT = 3600
+FUTURE_POLLING_PERIOD = 1
 
 
 class OrganizationCfg(BaseModel):
@@ -100,6 +104,7 @@ def network(backend_type: substra.BackendType, is_ci: bool = False):
         else:
             client = substra.Client(backend_type=backend_type)
         client.login(username=organization.username, password=organization.password)
+        client._wait = functools.partial(client._wait, timeout=FUTURE_TIMEOUT, polling_period=FUTURE_POLLING_PERIOD)
         clients.append(client)
 
     return Network(clients=clients)
