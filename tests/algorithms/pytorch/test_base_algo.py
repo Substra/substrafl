@@ -26,7 +26,6 @@ from substrafl.strategies import Scaffold
 from substrafl.strategies import SingleOrganization
 from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
-from tests import utils
 from tests.conftest import LINEAR_N_COL
 from tests.conftest import LINEAR_N_TARGET
 
@@ -299,7 +298,7 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
     )
-    utils.wait(network.clients[0], cp)
+    network.clients[0].wait_compute_plan(cp.key)
 
     output_model = {}
 
@@ -508,4 +507,4 @@ def test_gpu(
     )
 
     # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
+    network.clients[0].wait_compute_plan(compute_plan.key)

@@ -12,7 +12,6 @@ from substrafl.model_loading import download_algo_state
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.strategies import NewtonRaphson
-from tests import utils
 
 from ... import assets_factory
 
@@ -319,7 +318,7 @@ def compute_plan(
     )
 
     # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
+    network.clients[0].wait_compute_plan(compute_plan.key)
 
     return compute_plan
 

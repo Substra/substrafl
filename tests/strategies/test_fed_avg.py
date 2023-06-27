@@ -11,8 +11,6 @@ from substrafl.remote import remote_data
 from substrafl.strategies import FedAvg
 from substrafl.strategies.schemas import FedAvgSharedState
 
-from .. import utils
-
 logger = getLogger("tests")
 
 
@@ -111,7 +109,7 @@ def test_fed_avg(network, constant_samples, numpy_datasets, session_dir, dummy_a
         experiment_folder=session_dir / "experiment_folder",
     )
     # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
+    network.clients[0].wait_compute_plan(compute_plan.key)
 
 
 @pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])

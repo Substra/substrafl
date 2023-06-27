@@ -23,7 +23,6 @@ CURRENT_FILE = Path(__file__)
 # workaround to work with tests/dependency/test_local_dependencies_file_notebook.ipynb
 # because we can't import tests in the CI (interfere with substra/tests), and we can't do relative import with nbmake
 sys.path.append(str(CURRENT_FILE.parents[1]))
-import utils  # noqa: E402
 
 ASSETS_DIR = CURRENT_FILE.parents[1] / "end_to_end" / "test_assets"
 DEFAULT_PERMISSIONS = substra.schemas.Permissions(public=True, authorized_ids=list())
@@ -142,7 +141,7 @@ class TestLocalDependency:
         function_key = self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, train_task)
+        client.wait_task(train_task.key, raises=True)
 
     def test_local_dependencies_directory(
         self,
@@ -178,7 +177,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, train_task)
+        client.wait_task(train_task.key, raises=True)
 
     def test_local_dependencies_file_in_directory(
         self,
@@ -214,7 +213,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, train_task)
+        client.wait_task(train_task.key, raises=True)
 
     def test_local_dependencies_file(
         self,
@@ -250,7 +249,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, train_task)
+        client.wait_task(train_task.key, raises=True)
 
     @pytest.mark.docker_only
     @pytest.mark.parametrize(
@@ -296,7 +295,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        utils.wait(client, train_task)
+        client.wait_task(train_task.key, raises=True)
 
     @pytest.mark.docker_only
     @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
