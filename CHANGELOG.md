@@ -32,6 +32,10 @@ with tempfile.TemporaryDirectory() as temp_folder:
     aggregated_state = _load_from_files(input_folder=temp_folder, remote=True)
 ```
 
+### Removed
+
+- Function `wait` in `utils`. You can use `substra.Client.wait_task` & `substra.Client.wait_compute_plan` instead. ([#147](https://github.com/Substra/substrafl/pull/147))
+
 ## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
 
 ### Changed
@@ -39,6 +43,7 @@ with tempfile.TemporaryDirectory() as temp_folder:
 - BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
 - BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
 - Numpy < 1.24 in dependencies to keep pickle compatibility with substra-tools numpy version ([#144](https://github.com/Substra/substrafl/pull/144))
+
 
 ## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
 
