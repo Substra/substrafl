@@ -141,7 +141,7 @@ class TestLocalDependency:
         function_key = self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        client.wait_task(train_task.key, raises=True)
+        client.wait_task(train_task.key, raise_on_failure=True)
 
     def test_local_dependencies_directory(
         self,
@@ -177,7 +177,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        client.wait_task(train_task.key, raises=True)
+        client.wait_task(train_task.key, raise_on_failure=True)
 
     def test_local_dependencies_file_in_directory(
         self,
@@ -213,7 +213,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        client.wait_task(train_task.key, raises=True)
+        client.wait_task(train_task.key, raise_on_failure=True)
 
     def test_local_dependencies_file(
         self,
@@ -249,7 +249,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        client.wait_task(train_task.key, raises=True)
+        client.wait_task(train_task.key, raise_on_failure=True)
 
     @pytest.mark.docker_only
     @pytest.mark.parametrize(
@@ -295,7 +295,7 @@ class TestLocalDependency:
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)
 
         train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
-        client.wait_task(train_task.key, raises=True)
+        client.wait_task(train_task.key, raise_on_failure=True)
 
     @pytest.mark.docker_only
     @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
