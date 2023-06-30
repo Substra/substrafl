@@ -76,7 +76,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
     )
 
     # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
+    network.clients[0].wait_compute_plan(compute_plan.key)
 
     return compute_plan
 

@@ -74,7 +74,7 @@ def compute_plan(
     )
 
     # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
+    network.clients[0].wait_compute_plan(compute_plan.key)
 
     return compute_plan
 

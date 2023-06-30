@@ -10,7 +10,6 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_state
 from substrafl.strategies import SingleOrganization
-from tests import utils
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +72,7 @@ def compute_plan(
     )
 
     # Wait for the compute plan to be finished
-    utils.wait(network.clients[0], compute_plan)
+    network.clients[0].wait_compute_plan(compute_plan.key)
 
     return compute_plan
 

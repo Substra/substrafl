@@ -1,4 +1,3 @@
-import time
 from copy import deepcopy
 from pathlib import Path
 
@@ -14,7 +13,6 @@ from pure_substrafl.register_assets import save_asset_keys
 from pure_torch.strategies import basic_fed_avg
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_auc_score
-from substra.sdk.models import ComputePlanStatus
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -112,20 +110,7 @@ def substrafl_fed_avg(
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
 
-    # Wait for the compute plan to finish
-    # Read the results from saved performances
-    running = True
-    while running:
-        if clients[0].get_compute_plan(compute_plan.key).status in (
-            ComputePlanStatus.done.value,
-            ComputePlanStatus.failed.value,
-            ComputePlanStatus.canceled.value,
-        ):
-            running = False
-
-        else:
-            time.sleep(1)
-
+    clients[0].wait_compute_plan(compute_plan.key)
     performances = clients[1].get_performances(compute_plan.key)
     return performances.dict().values()
 
