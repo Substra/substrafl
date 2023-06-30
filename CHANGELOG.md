@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
-## Changed
+## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
+
+### Changed
 
 - BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
 - BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
