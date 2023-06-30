@@ -278,7 +278,7 @@ def _load_from_files(input_folder: Path, remote: bool = False) -> Any:
             )
 
     else:
-        loaded_instance = instance.load_model(folder / metadata[MODEL_DICT_KEY])
+        loaded_instance = instance.load_shared(folder / metadata[MODEL_DICT_KEY])
 
     return loaded_instance
 
@@ -471,7 +471,7 @@ def download_aggregate_shared_state(
             round_idx=round_idx,
             rank_idx=rank_idx,
             task_type=TaskType.AGGREGATE,
-            identifier=OutputIdentifiers.model,
+            identifier=OutputIdentifiers.shared,
         )
         aggregated = _load_from_files(input_folder=temp_folder, remote=True)
 

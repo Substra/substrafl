@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
+`download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
+([#142](https://github.com/Substra/substrafl/pull/142)).
+
+```py
+import tempfile
+
+from substrafl.model_loading import _download_task_output_files
+from substrafl.model_loading import _load_from_files
+
+with tempfile.TemporaryDirectory() as temp_folder:
+    _download_task_output_files(
+        client=<client>,
+        compute_plan_key=<compute_plan_key>,
+        dest_folder=temp_folder,
+        round_idx=<round_idx>,
+        rank_idx=<rank_idx>,
+        task_type="aggregate",
+        identifier="model",
+    )
+    aggregated_state = _load_from_files(input_folder=temp_folder, remote=True)
+```
+
 ## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
 
 ### Changed

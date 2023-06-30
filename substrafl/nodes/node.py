@@ -9,8 +9,6 @@ OperationKey = NewType("OperationKey", str)
 class InputIdentifiers(str, Enum):
     local = "local"
     shared = "shared"
-    model = "model"
-    models = "models"
     predictions = "predictions"
     opener = "opener"
     datasamples = "datasamples"
@@ -22,7 +20,6 @@ class InputIdentifiers(str, Enum):
 class OutputIdentifiers(str, Enum):
     local = "local"
     shared = "shared"
-    model = "model"
     predictions = "predictions"
 
 

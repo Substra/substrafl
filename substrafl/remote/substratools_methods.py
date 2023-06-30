@@ -1,8 +1,11 @@
+import os
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import Type
 from typing import TypedDict
+from typing import Union
 
 import substratools as tools
 
@@ -48,19 +51,22 @@ class RemoteMethod:
         if instance_path is not None:
             self.instance = self.load_instance(instance_path)
 
-        if InputIdentifiers.models in inputs:
-            models = []
-            for m_path in inputs[InputIdentifiers.models]:
-                models.append(self.load_model(m_path))
-            loaded_inputs["shared_states"] = models
+        if InputIdentifiers.shared in inputs:
+            input_shared = inputs[InputIdentifiers.shared]
+            if input_shared is None:
+                loaded_inputs["shared_state"] = None
+
+            elif isinstance(input_shared, str) or isinstance(input_shared, Path):
+                loaded_inputs["shared_state"] = self.load_shared(input_shared)
+
+            elif isinstance(input_shared, Iterable):
+                shared_states = []
+                for m_path in input_shared:
+                    shared_states.append(self.load_shared(m_path))
+                loaded_inputs["shared_states"] = shared_states
 
         if InputIdentifiers.datasamples in inputs:
             loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
-
-        if InputIdentifiers.shared in inputs:
-            loaded_inputs["shared_state"] = (
-                self.load_model(inputs[InputIdentifiers.shared]) if inputs[InputIdentifiers.shared] else None
-            )
 
         if InputIdentifiers.predictions in inputs:
             loaded_inputs["predictions_path"] = inputs[InputIdentifiers.predictions]
@@ -82,11 +88,8 @@ class RemoteMethod:
         if OutputIdentifiers.local in outputs:
             self.save_instance(outputs[OutputIdentifiers.local])
 
-        if OutputIdentifiers.model in outputs:
-            self.save_model(method_output, outputs[OutputIdentifiers.model])
-
-        elif OutputIdentifiers.shared in outputs:
-            self.save_model(method_output, outputs[OutputIdentifiers.shared])
+        if OutputIdentifiers.shared in outputs:
+            self.save_shared(method_output, outputs[OutputIdentifiers.shared])
 
         else:
             for output_id in outputs:
@@ -120,43 +123,43 @@ class RemoteMethod:
 
         self.save_method_output(method_output, outputs)
 
-    def load_model(self, path: str) -> Any:
-        """Load the model from disk
+    def load_shared(self, path: Union[str, os.PathLike]) -> Any:
+        """Load the shared state from disk
 
         Args:
-            path (str): path to the saved model
+            path (Union[str, os.PathLike]): path to the saved shared state
 
         Returns:
-            Any: loaded model
+            Any: loaded shared state
         """
         return self.shared_state_serializer.load(Path(path))
 
-    def save_model(self, model, path: str) -> None:
-        """Save the model
+    def save_shared(self, shared_state, path: Union[str, os.PathLike]) -> None:
+        """Save the shared state
 
         Args:
-            model (Any): Model to save
-            path (str): Path where to save the model
+            model (Any): Shared state to save
+            path (Union[str, os.PathLike]): Path where to save the model
         """
-        self.shared_state_serializer.save(model, Path(path))
+        self.shared_state_serializer.save(shared_state, Path(path))
 
-    def load_instance(self, path: str) -> Any:
+    def load_instance(self, path: Union[str, os.PathLike]) -> Any:
         """Load the instance from disk
 
         Args:
-            path (str): path to the saved instance
+            path (Union[str, os.PathLike]): path to the saved instance
 
         Returns:
             Any: loaded instance
         """
         return self.instance.load_local_state(Path(path))
 
-    def save_instance(self, path: str) -> None:
+    def save_instance(self, path: Union[str, os.PathLike]) -> None:
         """Save the instance
 
         Args:
             model (Any): Instance to save
-            path (str): Path where to save the instance
+            path (Union[str, os.PathLike]): Path where to save the instance
         """
         self.instance.save_local_state(Path(path))
 

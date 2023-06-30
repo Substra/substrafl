@@ -43,7 +43,7 @@ class AssetKeys(str, enum.Enum):
     params=(
         (TaskType.TRAIN, OutputIdentifiers.local),
         (TaskType.TRAIN, OutputIdentifiers.shared),
-        (TaskType.AGGREGATE, OutputIdentifiers.model),
+        (TaskType.AGGREGATE, OutputIdentifiers.shared),
     )
 )
 def output_parameters(request):

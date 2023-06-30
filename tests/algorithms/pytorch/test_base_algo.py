@@ -234,7 +234,7 @@ def test_base_algo_custom_init_arg_default_value(session_dir, dummy_algo_custom_
     }
     remote_struct.generic_function(inputs, outputs, task_properties)
 
-    result = remote_struct.load_model(outputs[OutputIdentifiers.shared])
+    result = remote_struct.load_shared(outputs[OutputIdentifiers.shared])
 
     assert result == 5
 
@@ -263,7 +263,7 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
     }
     remote_struct.generic_function(inputs, outputs, task_properties)
 
-    result = remote_struct.load_model(outputs[OutputIdentifiers.shared])
+    result = remote_struct.load_shared(outputs[OutputIdentifiers.shared])
     assert result == arg_value
 
 
