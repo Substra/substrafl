@@ -7,13 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
-## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
-
 ### Changed
 
-- BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
-- BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
-- Numpy < 1.24 in dependencies to keep pickle compatibility with substra-tools numpy version ([#144](https://github.com/Substra/substrafl/pull/144))
 - Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
 `download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
 ([#142](https://github.com/Substra/substrafl/pull/142)).
@@ -36,6 +31,14 @@ with tempfile.TemporaryDirectory() as temp_folder:
     )
     aggregated_state = _load_from_files(input_folder=temp_folder, remote=True)
 ```
+
+## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
+
+### Changed
+
+- BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
+- BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
+- Numpy < 1.24 in dependencies to keep pickle compatibility with substra-tools numpy version ([#144](https://github.com/Substra/substrafl/pull/144))
 
 ## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
 
