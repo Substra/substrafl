@@ -32,6 +32,8 @@ with tempfile.TemporaryDirectory() as temp_folder:
     aggregated_state = _load_from_files(input_folder=temp_folder, remote=True)
 ```
 
+- Pydantic < 2.0 in dependencies before full support
+
 ### Removed
 
 - Function `wait` in `utils`. You can use `substra.Client.wait_task` & `substra.Client.wait_compute_plan` instead. ([#147](https://github.com/Substra/substrafl/pull/147))
