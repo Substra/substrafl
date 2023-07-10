@@ -118,7 +118,7 @@ def _save_experiment_summary(
     strategy: ComputePlanBuilder,
     num_rounds: int,
     operation_cache: Dict[RemoteStruct, OperationKey],
-    train_data_nodes: TrainDataNode,
+    train_data_nodes: List[TrainDataNode],
     aggregation_node: Optional[AggregationNode],
     evaluation_strategy: EvaluationStrategy,
     timestamp: str,
@@ -132,7 +132,7 @@ def _save_experiment_summary(
         strategy (substrafl.strategies.Strategy): strategy
         num_rounds (int): num_rounds
         operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
-        train_data_nodes (TrainDataNode): train_data_nodes
+        train_data_nodes (typing.List[TrainDataNode]): train_data_nodes
         aggregation_node (typing.Optional[AggregationNode]): aggregation_node
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format

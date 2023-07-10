@@ -87,7 +87,7 @@ def substrafl_fed_avg(
     # Dependencies
     base = Path(__file__).parent
     dependencies = Dependency(
-        pypi_dependencies=["torch", "numpy", "sklearn"],
+        pypi_dependencies=["torch", "numpy", "scikit-learn", "'pydantic>=1.9.0, <2.0.0'"],
         local_code=[base / "common", base / "weldon_fedavg.py"],
         editable_mode=False,
     )
@@ -110,7 +110,7 @@ def substrafl_fed_avg(
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
 
-    clients[0].wait_compute_plan(compute_plan.key)
+    clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
     performances = clients[1].get_performances(compute_plan.key)
     return performances.dict().values()
 

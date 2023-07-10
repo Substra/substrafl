@@ -1,0 +1,8 @@
+- username: 'org-1'
+  url: 'http://substra-backend.org-1.com'
+  password: 'p@sswr0d44'
+  insecure: True
+- username: 'org-2'
+  url: 'http://substra-backend.org-2.com'
+  password: 'p@sswr0d45'
+  insecure: True

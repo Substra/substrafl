@@ -42,7 +42,7 @@ def instantiate_clients(
     mode: substra.BackendType = substra.BackendType.LOCAL_SUBPROCESS,
     n_centers: Optional[int] = 2,
     conf: Optional[dict] = None,
-):
+) -> List[substra.Client]:
     """Create substra client according to passed args
 
     Args:
@@ -62,6 +62,7 @@ def instantiate_clients(
                 url=organization.get("url"),
                 username=organization.get("username"),
                 password=organization.get("password"),
+                insecure=organization.get("insecure") or False
             )
             clients.append(client)
     else:
@@ -70,7 +71,9 @@ def instantiate_clients(
     return clients
 
 
-def get_clients(mode: substra.BackendType, credentials: os.PathLike = "remote.yaml", n_centers: int = 2):
+def get_clients(
+        mode: substra.BackendType, credentials: os.PathLike = "remote.yaml", n_centers: int = 2
+) -> List[substra.Client]:
     # Load Configuration
     conf = yaml.full_load((SUBSTRA_CONFIG_FOLDER / credentials).read_text())
     clients = instantiate_clients(conf=conf, mode=mode, n_centers=n_centers)
@@ -147,10 +150,7 @@ def add_duplicated_dataset(
         data_sample_keys = data_sample_keys[:nb_data_sample]
 
     for _ in tqdm(range(nb_data_sample_to_add), desc=f"Client {msp_id}: adding {kind} data samples"):
-        data_sample_key = client.add_data_sample(
-            data_sample,
-            local=True,
-        )
+        data_sample_key = client.add_data_sample(data_sample, local=True)
         data_sample_keys.append(data_sample_key)
 
     asset_keys[msp_id].update(
@@ -175,7 +175,7 @@ def get_train_data_nodes(
         train_folder (Path): Unique train data sample to be replicated and used.
         asset_keys (dict): Already registered asset to be reused. If an asset is defined in this dict,
             it will be reused.
-        nb_data_sample (int): The number of time the train data folder will used as a datasample.
+        nb_data_sample (int): The number of time the train data folder will be used as a datasample.
             If train data sample keys are already present in the assets keys, the first nb_data_sample will
             be reused and new ones will be added if needed so the number of datasamples used always is nb_data_sample
 
@@ -218,8 +218,8 @@ def get_test_data_nodes(
         client (substra.Client): Substra client to register the asset with.
         test_folder (Path): Folder where the test data are stored.
         nb_data_sample (int): The number of time the test data folder will be added as a datasample.
-            If a test data sample keys is present in the assets keys, new datasamples will be added so t
-            he length of the data sample keys list matches the nb_data_sample value.
+            If a test data sample keys is present in the assets keys, new datasamples will be added so the length of the
+            data sample keys list matches the nb_data_sample value.
 
     Returns:
         TestDataNode: Substrafl test data.
