@@ -149,7 +149,7 @@ python benchmarks.py --mode remote
 
 ### Configuration
 
-Modify the [configuration file](./substra_conf/remote.yaml) with the needed credentials
+Create a [configuration file](./substra_conf/remote.yaml) with the needed credentials
 If you already have a configuration file, you can specify its relative path to the `./substra_conf` folder as
 an optional arg when running the benchmark:
 

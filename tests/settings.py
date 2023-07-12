@@ -11,7 +11,7 @@ from pydantic import validator
 
 CURRENT_DIR = Path(__file__).parent
 
-DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "remote.yaml"
+DEFAULT_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "local.yaml"
 CI_REMOTE_NETWORK_CONFIGURATION_FILE = CURRENT_DIR / "substra_conf" / "ci.yaml"
 
 MIN_ORGANIZATIONS = 2
