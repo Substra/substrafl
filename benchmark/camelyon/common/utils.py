@@ -46,7 +46,7 @@ def parse_params() -> dict:
     parser.add_argument(
         "--credentials-path",
         type=str,
-        default="local.yaml",
+        default="remote.yaml",
         help="Remote only: relative path from the substra_conf folder to Substra credentials",
     )
     parser.add_argument(

@@ -149,12 +149,23 @@ python benchmarks.py --mode remote
 
 ### Configuration
 
-Create a [configuration file](./substra_conf/remote.yaml) with the needed credentials
+Modify the [configuration file](./substra_conf/remote.yaml) with the needed credentials
 If you already have a configuration file, you can specify its relative path to the `./substra_conf` folder as
 an optional arg when running the benchmark:
 
 ```sh
 python benchmarks.py --mode remote --credentials my_credentials.yaml
+```
+
+_..note:: If you're using a locally deployed environment, make sure your backend nginx configurations are ok with body sizes involved during the benchmark:_
+
+```yaml
+server:
+  ingress:
+    enabled: true
+    hostname: "substra-backend.org-1.com"
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 0m  # 0 for infinite
 ```
 
 ### Substra assets management

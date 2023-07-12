@@ -5,7 +5,7 @@ benchmark_cl_experiment_folder
 
 substra_conf/*
 !substra_conf/ci.yaml
-!substra_conf/local.yaml
+!substra_conf/remote.yaml
 
 data/tmp
 data/index.csv

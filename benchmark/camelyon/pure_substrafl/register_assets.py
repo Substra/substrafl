@@ -41,7 +41,7 @@ DEFAULT_DATASET = DatasetSpec(
 def instantiate_clients(
     mode: substra.BackendType = substra.BackendType.LOCAL_SUBPROCESS,
     n_centers: Optional[int] = 2,
-    conf: Optional[dict] = None,
+    conf: Optional[List[dict]] = None,
 ) -> List[substra.Client]:
     """Create substra client according to passed args
 
@@ -62,7 +62,7 @@ def instantiate_clients(
                 url=organization.get("url"),
                 username=organization.get("username"),
                 password=organization.get("password"),
-                insecure=organization.get("insecure") or False,
+                insecure=organization.get("insecure", False),
             )
             clients.append(client)
     else:
@@ -72,7 +72,7 @@ def instantiate_clients(
 
 
 def get_clients(
-    mode: substra.BackendType, credentials: os.PathLike = "local.yaml", n_centers: int = 2
+    mode: substra.BackendType, credentials: os.PathLike = "remote.yaml", n_centers: int = 2
 ) -> List[substra.Client]:
     # Load Configuration
     conf = yaml.full_load((SUBSTRA_CONFIG_FOLDER / credentials).read_text())
