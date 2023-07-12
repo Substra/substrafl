@@ -47,7 +47,6 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
 
     run_keys = [
         "n_rounds",
-        "seed",
         "n_centers",
         "learning_rate",
         "num_workers",
@@ -60,6 +59,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
+        seed=exp_params["seed"],
         credentials_path=exp_params["credentials"],
         asset_keys_path=exp_params["asset_keys"],
         index_generator=index_generator,
