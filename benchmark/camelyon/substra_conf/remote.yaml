@@ -1,6 +1,8 @@
-- username: 'org-1-channel-2-user-1'
-  url: 'https://api.org-1.internal.cg.owkin.tech'
-  password: 'BigBigp@ssword20char'
-- username: 'org-2-channel-2-user-1'
-  url: 'https://api.org-2.internal.cg.owkin.tech'
-  password: 'BigBigp@ssword20char'
+- username: 'org-1'
+  url: 'http://substra-backend.org-1.com'
+  password: 'p@sswr0d44'
+  insecure: True
+- username: 'org-2'
+  url: 'http://substra-backend.org-2.com'
+  password: 'p@sswr0d45'
+  insecure: True

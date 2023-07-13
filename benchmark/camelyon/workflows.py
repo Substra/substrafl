@@ -1,3 +1,4 @@
+import typing
 from copy import deepcopy
 from pathlib import Path
 
@@ -53,7 +54,6 @@ def substrafl_fed_avg(
         n_centers (int): Number of centers to be used for the fed avg strategy.
         learning_rate (int): Learning rate to be used.
         n_rounds (int): Number of rounds for the strategy to be executed.
-        n_local_steps (int): Number of updates for each step of the strategy.
         num_workers (int): Number of workers for the torch data loader.
         index_generator (NpIndexGenerator): index generator to be used by the algo.
         model (nn.Module): model template to be used by the algo.
@@ -87,9 +87,10 @@ def substrafl_fed_avg(
     # Dependencies
     base = Path(__file__).parent
     dependencies = Dependency(
-        pypi_dependencies=["torch", "numpy", "sklearn"],
+        pypi_dependencies=["numpy==1.23.5", "torch==2.0.1", "scikit-learn==1.1.1"],
         local_code=[base / "common", base / "weldon_fedavg.py"],
-        editable_mode=False,
+        # Keeping editable_mode=True to ensure nightly test benchmarks are ran against main substrafl git ref
+        editable_mode=True,
     )
 
     # Custom Strategy used for the data loading (from custom_torch_function.py file)
@@ -110,7 +111,7 @@ def substrafl_fed_avg(
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
 
-    clients[0].wait_compute_plan(compute_plan.key)
+    clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
     performances = clients[1].get_performances(compute_plan.key)
     return performances.dict().values()
 
@@ -120,14 +121,13 @@ def torch_fed_avg(
     test_folder: Path,
     nb_train_data_samples: int,
     nb_test_data_samples: int,
-    seed: int,
     n_centers: int,
     learning_rate: int,
     n_rounds: int,
     num_workers: int,
     index_generator: NpIndexGenerator,
     model: torch.nn.Module,
-) -> float:
+) -> typing.Dict:
     """Execute Weldon algorithm for a fed avg strategy implemented in pure torch and python.
 
     Args:

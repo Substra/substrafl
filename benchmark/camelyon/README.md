@@ -157,6 +157,17 @@ an optional arg when running the benchmark:
 python benchmarks.py --mode remote --credentials my_credentials.yaml
 ```
 
+_..note:: If you're using a locally deployed environment, make sure your backend nginx configurations are ok with body sizes involved during the benchmark:_
+
+```yaml
+server:
+  ingress:
+    enabled: true
+    hostname: "substra-backend.org-1.com"
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 0m  # 0 for infinite
+```
+
 ### Substra assets management
 
 In remote, one can chose to reuse some assets by passing their keys in the [keys.json](./substra_conf/keys.json), e.g.:
