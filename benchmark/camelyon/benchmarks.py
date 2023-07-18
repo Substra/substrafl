@@ -8,9 +8,12 @@ from pathlib import Path
 from common.dataset_manager import creates_data_folder
 from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
+from common.utils import load_results
 from common.utils import parse_params
-from common.utils import read_results
+
+# from common.utils import read_results
 from common.weldon import Weldon
+from performances import compare_performances
 from workflows import substrafl_fed_avg
 from workflows import torch_fed_avg
 
@@ -91,6 +94,8 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         }
     )
 
+    compare_performances(left=cl_perf, right=sa_perf)
+
     return {str(time.time()): exp_params}
 
 
@@ -106,8 +111,8 @@ def main():
     params = parse_params()
 
     # Read old benchmark results from file if run in local
-    if params["mode"] != "remote":
-        results = set(read_results(LOCAL_RESULTS_FILE))
+    # if params["mode"] != "remote":
+    # results = read_results(LOCAL_RESULTS_FILE)
 
     # Not used in remote, TODO: refactor at some point
     data_path = params.pop("data_path").resolve()
@@ -127,14 +132,13 @@ def main():
 
     try:
         # Execute experiment
-        res = fed_avg(params, train_folder, test_folder)
+        results = fed_avg(params, train_folder, test_folder)
+        load_results(file=LOCAL_RESULTS_FILE, results=results)
+        # if params["mode"] != "remote":
+        # Update results
 
-        if params["mode"] != "remote":
-            # Update results
-            results.update(res)
-
-            # Save results
-            LOCAL_RESULTS_FILE.write_text(json.dumps(list(results), sort_keys=True, indent=4))
+        # Save results
+        LOCAL_RESULTS_FILE.write_text(json.dumps(list(results), sort_keys=True, indent=4))
     finally:
         # Delete the temporary experiment folders at the end of the benchmark
         shutil.rmtree("local-worker", ignore_errors=True)

@@ -97,13 +97,17 @@ def read_results(results_file) -> dict:
     Returns:
         dict: Previous results from former benchmark.
     """
-
     results_file.parent.mkdir(exist_ok=True)
 
-    if results_file.exists():
-        results = json.loads(results_file.read_text())
+    if not results_file.exists():
+        return []
 
-    else:
-        results = {}
+    return json.loads(results_file.read_text())
 
-    return results
+
+def load_results(file: Path, results: dict) -> None:
+    """"""
+    file.parent.mkdir(exist_ok=True)
+    results = (json.loads(file.read_text()) if file.exists() else []) + [results]
+    file.write_text(json.dumps(results, sort_keys=True, indent=4))
+    return

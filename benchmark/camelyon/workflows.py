@@ -7,6 +7,7 @@ import torch
 import weldon_fedavg
 from common.data_managers import CamelyonDataset
 from common.data_managers import Data
+from performances import get_performances
 from pure_substrafl import register_assets
 from pure_substrafl.register_assets import get_clients
 from pure_substrafl.register_assets import load_asset_keys
@@ -110,10 +111,9 @@ def substrafl_fed_avg(
         dependencies=dependencies,
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
     )
-
     clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
-    performances = clients[1].get_performances(compute_plan.key)
-    return performances.dict().values()
+
+    return get_performances(key=compute_plan.key, clients=clients)
 
 
 def torch_fed_avg(

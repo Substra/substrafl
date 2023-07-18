@@ -209,7 +209,7 @@ def get_train_data_nodes(
 
 def get_test_data_nodes(
     clients: List[substra.Client], test_folder: Path, asset_keys: dict, nb_data_sample
-) -> TestDataNode:
+) -> List[TestDataNode]:
     """Generate a test data node for the data within the passed folder with the client.
     The associated metric only returns the float(y_pred) where y_pred is the results of the
     predict method of the used function.
