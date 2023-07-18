@@ -1,23 +1,22 @@
-import json
 import multiprocessing
 import shutil
 import sys
-import time
 from pathlib import Path
 
+from benchmark_metrics import assert_expected_results
 from common.dataset_manager import creates_data_folder
 from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
+from common.utils import load_benchmark_summary
 from common.utils import parse_params
-from common.utils import read_results
 from common.weldon import Weldon
 from workflows import substrafl_fed_avg
 from workflows import torch_fed_avg
 
 from substrafl.index_generator import NpIndexGenerator
 
-RESULTS_FOLDER = Path(__file__).parent / "results"
-LOCAL_RESULTS_FILE = RESULTS_FOLDER / "results.json"
+FOLDER = Path(__file__).parent
+LOCAL_RESULTS_FILE = FOLDER / "results" / "results.json"
 
 
 def fed_avg(params: dict, train_folder: Path, test_folder: Path):
@@ -33,7 +32,6 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         dict: Results of both experiment with their computation time and the used parameters
     """
     exp_params = params.copy()
-
     index_generator = NpIndexGenerator(
         batch_size=exp_params["batch_size"], num_updates=exp_params["n_local_steps"], drop_last=True, shuffle=False
     )
@@ -52,46 +50,33 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         "num_workers",
         "nb_train_data_samples",
         "nb_test_data_samples",
+        "seed",
     ]
 
-    cl_start = time.time()
-    cl_perf = substrafl_fed_avg(
+    cl_metrics = substrafl_fed_avg(
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
-        seed=exp_params["seed"],
         credentials_path=exp_params["credentials"],
         asset_keys_path=exp_params["asset_keys"],
         index_generator=index_generator,
         model=model,
         mode=exp_params["mode"],
     )
-    cl_end = time.time()
-    exp_params.update(
-        {
-            "substrafl_time": cl_end - cl_start,
-            "substrafl_perf": cl_perf,
-        }
-    )
 
-    sa_start = time.time()
-    sa_perf = torch_fed_avg(
+    sa_metrics = torch_fed_avg(
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
         index_generator=index_generator,
         model=model,
     )
-    sa_end = time.time()
 
-    exp_params.update(
-        {
-            "pure_torch_time": sa_end - sa_start,
-            "pure_torch_perf": sa_perf,
-        }
-    )
+    results = {**exp_params, **{"results": {**cl_metrics.to_dict, **sa_metrics.to_dict}}}
+    load_benchmark_summary(file=LOCAL_RESULTS_FILE, experiment_summary=results)
+    assert_expected_results(cl_metrics=cl_metrics, sa_metrics=sa_metrics, mode=exp_params["mode"])
 
-    return {str(time.time()): exp_params}
+    return
 
 
 def main():
@@ -104,10 +89,6 @@ def main():
 
     # Parse experiment params from the cli and system configuration
     params = parse_params()
-
-    # Read old benchmark results from file if run in local
-    if params["mode"] != "remote":
-        results = set(read_results(LOCAL_RESULTS_FILE))
 
     # Not used in remote, TODO: refactor at some point
     data_path = params.pop("data_path").resolve()
@@ -127,18 +108,11 @@ def main():
 
     try:
         # Execute experiment
-        res = fed_avg(params, train_folder, test_folder)
-
-        if params["mode"] != "remote":
-            # Update results
-            results.update(res)
-
-            # Save results
-            LOCAL_RESULTS_FILE.write_text(json.dumps(list(results), sort_keys=True, indent=4))
+        fed_avg(params, train_folder, test_folder)
     finally:
         # Delete the temporary experiment folders at the end of the benchmark
         shutil.rmtree("local-worker", ignore_errors=True)
-        shutil.rmtree("benchmark_cl_experiment_folder", ignore_errors=True)
+        shutil.rmtree(FOLDER / "benchmark_cl_experiment_folder", ignore_errors=True)
 
 
 if __name__ == "__main__":

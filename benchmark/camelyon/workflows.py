@@ -1,7 +1,8 @@
-import typing
+import time
 from copy import deepcopy
 from pathlib import Path
 
+import benchmark_metrics
 import numpy as np
 import torch
 import weldon_fedavg
@@ -39,7 +40,7 @@ def substrafl_fed_avg(
     model: torch.nn.Module,
     credentials_path: Path,
     asset_keys_path: Path,
-) -> dict:
+) -> benchmark_metrics.BenchmarkResults:
     """Execute Weldon algorithm for a fed avg strategy with substrafl API.
 
     Args:
@@ -63,7 +64,6 @@ def substrafl_fed_avg(
     Returns:
         dict: Results of the experiment.
     """
-
     clients = get_clients(credentials=credentials_path, mode=mode, n_centers=n_centers)
     asset_keys = load_asset_keys(asset_keys_path, mode)
 
@@ -112,8 +112,10 @@ def substrafl_fed_avg(
     )
 
     clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
-    performances = clients[1].get_performances(compute_plan.key)
-    return performances.dict().values()
+
+    performances = clients[1].get_performances(key=compute_plan.key)
+
+    return benchmark_metrics.get_metrics_from_substra_performances(performances=performances)
 
 
 def torch_fed_avg(
@@ -121,13 +123,14 @@ def torch_fed_avg(
     test_folder: Path,
     nb_train_data_samples: int,
     nb_test_data_samples: int,
+    seed: int,
     n_centers: int,
     learning_rate: int,
     n_rounds: int,
     num_workers: int,
     index_generator: NpIndexGenerator,
     model: torch.nn.Module,
-) -> typing.Dict:
+) -> benchmark_metrics.BenchmarkResults:
     """Execute Weldon algorithm for a fed avg strategy implemented in pure torch and python.
 
     Args:
@@ -148,14 +151,10 @@ def torch_fed_avg(
     Returns:
         Tuple[float, dict]: Result of the experiment and more details on the speed.
     """
-    train_camelyon = Data(paths=[train_folder] * nb_train_data_samples)
+    start = time.time()
 
-    train_datasets = [
-        CamelyonDataset(
-            datasamples=train_camelyon,
-        )
-        for _ in range(n_centers)
-    ]
+    train_camelyon = Data(paths=[train_folder] * nb_train_data_samples)
+    train_datasets = [CamelyonDataset(datasamples=train_camelyon) for _ in range(n_centers)]
 
     batch_samplers = list()
     for train_dataset in train_datasets:
@@ -198,13 +197,12 @@ def torch_fed_avg(
     ]
 
     # Models definition
-
     models = []
     # Each model must be instantiated with the same parameters
     for _ in range(n_centers):
         models.append(deepcopy(model))
 
-    criteria = [torch.nn.BCEWithLogitsLoss() for _ in range(n_centers)]
+    criteria = [torch.nn.BCELoss() for _ in range(n_centers)]
     optimizers = [torch.optim.Adam(model.parameters(), lr=learning_rate) for model in models]
 
     basic_fed_avg(
@@ -216,20 +214,21 @@ def torch_fed_avg(
         batch_samplers=batch_samplers,
     )
 
-    metrics = {}
+    performances = {}
 
     with torch.no_grad():
         for k, test_dataloader in enumerate(tqdm(test_dataloaders, desc="predict: ")):
             y_pred = []
             y_true = np.array([])
             for X, y in test_dataloader:
-                y_pred.append(models[k](X).reshape(-1))
+                y_pred.append(models[k](X))
                 y_true = np.append(y_true, y.numpy())
 
             # Fusion, sigmoid and to numpy
-            y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
+            y_pred = torch.cat(y_pred).numpy()
             auc = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
             acc = accuracy_score(y_true, np.round(y_pred)) if len(set(y_true)) > 1 else 0
-            metrics.update({k: {"ROC AUC": auc, "Accuracy": acc}})
+            performances.update({str(k): {"ROC AUC": auc, "Accuracy": acc}})
 
+    metrics = benchmark_metrics.BenchmarkResults(name="torch", exec_time=time.time() - start, performances=performances)
     return metrics

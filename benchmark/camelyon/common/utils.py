@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 from pathlib import Path
 
@@ -91,19 +92,19 @@ file where to fill in the Substra assets to be reused""",
     return params
 
 
-def read_results(results_file) -> dict:
-    """Read previous results from file if exists.
-
-    Returns:
-        dict: Previous results from former benchmark.
+def load_benchmark_summary(file: Path, experiment_summary: dict, n_experiment_limit: int = 10) -> None:
     """
+    Load benchmark summary and results.
 
-    results_file.parent.mkdir(exist_ok=True)
+    Args:
+        file (Path): result filepath
+        experiment_summary (dict): benchmark summary
+        n_experiment_limit (int): limit of experiment to keep in the result file
 
-    if results_file.exists():
-        results = json.loads(results_file.read_text())
-
-    else:
-        results = {}
-
-    return results
+    """
+    n_experiment_limit = -1 * max(n_experiment_limit, 0)
+    file.parent.mkdir(exist_ok=True)
+    experiment_summary = {datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"): experiment_summary}
+    experiment_summary = (json.loads(file.read_text()) if file.exists() else []) + [experiment_summary]
+    file.write_text(json.dumps(experiment_summary[n_experiment_limit:], sort_keys=True, indent=4))
+    return

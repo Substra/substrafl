@@ -100,35 +100,43 @@ python benchmarks.sh --mode docker
 After each run the [result file](./results/results.json) is populated with a new entry:
 
 ```json
- "1651743200.005445": {  // timestamp of the experiment
+{
+    "2023-08-07T09:18:50": {
         "asset_keys": "keys.json",
         "batch_size": 4,
-        "substrafl_perf": {
-        // substrafl performances on each center (should be the same and the same as the torch results)
-            "0": 0.25000000000000006,
-            "1": 0.25000000000000006
-        },
-        "substrafl_time": 179.76791310310364, // substrafl execution time (do not take the data registration into account)
-        "substrafl_version": "0.11.0",
         "credentials": "remote.yaml",
         "learning_rate": 0.01,
         "mode": "subprocess",
         "n_centers": 2,
-        "n_local_steps": 2,
+        "n_local_steps": 1,
         "n_rounds": 2,
-        "nb_test_data_samples": 5,
-        "nb_train_data_samples": 5,
-        "num_workers": 3,
-        "pure_torch_perf": {
-        // pure torch performances on each center (should be the same and the same as the substrafl results)
-            "0": 0.25520833333333337,
-            "1": 0.25520833333333337
+        "nb_test_data_samples": 2,
+        "nb_train_data_samples": 2,
+        "num_workers": 0,
+        "results": {
+            "substrafl": {
+                "exec_time": 28.036304,
+                "n_clients": 2,
+                "performances": {
+                    "Accuracy": 0.5,
+                    "ROC AUC": 1.0
+                }
+            },
+            "torch": {
+                "exec_time": 2.4744441509246826,
+                "n_clients": 2,
+                "performances": {
+                    "Accuracy": 0.5,
+                    "ROC AUC": 1.0
+                }
+            }
         },
-        "pure_torch_time": 110.0057361125946, // pure torch execution time
         "seed": 42,
-        "substra_version": "0.18.0",
-        "substratools_version": "0.11.0"
+        "substra_version": "0.45.0",
+        "substrafl_version": "0.38.0",
+        "substratools_version": "0.20.0"
     }
+}
 ```
 
 ### Full local benchmark
@@ -170,7 +178,7 @@ server:
 
 ### Substra assets management
 
-In remote, one can chose to reuse some assets by passing their keys in the [keys.json](./substra_conf/keys.json), e.g.:
+In remote, one can choose to reuse some assets by passing their keys in the [keys.json](./substra_conf/keys.json), e.g.:
 
 ```json
 {

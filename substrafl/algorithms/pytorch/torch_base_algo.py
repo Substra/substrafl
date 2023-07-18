@@ -2,6 +2,7 @@ import abc
 import inspect
 import logging
 import os
+import random
 import shutil
 from pathlib import Path
 from typing import Any
@@ -58,6 +59,8 @@ class TorchAlgo(Algo):
         super().__init__(*args, **kwargs)
 
         if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
             torch.manual_seed(seed)
 
         self._device = self._get_torch_device(use_gpu=use_gpu)
