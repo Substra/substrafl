@@ -24,27 +24,23 @@ def get_weldon_fedavg(
         TorchFedAvgAlgo: To be submit to a substrafl execute experiment function.
     """
 
-    # Substrafl will instantiate each center with a copy of this model, hence we need to set the seed at
-    # initialization
-    torch.manual_seed(seed)
-
     # Model definition
     my_model = deepcopy(model)
 
-    criterion = torch.nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    criterion = torch.nn.BCELoss()
+    optimizer = torch.optim.Adam(my_model.parameters(), lr=learning_rate)
 
     # Substrafl formatted Algo
     class MyAlgo(TorchFedAvgAlgo):
         def __init__(
             self,
         ):
-            torch.manual_seed(seed)
             super().__init__(
                 model=my_model,
                 criterion=criterion,
                 optimizer=optimizer,
                 index_generator=index_generator,
+                seed=seed,
                 dataset=CamelyonDataset,
             )
 
@@ -64,7 +60,7 @@ def get_weldon_fedavg(
             # Train the model
             for x_batch, y_batch in dataloader:
                 # Forward pass
-                y_pred = self._model(x_batch).reshape(-1)
+                y_pred = self._model(x_batch)
 
                 # Compute Loss
                 loss = self._criterion(y_pred, y_batch)
@@ -91,9 +87,9 @@ def get_weldon_fedavg(
             y_pred = []
             with torch.no_grad():
                 for X in dataloader:
-                    y_pred.append(self._model(X).reshape(-1))
+                    y_pred.append(self._model(X))
 
-            y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
+            y_pred = torch.cat(y_pred).numpy()
 
             self._save_predictions(y_pred, predictions_path)
 

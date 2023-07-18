@@ -65,6 +65,9 @@ def substrafl_fed_avg(
         dict: Results of the experiment.
     """
 
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
     clients = get_clients(credentials=credentials_path, mode=mode, n_centers=n_centers)
     asset_keys = load_asset_keys(asset_keys_path, mode)
 
@@ -121,6 +124,7 @@ def torch_fed_avg(
     test_folder: Path,
     nb_train_data_samples: int,
     nb_test_data_samples: int,
+    seed: int,
     n_centers: int,
     learning_rate: int,
     n_rounds: int,
@@ -148,6 +152,10 @@ def torch_fed_avg(
     Returns:
         Tuple[float, dict]: Result of the experiment and more details on the speed.
     """
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
     train_camelyon = Data(paths=[train_folder] * nb_train_data_samples)
 
     train_datasets = [
@@ -204,7 +212,7 @@ def torch_fed_avg(
     for _ in range(n_centers):
         models.append(deepcopy(model))
 
-    criteria = [torch.nn.BCEWithLogitsLoss() for _ in range(n_centers)]
+    criteria = [torch.nn.BCELoss() for _ in range(n_centers)]
     optimizers = [torch.optim.Adam(model.parameters(), lr=learning_rate) for model in models]
 
     basic_fed_avg(
@@ -223,11 +231,11 @@ def torch_fed_avg(
             y_pred = []
             y_true = np.array([])
             for X, y in test_dataloader:
-                y_pred.append(models[k](X).reshape(-1))
+                y_pred.append(models[k](X))
                 y_true = np.append(y_true, y.numpy())
 
             # Fusion, sigmoid and to numpy
-            y_pred = torch.sigmoid(torch.cat(y_pred)).numpy()
+            y_pred = torch.cat(y_pred).numpy()
             auc = roc_auc_score(y_true, y_pred) if len(set(y_true)) > 1 else 0
             acc = accuracy_score(y_true, np.round(y_pred)) if len(set(y_true)) > 1 else 0
             metrics.update({k: {"ROC AUC": auc, "Accuracy": acc}})

@@ -27,5 +27,7 @@ class Weldon(torch.nn.Module):
         top, _ = scores.topk(k=self.n_top, dim=self.dim)
         bottom, _ = scores.topk(k=self.n_bottom, largest=False, dim=self.dim)
         extreme_scores = torch.cat([top, bottom], dim=self.dim)
+        output = torch.mean(extreme_scores, 1, keepdim=False).reshape(-1)
+        output = torch.sigmoid(output)
 
-        return torch.mean(extreme_scores, 1, keepdim=False)
+        return output

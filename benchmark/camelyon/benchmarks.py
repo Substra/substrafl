@@ -5,6 +5,8 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
+import torch
 from common.dataset_manager import creates_data_folder
 from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
@@ -35,7 +37,12 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
     Returns:
         dict: Results of both experiment with their computation time and the used parameters
     """
+
     exp_params = params.copy()
+
+    seed = exp_params["seed"]
+    torch.manual_seed(seed)
+    np.random.seed(seed)
 
     index_generator = NpIndexGenerator(
         batch_size=exp_params["batch_size"], num_updates=exp_params["n_local_steps"], drop_last=True, shuffle=False
@@ -62,7 +69,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
-        seed=exp_params["seed"],
+        seed=seed,
         credentials_path=exp_params["credentials"],
         asset_keys_path=exp_params["asset_keys"],
         index_generator=index_generator,
@@ -82,6 +89,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
+        seed=seed,
         index_generator=index_generator,
         model=model,
     )
