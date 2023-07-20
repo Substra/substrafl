@@ -1,5 +1,5 @@
-API reference
-==============
+SubstraFL API reference
+=======================
 
 .. toctree::
    :glob:
