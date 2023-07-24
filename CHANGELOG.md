@@ -38,6 +38,7 @@ with tempfile.TemporaryDirectory() as temp_folder:
 
 ### Fixed
 
+- Compatibility with GPU devices when running torch based experiments ([#154](https://github.com/Substra/substrafl/pull/154))
 - Pin `pydantic` to `>=1.9.0` & `<2.0.0` as `pydantic` v `2.0.0` has been released with a lot of non backward compatible changes. ([#148](https://github.com/Substra/substrafl/pull/148))
 
 ## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
@@ -47,7 +48,6 @@ with tempfile.TemporaryDirectory() as temp_folder:
 - BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
 - BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
 - Numpy < 1.24 in dependencies to keep pickle compatibility with substra-tools numpy version ([#144](https://github.com/Substra/substrafl/pull/144))
-
 
 ## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
 
