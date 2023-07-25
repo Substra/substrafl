@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## \[Unreleased\]
 
 
-## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-07-25
+## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-07-25
 
 ### Changed
 
