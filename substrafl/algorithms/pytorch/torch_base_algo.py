@@ -152,7 +152,7 @@ class TorchAlgo(Algo):
 
         self._model.eval()
 
-        predictions = torch.Tensor([])
+        predictions = torch.Tensor([]).to(self._device)
         with torch.inference_mode():
             for x in predict_loader:
                 x = x.to(self._device)
