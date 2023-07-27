@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+
+## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.39.0) - 2023-07-25
+
 ### Changed
 
-- Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
+- BREAKING: Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
 `download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
 ([#142](https://github.com/Substra/substrafl/pull/142)).
 
