@@ -20,8 +20,8 @@ from substrafl import exceptions
 from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
 from substrafl.nodes.node import InputIdentifiers
-from substrafl.remote.register.generate_wheel import local_lib_wheels
-from substrafl.remote.register.generate_wheel import pypi_lib_wheels
+from substrafl.remote.register.manage_dependencies import local_lib_wheels
+from substrafl.remote.register.manage_dependencies import pypi_lib_wheels
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.substratools_methods import RemoteMethod
 

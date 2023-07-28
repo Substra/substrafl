@@ -27,7 +27,7 @@ Register
 ^^^^^^^^
 
 .. automodule:: substrafl.remote.register.register
-.. automodule:: substrafl.remote.register.generate_wheel
+.. automodule:: substrafl.remote.register.manage_dependencies
 
 
 Serializers
