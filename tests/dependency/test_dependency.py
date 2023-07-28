@@ -37,13 +37,13 @@ def test_dependency_validators_file_not_exist():
 def test_dependency_validators_not_valid_path():
     with pytest.raises(ValidationError):
         # Can't pass non parsable object.
-        Dependency(local_dependencies=[{"a_random_test": 3}], editable_mode=True)
+        Dependency(local_installable_dependencies=[{"a_random_test": 3}], editable_mode=True)
 
 
 def test_dependency_validators_no_setup_file():
     with pytest.raises(InvalidPathError):
-        # :arg:local_dependencies folders must contain a setup.py.
-        Dependency(local_dependencies=[CURRENT_FILE.parent], editable_mode=True)
+        # :arg:local_installable_dependencies folders must contain a setup.py.
+        Dependency(local_installable_dependencies=[CURRENT_FILE.parent], editable_mode=True)
 
 
 @pytest.mark.slow
@@ -289,7 +289,7 @@ class TestLocalDependency:
         my_algo = MyAlgo()
         algo_deps = Dependency(
             pypi_dependencies=["pytest"],
-            local_dependencies=[CURRENT_FILE.parent / pkg_path for pkg_path in pkg_paths],
+            local_installable_dependencies=[CURRENT_FILE.parent / pkg_path for pkg_path in pkg_paths],
             editable_mode=True,
         )
         function_key = self._register_function(my_algo, algo_deps, client, session_dir)

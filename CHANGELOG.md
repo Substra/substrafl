@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Rename `generate_wheel.py` to `manage_dependencies.py` ([#156](https://github.com/Substra/substrafl/pull/156))
-- Move `manage_dependencies.py` from `remote.register` to `dependency` ([#158](https://github.com/Substra/substrafl/pull/158))
+- BREAKING: Rename `generate_wheel.py` to `manage_dependencies.py` ([#156](https://github.com/Substra/substrafl/pull/156))
+- BREAKING: Move `manage_dependencies.py` from `remote.register` to `dependency` ([#158](https://github.com/Substra/substrafl/pull/158))
+- BREAKING: `local_dependencies` is renamed `local_installable_dependencies` ([#158](https://github.com/Substra/substrafl/pull/158))
 
 ## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.39.0) - 2023-07-25
 
