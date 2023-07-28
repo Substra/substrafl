@@ -364,7 +364,9 @@ def _create_files(input_folder, algo, metadata):
     _create_substra_function_files(
         remote_struct=data_operation.remote_struct,
         install_libraries=True,
-        dependencies=Dependency(local_dependencies=[str(FILE_PATH / "installable_library")], editable_mode=True),
+        dependencies=Dependency(
+            local_installable_dependencies=[str(FILE_PATH / "installable_library")], editable_mode=True
+        ),
         operation_dir=input_folder,
     )
 

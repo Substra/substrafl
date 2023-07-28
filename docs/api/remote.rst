@@ -25,10 +25,7 @@ Substra tools methods
 
 Register
 ^^^^^^^^
-
 .. automodule:: substrafl.remote.register.register
-.. automodule:: substrafl.remote.register.manage_dependencies
-
 
 Serializers
 ^^^^^^^^^^^^

@@ -1,5 +1,10 @@
 Dependency
 ==========
 
+Schemas
+^^^^^^^
+.. automodule:: substrafl.dependency.schemas
 
-.. automodule:: substrafl.dependency
+Manage Dependencies
+^^^^^^^^^^^^^^^^^^^
+.. automodule:: substrafl.dependency.manage_dependencies
