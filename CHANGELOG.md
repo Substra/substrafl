@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
-<<<<<<< HEAD
 ### Changed
 
 - Rename `generate_wheel.py` to `manage_dependencies.py` ([#156](https://github.com/Substra/substrafl/pull/156))
@@ -17,12 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - BREAKING: Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
-=======
-### Changed
-
-- Rename `generate_wheel.py` to `manage_dependency.py` ([#156](https://github.com/Substra/substrafl/pull/156))
-- Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
->>>>>>> 467cbe2 (chore: changelog)
 `download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
 ([#142](https://github.com/Substra/substrafl/pull/142)).
 
