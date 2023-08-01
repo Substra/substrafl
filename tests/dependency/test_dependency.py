@@ -2,8 +2,6 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -11,6 +9,7 @@ import substra
 from pydantic import ValidationError
 
 import substrafl
+from substrafl.constants import SUBSTRAFL_FOLDER
 from substrafl.dependency import Dependency
 from substrafl.exceptions import InvalidPathError
 from substrafl.nodes.node import InputIdentifiers
@@ -298,23 +297,70 @@ class TestLocalDependency:
         client.wait_task(train_task.key, raise_on_failure=True)
 
     @pytest.mark.docker_only
-    @patch("substrafl.remote.register.register.local_lib_wheels", MagicMock(return_value="INSTALL IN EDITABLE MODE"))
     def test_force_editable_mode(
         self,
+        mocker,
         monkeypatch,
         network,
         session_dir,
         dummy_algo_class,
     ):
+        mocker.patch(
+            "substrafl.dependency.manage_dependencies.local_lib_wheels", return_value=["INSTALL IN EDITABLE MODE"]
+        )
+        mocker.patch("substrafl.dependency.manage_dependencies.compile_requirements")
+
         client = network.clients[0]
         algo_deps = Dependency(pypi_dependencies=["pytest"], editable_mode=False)
 
         monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(True))
         self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
-        assert substrafl.remote.register.register.local_lib_wheels.call_count == 1
+        assert substrafl.dependency.manage_dependencies.local_lib_wheels.call_count == 1
 
-        substrafl.remote.register.register.local_lib_wheels.reset_mock()
+        substrafl.dependency.manage_dependencies.local_lib_wheels.reset_mock()
 
         monkeypatch.setenv("SUBSTRA_FORCE_EDITABLE_MODE", str(False))
         self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
         assert substrafl.remote.register.register.local_lib_wheels.call_count == 0
+
+
+def test_get_compute(tmp_path):
+    dependency = Dependency(
+        pypi_dependencies=["pytest"],
+        local_installable_dependencies=[CURRENT_FILE.parent / "installable_library"],
+        local_code=[CURRENT_FILE.parent / "local_code_file.py"],
+        editable_mode=True,
+    )
+
+    dependency.copy_compute_dir(tmp_path)
+
+    assert (tmp_path / "local_code_file.py").is_file()
+    assert (tmp_path / "requirements.txt").is_file()
+    assert (tmp_path / SUBSTRAFL_FOLDER).is_dir()
+    assert (tmp_path / SUBSTRAFL_FOLDER / "dist").is_dir()
+    assert (tmp_path / SUBSTRAFL_FOLDER / "local_dependencies").is_dir()
+
+
+def test_get_compute_with_compile(tmp_path):
+    dependency = Dependency(
+        pypi_dependencies=["pytest"],
+        local_installable_dependencies=[CURRENT_FILE.parent / "installable_library"],
+        editable_mode=True,
+        compile=True,
+    )
+
+    dependency.copy_compute_dir(tmp_path)
+
+    assert (tmp_path / "requirements.in").is_file()
+    assert (tmp_path / "requirements.txt").is_file()
+
+
+def test_dependency_deletion():
+    dependency = Dependency(
+        pypi_dependencies=["pytest"],
+    )
+    cache_dir = dependency._cache_directory
+    assert cache_dir.exists()
+
+    del dependency
+    assert not cache_dir.exists()

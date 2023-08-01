@@ -49,6 +49,7 @@ setup(
         "wheel",
         "six",
         "packaging",
+        "pip-tools",
     ],
     extras_require={
         "dev": [

@@ -14,8 +14,8 @@ from substra.sdk.models import Status
 
 import substrafl
 from substrafl import exceptions
+from substrafl.constants import SUBSTRAFL_FOLDER
 from substrafl.nodes.node import OutputIdentifiers
-from substrafl.remote.register.register import SUBSTRAFL_FOLDER
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
 
@@ -273,7 +273,7 @@ def _load_from_files(input_folder: Path, remote: bool = False) -> Any:
             raise exceptions.LoadLocalDependencyError(
                 "The instance from the given input folder requires the installation of "
                 "additional dependencies. Those can be found in "
-                f"{str(folder / 'substrafl_internal' / 'installable_library')}"
+                f"{str(folder / SUBSTRAFL_FOLDER / 'installable_library')}"
                 f"\nFull trace of the error: {e}"
             )
 
