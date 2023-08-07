@@ -3,7 +3,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from benchmark_metrics import assert_expected_results
+from common.benchmark_metrics import assert_expected_results
 from common.dataset_manager import creates_data_folder
 from common.dataset_manager import fetch_camelyon
 from common.dataset_manager import reset_data_folder
@@ -15,8 +15,8 @@ from workflows import torch_fed_avg
 
 from substrafl.index_generator import NpIndexGenerator
 
-FOLDER = Path(__file__).parent
-LOCAL_RESULTS_FILE = FOLDER / "results" / "results.json"
+PARENT_FOLDER = Path(__file__).parent
+LOCAL_RESULTS_FILE = PARENT_FOLDER / "results" / "results.json"
 
 
 def fed_avg(params: dict, train_folder: Path, test_folder: Path):
@@ -53,7 +53,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         "seed",
     ]
 
-    cl_metrics = substrafl_fed_avg(
+    substrafl_metrics = substrafl_fed_avg(
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
@@ -64,7 +64,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         mode=exp_params["mode"],
     )
 
-    sa_metrics = torch_fed_avg(
+    torch_metrics = torch_fed_avg(
         train_folder=train_folder,
         test_folder=test_folder,
         **{k: v for k, v in exp_params.items() if k in run_keys},
@@ -72,11 +72,9 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         model=model,
     )
 
-    results = {**exp_params, **{"results": {**cl_metrics.to_dict, **sa_metrics.to_dict}}}
+    results = {**exp_params, **{"results": {**substrafl_metrics.to_dict, **torch_metrics.to_dict}}}
     load_benchmark_summary(file=LOCAL_RESULTS_FILE, experiment_summary=results)
-    assert_expected_results(cl_metrics=cl_metrics, sa_metrics=sa_metrics, mode=exp_params["mode"])
-
-    return
+    assert_expected_results(substrafl_metrics=substrafl_metrics, torch_metrics=torch_metrics, exp_params=exp_params)
 
 
 def main():
@@ -112,7 +110,7 @@ def main():
     finally:
         # Delete the temporary experiment folders at the end of the benchmark
         shutil.rmtree("local-worker", ignore_errors=True)
-        shutil.rmtree(FOLDER / "benchmark_cl_experiment_folder", ignore_errors=True)
+        shutil.rmtree(PARENT_FOLDER / "benchmark_cl_experiment_folder", ignore_errors=True)
 
 
 if __name__ == "__main__":

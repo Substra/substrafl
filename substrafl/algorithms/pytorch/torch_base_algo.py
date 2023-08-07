@@ -59,6 +59,8 @@ class TorchAlgo(Algo):
         super().__init__(*args, **kwargs)
 
         if seed is not None:
+            # For a better control of randomness, it is recommended to set python and NumPy seed along with PyTorch's:
+            # https://pytorch.org/docs/2.0/notes/randomness.html#controlling-sources-of-randomness
             random.seed(seed)
             np.random.seed(seed)
             torch.manual_seed(seed)

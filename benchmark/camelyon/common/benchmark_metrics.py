@@ -1,4 +1,4 @@
-import datetime
+from collections import defaultdict
 from typing import Dict
 from typing import Union
 
@@ -68,16 +68,18 @@ class BenchmarkResults:
         return {key: round(val, N_DIGITS_TOL) for key, val in perf_list[0].items()}
 
 
-def assert_expected_results(cl_metrics: BenchmarkResults, sa_metrics: BenchmarkResults, mode: str) -> None:
+def assert_expected_results(
+    substrafl_metrics: BenchmarkResults, torch_metrics: BenchmarkResults, exp_params: Dict
+) -> None:
     """
     Assert benchmark results are the one expected, ie:
         - Assert substrafl and pure-torch performances are equals
         - Assert performances values are the one expected regarding the execution mode
 
     Args:
-        cl_metrics (BenchmarkResults): Benchmark results for the substrafl experiment
-        sa_metrics (BenchmarkResults): Benchmark results for the pure torch experiment
-        mode:
+        substrafl_metrics (BenchmarkResults): Benchmark results for the substrafl experiment
+        torch_metrics (BenchmarkResults): Benchmark results for the pure torch experiment
+        exp_params (Dict): Experiment parameters
 
     Returns:
         None
@@ -85,28 +87,33 @@ def assert_expected_results(cl_metrics: BenchmarkResults, sa_metrics: BenchmarkR
     Raises:
         PerformanceError if results are not the one expected.
     """
-    cl_metrics.assert_performance_equals(other=sa_metrics)
+    batch_size, n_local_steps, n_rounds = exp_params["batch_size"], exp_params["n_local_steps"], exp_params["n_rounds"]
 
-    if mode == "subprocess":
-        expected_performances = {"Accuracy": 0.5, "ROC AUC": 1.0}
-    elif mode == "remote":
-        expected_performances = {"Accuracy": 1.0, "ROC AUC": 1.0}
+    if batch_size == 4 and n_local_steps == 1 and n_rounds == 2:
+        expected_metrics = {"Accuracy": 0.5, "ROC AUC": 1.0}
+
+    elif batch_size == 4 and n_local_steps == 10 and n_rounds == 7:
+        expected_metrics = {"Accuracy": 1.0, "ROC AUC": 1.0}
+
     else:
+        print(
+            f"Unknown run case, cannot perform result assertion."
+            f"Consider registering expected results in {__name__}.assert_expected_results"
+        )
         return
 
-    cl_metrics.assert_performance_equals(
-        other=BenchmarkResults(name=f"expected_{mode}", exec_time=0, performances={"0": expected_performances})
-    )
+    expected_metrics = BenchmarkResults(name="expected", exec_time=0, performances={"0": expected_metrics})
 
-    return
+    substrafl_metrics.assert_performance_equals(other=torch_metrics)
+    substrafl_metrics.assert_performance_equals(other=expected_metrics)
 
 
-def get_metrics_from_substra_performances(performances: Performances) -> BenchmarkResults:
+def get_metrics_from_substra_performances(raw_performances: Performances) -> BenchmarkResults:
     """
     Get benchmark performances.
 
     Args:
-        performances (Performances): substra Performances
+        raw_performances (Performances): substra Performances
 
     Returns:
         typing.Dict[str, typing.Dict[str, float]
@@ -116,17 +123,12 @@ def get_metrics_from_substra_performances(performances: Performances) -> Benchma
             - if the number of worker in Performances differ from the number of Substra clients
             - if one identifier is evaluated several times for one worker
     """
-    execution_time: datetime.timedelta = performances.compute_plan_end_date[0] - performances.compute_plan_start_date[0]
-    execution_time: float = execution_time.total_seconds()
+    execution_time = raw_performances.compute_plan_end_date[0] - raw_performances.compute_plan_start_date[0]
 
-    workers, metrics, values = performances.worker, performances.identifier, performances.performance
-    performances = {}
-
-    for org, metric, value in list(zip(workers, metrics, values)):
-        if org not in performances:
-            performances[org] = {}
+    performances = defaultdict(dict)
+    for org, metric, value in zip(raw_performances.worker, raw_performances.identifier, raw_performances.performance):
         if metric in performances[org]:
             raise PerformanceError(f"Metric {metric} evaluated several times on worker {org}")
         performances[org][metric] = float(value)
 
-    return BenchmarkResults(name="substrafl", exec_time=execution_time, performances=performances)
+    return BenchmarkResults(name="substrafl", exec_time=execution_time.total_seconds(), performances=performances)

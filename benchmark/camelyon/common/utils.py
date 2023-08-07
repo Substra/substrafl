@@ -107,4 +107,3 @@ def load_benchmark_summary(file: Path, experiment_summary: dict, n_experiment_li
     experiment_summary = {datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"): experiment_summary}
     experiment_summary = (json.loads(file.read_text()) if file.exists() else []) + [experiment_summary]
     file.write_text(json.dumps(experiment_summary[n_experiment_limit:], sort_keys=True, indent=4))
-    return

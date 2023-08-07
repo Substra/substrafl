@@ -2,10 +2,10 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
-import benchmark_metrics
 import numpy as np
 import torch
 import weldon_fedavg
+from common import benchmark_metrics
 from common.data_managers import CamelyonDataset
 from common.data_managers import Data
 from pure_substrafl import register_assets
@@ -115,7 +115,7 @@ def substrafl_fed_avg(
 
     performances = clients[1].get_performances(key=compute_plan.key)
 
-    return benchmark_metrics.get_metrics_from_substra_performances(performances=performances)
+    return benchmark_metrics.get_metrics_from_substra_performances(raw_performances=performances)
 
 
 def torch_fed_avg(
