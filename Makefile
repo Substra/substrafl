@@ -41,8 +41,8 @@ benchmark: pyclean
 		--nb-train-data-samples 5 \
 		--nb-test-data-samples 2 \
 		--batch-size 4 \
-		--n-local-steps 10 \
-		--n-rounds 7
+		--n-local-steps 7 \
+		--n-rounds 6
 
 benchmark-local: pyclean
 	python benchmark/camelyon/benchmarks.py \

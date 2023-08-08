@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Dict
 from typing import Union
+from warnings import warn
 
 from substra.sdk.models import Performances
 
@@ -89,16 +90,18 @@ def assert_expected_results(
     """
     batch_size, n_local_steps, n_rounds = exp_params["batch_size"], exp_params["n_local_steps"], exp_params["n_rounds"]
 
+    # Matches the `make benchmark-local` cmd parameters used in substrafl CI
     if batch_size == 4 and n_local_steps == 1 and n_rounds == 2:
         expected_metrics = {"Accuracy": 0.5, "ROC AUC": 1.0}
 
-    elif batch_size == 4 and n_local_steps == 10 and n_rounds == 7:
+    # Empiric parameter thresholds where both Accuracy and ROC reach max theoretical value
+    elif batch_size >= 4 and n_local_steps >= 7 and n_rounds >= 6:
         expected_metrics = {"Accuracy": 1.0, "ROC AUC": 1.0}
 
     else:
-        print(
-            f"Unknown run case, cannot perform result assertion."
-            f"Consider registering expected results in {__name__}.assert_expected_results"
+        warn(
+            f"Unknown run case, cannot perform result assertion. "
+            f"Consider registering expected results in {__name__}.{assert_expected_results.__name__}"
         )
         return
 
