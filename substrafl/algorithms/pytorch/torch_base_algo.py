@@ -10,6 +10,7 @@ from typing import Optional
 from typing import Union
 
 import numpy as np
+import numpy.random
 import torch
 
 from substrafl.algorithms.algo import Algo
@@ -278,10 +279,13 @@ class TorchAlgo(Algo):
 
         self._index_generator = checkpoint.pop("index_generator")
 
+        random.setstate(checkpoint.pop("random_rng_state"))
+        numpy.random.set_state(checkpoint.pop("numpy_rng_state"))
+
         if self._device == torch.device("cpu"):
-            torch.set_rng_state(checkpoint.pop("rng_state").to(self._device))
+            torch.set_rng_state(checkpoint.pop("torch_rng_state").to(self._device))
         else:
-            torch.cuda.set_rng_state(checkpoint.pop("rng_state").to("cpu"))
+            torch.cuda.set_rng_state(checkpoint.pop("torch_rng_state").to("cpu"))
 
         return checkpoint
 
@@ -329,10 +333,14 @@ class TorchAlgo(Algo):
         if self._scheduler is not None:
             checkpoint["scheduler_state_dict"] = self._scheduler.state_dict()
 
+        checkpoint["random_rng_state"] = random.getstate()
+
+        checkpoint["numpy_rng_state"] = np.random.get_state()
+
         if self._device == torch.device("cpu"):
-            checkpoint["rng_state"] = torch.get_rng_state()
+            checkpoint["torch_rng_state"] = torch.get_rng_state()
         else:
-            checkpoint["rng_state"] = torch.cuda.get_rng_state()
+            checkpoint["torch_rng_state"] = torch.cuda.get_rng_state()
 
         return checkpoint
 

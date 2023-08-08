@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Freeze both `random.seed` and `np.random.seed` along with `torch.manual_seed` in `TorchAlgo`([#151](https://github.com/Substra/substrafl/pull/151))
+- Set, save & load `random.seed` and `np.random.seed` along with `torch.manual_seed` in `TorchAlgo`([#151](https://github.com/Substra/substrafl/pull/151))
 
 ## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.39.0) - 2023-07-25
 
