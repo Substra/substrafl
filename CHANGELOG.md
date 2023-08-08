@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: Move `manage_dependencies.py` from `remote.register` to `dependency` ([#158](https://github.com/Substra/substrafl/pull/158))
 - BREAKING: `local_dependencies` is renamed `local_installable_dependencies` ([#158](https://github.com/Substra/substrafl/pull/158))
 
+### Fixed
+
+- Set, save & load `random.seed` and `np.random.seed` along with `torch.manual_seed` in `TorchAlgo`([#151](https://github.com/Substra/substrafl/pull/151))
+
 ## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.39.0) - 2023-07-25
 
 ### Changed
