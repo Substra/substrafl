@@ -80,7 +80,7 @@ class SimuAggregationNode(AggregationNode):
 
         method_parameters["shared_states"] = operation.shared_states
         method_to_run = getattr(self.strategy, method_name)
-        import pdb; pdb.set_trace()
+
         shared_state = method_to_run(**method_parameters, _skip=True)
 
         return shared_state
