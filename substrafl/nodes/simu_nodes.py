@@ -29,7 +29,8 @@ class SimuTrainDataNode(TrainDataNode):
 
         output_method = method_to_run(**method_parameters, _skip=True)
         # Return the results
-        return None, output_method
+        op_id = str(uuid.uuid4())
+        return LocalStateRef(key=op_id), output_method
 
     def register_operations(self, *args, **kwargs):
         return {}
@@ -54,7 +55,7 @@ class SimuTestDataNode(TestDataNode):
         super().__init__(organization_id, data_manager_key, test_data_sample_keys, metric_functions)
         self.algo = algo
         self._preload_data(client)
-        self.scores = {}
+        self.scores = []
 
     def update_states(self, traintask_id, operation, round_idx):
         _method_name = operation.remote_struct._method_name
@@ -68,11 +69,11 @@ class SimuTestDataNode(TestDataNode):
         predictions = method_to_run(**method_parameters, _skip=True)
 
         # Evaluate the predictions with all the metrics, store the scores
-        self.scores[round_idx] = {}
         for key, metric_func in self.metric_functions.items():
-            self.scores[round_idx][key] = metric_func(self._datasamples, predictions)
-
-        # return none
+            self.scores.append({
+                key: metric_func(self._datasamples, predictions),
+                "round_idx": round_idx}
+            )
         return None
 
     def register_test_operations(self, *args, **kwargs):

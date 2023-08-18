@@ -24,6 +24,7 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.nodes.simu_nodes import SimuTrainDataNode
 
 logger = logging.getLogger(__name__)
 
@@ -309,7 +310,10 @@ def execute_experiment(
         num_rounds=num_rounds,
         clean_models=clean_models,
     )
-
+    if isinstance(train_data_nodes[0], SimuTrainDataNode):
+        # gather all the scores
+        scores = {tdn.organization_id: tdn.scores for tdn in evaluation_strategy.test_data_nodes}
+        return scores
     # Computation graph is created
     logger.info("Registering the functions to Substra.")
     tasks, operation_cache = _register_operations(
