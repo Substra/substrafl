@@ -68,8 +68,20 @@ class SimuTestDatanode(TestDataNode):
 
 
 class SimuAggregationNode(AggregationNode):
+
+    def __init__(self, organization_id, strategy):
+        super().__init__(organization_id)
+        self.strategy = strategy
+
     def update_states(self, operation, *args, **kwargs):
-        shared_state = operation()
+
+        method_name = operation.remote_struct._method_name
+        method_parameters = operation.remote_struct._method_parameters
+
+        method_parameters["shared_states"] = operation.shared_states
+        method_to_run = getattr(self.strategy, method_name)
+        import pdb; pdb.set_trace()
+        shared_state = method_to_run(**method_parameters, _skip=True)
 
         return shared_state
 
