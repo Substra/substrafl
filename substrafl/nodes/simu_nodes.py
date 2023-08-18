@@ -50,10 +50,12 @@ class SimuTrainDataNode(TrainDataNode):
 
 
 class SimuTestDatanode(TestDataNode):
-    def __init__(self, organization_id, data_manager_key, test_data_sample_keys, metric_functions):
+    def __init__(self, organization_id, data_manager_key, test_data_sample_keys, metric_functions, client):
         super().__init__(self, organization_id, data_manager_key, test_data_sample_keys, metric_functions)
+        self._preload_data(client)
 
     def update_states(self, traintask_id, operation, round_idx):
+
         # load data
         shared_state = operation(self._datasamples, _skip=True)
 
@@ -65,6 +67,20 @@ class SimuTestDatanode(TestDataNode):
 
     def register_predict_operations(self, *args, **kwargs):
         return {}
+
+    def _preload_data(self, substra_client):
+        dataset_info = substra_client.get_dataset(self.data_manager_key)
+
+        opener_interface = load_interface_from_module(
+            "opener",
+            interface_class=Opener,
+            interface_signature=None,
+            path=dataset_info.opener.storage_address
+        )
+
+        data_sample_paths = [substra_client.get_data_sample(dsk).path for dsk in self.data_sample_keys]
+
+        self._datasamples = opener_interface.get_data(data_sample_paths)
 
 
 class SimuAggregationNode(AggregationNode):
