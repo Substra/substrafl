@@ -100,7 +100,8 @@ class TorchAlgo(Algo):
         raise NotImplementedError()
 
     @remote_data
-    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None,
+                return_predictions=False) -> Any:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -114,7 +115,10 @@ class TorchAlgo(Algo):
 
         # Create torch dataset
         predict_dataset = self._dataset(datasamples, is_inference=True)
-        self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
+        return self._local_predict(
+            predict_dataset=predict_dataset, predictions_path=predictions_path,
+            return_predictions=return_predictions
+        )
 
     def _save_predictions(self, predictions: torch.Tensor, predictions_path: os.PathLike):
         """Save the predictions under the numpy format.
@@ -127,7 +131,7 @@ class TorchAlgo(Algo):
             np.save(predictions_path, predictions)
             shutil.move(str(predictions_path) + ".npy", predictions_path)
 
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path, return_predictions=False):
         """Execute the following operations:
 
             * Create the torch dataloader using the index generator batch size.
@@ -167,6 +171,8 @@ class TorchAlgo(Algo):
 
         predictions = predictions.cpu().detach()
         self._save_predictions(predictions, predictions_path)
+        if return_predictions:
+            return predictions
 
     def _local_train(
         self,

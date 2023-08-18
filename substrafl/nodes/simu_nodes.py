@@ -49,18 +49,31 @@ class SimuTrainDataNode(TrainDataNode):
         self._datasamples = opener_interface.get_data(data_sample_paths)
 
 
-class SimuTestDatanode(TestDataNode):
-    def __init__(self, organization_id, data_manager_key, test_data_sample_keys, metric_functions, client):
-        super().__init__(self, organization_id, data_manager_key, test_data_sample_keys, metric_functions)
+class SimuTestDataNode(TestDataNode):
+    def __init__(self, organization_id, data_manager_key, test_data_sample_keys, metric_functions, algo, client):
+        super().__init__(organization_id, data_manager_key, test_data_sample_keys, metric_functions)
+        self.algo = algo
         self._preload_data(client)
+        self.scores = {}
 
     def update_states(self, traintask_id, operation, round_idx):
+        _method_name = operation.remote_struct._method_name
+        method_parameters = operation.remote_struct._method_parameters
 
-        # load data
-        shared_state = operation(self._datasamples, _skip=True)
+        method_parameters["shared_state"] = operation.shared_state
+        method_parameters["datasamples"] = self._datasamples
+        method_parameters["return_predictions"] = True
+        method_to_run = getattr(self.algo, _method_name)
 
-        # return the results
-        return None, shared_state
+        predictions = method_to_run(**method_parameters, _skip=True)
+
+        # Evaluate the predictions with all the metrics, store the scores
+        self.scores[round_idx] = {}
+        for key, metric_func in self.metric_functions.items():
+            self.scores[round_idx][key] = metric_func(self._datasamples, predictions)
+
+        # return none
+        return None
 
     def register_test_operations(self, *args, **kwargs):
         return {}
@@ -78,7 +91,8 @@ class SimuTestDatanode(TestDataNode):
             path=dataset_info.opener.storage_address
         )
 
-        data_sample_paths = [substra_client.get_data_sample(dsk).path for dsk in self.data_sample_keys]
+        data_sample_paths = [substra_client.get_data_sample(dsk).path
+                             for dsk in self.test_data_sample_keys]
 
         self._datasamples = opener_interface.get_data(data_sample_paths)
 
