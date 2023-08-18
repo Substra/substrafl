@@ -158,11 +158,12 @@ class TorchAlgo(Algo):
 
         self._model.eval()
 
-        predictions = torch.Tensor([]).to(self._device)
+        predictions = []
         with torch.no_grad():
             for x in predict_loader:
                 x = x.to(self._device)
-                predictions = torch.cat((predictions, self._model(x)), 0)
+                predictions.append(self._model(x))
+        predictions = torch.cat(predictions, 0)  # only 1 cat operation, fewer copies
 
         predictions = predictions.cpu().detach()
         self._save_predictions(predictions, predictions_path)
