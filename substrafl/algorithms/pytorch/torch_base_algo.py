@@ -161,8 +161,7 @@ class TorchAlgo(Algo):
             )
 
         self._model.eval()
-        import numpy as np
-        print("predict", id(self._model), [np.linalg.norm(p.detach().numpy()) for p in self._model.parameters()])
+
         predictions = []
         with torch.no_grad():
             for x in predict_loader:

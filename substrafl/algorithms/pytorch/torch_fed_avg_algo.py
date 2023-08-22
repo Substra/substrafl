@@ -192,8 +192,7 @@ class TorchFedAvgAlgo(TorchAlgo):
                 updates=parameter_updates,
                 with_batch_norm_parameters=self._with_batch_norm_parameters,
             )
-        import numpy as np
-        print("train", id(self._model), [np.linalg.norm(p.detach().numpy()) for p in self._model.parameters()])
+
         self._index_generator.reset_counter()
 
         old_parameters = weight_manager.get_parameters(
@@ -217,8 +216,6 @@ class TorchFedAvgAlgo(TorchAlgo):
             ),
             parameters_to_subtract=old_parameters,
         )
-        import numpy as np
-        print("train", id(self._model), [np.linalg.norm(p.detach().numpy()) for p in self._model.parameters()])
 
         # Re set to the previous state
         weight_manager.set_parameters(
@@ -226,8 +223,6 @@ class TorchFedAvgAlgo(TorchAlgo):
             parameters=old_parameters,
             with_batch_norm_parameters=self._with_batch_norm_parameters,
         )
-        import numpy as np
-        print("train", id(self._model), [np.linalg.norm(p.detach().numpy()) for p in self._model.parameters()])
 
         return FedAvgSharedState(
             n_samples=len(train_dataset),
