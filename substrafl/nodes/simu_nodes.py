@@ -57,7 +57,22 @@ class SimuTestDataNode(TestDataNode):
         self._preload_data(client)
         self.scores = []
 
+    def pair_with_train_node(self, train_node):
+        # keep a reference to the train node
+        self._train_node = train_node
+        # self.algo = train_node.algo
+        self._check_equality_algo()
+
+    def _check_equality_algo(self):
+        assert id(self.algo) == id(self._train_node.algo)
+        assert self.algo == self._train_node.algo
+        assert self.algo._model == self._train_node.algo._model
+        import numpy as np
+        for p1, p2 in zip(self.algo._model.parameters(),self._train_node.algo._model.parameters()):
+            np.testing.assert_allclose(p1.detach().numpy(), p2.detach().numpy())
+
     def update_states(self, traintask_id, operation, round_idx):
+        self._check_equality_algo()
         _method_name = operation.remote_struct._method_name
         method_parameters = operation.remote_struct._method_parameters
 
@@ -67,6 +82,8 @@ class SimuTestDataNode(TestDataNode):
         method_to_run = getattr(self.algo, _method_name)
 
         predictions = method_to_run(**method_parameters, _skip=True)
+
+        # assert id(self.algo) == id(self._train_node.algo)
 
         # Evaluate the predictions with all the metrics, store the scores
         for key, metric_func in self.metric_functions.items():

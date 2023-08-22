@@ -209,6 +209,7 @@ class FedAvg(Strategy):
         for idx in range(parameters_update_len):
             states = [state.parameters_update[idx] * (state.n_samples / n_all_samples) for state in shared_states]
             averaged_states.append(np.sum(states, axis=0))
+        print([np.linalg.norm(avg_state) for avg_state in averaged_states])
 
         return FedAvgAveragedState(avg_parameters_update=averaged_states)
 
