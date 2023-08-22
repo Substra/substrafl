@@ -278,10 +278,10 @@ def execute_experiment(
     if dependencies is None:
         dependencies = Dependency()
 
-    train_data_nodes = copy.deepcopy(train_data_nodes)
-    aggregation_node = copy.deepcopy(aggregation_node)
-    strategy = copy.deepcopy(strategy)
-    evaluation_strategy = copy.deepcopy(evaluation_strategy)
+    # train_data_nodes = copy.deepcopy(train_data_nodes)
+    # aggregation_node = copy.deepcopy(aggregation_node)
+    # strategy = copy.deepcopy(strategy)
+    # evaluation_strategy = copy.deepcopy(evaluation_strategy)
 
     train_organization_ids = [train_data_node.organization_id for train_data_node in train_data_nodes]
 
