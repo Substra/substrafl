@@ -91,6 +91,17 @@ class SimuTestDataNode(TestDataNode):
 
         self._datasamples = opener_interface.get_data(data_sample_paths)
 
+    def synchronize_with_train_node(self, train_data_nodes):
+        # find the train node with the correct org id
+        def match_org_id(train_node):
+            return train_node.organization_id == self.organization_id
+
+        train_data_node = list(filter(match_org_id, train_data_nodes))
+        assert len(train_data_node) == 1, "Each test node should be matched to a train node"
+        train_data_node = train_data_node[0]
+        # synchronize the algorithms
+        self.algo = train_data_node.algo
+
 
 class SimuAggregationNode(AggregationNode):
     def __init__(self, organization_id, strategy):

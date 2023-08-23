@@ -267,6 +267,9 @@ class TestDataNode(Node):
         )
         return summary
 
+    def synchronize_with_train_node(self, train_data_nodes):
+        pass
+
 
 def _check_metric_function(metric_function: Callable) -> None:
     """Function to check the type and the signature of a given metric function.

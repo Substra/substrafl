@@ -215,3 +215,7 @@ class EvaluationStrategy:
 
         self._current_round += 1
         return test_it
+
+    def synchronize_train_test_nodes(self, train_data_nodes):
+        for test_data_node in self.test_data_nodes:
+            test_data_node.synchronize_with_train_node(train_data_nodes)
