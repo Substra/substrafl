@@ -1,9 +1,13 @@
 import uuid
-from substrafl.nodes import TrainDataNode, TestDataNode, AggregationNode
-from substrafl.nodes.references.local_state import LocalStateRef
 from copy import deepcopy
-from substratools.utils import load_interface_from_module
+
 from substratools import Opener
+from substratools.utils import load_interface_from_module
+
+from substrafl.nodes import AggregationNode
+from substrafl.nodes import TestDataNode
+from substrafl.nodes import TrainDataNode
+from substrafl.nodes.references.local_state import LocalStateRef
 
 
 class SimuTrainDataNode(TrainDataNode):
@@ -39,10 +43,7 @@ class SimuTrainDataNode(TrainDataNode):
         dataset_info = substra_client.get_dataset(self.data_manager_key)
 
         opener_interface = load_interface_from_module(
-            "opener",
-            interface_class=Opener,
-            interface_signature=None,
-            path=dataset_info.opener.storage_address
+            "opener", interface_class=Opener, interface_signature=None, path=dataset_info.opener.storage_address
         )
 
         data_sample_paths = [substra_client.get_data_sample(dsk).path for dsk in self.data_sample_keys]
@@ -70,10 +71,7 @@ class SimuTestDataNode(TestDataNode):
 
         # Evaluate the predictions with all the metrics, store the scores
         for key, metric_func in self.metric_functions.items():
-            self.scores.append({
-                key: metric_func(self._datasamples, predictions),
-                "round_idx": round_idx}
-            )
+            self.scores.append({key: metric_func(self._datasamples, predictions), "round_idx": round_idx})
         return None
 
     def register_test_operations(self, *args, **kwargs):
@@ -86,20 +84,15 @@ class SimuTestDataNode(TestDataNode):
         dataset_info = substra_client.get_dataset(self.data_manager_key)
 
         opener_interface = load_interface_from_module(
-            "opener",
-            interface_class=Opener,
-            interface_signature=None,
-            path=dataset_info.opener.storage_address
+            "opener", interface_class=Opener, interface_signature=None, path=dataset_info.opener.storage_address
         )
 
-        data_sample_paths = [substra_client.get_data_sample(dsk).path
-                             for dsk in self.test_data_sample_keys]
+        data_sample_paths = [substra_client.get_data_sample(dsk).path for dsk in self.test_data_sample_keys]
 
         self._datasamples = opener_interface.get_data(data_sample_paths)
 
 
 class SimuAggregationNode(AggregationNode):
-
     def __init__(self, organization_id, strategy):
         super().__init__(organization_id)
         self.strategy = strategy

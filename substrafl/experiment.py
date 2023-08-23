@@ -22,9 +22,9 @@ from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
+from substrafl.nodes.simu_nodes import SimuTrainDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.nodes.simu_nodes import SimuTrainDataNode
 
 logger = logging.getLogger(__name__)
 

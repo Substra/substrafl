@@ -100,8 +100,9 @@ class TorchAlgo(Algo):
         raise NotImplementedError()
 
     @remote_data
-    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None,
-                return_predictions=False) -> Any:
+    def predict(
+        self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None, return_predictions=False
+    ) -> Any:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -116,8 +117,7 @@ class TorchAlgo(Algo):
         # Create torch dataset
         predict_dataset = self._dataset(datasamples, is_inference=True)
         return self._local_predict(
-            predict_dataset=predict_dataset, predictions_path=predictions_path,
-            return_predictions=return_predictions
+            predict_dataset=predict_dataset, predictions_path=predictions_path, return_predictions=return_predictions
         )
 
     def _save_predictions(self, predictions: torch.Tensor, predictions_path: os.PathLike):
