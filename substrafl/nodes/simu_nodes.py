@@ -36,7 +36,7 @@ class SimuTrainDataNode(TrainDataNode):
         if self.keep_intermediate_states:
             if not hasattr(self, "intermediate_states"):
                 self.intermediate_states = []
-            self.intermediate_states.append(deepcopy(self))
+            self.intermediate_states.append(deepcopy(self.algo))
         # Return the results
         op_id = str(uuid.uuid4())
         return LocalStateRef(key=op_id), output_method
