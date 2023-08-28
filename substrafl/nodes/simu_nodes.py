@@ -11,8 +11,9 @@ from substrafl.nodes.references.local_state import LocalStateRef
 
 
 class SimuTrainDataNode(TrainDataNode):
-    def __init__(self, organization_id, data_manager_key, data_sample_keys, algo, client):
+    def __init__(self, organization_id, data_manager_key, data_sample_keys, algo, client, keep_intermediate_states=False):
         super().__init__(organization_id, data_manager_key, data_sample_keys)
+        self.keep_intermediate_states = keep_intermediate_states
         # Make a deep copy of the input algo
         self.algo = deepcopy(algo)
 
@@ -32,6 +33,10 @@ class SimuTrainDataNode(TrainDataNode):
         method_to_run = getattr(self.algo, _method_name)
 
         output_method = method_to_run(**method_parameters, _skip=True)
+        if self.keep_intermediate_states:
+            if not hasattr(self, "intermediate_states"):
+                self.intermediate_states = []
+            self.intermediate_states.append(deepcopy(self))
         # Return the results
         op_id = str(uuid.uuid4())
         return LocalStateRef(key=op_id), output_method
