@@ -281,7 +281,9 @@ def execute_experiment(
     train_data_nodes = copy.deepcopy(train_data_nodes)
     aggregation_node = copy.deepcopy(aggregation_node)
     strategy = copy.deepcopy(strategy)
-    evaluation_strategy = copy.deepcopy(evaluation_strategy)
+
+    if not(isinstance(train_data_nodes[0], SimuTrainDataNode)):
+        evaluation_strategy = copy.deepcopy(evaluation_strategy)
 
     train_organization_ids = [train_data_node.organization_id for train_data_node in train_data_nodes]
 
