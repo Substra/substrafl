@@ -356,7 +356,7 @@ def execute_experiment(
         del xp_train_data_nodes
         del xp_evaluation_strategy
         del xp_aggregation_node
-        scores = {tdn.organization_id: tdn.scores for tdn in xp_evaluation_strategy.test_data_nodes}
+        scores = {tdn.organization_id: tdn.scores for tdn in evaluation_strategy.test_data_nodes}
         return scores
 
     # Computation graph is created
