@@ -294,7 +294,7 @@ def execute_experiment(
                 data_manager_key=t.data_manager_key,
                 data_sample_keys=t.data_sample_keys,
                 algo=copy.deepcopy(strategy.algo),
-                client=t.client,
+                client=copy.deepcopy(client),
             ))
         xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
         xp_evaluation_strategy.test_data_nodes = []
