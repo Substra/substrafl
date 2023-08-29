@@ -11,6 +11,11 @@ class Client(SubstraClient):
                 super().__init__(*args, **kwargs)
                 # We tag it with a mark
                 self.is_simu = True
+            else:
+                super().__init__(*args, **kwargs)
+                # We tag it with a mark
+                self.is_simu = False
+
         else:
             super().__init__(*args, **kwargs)
             # We tag it with a mark
