@@ -289,13 +289,18 @@ def execute_experiment(
         # We don't want to change the type of nodes given by the user
         xp_train_data_nodes = []
         for t in train_data_nodes:
-            xp_train_data_nodes.append(SimuTrainDataNode(
+            simu_train_node = SimuTrainDataNode(
                 organization_id=t.organization_id,
                 data_manager_key=t.data_manager_key,
                 data_sample_keys=t.data_sample_keys,
                 algo=copy.deepcopy(strategy.algo),
                 client=copy.deepcopy(client),
-            ))
+            )
+            if hasattr(t, "keep_intermediate_states"):
+                simu_train_node.keep_intermediate_states = t.keep_intermediate_states
+            
+            xp_train_data_nodes.append(simu_train_node)
+
         xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
         xp_evaluation_strategy.test_data_nodes = []
         for t_train, t_test in zip(train_data_nodes, evaluation_strategy.test_data_nodes):
