@@ -299,7 +299,7 @@ def execute_experiment(
         xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
         xp_evaluation_strategy.test_data_nodes = []
         for t_train, t_test in zip(train_data_nodes, evaluation_strategy.test_data_nodes):
-            assert t_train.org_id == t_test.org_id
+            assert t_train.organization_id == t_test.organization_id
             assert t_train.data_manager_key == t_test.data_manager_key
             xp_evaluation_strategy.test_data_nodes.append(SimuTestDataNode(
                 organization_id=t_train.organization_id,
