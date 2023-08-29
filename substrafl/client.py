@@ -6,7 +6,7 @@ class Client(SubstraClient):
         if "backend_type" in kwargs:
             if kwargs["backend_type"] == "simu":
                 # We remove it not to raise Errors for unrecognized backend
-                kwargs.pop("backend_type")
+                kwargs["backend_type"] = None
                 # We init it with default backend which is subprocess
                 super().__init__(*args, **kwargs)
                 # We tag it with a mark
