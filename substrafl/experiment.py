@@ -302,12 +302,12 @@ def execute_experiment(
             assert t_train.org_id == t_test.org_id
             assert t_train.data_manager_key == t_test.data_manager_key
             xp_evaluation_strategy.test_data_nodes.append(SimuTestDataNode(
-                organization_id=t_train.org_id,
+                organization_id=t_train.organization_id,
                 data_manager_key=t_train.data_manager_key,
                 test_data_sample_keys=t_test.test_data_sample_keys,
                 metric_functions=t_test.metric_functions,
                 algo=copy.deepcopy(strategy.algo),
-                client=t_train.client,
+                client=copy.deepcopy(client),
             ))
 
     else:
@@ -319,12 +319,12 @@ def execute_experiment(
     if len(train_organization_ids) != len(set(train_organization_ids)):
         raise ValueError("Training multiple functions on the same organization is not supported right now.")
 
-    if evaluation_strategy is not None:
-        _check_evaluation_strategy(evaluation_strategy, num_rounds)
+    if xp_evaluation_strategy is not None:
+        _check_evaluation_strategy(xp_evaluation_strategy, num_rounds)
         # Reset the evaluation strategy
-        evaluation_strategy.restart_rounds()
+        xp_evaluation_strategy.restart_rounds()
         # Synchronize the nodes if necessary
-        evaluation_strategy.synchronize_train_test_nodes(xp_train_data_nodes)
+        xp_evaluation_strategy.synchronize_train_test_nodes(xp_train_data_nodes)
 
     cp_metadata = dict()
     if additional_metadata is not None:
