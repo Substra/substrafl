@@ -216,7 +216,7 @@ def _get_packages_versions() -> dict:
 
 def execute_experiment(
     *,
-    client: Union[substra.Client, substrafl.client.Client],
+    client: Union[substra.Client, substrafl.Client],
     strategy: ComputePlanBuilder,
     train_data_nodes: List[TrainDataNode],
     experiment_folder: Union[str, Path],
