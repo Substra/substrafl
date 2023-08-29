@@ -280,7 +280,7 @@ def execute_experiment(
 
     strategy = copy.deepcopy(strategy)
     xp_evaluation_strategy = copy.deepcopy(evaluation_strategy)
-    if hasattr(client, "simu_mode"):
+    if hasattr(client, "is_simu"):
         is_simu = client.is_simu
     else:
         is_simu = False
