@@ -22,7 +22,7 @@ from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
-from substrafl.nodes.simu_nodes import SimuTrainDataNode
+from substrafl.nodes.simu_nodes import SimuTrainDataNode, SimuAggregationNode, SimuTestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -216,7 +216,7 @@ def _get_packages_versions() -> dict:
 
 def execute_experiment(
     *,
-    client: substra.Client,
+    client: Union[substra.Client, substrafl.Client],
     strategy: ComputePlanBuilder,
     train_data_nodes: List[TrainDataNode],
     experiment_folder: Union[str, Path],
@@ -279,13 +279,42 @@ def execute_experiment(
         dependencies = Dependency()
 
     strategy = copy.deepcopy(strategy)
+    xp_evaluation_strategy = copy.deepcopy(evaluation_strategy)
+    if hasattr(client, "simu_mode"):
+        is_simu = client.is_simu
+    else:
+        is_simu = False
+    if is_simu:
+        assert len(train_data_nodes) == len(evaluation_strategy.test_data_nodes)
+        # We don't want to change the type of nodes given by the user
+        xp_train_data_nodes = []
+        for t in train_data_nodes:
+            xp_train_data_nodes.append(SimuTrainDataNode(
+                organization_id=t.organization_id,
+                data_manager_key=t.data_manager_key,
+                data_sample_keys=t.data_sample_keys,
+                algo=copy.deepcopy(strategy.algo),
+                client=t.client,
+            ))
+        xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
+        xp_evaluation_strategy.test_data_nodes = []
+        for t_train, t_test in zip(train_data_nodes, evaluation_strategy.test_data_nodes):
+            assert t_train.org_id == t_test.org_id
+            assert t_train.data_manager_key == t_test.data_manager_key
+            xp_evaluation_strategy.test_data_nodes.append(SimuTestDataNode(
+                organization_id=t_train.org_id,
+                data_manager_key=t_train.data_manager_key,
+                test_data_sample_keys=t_test.test_data_sample_keys,
+                metric_functions=t_test.metric_functions,
+                algo=copy.deepcopy(strategy.algo),
+                client=t_train.client,
+            ))
 
-    if not(isinstance(train_data_nodes[0], SimuTrainDataNode)):
-        train_data_nodes = copy.deepcopy(train_data_nodes)
-        aggregation_node = copy.deepcopy(aggregation_node)
-        evaluation_strategy = copy.deepcopy(evaluation_strategy)
+    else:
+        xp_train_data_nodes = copy.deepcopy(train_data_nodes)
+        xp_aggregation_node = copy.deepcopy(aggregation_node)
 
-    train_organization_ids = [train_data_node.organization_id for train_data_node in train_data_nodes]
+    train_organization_ids = [train_data_node.organization_id for train_data_node in xp_train_data_nodes]
 
     if len(train_organization_ids) != len(set(train_organization_ids)):
         raise ValueError("Training multiple functions on the same organization is not supported right now.")
@@ -295,7 +324,7 @@ def execute_experiment(
         # Reset the evaluation strategy
         evaluation_strategy.restart_rounds()
         # Synchronize the nodes if necessary
-        evaluation_strategy.synchronize_train_test_nodes(train_data_nodes)
+        evaluation_strategy.synchronize_train_test_nodes(xp_train_data_nodes)
 
     cp_metadata = dict()
     if additional_metadata is not None:
@@ -308,23 +337,35 @@ def execute_experiment(
     logger.info("Building the compute plan.")
 
     strategy.build_compute_plan(
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
-        evaluation_strategy=evaluation_strategy,
+        train_data_nodes=xp_train_data_nodes,
+        aggregation_node=xp_aggregation_node,
+        evaluation_strategy=xp_evaluation_strategy,
         num_rounds=num_rounds,
         clean_models=clean_models,
     )
-    if isinstance(train_data_nodes[0], SimuTrainDataNode):
-        # gather all the scores
-        scores = {tdn.organization_id: tdn.scores for tdn in evaluation_strategy.test_data_nodes}
+    if is_simu:
+        # Modify objects inplace
+        # TODO in the future mock API to access simu stuff as you would non
+        # simu stuff
+        for tnode, xp_tnode in zip(evaluation_strategy.test_data_nodes, xp_evaluation_strategy.test_data_nodes):
+            tnode.scores = xp_tnode.scores
+        for tnode, xp_tnode in zip(train_data_nodes, xp_train_data_nodes):
+            tnode.algo = xp_tnode.algo
+            if hasattr(xp_tnode, "intermediate_states"):
+                tnode.intermediate_states = xp_tnode.intermediate_states
+        del xp_train_data_nodes
+        del xp_evaluation_strategy
+        del xp_aggregation_node
+        scores = {tdn.organization_id: tdn.scores for tdn in xp_evaluation_strategy.test_data_nodes}
         return scores
+
     # Computation graph is created
     logger.info("Registering the functions to Substra.")
     tasks, operation_cache = _register_operations(
         client=client,
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
-        evaluation_strategy=evaluation_strategy,
+        train_data_nodes=xp_train_data_nodes,
+        aggregation_node=xp_aggregation_node,
+        evaluation_strategy=xp_evaluation_strategy,
         dependencies=dependencies,
     )
 
@@ -342,9 +383,9 @@ def execute_experiment(
         strategy=strategy,
         num_rounds=num_rounds,
         operation_cache=operation_cache,
-        train_data_nodes=train_data_nodes,
-        aggregation_node=aggregation_node,
-        evaluation_strategy=evaluation_strategy,
+        train_data_nodes=xp_train_data_nodes,
+        aggregation_node=xp_aggregation_node,
+        evaluation_strategy=xp_evaluation_strategy,
         timestamp=timestamp,
         additional_metadata=additional_metadata,
     )
