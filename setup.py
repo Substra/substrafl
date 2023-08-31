@@ -44,7 +44,7 @@ setup(
         "cloudpickle>=1.6.0",
         "substra~=0.47.0",
         "substratools~=0.20.0",
-        "pydantic>=2.3.0, <3.0",
+        "pydantic<3.0",
         "pip>=21.2",
         "wheel",
         "six",
