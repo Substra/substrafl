@@ -110,7 +110,7 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
                     "--find-links",
                     dest_dir.parent / "substratools",
                 ]
-            subprocess.check_output(
+            ret = subprocess.check_output(
                 [
                     sys.executable,
                     "-m",
@@ -123,9 +123,11 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
                 ]
                 + extra_args,
                 cwd=str(lib_path),
+                text=True,
             )
+            wheel_name = re.findall(r"filename=(\S*)", ret)[0]
 
-        shutil.copy(wheel_path, dest_dir / wheel_name)
+        shutil.copy(wheel_path.parent / wheel_name, dest_dir / wheel_name)
         wheel_names.append(wheel_name)
 
     return wheel_names
