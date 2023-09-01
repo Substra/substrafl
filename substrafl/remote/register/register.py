@@ -217,7 +217,7 @@ def _create_substra_function_files(
     substrafl_internal = operation_dir / SUBSTRAFL_FOLDER
     substrafl_internal.mkdir()
 
-    dependency_cache_folder = dependencies.get_cache_directory()
+    dependency_cache_folder = dependencies.cache_directory
     shutil.copytree(dependency_cache_folder, operation_dir, dirs_exist_ok=True)
 
     remote_struct.save(dest=substrafl_internal)

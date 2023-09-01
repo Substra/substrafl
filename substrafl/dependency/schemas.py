@@ -136,7 +136,8 @@ class Dependency(BaseModel):
             excluded_regex=self.excluded_regex,
         )
 
-    def get_cache_directory(self) -> Path:
+    @property
+    def cache_directory(self) -> Path:
         """Getter method to retrieve the path to the cache directory where the dependencies are computed.
 
         Raises:

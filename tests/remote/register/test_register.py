@@ -100,7 +100,7 @@ def test_create_dockerfile(tmp_path, mocker, local_installable_module):
         local_installable_dependencies=[local_installable_dependencies],
         local_code=[local_code_folder],
     )
-    dependencies._compute_in_cache_directory()
+    dependencies._compute_in_cache_directory
 
     expected_dockerfile = f"""
 FROM substratools-mocked

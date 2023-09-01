@@ -332,7 +332,7 @@ def test_get_compute():
         editable_mode=True,
     )
 
-    cache_dir = dependency.get_cache_directory()
+    cache_dir = dependency.cache_directory
 
     assert (cache_dir / "local_code_file.py").is_file()
     assert (cache_dir / "requirements.txt").is_file()
@@ -349,7 +349,7 @@ def test_get_compute_with_compile():
         compile=True,
     )
 
-    cache_dir = dependency.get_cache_directory()
+    cache_dir = dependency.cache_directory
 
     assert (cache_dir / "requirements.in").is_file()
     assert (cache_dir / "requirements.txt").is_file()
