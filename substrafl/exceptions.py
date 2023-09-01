@@ -10,6 +10,18 @@ class SubstraToolsDeprecationWarning(DeprecationWarning):
     """The substratools version used is deprecated."""
 
 
+class UnsupportedPythonVersionError(Exception):
+    """The Python version used is not supported by Substra."""
+
+
+class InvalidUserModuleError(Exception):
+    """The local folder passed by the user as a dependency is not a valid Python module."""
+
+
+class InvalidDependenciesError(Exception):
+    """The set of constraints given on dependencies cannot be solved or is otherwise invalid (wrong package name)."""
+
+
 class CriterionReductionError(Exception):
     """The criterion reduction must be set to 'mean' to use the Newton-Raphson strategy."""
 
@@ -134,3 +146,7 @@ class MetricFunctionSignatureError(Exception):
 
 class MetricFunctionTypeError(Exception):
     """The metric_function() must be of type function."""
+
+
+class DependencyCacheNotFoundError(Exception):
+    """No cache directory found for the dependencies."""

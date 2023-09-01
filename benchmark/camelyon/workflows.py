@@ -91,6 +91,7 @@ def substrafl_fed_avg(
         local_code=[base / "common", base / "weldon_fedavg.py"],
         # Keeping editable_mode=True to ensure nightly test benchmarks are ran against main substrafl git ref
         editable_mode=True,
+        compile=True,
     )
 
     # Custom Strategy used for the data loading (from custom_torch_function.py file)
