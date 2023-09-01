@@ -49,10 +49,13 @@ def build_user_dependency_wheel(lib_path: Path, dest_dir: Path) -> str:
             text=True,
         )
 
-        # Delete the folder when the wheel is computed
-        shutil.rmtree(dest_dir / lib_path)  # delete directory
     except subprocess.CalledProcessError as e:
         raise InvalidUserModuleError from e
+
+    finally:
+        # Delete the folder when the wheel is computed
+        shutil.rmtree(dest_dir / lib_path)  # delete directory
+
     wheel_name = re.findall(r"filename=(\S*)", ret.stdout)[0]
 
     return wheel_name

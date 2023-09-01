@@ -16,7 +16,6 @@ from pydantic import validator
 import substrafl
 from substrafl import exceptions
 from substrafl.constants import SUBSTRAFL_FOLDER
-from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import manage_dependencies
 from substrafl.dependency import path_management
 
@@ -164,9 +163,17 @@ class Dependency(BaseModel):
 
         Args:
             dest_dir (Path): directory where to copy the dependencies computation tree structure.
-        """
 
-        self._copy_cache_directory(dest_dir=dest_dir)
+        Raises:
+            exceptions.DependencyCacheNotFoundError: the method ``_compute_in_cache_directory`` must be
+                run before trying to copy the cache directory.
+        """
+        if self._cache_directory is not None:
+            shutil.copytree(self._cache_directory, dest_dir, dirs_exist_ok=True)
+        else:
+            raise exceptions.DependencyCacheNotFoundError(
+                "No cache directory found for the dependencies. Have you computed the dependencies?"
+            )
 
     def _compute(self, dest_dir: Path) -> None:
         """Build the different wheels, copy the local code and compile or write a requirements.txt regarding the
@@ -223,7 +230,7 @@ class Dependency(BaseModel):
         Use ``_copy_cache_directory`` method to copy it in an other directory.
         """
         if self._cache_directory is None:
-            self._cache_directory = Path(tempfile.mkdtemp(dir=str(Path.cwd().resolve()), prefix=TMP_SUBSTRAFL_PREFIX))
+            self._cache_directory = Path(tempfile.mkdtemp(dir=None))
             self._compute(self._cache_directory)
         else:
             logger.warning(
@@ -231,31 +238,15 @@ class Dependency(BaseModel):
                 "delete it."
             )
 
-    def _copy_cache_directory(self, dest_dir: Path) -> None:
-        """Copy the cache computed dest_dir content to the dest_dir given as argument.
-        The method ``_compute_in_cache_directory`` must be run before calling this method.
-        An error will be raised if not.
-
-        Args:
-            dest_dir (Path): directory where to copy the content of the cache directory.
-
-        Raises:
-            exceptions.DependencyCacheNotFoundError: the method ``_compute_in_cache_directory`` must be
-                run before trying to copy the cache directory.
-        """
-        if self._cache_directory is not None:
-            shutil.copytree(self._cache_directory, dest_dir, dirs_exist_ok=True)
-        else:
-            raise exceptions.DependencyCacheNotFoundError(
-                "No cache directory found for the dependencies. Have you computed the dependencies?"
-            )
-
     def _delete_cache_directory(self) -> None:
         """Delete the cache directory if it exists. A warning message is send to the logger
         if the cache directory does not exist.
         """
         if self._cache_directory is not None:
-            shutil.rmtree(self._cache_directory)  # delete directory
+            try:  # We don't want to raise in __del__.
+                shutil.rmtree(self._cache_directory)  # delete directory
+            except FileNotFoundError:
+                logger.warning("Not cache directory found for the dependencies when trying to clean it.")
             self._cache_directory = None
         else:
             logger.warning("Not cache directory found for the dependencies when trying to clean it.")
