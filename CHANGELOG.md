@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: Move `manage_dependencies.py` from `remote.register` to `dependency` ([#158](https://github.com/Substra/substrafl/pull/158))
 - BREAKING: `local_dependencies` is renamed `local_installable_dependencies` ([#158](https://github.com/Substra/substrafl/pull/158))
 - BREAKING: local_installable_dependencies are now limited to local modules or Python wheels (no support for bdist, sdist...)([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+- Update to pydantic 2.3.0 ([#159](https://github.com/Substra/substrafl/pull/159))
 
 ### Fixed
 
