@@ -136,8 +136,25 @@ class Dependency(BaseModel):
             excluded_regex=self.excluded_regex,
         )
 
-    def copy_compute_dir(self, dest_dir: Path) -> None:
-        """Copy the dependencies computation to the given ``dest_dir``.
+    def get_cache_directory(self) -> Path:
+        """Getter method to retrieve the path to the cache directory where the dependencies are computed.
+
+        Raises:
+            exceptions.DependencyCacheNotFoundError: If no cache directory is found, raise an exception.
+
+        Returns:
+            Path: return the path to the cache directory of the dependency.
+        """
+        if self._cache_directory is not None:
+            return self._cache_directory
+        else:
+            raise exceptions.DependencyCacheNotFoundError(
+                "No cache directory found for the dependencies. Have you computed the dependencies?"
+            )
+
+    def _compute(self, dest_dir: Path) -> None:
+        """Build the different wheels, copy the local code and compile or write a requirements.txt regarding the
+        given dependencies.
 
         Dependencies computation consists in:
 
@@ -160,24 +177,6 @@ class Dependency(BaseModel):
                 │   └── local-module-1.6.1-py3-none-any.whl
                 ├── requirements.in  # only if compile set to True
                 └── requirements.txt
-
-        Args:
-            dest_dir (Path): directory where to copy the dependencies computation tree structure.
-
-        Raises:
-            exceptions.DependencyCacheNotFoundError: the method ``_compute_in_cache_directory`` must be
-                run before trying to copy the cache directory.
-        """
-        if self._cache_directory is not None:
-            shutil.copytree(self._cache_directory, dest_dir, dirs_exist_ok=True)
-        else:
-            raise exceptions.DependencyCacheNotFoundError(
-                "No cache directory found for the dependencies. Have you computed the dependencies?"
-            )
-
-    def _compute(self, dest_dir: Path) -> None:
-        """Build the different wheels, copy the local code and compile or write a requirements.txt regarding the
-        given dependencies.
 
         Args:
             dest_dir (Path): directory where to compute the dependencies

@@ -324,7 +324,7 @@ class TestLocalDependency:
         assert substrafl.remote.register.register.local_lib_wheels.call_count == 0
 
 
-def test_get_compute(tmp_path):
+def test_get_compute():
     dependency = Dependency(
         pypi_dependencies=["pytest"],
         local_installable_dependencies=[CURRENT_FILE.parent / "installable_library"],
@@ -332,16 +332,16 @@ def test_get_compute(tmp_path):
         editable_mode=True,
     )
 
-    dependency.copy_compute_dir(tmp_path)
+    cache_dir = dependency.get_cache_directory()
 
-    assert (tmp_path / "local_code_file.py").is_file()
-    assert (tmp_path / "requirements.txt").is_file()
-    assert (tmp_path / SUBSTRAFL_FOLDER).is_dir()
-    assert (tmp_path / SUBSTRAFL_FOLDER / "dist").is_dir()
-    assert (tmp_path / SUBSTRAFL_FOLDER / "local_dependencies").is_dir()
+    assert (cache_dir / "local_code_file.py").is_file()
+    assert (cache_dir / "requirements.txt").is_file()
+    assert (cache_dir / SUBSTRAFL_FOLDER).is_dir()
+    assert (cache_dir / SUBSTRAFL_FOLDER / "dist").is_dir()
+    assert (cache_dir / SUBSTRAFL_FOLDER / "local_dependencies").is_dir()
 
 
-def test_get_compute_with_compile(tmp_path):
+def test_get_compute_with_compile():
     dependency = Dependency(
         pypi_dependencies=["pytest"],
         local_installable_dependencies=[CURRENT_FILE.parent / "installable_library"],
@@ -349,10 +349,10 @@ def test_get_compute_with_compile(tmp_path):
         compile=True,
     )
 
-    dependency.copy_compute_dir(tmp_path)
+    cache_dir = dependency.get_cache_directory()
 
-    assert (tmp_path / "requirements.in").is_file()
-    assert (tmp_path / "requirements.txt").is_file()
+    assert (cache_dir / "requirements.in").is_file()
+    assert (cache_dir / "requirements.txt").is_file()
 
 
 def test_dependency_deletion():

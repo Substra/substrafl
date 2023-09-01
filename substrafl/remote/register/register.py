@@ -4,6 +4,7 @@ Create the Substra function assets and register them to the platform.
 
 import logging
 import os
+import shutil
 import tarfile
 import tempfile
 import typing
@@ -216,7 +217,8 @@ def _create_substra_function_files(
     substrafl_internal = operation_dir / SUBSTRAFL_FOLDER
     substrafl_internal.mkdir()
 
-    dependencies.copy_compute_dir(operation_dir)
+    dependency_cache_folder = dependencies.get_cache_directory()
+    shutil.copytree(dependency_cache_folder, operation_dir, dirs_exist_ok=True)
 
     remote_struct.save(dest=substrafl_internal)
 
