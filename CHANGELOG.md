@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
 - `Dependency` objects are now computed at initialization in a cache directory, accessible through the `copy_compute_dir` method. The cache directory is deleted at the `Dependency` object deletion. ([#155])(<https://github.com/Substra/substrafl/pull/155>))
+- Check created wheels name. ([#160](https://github.com/Substra/substrafl/pull/160))
 
 ### Changed
 
