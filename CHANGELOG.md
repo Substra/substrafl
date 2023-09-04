@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Set, save & load `random.seed` and `np.random.seed` along with `torch.manual_seed` in `TorchAlgo`([#151](https://github.com/Substra/substrafl/pull/151))
-- Keep the last round task output by default ()
+- Keep the last round task output by default ([#162](https://github.com/Substra/substrafl/pull/162))
 
 ## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.39.0) - 2023-07-25
 
