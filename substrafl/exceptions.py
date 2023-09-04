@@ -150,3 +150,7 @@ class MetricFunctionTypeError(Exception):
 
 class DependencyCacheNotFoundError(Exception):
     """No cache directory found for the dependencies."""
+
+
+class WrongWheelNameError(Exception):
+    """Error with the extracted wheel name from pip wheel."""

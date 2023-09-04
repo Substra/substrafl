@@ -13,8 +13,7 @@ from types import ModuleType
 from typing import List
 from typing import Union
 
-from substrafl.exceptions import InvalidDependenciesError
-from substrafl.exceptions import InvalidUserModuleError
+from substrafl import exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ def build_user_dependency_wheel(lib_path: Path, dest_dir: Path) -> str:
         )
 
     except subprocess.CalledProcessError as e:
-        raise InvalidUserModuleError from e
+        raise exceptions.InvalidUserModuleError from e
 
     finally:
         # Delete the folder when the wheel is computed
@@ -58,6 +57,13 @@ def build_user_dependency_wheel(lib_path: Path, dest_dir: Path) -> str:
 
     wheel_name = re.findall(r"filename=(\S*)", ret.stdout)[0]
 
+    if not wheel_name.endswith(".whl"):
+        raise exceptions.WrongWheelNameError(
+            f"The extracted wheel name is not authorized. Extracted name should ends with .whl but got {wheel_name} "
+            "instead."
+        )
+    elif not (dest_dir / wheel_name).exists():
+        raise exceptions.WrongWheelNameError(f"The extracted wheel {str(dest_dir / wheel_name)} does not exist.")
     return wheel_name
 
 
@@ -125,7 +131,13 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
                 cwd=str(lib_path),
                 text=True,
             )
-            wheel_name = re.findall(r"filename=(\S*)", ret)[0]
+            created_wheel_name = re.findall(r"filename=(\S*)", ret)[0]
+
+            if created_wheel_name != wheel_name:
+                raise exceptions.WrongWheelNameError(
+                    f"The `pip wheel` command built a wheel with an unexpected name: {created_wheel_name} "
+                    "instead of {wheel_name}."
+                )
 
         shutil.copy(wheel_path.parent / wheel_name, dest_dir / wheel_name)
         wheel_names.append(wheel_name)
@@ -199,7 +211,7 @@ def compile_requirements(dependency_list: List[Union[str, Path]], *, dest_dir: P
             text=True,
         )
     except subprocess.CalledProcessError as e:
-        raise InvalidDependenciesError(
+        raise exceptions.InvalidDependenciesError(
             f"Error in command {' '.join(command)}\nstdout: {e.stdout}\nstderr: {e.stderr}"
         ) from e
 

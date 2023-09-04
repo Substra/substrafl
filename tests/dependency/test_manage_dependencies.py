@@ -23,6 +23,26 @@ def test_build_user_dependency_wheel(tmp_path, local_installable_module):
     assert (dest_dir / wheel_name).exists()
 
 
+def test_build_user_bad_dependency_wheel(tmp_path, local_installable_module):
+    setup_content = """from setuptools import setup, find_packages
+
+setup(
+    name='mymodule',
+    version='1.0.2',
+    author='Author Name',
+    description='Description of my package',
+    packages=find_packages(),
+    install_requires=['numpy >= 1.11.1', 'matplotlib >= 3.5.1'],
+)"""
+
+    dest_dir = tmp_path / "local_dir"
+    dest_dir.mkdir()
+    module_root = local_installable_module(dest_dir, setup_content)
+    wheel_name = build_user_dependency_wheel(module_root, dest_dir)
+    assert wheel_name == "mymodule-1.0.2-py3-none-any.whl"
+    assert (dest_dir / wheel_name).exists()
+
+
 def test_build_user_dependency_wheel_invalid_wheel(tmp_path):
     dest_dir = tmp_path / "local_dir"
     os.mkdir(dest_dir)
