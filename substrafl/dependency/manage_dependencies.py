@@ -136,7 +136,7 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
             if created_wheel_name != wheel_name:
                 raise exceptions.WrongWheelNameError(
                     f"The `pip wheel` command built a wheel with an unexpected name: {created_wheel_name} "
-                    "instead of {wheel_name}."
+                    f"instead of {wheel_name}."
                 )
 
         shutil.copy(wheel_path.parent / wheel_name, dest_dir / wheel_name)
