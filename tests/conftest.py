@@ -454,11 +454,11 @@ setup(
 
 @pytest.fixture
 def local_installable_module():
-    def _local_installable_module(root_dir, setup_content=None):
+    def _local_installable_module(root_dir):
         module_root = root_dir / "my_module"
         module_root.mkdir()
         setup_file = module_root / "setup.py"
-        setup_file.write_text(setup_content or SETUP_CONTENT)
+        setup_file.write_text(SETUP_CONTENT)
         return module_root
 
     return _local_installable_module
