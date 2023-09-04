@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+<<<<<<< HEAD
+=======
+### Added
+
+- Check the Python version used before generating the Dockerfile ([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+- Python dependencies can be resolved using pip compile during function registration by setting `compile` to `True`
+  in the `Dependency` object ([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+
+  ```py
+  Dependency(
+        pypi_dependencies=["pytest", "numpy"],
+        compile=True,
+    )
+  ```
+
+- `Dependency` objects are now computed at initialization in a cache directory, accessible through the `copy_compute_dir` method. The cache directory is deleted at the `Dependency` object deletion. ([#155])(<https://github.com/Substra/substrafl/pull/155>))
+
+### Changed
+
+- BREAKING: Rename `generate_wheel.py` to `manage_dependencies.py` ([#156](https://github.com/Substra/substrafl/pull/156))
+- BREAKING: Move `manage_dependencies.py` from `remote.register` to `dependency` ([#158](https://github.com/Substra/substrafl/pull/158))
+- BREAKING: `local_dependencies` is renamed `local_installable_dependencies` ([#158](https://github.com/Substra/substrafl/pull/158))
+- BREAKING: local_installable_dependencies are now limited to local modules or Python wheels (no support for bdist, sdist...)([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+
+### Fixed
+
+- Set, save & load `random.seed` and `np.random.seed` along with `torch.manual_seed` in `TorchAlgo`([#151](https://github.com/Substra/substrafl/pull/151))
+- Keep the last round task output by default ()
+
+## [0.39.0](https://github.com/Substra/substrafl/releases/tag/0.39.0) - 2023-07-25
+
+### Changed
+
+- BREAKING: Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
+`download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
+([#142](https://github.com/Substra/substrafl/pull/142)).
+
+```py
+import tempfile
+
+from substrafl.model_loading import _download_task_output_files
+from substrafl.model_loading import _load_from_files
+
+with tempfile.TemporaryDirectory() as temp_folder:
+    _download_task_output_files(
+        client=<client>,
+        compute_plan_key=<compute_plan_key>,
+        dest_folder=temp_folder,
+        round_idx=<round_idx>,
+        rank_idx=<rank_idx>,
+        task_type="aggregate",
+        identifier="model",
+    )
+    aggregated_state = _load_from_files(input_folder=temp_folder, remote=True)
+```
+
+### Removed
+
+- Function `wait` in `utils`. You can use `substra.Client.wait_task` & `substra.Client.wait_compute_plan` instead. ([#147](https://github.com/Substra/substrafl/pull/147))
+
+### Fixed
+
+- Compatibility with GPU devices when running torch based experiments ([#154](https://github.com/Substra/substrafl/pull/154))
+- Pin `pydantic` to `>=1.9.0` & `<2.0.0` as `pydantic` v `2.0.0` has been released with a lot of non backward compatible changes. ([#148](https://github.com/Substra/substrafl/pull/148))
+
+## [0.38.0](https://github.com/Substra/substrafl/releases/tag/0.38.0) - 2023-06-27
+
+### Changed
+
+- BREAKING: Rename `model_loading.download_shared_state` to `model_loading.download_train_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
+- BREAKING: Rename `model_loading.download_aggregated_state` to `model_loading.download_aggregate_shared_state` ([#143](https://github.com/Substra/substrafl/pull/143))
+- Numpy < 1.24 in dependencies to keep pickle compatibility with substra-tools numpy version ([#144](https://github.com/Substra/substrafl/pull/144))
+
+>>>>>>> 27ce386 (chore: keep the last round task outputs)
 ## [0.37.0](https://github.com/Substra/substrafl/releases/tag/0.37.0) - 2023-06-12
 
 ### Added
