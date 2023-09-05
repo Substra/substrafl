@@ -72,7 +72,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
         num_rounds=NUM_ROUNDS,
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
-        clean_models=False,
+        clean_models=True,
     )
 
     # Wait for the compute plan to be finished

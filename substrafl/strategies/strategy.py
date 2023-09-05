@@ -183,6 +183,9 @@ class Strategy(ComputePlanBuilder):
                     clean_models=clean_models,
                 )
             else:
+                if round_idx == num_rounds:
+                    clean_models = False  # Enforce to keep at least the outputs of the last round.
+
                 self.perform_round(
                     train_data_nodes=train_data_nodes,
                     aggregation_node=aggregation_node,
