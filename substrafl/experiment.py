@@ -281,47 +281,19 @@ def execute_experiment(
         dependencies = Dependency()
 
     strategy = copy.deepcopy(strategy)
-    xp_evaluation_strategy = copy.deepcopy(evaluation_strategy)
     if hasattr(client, "is_simu"):
         is_simu = client.is_simu
     else:
         is_simu = False
+
     if is_simu:
-        assert len(train_data_nodes) == len(evaluation_strategy.test_data_nodes)
-        # We don't want to change the type of nodes given by the user
-        xp_train_data_nodes = []
-        for t in train_data_nodes:
-            simu_train_node = SimuTrainDataNode(
-                organization_id=t.organization_id,
-                data_manager_key=t.data_manager_key,
-                data_sample_keys=t.data_sample_keys,
-                algo=copy.deepcopy(strategy.algo),
-                client=copy.deepcopy(client),
-            )
-            if hasattr(t, "keep_intermediate_states"):
-                simu_train_node.keep_intermediate_states = t.keep_intermediate_states
-
-            xp_train_data_nodes.append(simu_train_node)
-
-        xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
-        xp_evaluation_strategy.test_data_nodes = []
-        for t_train, t_test in zip(train_data_nodes, evaluation_strategy.test_data_nodes):
-            assert t_train.organization_id == t_test.organization_id
-            assert t_train.data_manager_key == t_test.data_manager_key
-            xp_evaluation_strategy.test_data_nodes.append(
-                SimuTestDataNode(
-                    organization_id=t_train.organization_id,
-                    data_manager_key=t_train.data_manager_key,
-                    test_data_sample_keys=t_test.test_data_sample_keys,
-                    metric_functions=t_test.metric_functions,
-                    algo=copy.deepcopy(strategy.algo),
-                    client=copy.deepcopy(client),
-                )
-            )
-
+        xp_train_data_nodes, xp_aggregation_node, xp_evaluation_strategy = _override_nodes_simu(
+            train_data_nodes, aggregation_node, evaluation_strategy, strategy, client
+        )
     else:
         xp_train_data_nodes = copy.deepcopy(train_data_nodes)
         xp_aggregation_node = copy.deepcopy(aggregation_node)
+        xp_evaluation_strategy = copy.deepcopy(evaluation_strategy)
 
     train_organization_ids = [train_data_node.organization_id for train_data_node in xp_train_data_nodes]
 
@@ -407,3 +379,44 @@ def execute_experiment(
     )
     logger.info(("The compute plan has been registered to Substra, its key is {0}.").format(compute_plan.key))
     return compute_plan
+
+
+def _override_nodes_simu(train_data_nodes, aggregation_node, evaluation_strategy, strategy, client):
+    # Check that each train data node has a test data node
+    assert len(train_data_nodes) == len(evaluation_strategy.test_data_nodes)
+    # We don't want to change the type of nodes given by the user
+    xp_train_data_nodes = []
+    for t in train_data_nodes:
+        simu_train_node = SimuTrainDataNode(
+            organization_id=t.organization_id,
+            data_manager_key=t.data_manager_key,
+            data_sample_keys=t.data_sample_keys,
+            algo=copy.deepcopy(strategy.algo),
+            client=copy.deepcopy(client),
+        )
+        if hasattr(t, "keep_intermediate_states"):
+            simu_train_node.keep_intermediate_states = t.keep_intermediate_states
+
+        xp_train_data_nodes.append(simu_train_node)
+
+    # aggregation node
+    xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
+
+    # Evaluation strategy (incl. test data nodes)
+    xp_evaluation_strategy = copy.deepcopy(evaluation_strategy)
+    xp_evaluation_strategy.test_data_nodes = []
+    for t_train, t_test in zip(train_data_nodes, evaluation_strategy.test_data_nodes):
+        assert t_train.organization_id == t_test.organization_id
+        assert t_train.data_manager_key == t_test.data_manager_key
+        xp_evaluation_strategy.test_data_nodes.append(
+            SimuTestDataNode(
+                organization_id=t_train.organization_id,
+                data_manager_key=t_train.data_manager_key,
+                test_data_sample_keys=t_test.test_data_sample_keys,
+                metric_functions=t_test.metric_functions,
+                algo=copy.deepcopy(strategy.algo),
+                client=copy.deepcopy(client),
+            )
+        )
+
+    return xp_train_data_nodes, xp_aggregation_node, xp_evaluation_strategy
