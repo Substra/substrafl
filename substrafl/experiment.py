@@ -298,7 +298,7 @@ def execute_experiment(
             )
             if hasattr(t, "keep_intermediate_states"):
                 simu_train_node.keep_intermediate_states = t.keep_intermediate_states
-            
+
             xp_train_data_nodes.append(simu_train_node)
 
         xp_aggregation_node = SimuAggregationNode(aggregation_node.organization_id, strategy=strategy)
@@ -358,9 +358,6 @@ def execute_experiment(
             tnode.algo = xp_tnode.algo
             if hasattr(xp_tnode, "intermediate_states"):
                 tnode.intermediate_states = xp_tnode.intermediate_states
-        del xp_train_data_nodes
-        del xp_evaluation_strategy
-        del xp_aggregation_node
         scores = {tdn.organization_id: tdn.scores for tdn in evaluation_strategy.test_data_nodes}
         return scores
 
