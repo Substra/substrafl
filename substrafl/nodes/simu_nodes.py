@@ -11,7 +11,9 @@ from substrafl.nodes.references.local_state import LocalStateRef
 
 
 class SimuTrainDataNode(TrainDataNode):
-    def __init__(self, organization_id, data_manager_key, data_sample_keys, algo, client, keep_intermediate_states=False):
+    def __init__(
+        self, organization_id, data_manager_key, data_sample_keys, algo, client, keep_intermediate_states=False
+    ):
         super().__init__(organization_id, data_manager_key, data_sample_keys)
         self.keep_intermediate_states = keep_intermediate_states
         # Make a deep copy of the input algo
@@ -114,7 +116,6 @@ class SimuAggregationNode(AggregationNode):
         self.strategy = strategy
 
     def update_states(self, operation, *args, **kwargs):
-
         method_name = operation.remote_struct._method_name
         method_parameters = operation.remote_struct._method_parameters
 

@@ -22,7 +22,9 @@ from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OperationKey
-from substrafl.nodes.simu_nodes import SimuTrainDataNode, SimuAggregationNode, SimuTestDataNode
+from substrafl.nodes.simu_nodes import SimuAggregationNode
+from substrafl.nodes.simu_nodes import SimuTestDataNode
+from substrafl.nodes.simu_nodes import SimuTrainDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -306,14 +308,16 @@ def execute_experiment(
         for t_train, t_test in zip(train_data_nodes, evaluation_strategy.test_data_nodes):
             assert t_train.organization_id == t_test.organization_id
             assert t_train.data_manager_key == t_test.data_manager_key
-            xp_evaluation_strategy.test_data_nodes.append(SimuTestDataNode(
-                organization_id=t_train.organization_id,
-                data_manager_key=t_train.data_manager_key,
-                test_data_sample_keys=t_test.test_data_sample_keys,
-                metric_functions=t_test.metric_functions,
-                algo=copy.deepcopy(strategy.algo),
-                client=copy.deepcopy(client),
-            ))
+            xp_evaluation_strategy.test_data_nodes.append(
+                SimuTestDataNode(
+                    organization_id=t_train.organization_id,
+                    data_manager_key=t_train.data_manager_key,
+                    test_data_sample_keys=t_test.test_data_sample_keys,
+                    metric_functions=t_test.metric_functions,
+                    algo=copy.deepcopy(strategy.algo),
+                    client=copy.deepcopy(client),
+                )
+            )
 
     else:
         xp_train_data_nodes = copy.deepcopy(train_data_nodes)
