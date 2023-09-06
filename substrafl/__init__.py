@@ -1,7 +1,6 @@
 import logging
 
 from substrafl.__version__ import __version__  # noqa
-from substrafl.client import Client
 from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.experiment import execute_experiment

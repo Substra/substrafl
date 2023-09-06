@@ -218,7 +218,7 @@ def _get_packages_versions() -> dict:
 
 def execute_experiment(
     *,
-    client: Union[substra.Client, substrafl.Client],
+    client: substra.Client,
     strategy: ComputePlanBuilder,
     train_data_nodes: List[TrainDataNode],
     experiment_folder: Union[str, Path],
@@ -230,6 +230,7 @@ def execute_experiment(
     name: Optional[str] = None,
     additional_metadata: Optional[Dict] = None,
     task_submission_batch_size: int = 500,
+    simu_mode=False,
 ) -> substra.sdk.models.ComputePlan:
     """Run a complete experiment. This will train (on the `train_data_nodes`) and test (on the
     `test_data_nodes`) the specified `strategy` `n_rounds` times and return the
@@ -273,6 +274,9 @@ def execute_experiment(
         task_submission_batch_size(int): The compute plan tasks are submitted by batch. The higher the batch size,
             the faster the submission, a batch size that is too high makes the submission fail.
             Rule of thumb: batch_size = math.floor(120000 / number_of_samples_per_task)
+        simu_mode(bool, Optional): Whether to apply a simulation mode, that will run everything
+            in the same process instead of the subprocess mode. This is much faster than subprocess.
+            Defaults to False.
 
     Returns:
         ComputePlan: The generated compute plan
@@ -281,13 +285,9 @@ def execute_experiment(
         dependencies = Dependency()
 
     strategy = copy.deepcopy(strategy)
-    if hasattr(client, "is_simu"):
-        is_simu = client.is_simu
-    else:
-        is_simu = False
 
     xp_train_data_nodes, xp_aggregation_node, xp_evaluation_strategy = _prepare_nodes(
-        train_data_nodes, aggregation_node, evaluation_strategy, strategy, client, is_simu
+        train_data_nodes, aggregation_node, evaluation_strategy, strategy, client, simu_mode
     )
 
     train_organization_ids = [train_data_node.organization_id for train_data_node in xp_train_data_nodes]
@@ -319,7 +319,7 @@ def execute_experiment(
         num_rounds=num_rounds,
         clean_models=clean_models,
     )
-    if is_simu:
+    if simu_mode:
         # Modify objects inplace
         # TODO in the future mock API to access simu stuff as you would non
         # simu stuff
@@ -376,8 +376,8 @@ def execute_experiment(
     return compute_plan
 
 
-def _prepare_nodes(train_data_nodes, aggregation_node, evaluation_strategy, strategy, client, is_simu=False):
-    if is_simu:
+def _prepare_nodes(train_data_nodes, aggregation_node, evaluation_strategy, strategy, client, simu_mode=False):
+    if simu_mode:
         # Check that each train data node has a test data node
         assert len(train_data_nodes) == len(evaluation_strategy.test_data_nodes)
         # We don't want to change the type of nodes given by the user
