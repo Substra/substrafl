@@ -66,7 +66,7 @@ class TrainDataNode(Node):
                 ),
             },
             metadata={
-                "round_idx": round_idx,
+                "round_idx": str(round_idx),
             },
             tag=TaskType.INITIALIZATION,
             worker=self.organization_id,
@@ -160,7 +160,7 @@ class TrainDataNode(Node):
         else:
             shared_inputs = []
 
-        task_metadata = {"round_idx": round_idx} if round_idx is not None else {}
+        task_metadata = {"round_idx": str(round_idx)} if round_idx is not None else {}
         train_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,

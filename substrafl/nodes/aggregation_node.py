@@ -77,7 +77,7 @@ class AggregationNode(Node):
             else None
         )
 
-        task_metadata = {"round_idx": round_idx} if round_idx is not None else {}
+        task_metadata = {"round_idx": str(round_idx)} if round_idx is not None else {}
         aggregate_task = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key
             task_id=op_id,
