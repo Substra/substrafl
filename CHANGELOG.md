@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.40.0](https://github.com/Substra/substrafl/releases/tag/0.40.0) - 2023-09-07
+
 ### Added
 
 - Check the Python version used before generating the Dockerfile ([#155])(<https://github.com/Substra/substrafl/pull/155>)).
@@ -20,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     )
   ```
 
-- `Dependency` objects are now computed at initialization in a cache directory, accessible through the `copy_compute_dir` method. The cache directory is deleted at the `Dependency` object deletion. ([#155])(<https://github.com/Substra/substrafl/pull/155>))
+- Dependency objects are now computed at initialization in a cache directory, accessible through the `cache_directory` attribute. The cache directory is deleted at the Dependency object deletion. ([https://github.com/Substra/substrafl/pull/155])(https://github.com/Substra/substrafl/pull/155))
 - Check created wheels name. ([#160](https://github.com/Substra/substrafl/pull/160))
 
 ### Changed
@@ -40,8 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - BREAKING: Input and output of aggregate tasks are now `shared_state`. It provides more flexibility to link different type of tasks with each other. To use
-`download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
-([#142](https://github.com/Substra/substrafl/pull/142)).
+  `download_aggregate_shared_state` on experiments launched before this commit, you can use the following code as a replacement of the function
+  ([#142](https://github.com/Substra/substrafl/pull/142)).
 
 ```py
 import tempfile
@@ -91,7 +93,7 @@ with tempfile.TemporaryDirectory() as temp_folder:
 
 ## Changed
 
-- BREAKING: depreciate the usage of `model_loading.download_algo_files` and `model_loading.load_algo` functions. New utils functions are now available.  ([#125](https://github.com/Substra/substrafl/pull/125))
+- BREAKING: depreciate the usage of `model_loading.download_algo_files` and `model_loading.load_algo` functions. New utils functions are now available. ([#125](https://github.com/Substra/substrafl/pull/125))
   `model_loading.download_algo_state` to download a SubstraFL algo of a given round or rank.
   `model_loading.download_shared_state` to download a SubstraFL shared object of a given round or rank.
   `model_loading.download_aggregated_state` to download a SubstraFL aggregated of a given round or rank.
