@@ -70,7 +70,6 @@ class Dependency(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-        underscore_attrs_are_private = True
 
     def __init__(self, *args, **kwargs):
         """Dependencies are computed at object initialization.
