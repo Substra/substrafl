@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.41.0](https://github.com/Substra/substrafl/releases/tag/0.41.0) - 2023-09-08
+
 ### Changed
 
 - Update to pydantic 2.3.0 ([#159](https://github.com/Substra/substrafl/pull/159))
@@ -15,9 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Check the Python version used before generating the Dockerfile ([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+- Check the Python version used before generating the Dockerfile ([#155](<https://github.com/Substra/substrafl/pull/155>)).
 - Python dependencies can be resolved using pip compile during function registration by setting `compile` to `True`
-  in the `Dependency` object ([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+  in the `Dependency` object ([#155](<https://github.com/Substra/substrafl/pull/155>)).
 
   ```py
   Dependency(
@@ -26,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     )
   ```
 
-- Dependency objects are now computed at initialization in a cache directory, accessible through the `cache_directory` attribute. The cache directory is deleted at the Dependency object deletion. ([https://github.com/Substra/substrafl/pull/155])(<https://github.com/Substra/substrafl/pull/155>))
+- Dependency objects are now computed at initialization in a cache directory, accessible through the `cache_directory` attribute. The cache directory is deleted at the Dependency object deletion. ([#155](<https://github.com/Substra/substrafl/pull/155>))
 - Check created wheels name. ([#160](https://github.com/Substra/substrafl/pull/160))
 
 ### Changed
@@ -34,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: Rename `generate_wheel.py` to `manage_dependencies.py` ([#156](https://github.com/Substra/substrafl/pull/156))
 - BREAKING: Move `manage_dependencies.py` from `remote.register` to `dependency` ([#158](https://github.com/Substra/substrafl/pull/158))
 - BREAKING: `local_dependencies` is renamed `local_installable_dependencies` ([#158](https://github.com/Substra/substrafl/pull/158))
-- BREAKING: local_installable_dependencies are now limited to local modules or Python wheels (no support for bdist, sdist...)([#155])(<https://github.com/Substra/substrafl/pull/155>)).
+- BREAKING: local_installable_dependencies are now limited to local modules or Python wheels (no support for bdist, sdist...) ([#155](<https://github.com/Substra/substrafl/pull/155>)).
 
 ### Fixed
 
