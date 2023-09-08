@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Changed
+
+- Update to pydantic 2.3.0 ([#159](https://github.com/Substra/substrafl/pull/159))
+
 ## [0.40.0](https://github.com/Substra/substrafl/releases/tag/0.40.0) - 2023-09-07
 
 ### Added
@@ -22,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     )
   ```
 
-- Dependency objects are now computed at initialization in a cache directory, accessible through the `cache_directory` attribute. The cache directory is deleted at the Dependency object deletion. ([https://github.com/Substra/substrafl/pull/155])(https://github.com/Substra/substrafl/pull/155))
+- Dependency objects are now computed at initialization in a cache directory, accessible through the `cache_directory` attribute. The cache directory is deleted at the Dependency object deletion. ([https://github.com/Substra/substrafl/pull/155])(<https://github.com/Substra/substrafl/pull/155>))
 - Check created wheels name. ([#160](https://github.com/Substra/substrafl/pull/160))
 
 ### Changed

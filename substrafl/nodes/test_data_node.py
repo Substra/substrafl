@@ -114,7 +114,7 @@ class TestDataNode(Node):
                 parent_task_output_identifier=OutputIdentifiers.predictions,
             )
         ]
-        task_metadata = {"round_idx": round_idx} if round_idx is not None else {}
+        task_metadata = {"round_idx": str(round_idx)} if round_idx is not None else {}
 
         predicttask = substra.schemas.ComputePlanTaskSpec(
             function_key=str(uuid.uuid4()),  # bogus function key

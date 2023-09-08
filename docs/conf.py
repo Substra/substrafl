@@ -180,6 +180,7 @@ autodoc_mock_imports = ["torch"]
 # The following elements are the link that auto doc were not able to do
 nitpick_ignore = [
     ("py:class", "pydantic.main.BaseModel"),
+    ("py:class", "BaseModel"),
     ("py:class", "torch.nn.modules.module.Module"),
     ("py:class", "torch.nn.modules.loss._Loss"),
     ("py:class", "torch.optim.optimizer.Optimizer"),
