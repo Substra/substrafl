@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.37.3](https://github.com/Substra/substrafl/releases/tag/0.37.3) - 2023-09-11
+
+### Fixed
+
+- Pin Substra to 0.45.1.
+
 ## [0.37.2](https://github.com/Substra/substrafl/releases/tag/0.37.2) - 2023-09-11
 
 ### Fixed
