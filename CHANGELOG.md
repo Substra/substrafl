@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Fixed
+
+- Fix Newton-Raphson docstring ([#170](https://github.com/Substra/substrafl/pull/170))
+
 ## [0.41.0](https://github.com/Substra/substrafl/releases/tag/0.41.0) - 2023-09-08
 
 ### Changed

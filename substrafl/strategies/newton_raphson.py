@@ -22,8 +22,10 @@ from substrafl.strategies.strategy import Strategy
 class NewtonRaphson(Strategy):
     """Newton-Raphson strategy.
 
-    Newton-Raphson strategy is based on Newton-Raphson distributed method. It leads to a faster divergence than
+    Newton-Raphson strategy is based on Newton-Raphson distributed method. It leads to a faster convergence than
     a standard FedAvg strategy, however it can only be used on convex problems.
+
+    See https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization for more details.
 
     In a local step, the first order derivative (gradients) and the second order derivative (Hessian Matrix) of loss
     with respect to weights  is calculated for each node.
