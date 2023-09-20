@@ -71,7 +71,7 @@ def get_weldon_fedavg(
                 if self._scheduler is not None:
                     self._scheduler.step()
 
-        def _local_predict(self, predict_dataset, predictions_path):
+        def _local_predict(self, predict_dataset, predictions_path, return_predictions=False):
             multiprocessing_context = None
             if num_workers != 0:
                 multiprocessing_context = torch.multiprocessing.get_context("spawn")
