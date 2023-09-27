@@ -86,9 +86,9 @@ class Mean(BaseAnalytic):
             }
         n_samples = datasamples.select_dtypes(include=np.number).count()
         # we don't want to rely on  broadcasting because we want a different noise value for each column
-        bounded_mean = datasamples.clip(lower=self.lower_bounds, upper=self.upper_bounds) + np.random.laplace(
-            scale=self.epsilon * n_samples, size=datasamples.shape[1]
-        )
+        bounded_mean = datasamples.clip(lower=self.lower_bounds, upper=self.upper_bounds).mean(
+            numeric_only=True, skipna=True
+        ) + np.random.laplace(scale=self.epsilon * n_samples, size=datasamples.shape[1])
         return {
             "mean": bounded_mean,
             "n_samples": n_samples,
