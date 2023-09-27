@@ -9,7 +9,7 @@ from substrafl.analytics.mean import Mean
 def data():
     data = {
         "1": [2, 3, 4, 100, 11, 10],
-        "2": [20000, 25000, np.nan, 30000, 23456, 65000],
+        "2": [20_000, 25_000, np.nan, 30_000, 23_456, 65_000],
         "4": [1000, 2300, 1200, 2000, 1100, np.nan],
     }
 
@@ -59,3 +59,20 @@ def test_aggregate_mean(data, data_split):
     assert isinstance(avg_state, dict)
     assert "global_mean" in avg_state
     assert np.isclose(avg_state["global_mean"], local_means).all()
+
+
+@pytest.mark.parametrize("epsilon", [0.1, 0.5, 1, 10])
+def test_dp_mean(data, epsilon):
+    lower_bounds = [0, 0, 0]
+    upper_bounds = [100, 100_000, 2500]
+
+    size = data.count()
+
+    original_mean = Mean().local_mean(datasamples=data, _skip=True)["mean"]
+    dp_mean = Mean(
+        differentially_private=True,
+        epsilon=epsilon,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+    ).local_mean(datasamples=data, _skip=True)["mean"]
+    assert all(abs(original_mean - dp_mean) < 10 * (1 / size + 1 / (epsilon * size)))
