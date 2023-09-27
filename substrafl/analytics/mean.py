@@ -49,7 +49,7 @@ class Mean(BaseAnalytic):
         kwargs: Any
             extra keyword arguments
         """
-        super().__init__(differentially_private, *args, **kwargs)
+        super().__init__(differentially_private, epsilon, lower_bounds, upper_bounds, *args, **kwargs)
         if differentially_private and (epsilon is None or lower_bounds is None or upper_bounds is None):
             raise RuntimeError("epsilon, lower_bound and upper_bound must be set to use differential privacy")
         # TODO check that numpy seed is not set if differentially_private = True
