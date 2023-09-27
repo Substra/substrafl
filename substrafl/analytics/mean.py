@@ -1,13 +1,16 @@
 """Define the substrafl stragegy to compute a mean."""
+
+from typing import Any
+from typing import List
+
 import numpy as np
-from cancerlinq.strategies.base_strategy import AnalyticStrategy
-from cancerlinq.utils.aggregation import aggregate_means
+from analytics.base_analytic import BaseAnalytic
 
 from substrafl.remote import remote
 from substrafl.remote import remote_data
 
 
-class StrategyMean(AnalyticStrategy):
+class Mean(BaseAnalytic):
     """Implement the substrafl AnalyticsStrategy for the mean.
 
     This class is the first one of a new kind of strategies, AnalyticsStrategy, vs
@@ -62,6 +65,33 @@ class StrategyMean(AnalyticStrategy):
             "n_samples": datasamples.select_dtypes(include=np.number).count(),
         }
 
+    def _aggregate_means(self, local_means: List[Any], n_local_samples: List[int]):
+        """Aggregate local means.
+
+        Aggregate the local means into a global mean by using the local number of samples.
+
+        Parameters
+        ----------
+        local_means : List[Any]
+            List of local means. Could be array, float, Series.
+        n_local_samples : List[int]
+            List of number of samples used for each local mean.
+
+        Returns
+        -------
+        Any
+            Aggregated mean. Same type of the local means
+        """
+        tot_samples = np.copy(n_local_samples[0])
+        tot_mean = np.copy(local_means[0])
+        for mean, n_sample in zip(local_means[1:], n_local_samples[1:]):
+            mean = np.nan_to_num(mean, nan=0, copy=False)
+            tot_mean *= tot_samples / (tot_samples + n_sample)
+            tot_mean += mean * (n_sample / (tot_samples + n_sample))
+            tot_samples += n_sample
+
+        return tot_mean
+
     @remote
     def aggregate_mean(self, shared_states):
         """Compute the global mean given the local results.
@@ -76,5 +106,5 @@ class StrategyMean(AnalyticStrategy):
         dict
             Global results to be shared with train nodes via shared_state.
         """
-        tot_mean = aggregate_means([s["mean"] for s in shared_states], [s["n_samples"] for s in shared_states])
+        tot_mean = self._aggregate_means([s["mean"] for s in shared_states], [s["n_samples"] for s in shared_states])
         return {"global_mean": tot_mean}

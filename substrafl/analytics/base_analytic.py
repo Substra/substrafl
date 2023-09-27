@@ -7,7 +7,7 @@ from typing import Optional
 from substrafl.compute_plan_builder import ComputePlanBuilder
 
 
-class AnalyticStrategy(ComputePlanBuilder):
+class BaseAnalytic(ComputePlanBuilder):
     """Implement the abstract substrafl AnalyticsStrategy.
 
     This class is the first one of a new kind of strategies, AnalyticsStrategy, vs
