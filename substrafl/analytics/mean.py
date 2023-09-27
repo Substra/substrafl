@@ -5,8 +5,8 @@ from typing import List
 from typing import Optional
 
 import numpy as np
-from analytics.base_analytic import BaseAnalytic
 
+from substrafl.analytics.base_analytic import BaseAnalytic
 from substrafl.remote import remote
 from substrafl.remote import remote_data
 
@@ -79,7 +79,7 @@ class Mean(BaseAnalytic):
         dict
             Local results to be shared via shared_state to the aggregation node.
         """
-        if not self.differential_private:
+        if not self.differentially_private:
             return {
                 "mean": datasamples.mean(numeric_only=True, skipna=True),
                 "n_samples": datasamples.select_dtypes(include=np.number).count(),
