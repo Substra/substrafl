@@ -2,6 +2,7 @@
 
 from typing import Any
 from typing import List
+from typing import Optional
 
 import numpy as np
 from analytics.base_analytic import BaseAnalytic
@@ -17,7 +18,15 @@ class Mean(BaseAnalytic):
     OptimizationStrategy which are the current strategies.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        differentially_private: bool = False,
+        epsilon: Optional[float] = None,
+        lower_bounds: Optional[List[float]] = None,
+        upper_bounds: Optional[List[float]] = None,
+        *args,
+        **kwargs,
+    ):
         """Initialize the strategy.
 
         Define self.aggregation and self.local_computations,
@@ -32,12 +41,22 @@ class Mean(BaseAnalytic):
 
         Parameters
         ----------
+        differentially_private: bool
+            If True, the mean is computed in a differential private way.
+            Defaults to False.
         args: Any
             extra arguments
         kwargs: Any
             extra keyword arguments
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(differentially_private, *args, **kwargs)
+        if differentially_private and (epsilon is None or lower_bounds is None or upper_bounds is None):
+            raise RuntimeError("epsilon, lower_bound and upper_bound must be set to use differential privacy")
+        # TODO check that numpy seed is not set if differentially_private = True
+        self.differentially_private = differentially_private
+        self.epsilon = epsilon
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
         self.local_computations = [self.local_mean]
         self.aggregations = [self.aggregate_mean]
 
@@ -60,9 +79,19 @@ class Mean(BaseAnalytic):
         dict
             Local results to be shared via shared_state to the aggregation node.
         """
+        if not self.differential_private:
+            return {
+                "mean": datasamples.mean(numeric_only=True, skipna=True),
+                "n_samples": datasamples.select_dtypes(include=np.number).count(),
+            }
+        n_samples = datasamples.select_dtypes(include=np.number).count()
+        # we don't want to rely on  broadcasting because we want a different noise value for each column
+        bounded_mean = datasamples.clip(lower=self.lower_bounds, upper=self.upper_bounds) + np.random.laplace(
+            scale=self.epsilon * n_samples, size=datasamples.shape[1]
+        )
         return {
-            "mean": datasamples.mean(numeric_only=True, skipna=True),
-            "n_samples": datasamples.select_dtypes(include=np.number).count(),
+            "mean": bounded_mean,
+            "n_samples": n_samples,
         }
 
     def _aggregate_means(self, local_means: List[Any], n_local_samples: List[int]):
