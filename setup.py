@@ -50,6 +50,8 @@ setup(
         "six",
         "packaging",
         "pip-tools",
+        "scipy",
+        "pandas",
     ],
     extras_require={
         "dev": [
