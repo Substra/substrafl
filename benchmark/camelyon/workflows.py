@@ -87,7 +87,7 @@ def substrafl_fed_avg(
     # Dependencies
     base = Path(__file__).parent
     dependencies = Dependency(
-        pypi_dependencies=["numpy==1.23.5", "torch==2.0.1", "scikit-learn==1.3.1"],
+        pypi_dependencies=["numpy==1.24.3", "torch==2.0.1", "scikit-learn==1.3.1"],
         local_code=[base / "common", base / "weldon_fedavg.py"],
         # Keeping editable_mode=True to ensure nightly test benchmarks are ran against main substrafl git ref
         editable_mode=True,
