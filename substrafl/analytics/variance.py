@@ -15,7 +15,7 @@ class StrategyVariance(BaseAnalytic):
     OptimizationStrategy which are the current strategies.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, differentially_private: bool = False, *args, **kwargs):
         """Initialize the strategy.
 
         Define self.aggregation and self.local_computations,
