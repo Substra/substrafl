@@ -3,12 +3,14 @@ Utility functions to manage dependencies (building wheels, compiling requirement
 """
 import logging
 import os
+import pathlib
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 from pathlib import PurePosixPath
+from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import List
 from typing import Union
@@ -16,8 +18,6 @@ from typing import Union
 from substrafl import exceptions
 
 logger = logging.getLogger(__name__)
-
-LOCAL_WHEELS_FOLDER = Path.home() / ".substrafl"
 
 
 def build_user_dependency_wheel(lib_path: Path, dest_dir: Path) -> str:
@@ -96,26 +96,22 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
         lib_name = lib_module.__name__
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
-        wheel_path = LOCAL_WHEELS_FOLDER / wheel_name
-        # Recreate the wheel only if it does not exist
-        if wheel_path.exists():
-            logger.warning(
-                f"Existing wheel {wheel_path} will be used to build {lib_name}. "
-                "It may lead to errors if you are using an unreleased version of this lib: "
-                "if it's the case, you can delete the wheel and it will be re-generated."
-            )
-        else:
-            # if the right version of substra or substratools is not found, it will search if they are already
-            # installed in 'dist' and take them from there.
-            # sys.executable takes the current Python interpreter instead of the default one on the computer
-            extra_args: list = []
-            if lib_name == "substrafl":
-                extra_args = [
-                    "--find-links",
-                    dest_dir.parent / "substra",
-                    "--find-links",
-                    dest_dir.parent / "substratools",
-                ]
+        # if the right version of substra or substratools is not found, it will search if they are already
+        # installed in 'dist' and take them from there.
+        # sys.executable takes the current Python interpreter instead of the default one on the computer
+
+        extra_args = (
+            [
+                "--find-links",
+                dest_dir.parent / "substra",
+                "--find-links",
+                dest_dir.parent / "substratools",
+            ]
+            if lib_name == "substrafl"
+            else []
+        )
+
+        with TemporaryDirectory() as tmp_dir:
             ret = subprocess.check_output(
                 [
                     sys.executable,
@@ -124,7 +120,7 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
                     "wheel",
                     ".",
                     "-w",
-                    LOCAL_WHEELS_FOLDER,
+                    tmp_dir,
                     "--no-deps",
                 ]
                 + extra_args,
@@ -139,7 +135,7 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
                     f"instead of {wheel_name}."
                 )
 
-        shutil.copy(wheel_path.parent / wheel_name, dest_dir / wheel_name)
+            shutil.copy(pathlib.Path(tmp_dir) / wheel_name, dest_dir / wheel_name)
         wheel_names.append(wheel_name)
 
     return wheel_names

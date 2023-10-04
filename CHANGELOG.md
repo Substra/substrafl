@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support on Python 3.11 ([#169](https://github.com/Substra/substrafl/pull/169))
 
+### Changed
+- Remove substrafl wheel cache ([#175](https://github.com/Substra/substrafl/pull/175))
+
 ## [0.41.1](https://github.com/Substra/substrafl/releases/tag/0.41.1) - 2023-10-06
 
 ### Fixed
