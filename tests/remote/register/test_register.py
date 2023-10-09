@@ -40,7 +40,7 @@ def test_check_python_version(version):
         register._check_python_version(version)
 
 
-@pytest.mark.parametrize("version", ["3.8", "3.9", "3.10"])
+@pytest.mark.parametrize("version", ["3.8", "3.9", "3.10", "3.11"])
 def test_check_python_version_valid(version):
     """Does not raise for supported versions"""
     register._check_python_version(version)

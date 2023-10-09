@@ -33,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     keywords=["substrafl"],
     packages=find_packages(exclude=["tests*", "benchmark*"]),
@@ -40,7 +41,7 @@ setup(
     # that release is private and in the Docker container
     # it has access only to the public PyPi
     install_requires=[
-        "numpy>=1.20.3, <1.24",
+        "numpy>=1.24",
         "cloudpickle>=1.6.0",
         "substra~=0.48.1",
         "substratools~=0.21.0",
