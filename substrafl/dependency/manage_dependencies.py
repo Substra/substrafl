@@ -194,7 +194,6 @@ def compile_requirements(dependency_list: List[Union[str, Path]], *, dest_dir: P
         "piptools",
         "compile",
         "--resolver=backtracking",
-        "--no-emit-index-url",
         str(requirements_in),
     ]
     try:
