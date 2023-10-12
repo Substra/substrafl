@@ -8,7 +8,6 @@ import torch
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch import TorchScaffoldAlgo
 from substrafl.algorithms.pytorch.weight_manager import increment_parameters
-from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import NumUpdatesValueError
 from substrafl.exceptions import TorchScaffoldAlgoParametersUpdateError
@@ -50,6 +49,7 @@ def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_sched
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
                 scheduler=scheduler,
+                use_gpu=False,
             )
 
     return MyAlgo
@@ -72,12 +72,9 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
 
 
 @pytest.fixture(scope="module")
-def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
-
+def compute_plan(
+    torch_algo, torch_cpu_dependency, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir
+):
     strategy = Scaffold(algo=torch_algo())
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes, eval_rounds=[0, NUM_ROUNDS]
@@ -90,7 +87,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
-        dependencies=algo_deps,
+        dependencies=torch_cpu_dependency,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
     )

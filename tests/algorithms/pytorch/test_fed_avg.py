@@ -7,7 +7,6 @@ import torch
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch import TorchFedAvgAlgo
 from substrafl.algorithms.pytorch.weight_manager import increment_parameters
-from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_aggregate_shared_state
@@ -46,18 +45,16 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
                 model=perceptron,
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
+                use_gpu=False,
             )
 
     return MyAlgo
 
 
 @pytest.fixture(scope="module")
-def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir):
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
-
+def compute_plan(
+    torch_algo, torch_cpu_dependency, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir
+):
     strategy = FedAvg(algo=torch_algo())
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes, eval_rounds=[0, NUM_ROUNDS]
@@ -70,7 +67,7 @@ def compute_plan(torch_algo, train_linear_nodes, test_linear_nodes, aggregation_
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
-        dependencies=algo_deps,
+        dependencies=torch_cpu_dependency,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=True,
     )

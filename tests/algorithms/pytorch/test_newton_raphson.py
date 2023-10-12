@@ -4,7 +4,6 @@ import torch
 
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch import TorchNewtonRaphsonAlgo
-from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import CriterionReductionError
 from substrafl.exceptions import NegativeHessianMatrixError
@@ -235,6 +234,7 @@ def compute_plan(
     nr_test_data,
     numpy_datasets,
     perceptron,
+    torch_cpu_dependency,
     aggregation_node,
     mae_metric,
     session_dir,
@@ -293,13 +293,10 @@ def compute_plan(
                 batch_size=BATCH_SIZE,
                 dataset=numpy_torch_dataset,
                 l2_coeff=0,
+                use_gpu=False,
             )
 
     my_algo = MyAlgo()
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
 
     strategy = NewtonRaphson(algo=my_algo, damping_factor=DAMPING_FACTOR)
     my_eval_strategy = EvaluationStrategy(
@@ -313,7 +310,7 @@ def compute_plan(
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
-        dependencies=algo_deps,
+        dependencies=torch_cpu_dependency,
         experiment_folder=session_dir / "experiment_folder",
     )
 
