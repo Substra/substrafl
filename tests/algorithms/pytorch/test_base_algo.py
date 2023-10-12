@@ -50,6 +50,7 @@ def rng_algo(request, torch_linear_model, numpy_torch_dataset):
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
                 index_generator=nig,
                 seed=test_seed,
+                use_gpu=False,
             )
 
         @property
@@ -267,7 +268,9 @@ def test_base_algo_custom_init_arg(session_dir, dummy_algo_custom_init_arg, arg_
 
 
 @pytest.mark.substra
-def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_strategy, rng_algo):
+def test_rng_state_save_and_load(
+    network, train_linear_nodes, session_dir, rng_strategy, rng_algo, torch_cpu_dependency
+):
     """
     Test that the RNG state is well incremented through the different rounds.
     """
@@ -282,10 +285,6 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
     expected_output_round_1 = torch.rand(n_rng_sample)
     expected_output_round_2 = torch.rand(n_rng_sample)
 
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
     strategy = rng_strategy(algo=my_algo)
 
     cp = execute_experiment(
@@ -295,7 +294,7 @@ def test_rng_state_save_and_load(network, train_linear_nodes, session_dir, rng_s
         evaluation_strategy=None,
         aggregation_node=None,
         num_rounds=2,
-        dependencies=algo_deps,
+        dependencies=torch_cpu_dependency,
         experiment_folder=session_dir / "experiment_folder",
     )
     network.clients[0].wait_compute_plan(cp.key)
@@ -476,7 +475,7 @@ def test_gpu(
     algo_class, strategy_class, use_gpu = dummy_gpu
     my_algo = algo_class()
     algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy", "pytest"],
+        pypi_dependencies=["torch==2.0.1", "numpy==1.24.3", "pytest"],
         editable_mode=True,
     )
 

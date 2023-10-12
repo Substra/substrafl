@@ -5,7 +5,6 @@ import torch
 
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch import TorchSingleOrganizationAlgo
-from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
 from substrafl.model_loading import download_algo_state
@@ -21,17 +20,13 @@ N_ROUND = 2
 def compute_plan(
     network,
     torch_linear_model,
+    torch_cpu_dependency,
     train_linear_nodes,
     test_linear_nodes,
     session_dir,
     numpy_torch_dataset,
     seed,
 ):
-    # Common definition
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
     BATCH_SIZE = 32
     N_UPDATES = 1
 
@@ -53,6 +48,7 @@ def compute_plan(
                 model=perceptron,
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
+                use_gpu=False,
             )
 
     my_algo = MySingleOrganizationAlgo()
@@ -67,7 +63,7 @@ def compute_plan(
         train_data_nodes=train_linear_nodes[:1],
         evaluation_strategy=my_eval_strategy,
         num_rounds=N_ROUND,
-        dependencies=algo_deps,
+        dependencies=torch_cpu_dependency,
         experiment_folder=session_dir / "experiment_folder",
     )
 

@@ -13,6 +13,7 @@ from substra.sdk.schemas import Permissions
 
 import docker
 from substrafl.algorithms.algo import Algo
+from substrafl.dependency import Dependency
 from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
@@ -313,6 +314,18 @@ def aggregation_node(network):
         AggregationNode: Substrafl aggregation Node.
     """
     return AggregationNode(network.msp_ids[0])
+
+
+@pytest.fixture(scope="session")
+def torch_cpu_dependency():
+    return Dependency(
+        pypi_dependencies=[
+            "torch==2.0.1",
+            "numpy==1.24.3",
+            "--extra-index-url https://download.pytorch.org/whl/cpu",
+        ],
+        editable_mode=True,
+    )
 
 
 @pytest.fixture(scope="session")

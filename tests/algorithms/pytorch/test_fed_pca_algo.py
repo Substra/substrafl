@@ -6,7 +6,6 @@ import torch
 
 from substrafl import execute_experiment
 from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
-from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.model_loading import download_algo_state
 from substrafl.nodes import TestDataNode
@@ -36,6 +35,7 @@ def torch_pca_algo(numpy_torch_dataset, seed):
                 batch_size=batch_size,
                 dataset=numpy_torch_dataset,
                 seed=seed,
+                use_gpu=False,
             )
 
     return MyAlgo
@@ -44,17 +44,13 @@ def torch_pca_algo(numpy_torch_dataset, seed):
 @pytest.fixture(scope="module")
 def compute_plan(
     torch_pca_algo,
+    torch_cpu_dependency,
     train_linear_nodes_pca,
     test_linear_nodes_pca,
     aggregation_node,
     network,
     session_dir,
 ):
-    algo_deps = Dependency(
-        pypi_dependencies=["torch", "numpy"],
-        editable_mode=True,
-    )
-
     strategy = FedPCA(algo=torch_pca_algo())
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes_pca,
@@ -68,7 +64,7 @@ def compute_plan(
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
-        dependencies=algo_deps,
+        dependencies=torch_cpu_dependency,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
     )
