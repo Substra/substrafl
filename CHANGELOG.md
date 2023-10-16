@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Remove substrafl wheel cache ([#175](https://github.com/Substra/substrafl/pull/175))
+- The predict task does not exist anymore. The evaluation of a model is done in a single task [#177](https://github.com/Substra/substrafl/pull/177)
+- `Strategy` implement an `evaluate` method, with the `@remote_data` decorator, to compute the evaluation of the model. The `evaluate` method is the same for all strategies [#177](https://github.com/Substra/substrafl/pull/177)
+- BREAKING: the `perform_predict` method of `Strategy` changed in favor of `perform_evaluation` that calls the new `evaluate` method [#177](https://github.com/Substra/substrafl/pull/177)
+- BREAKING: `metric_functions` are now passed to the `Strategy` instead of the `TestDataNode` [#177](https://github.com/Substra/substrafl/pull/177)
+- BREAKING: the `predict` method of `Algo` has no `@remote_data` decorator anymore. It signatures does not take `prediction_path` anymore, and the predictions are return by the method [#177](https://github.com/Substra/substrafl/pull/177)
 
 ### Fixed
 
