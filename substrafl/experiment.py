@@ -53,7 +53,6 @@ def _register_operations(
     # `register_operations` methods from the different organizations store the id of the already registered
     # functions so we don't add them twice
     operation_cache = dict()
-    predict_function_cache = dict()
     test_function_cache = dict()
     tasks = list()
 
@@ -81,12 +80,6 @@ def _register_operations(
 
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
-            predict_function_cache = test_data_node.register_predict_operations(
-                client=client,
-                permissions=permissions,
-                cache=predict_function_cache,
-                dependencies=dependencies,
-            )
             test_function_cache = test_data_node.register_test_operations(
                 client=client,
                 permissions=permissions,
@@ -94,7 +87,6 @@ def _register_operations(
                 dependencies=dependencies,
             )
 
-            tasks += test_data_node.predicttasks
             tasks += test_data_node.testtasks
 
     # The aggregation operation is defined in the strategy, its dependencies are

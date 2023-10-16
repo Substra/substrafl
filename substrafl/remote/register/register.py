@@ -23,9 +23,7 @@ from substrafl.constants import SUBSTRAFL_FOLDER
 from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
 from substrafl.exceptions import UnsupportedPythonVersionError
-from substrafl.nodes.node import InputIdentifiers
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.remote.substratools_methods import RemoteMethod
 
 logger = logging.getLogger(__name__)
 
@@ -293,87 +291,3 @@ def register_function(
             )
         )
         return key
-
-
-def register_metrics(
-    *,
-    client: substra.Client,
-    dependencies: Dependency,
-    permissions: substra.sdk.schemas.Permissions,
-    metric_functions: typing.Dict[str, typing.Callable],
-):
-    """Adds a function to the Substra platform using the given metric functions as the
-    function to register.
-    Each metric function must be of type function, and their signature must ONLY contains
-    `datasamples` and `predictions_path` as parameters. An error is raised otherwise.
-
-    Args:
-        client (substra.Client): The substra client.
-        permissions (substra.sdk.schemas.Permissions): Permissions for the metric function.
-        dependencies (Dependency): Metric function dependencies.
-        metric_functions (typing.Dict[str, typing.Callable]): functions to compute the score from the datasamples and
-            the predictions. These functions are registered in substra as one function.
-
-    Returns:
-        str: Substra function containing all the given metric functions.
-    """
-
-    inputs_metrics = [
-        substra.sdk.schemas.FunctionInputSpec(
-            identifier=InputIdentifiers.datasamples,
-            kind=substra.sdk.schemas.AssetKind.data_sample,
-            optional=False,
-            multiple=True,
-        ),
-        substra.sdk.schemas.FunctionInputSpec(
-            identifier=InputIdentifiers.opener,
-            kind=substra.sdk.schemas.AssetKind.data_manager,
-            optional=False,
-            multiple=False,
-        ),
-        substra.sdk.schemas.FunctionInputSpec(
-            identifier=InputIdentifiers.predictions,
-            kind=substra.sdk.schemas.AssetKind.model,
-            optional=False,
-            multiple=False,
-        ),
-    ]
-
-    outputs_metrics = [
-        substra.sdk.schemas.FunctionOutputSpec(
-            identifier=metric_function_id,
-            kind=substra.sdk.schemas.AssetKind.performance,
-            multiple=False,
-        )
-        for metric_function_id in metric_functions
-    ]
-
-    class Metric:
-        def score(self, datasamples, predictions_path, _skip=True):
-            # The _skip argument is needed to match the default signature of methods executed
-            # on substratools_methods.py.
-            return {
-                metric_function_id: metric_function(datasamples=datasamples, predictions_path=predictions_path)
-                for metric_function_id, metric_function in metric_functions.items()
-            }
-
-    remote_struct = RemoteStruct(
-        cls=Metric,
-        cls_args=[],
-        cls_kwargs={},
-        remote_cls=RemoteMethod,
-        method_name="score",
-        method_parameters={},
-        algo_name="Evaluating",
-    )
-
-    key = register_function(
-        client=client,
-        remote_struct=remote_struct,
-        permissions=permissions,
-        inputs=inputs_metrics,
-        outputs=outputs_metrics,
-        dependencies=dependencies,
-    )
-
-    return key
