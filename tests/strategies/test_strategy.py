@@ -5,7 +5,11 @@ import numpy as np
 import pytest
 
 from substrafl import exceptions
+<<<<<<< HEAD
 from substrafl.nodes.schemas import OutputIdentifiers
+=======
+from substrafl.nodes.node import OutputIdentifiers
+>>>>>>> b1ee596 (test: move metric function test to strategy and add evaluate test)
 
 
 @pytest.mark.parametrize(
