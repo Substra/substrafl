@@ -208,7 +208,7 @@ def test_train_newton_raphson_non_convex_cnn(torch_algo, seed):
     "n_samples,y_shape,batch_size",
     [(5, 1, 2), (5, 1, None), (5, 2, 2), (5, 2, None)],
 )
-def test_prediction_shape(session_dir, perceptron, torch_algo, n_samples, y_shape, batch_size):
+def test_prediction_shape(perceptron, torch_algo, n_samples, y_shape, batch_size):
     x_shape = 15
 
     x_train = np.zeros([n_samples, x_shape])
@@ -217,9 +217,7 @@ def test_prediction_shape(session_dir, perceptron, torch_algo, n_samples, y_shap
     model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
     my_algo = torch_algo(model=model, batch_size=batch_size)
 
-    prediction_file = session_dir / "NR_predictions"
-    my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
-    prediction = np.load(prediction_file)
+    prediction = my_algo.predict(datasamples=(x_train, y_train))
     assert prediction.shape == (n_samples, y_shape)
 
 
@@ -234,9 +232,9 @@ def compute_plan(
     nr_test_data,
     numpy_datasets,
     perceptron,
+    mae_metric,
     torch_cpu_dependency,
     aggregation_node,
-    mae_metric,
     session_dir,
     numpy_torch_dataset,
     seed,
@@ -278,7 +276,6 @@ def compute_plan(
             network.msp_ids[0],
             numpy_datasets[0],
             [test_sample_nodes[0]],
-            metric_functions=mae_metric,
         )
     ]
 
@@ -298,7 +295,7 @@ def compute_plan(
 
     my_algo = MyAlgo()
 
-    strategy = NewtonRaphson(algo=my_algo, damping_factor=DAMPING_FACTOR)
+    strategy = NewtonRaphson(algo=my_algo, metric_functions=mae_metric, damping_factor=DAMPING_FACTOR)
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_data_nodes, eval_rounds=[0, NUM_ROUNDS]
     )  # test the initialization and the last round
@@ -333,9 +330,6 @@ def test_pytorch_nr_algo_performance(
 ):
     perfs = network.clients[0].get_performances(compute_plan.key)
 
-    # This abs_ative error is due to the l2 regularization, mandatory to reach numerical stability.
-    # This fails on mac M1 pro with 1e-5
-    # TODO investigate
     assert pytest.approx(EXPECTED_PERFORMANCE, abs=rtol) == perfs.performance[1]
 
     torch.manual_seed(seed)
@@ -367,7 +361,7 @@ def test_download_load_algo(network, compute_plan, nr_test_data, mae, rtol):
 
 
 @pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
-def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, perceptron, mocker):
+def test_large_batch_size_in_predict(batch_size, torch_algo, perceptron, mocker):
     n_samples = 10
 
     x_train = np.zeros([n_samples, 10])
@@ -376,12 +370,10 @@ def test_large_batch_size_in_predict(batch_size, session_dir, torch_algo, percep
     model = perceptron(linear_n_col=10, linear_n_target=10)
     my_algo = torch_algo(model=model, batch_size=batch_size)
 
-    prediction_file = session_dir / "NR_predictions"
-
     spy = mocker.spy(torch.utils.data, "DataLoader")
 
     # Check that no MemoryError is thrown
-    my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
+    my_algo.predict(datasamples=(x_train, y_train))
 
     assert spy.call_count == 1
     assert spy.spy_return.batch_size == min(batch_size, n_samples)
