@@ -1,9 +1,7 @@
 import abc
 import inspect
 import logging
-import os
 import random
-import shutil
 from pathlib import Path
 from typing import Any
 from typing import Optional
@@ -19,7 +17,6 @@ from substrafl.exceptions import DatasetSignatureError
 from substrafl.exceptions import DatasetTypeError
 from substrafl.exceptions import OptimizerValueError
 from substrafl.index_generator import BaseIndexGenerator
-from substrafl.remote.decorators import remote_data
 
 logger = logging.getLogger(__name__)
 
@@ -99,8 +96,7 @@ class TorchAlgo(Algo):
         # Must be implemented in the child class
         raise NotImplementedError()
 
-    @remote_data
-    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: os.PathLike = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None) -> Any:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -109,40 +105,24 @@ class TorchAlgo(Algo):
         Args:
             datasamples (typing.Any): Input data
             shared_state (typing.Any): Latest train task shared state (output of the train method)
-            predictions_path (os.PathLike): Destination file to save predictions
         """
 
         # Create torch dataset
         predict_dataset = self._dataset(datasamples, is_inference=True)
-        self._local_predict(predict_dataset=predict_dataset, predictions_path=predictions_path)
+        predictions = self._local_predict(predict_dataset=predict_dataset)
+        return predictions
 
-    def _save_predictions(self, predictions: torch.Tensor, predictions_path: os.PathLike):
-        """Save the predictions under the numpy format.
-
-        Args:
-            predictions (torch.Tensor): predictions to save.
-            predictions_path (os.PathLike): destination file to save predictions.
-        """
-        if predictions_path is not None:
-            np.save(predictions_path, predictions)
-            shutil.move(str(predictions_path) + ".npy", predictions_path)
-
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
         """Execute the following operations:
 
             * Create the torch dataloader using the index generator batch size.
             * Set the model to `eval` mode
-            * Save the predictions using the
-              :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` function.
 
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
 
-        Important:
-            The onus is on the user to ``save`` the compute predictions. Substrafl provides the
-            :py:func:`~substrafl.algorithms.pytorch.torch_base_algo.TorchAlgo._save_predictions` to do so.
-            The user can load those predictions from a metric file with the command:
-            ``y_pred = np.load(inputs['predictions'])``.
+        Returns:
+            The computed predictions.
 
         Raises:
             BatchSizeNotFoundError: No default batch size have been found to perform local prediction.
@@ -163,7 +143,7 @@ class TorchAlgo(Algo):
         predictions = torch.cat(predictions, dim=0)
 
         predictions = predictions.cpu().detach()
-        self._save_predictions(predictions, predictions_path)
+        return predictions
 
     def _local_train(
         self,

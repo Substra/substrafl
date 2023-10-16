@@ -248,7 +248,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
             self._update_gradients_and_hessian(loss, current_batch_size)
 
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset, predictions_path):
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
         """Execute the following operations:
 
             * Create the torch dataloader using the batch size given at the ``__init__`` of the class
@@ -257,6 +257,9 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         Args:
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
+
+        Returns:
+            The computed predictions.
         """
         dataloader_batchsize = min(self._batch_size, len(predict_dataset)) if self._batch_size else len(predict_dataset)
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)
@@ -271,7 +274,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         predictions = predictions.cpu().detach()
 
-        self._save_predictions(predictions, predictions_path)
+        return predictions
 
     @remote_data
     def train(
