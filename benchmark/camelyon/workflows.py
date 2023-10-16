@@ -99,8 +99,21 @@ def substrafl_fed_avg(
         compile=True,
     )
 
+    # Metrics
+    def auc(datasamples, predictions):
+        """AUC"""
+
+        y_true = datasamples.y_true
+        return roc_auc_score(y_true, predictions) if len(set(y_true)) > 1 else 0
+
+    def accuracy(datasamples, predictions):
+        """Accuracy"""
+
+        y_true = datasamples.y_true
+        return accuracy_score(y_true, np.round(predictions)) if len(set(y_true)) > 1 else 0
+
     # Custom Strategy used for the data loading (from custom_torch_function.py file)
-    strategy = FedAvg(algo=my_algo)
+    strategy = FedAvg(algo=my_algo, metric_functions={"ROC AUC": auc, "Accuracy": accuracy})
 
     # Evaluation strategy
     evaluation = EvaluationStrategy(test_data_nodes=test_data_nodes, eval_rounds=[n_rounds])
