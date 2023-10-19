@@ -1,51 +1,24 @@
 import os
 import shutil
 import subprocess
+import zipfile
 from pathlib import Path
 
 import numpy as np
-from tqdm.auto import tqdm
 
-ROOT_DIR = Path(__file__).parents[1]
-
-FILE_LIST = [
-    "normal_001.tif.npy",
-    "normal_002.tif.npy",
-    "tumor_106.tif.npy",
-    "tumor_108.tif.npy",
-]
-URL = "https://zenodo.org/api/files/d5520b8a-6a5b-41ef-bde0-247dbdded101/"
-N_PARALLEL = 4
-TIMEOUT = 600
+URL = "https://zenodo.org/api/records/7053167/files-archive"
 
 
 def fetch_camelyon(data_path: Path):
-    index_filename = "index.csv"
-    if not (data_path / index_filename).exists():
+    files_archive = "files-archive"
+    if not (data_path / files_archive).exists():
         print("Downloading the dataset (~400Mb), this may take a few minutes.")
         subprocess.run(
-            ["wget", f"{URL}index.csv"],
-            check=True,
-            cwd=data_path,
+            ["wget", f"{URL}"], check=True, cwd=data_path, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
         )
-        processes = [
-            subprocess.Popen(
-                ["wget", f"{URL}{filename}"],
-                cwd=data_path / "tiles_0.5mpp",
-            )
-            for filename in FILE_LIST
-        ]
-        errors = list()
-        for proc in tqdm(processes):
-            try:
-                proc.communicate(timeout=TIMEOUT)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.communicate(timeout=TIMEOUT)
-            if proc.returncode != 0:
-                errors.append((proc.args, proc.returncode))
-        if len(errors) > 0:
-            raise subprocess.CalledProcessError(proc.args, proc.returncode)
+
+        with zipfile.ZipFile(data_path / files_archive, "r") as zip_ref:
+            zip_ref.extractall(data_path / "tiles_0.5mpp")
 
 
 def reset_data_folder(data_path: Path):
@@ -55,15 +28,17 @@ def reset_data_folder(data_path: Path):
         shutil.rmtree(data_path)
 
 
-def creates_data_folder(img_dir_path, dest_folder, index_path):
+def creates_data_folder(img_dir_path, dest_folder):
     """Creates the `dest_folder` and hard link the data passed in index to it.
 
     Args:
+        img_dir_path (Path): Folder with the data in npy format, and the associated
+            index.csv file.
         dest_folder (Path): Folder to put the needed data.
         index (np.ndarray): A 2D array (file_name, target) of the data wanted in the dest
         folder.
     """
-    index = np.loadtxt(index_path, delimiter=",", dtype="<U32")[1:]
+    index = np.loadtxt(img_dir_path / "index.csv", delimiter=",", dtype="<U32")[1:]
 
     dest_folder.mkdir(exist_ok=True, parents=True)
 
