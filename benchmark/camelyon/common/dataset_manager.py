@@ -14,9 +14,7 @@ def fetch_camelyon(data_path: Path):
     if not (data_path / files_archive).exists():
         print("Downloading the dataset (~400Mb), this may take a few minutes.")
         subprocess.run(
-            ["wget", f"{URL}"],
-            check=True,
-            cwd=data_path,
+            ["wget", f"{URL}"], check=True, cwd=data_path, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
         )
 
         with zipfile.ZipFile(data_path / files_archive, "r") as zip_ref:
