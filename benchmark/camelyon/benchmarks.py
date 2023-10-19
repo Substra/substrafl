@@ -96,12 +96,10 @@ def main():
     train_folder = creates_data_folder(
         img_dir_path=data_path / "tiles_0.5mpp",
         dest_folder=exp_data_path / "train",
-        index_path=data_path / "index.csv",
     )
     test_folder = creates_data_folder(
         img_dir_path=data_path / "tiles_0.5mpp",
         dest_folder=exp_data_path / "test",
-        index_path=data_path / "index.csv",
     )
 
     try:

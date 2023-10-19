@@ -8,4 +8,4 @@ substra_conf/*
 !substra_conf/remote.yaml
 
 data/tmp
-data/index.csv
+data/files-archive
