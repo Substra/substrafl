@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Fixed
+
+- Update schemas and tests to remove Pydantic v2 warnings ([#183](https://github.com/Substra/substrafl/pull/183))
+
 ## [0.42.0](https://github.com/Substra/substrafl/releases/tag/0.42.0) - 2023-10-18
 
 ### Added
