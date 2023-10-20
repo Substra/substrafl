@@ -83,7 +83,6 @@ class Dependency(BaseModel):
         self._delete_cache_directory()
 
     @field_validator("local_installable_dependencies", "local_code")
-    @classmethod
     def resolve_path(cls, v):  # noqa: N805
         """Resolve list of local code paths and check if they exist."""
         not_existing_paths = list()
@@ -102,7 +101,6 @@ class Dependency(BaseModel):
         return resolved_paths
 
     @field_validator("local_installable_dependencies")
-    @classmethod
     def check_setup(cls, v):  # noqa: N805
         """Check the presence of a setup.py file or a pyproject.toml in the provided paths."""
         not_installable = list()
