@@ -96,7 +96,7 @@ class TorchAlgo(Algo):
         # Must be implemented in the child class
         raise NotImplementedError()
 
-    def predict(self, datasamples: Any, shared_state: Any = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None) -> torch.Tensor:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -105,6 +105,9 @@ class TorchAlgo(Algo):
         Args:
             datasamples (typing.Any): Input data
             shared_state (typing.Any): Latest train task shared state (output of the train method)
+
+        Returns:
+            torch.Tensor: The computed predictions.
         """
 
         # Create torch dataset
@@ -112,7 +115,7 @@ class TorchAlgo(Algo):
         predictions = self._local_predict(predict_dataset=predict_dataset)
         return predictions
 
-    def _local_predict(self, predict_dataset: torch.utils.data.Dataset):
+    def _local_predict(self, predict_dataset: torch.utils.data.Dataset) -> torch.Tensor:
         """Execute the following operations:
 
             * Create the torch dataloader using the index generator batch size.
@@ -122,7 +125,7 @@ class TorchAlgo(Algo):
             predict_dataset (torch.utils.data.Dataset): predict_dataset build from the x returned by the opener.
 
         Returns:
-            The computed predictions.
+            torch.Tensor: The computed predictions.
 
         Raises:
             BatchSizeNotFoundError: No default batch size have been found to perform local prediction.

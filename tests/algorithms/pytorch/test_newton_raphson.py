@@ -339,6 +339,10 @@ def test_pytorch_nr_algo_performance(
     y_true = nr_test_data[0][:, -1]
 
     performance_at_init = mae(y_pred, y_true)
+
+    # This abs_ative error is due to the l2 regularization, mandatory to reach numerical stability.
+    # This fails on mac M1 pro with 1e-5
+    # TODO investigate
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 

@@ -79,6 +79,9 @@ class TestDataNode(Node):
                     permissions=substra.schemas.Permissions(public=True, authorized_ids=[]),
                     transient=False,
                 )
+                # To be able to create the right amount of task outputs, we need to know
+                # what are the metrics associated with the evaluate function.
+                # We get the metric_functions from the instance.
                 for metric_function_id in operation.remote_struct.get_instance().metric_functions
             },
             metadata=task_metadata,
@@ -108,7 +111,7 @@ class TestDataNode(Node):
                     inputs=[
                         substra.schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.datasamples,
-                            kind=substra.sdk.schemas.AssetKind.data_sample.value,
+                            kind=substra.schemas.AssetKind.data_sample.value,
                             optional=False,
                             multiple=True,
                         ),
@@ -131,6 +134,9 @@ class TestDataNode(Node):
                             kind=substra.schemas.AssetKind.performance.value,
                             multiple=False,
                         )
+                        # To be able to create the right amount of function outputs, we need to know
+                        # what are the metrics associated with the evaluate function.
+                        # We get the metric_functions from the instance.
                         for metric_function_id in remote_struct.get_instance().metric_functions
                     ],
                     dependencies=dependencies,

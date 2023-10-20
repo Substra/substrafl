@@ -285,7 +285,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[parameters_update])
 
-    def predict(self, datasamples: Any, shared_state: Any = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None) -> torch.Tensor:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -297,7 +297,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             shared_state (typing.Any): Latest train task shared state (output of the train method)
 
         Returns:
-            The computed predictions.
+            torch.Tensor: The computed predictions.
         """
 
         # Create torch dataset

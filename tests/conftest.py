@@ -273,6 +273,7 @@ def test_linear_nodes(
         network (Network): Substra network from the configuration file.
         numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
         mae (str): Mean absolute error metric for the TestDataNode
+        test_linear_data_samples (np.array): linear data.
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:

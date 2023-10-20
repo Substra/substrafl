@@ -160,13 +160,17 @@ class Strategy(ComputePlanBuilder):
         raise NotImplementedError
 
     @remote_data
-    def evaluate(self, datasamples: Any, shared_state: Any = None):
+    def evaluate(self, datasamples: Any, shared_state: Any = None) -> Dict[str, float]:
         """Is executed for each TestDataOrganizations.
 
         Args:
             datasamples (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
+
+        Returns:
+            Dict[str, float]: keys of the dict are the metric name, and values are the computed
+                performances.
         """
         predictions = self.algo.predict(datasamples, shared_state)
         return {
@@ -282,7 +286,7 @@ def _check_metric_function(metric_function: Callable) -> None:
     Raises:
         exceptions.MetricFunctionTypeError: metric_function must be of type "function"
         exceptions.MetricFunctionSignatureError: metric_function must ONLY contains
-            datasamples and predictions_path as parameters
+            datasamples and predictions as parameters
     """
 
     if not inspect.isfunction(metric_function):
@@ -297,11 +301,11 @@ def _check_metric_function(metric_function: Callable) -> None:
         )
     elif "predictions" not in parameters:
         raise exceptions.MetricFunctionSignatureError(
-            "The metric_function: {metric_function.__name__}  must contain predictions_path as parameter."
+            "The metric_function: {metric_function.__name__}  must contain predictions as parameter."
         )
     elif len(parameters) != 2:
         raise exceptions.MetricFunctionSignatureError(
-            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions_path as
+            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions as
             parameters."""
         )
 
