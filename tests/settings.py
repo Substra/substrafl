@@ -7,6 +7,7 @@ from typing import Optional
 import substra
 import yaml
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import field_validator
 
 CURRENT_DIR = Path(__file__).parent
@@ -67,9 +68,7 @@ class Network(BaseModel):
     clients: List[substra.sdk.client.Client]
     msp_ids: Optional[List[str]] = None
 
-    class Config:
-        # Arbitrary type is used because substra Client is not pydantic compatible
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def n_organizations(self) -> int:

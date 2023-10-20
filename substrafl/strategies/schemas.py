@@ -18,8 +18,7 @@ class StrategyName(str, Enum):
 class _Model(pydantic.BaseModel):
     """Base model configuration"""
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
 
 class FedAvgAveragedState(_Model):

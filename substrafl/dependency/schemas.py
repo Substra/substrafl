@@ -10,6 +10,7 @@ from typing import Optional
 import substra
 import substratools
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 
@@ -67,9 +68,7 @@ class Dependency(BaseModel):
     _wheels: List[Path] = []
     _local_paths: List[Path] = []
     _cache_directory: Optional[Path] = None
-
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True, allow_reuse=True)
 
     def __init__(self, *args, **kwargs):
         """Dependencies are computed at object initialization.
@@ -83,7 +82,8 @@ class Dependency(BaseModel):
         """Delete the cache directory."""
         self._delete_cache_directory()
 
-    @field_validator("local_installable_dependencies", "local_code", mode="before")
+    @field_validator("local_installable_dependencies", "local_code")
+    @classmethod
     def resolve_path(cls, v):  # noqa: N805
         """Resolve list of local code paths and check if they exist."""
         not_existing_paths = list()
@@ -101,7 +101,8 @@ class Dependency(BaseModel):
 
         return resolved_paths
 
-    @field_validator("local_installable_dependencies", mode="before")
+    @field_validator("local_installable_dependencies")
+    @classmethod
     def check_setup(cls, v):  # noqa: N805
         """Check the presence of a setup.py file or a pyproject.toml in the provided paths."""
         not_installable = list()
