@@ -68,7 +68,7 @@ class Dependency(BaseModel):
     _wheels: List[Path] = []
     _local_paths: List[Path] = []
     _cache_directory: Optional[Path] = None
-    model_config = ConfigDict(arbitrary_types_allowed=True, allow_reuse=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(self, *args, **kwargs):
         """Dependencies are computed at object initialization.
