@@ -7,7 +7,7 @@ from typing import Optional
 import substra
 import yaml
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import field_validator
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -44,7 +44,7 @@ class Configuration(BaseModel):
 
     organizations: List[OrganizationCfg]
 
-    @validator("organizations")
+    @field_validator("organizations", mode="before")
     def minimal_number_of_organizations(cls, v):  # noqa: N805
         assert len(v) >= MIN_ORGANIZATIONS, (
             "Not enough organizations defined in your configuration. "

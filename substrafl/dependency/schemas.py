@@ -11,7 +11,7 @@ import substra
 import substratools
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import field_validator
 
 import substrafl
 from substrafl import exceptions
@@ -83,7 +83,7 @@ class Dependency(BaseModel):
         """Delete the cache directory."""
         self._delete_cache_directory()
 
-    @validator("local_installable_dependencies", "local_code")
+    @field_validator("local_installable_dependencies", "local_code", mode="before")
     def resolve_path(cls, v):  # noqa: N805
         """Resolve list of local code paths and check if they exist."""
         not_existing_paths = list()
@@ -101,7 +101,7 @@ class Dependency(BaseModel):
 
         return resolved_paths
 
-    @validator("local_installable_dependencies")
+    @field_validator("local_installable_dependencies", mode="before")
     def check_setup(cls, v):  # noqa: N805
         """Check the presence of a setup.py file or a pyproject.toml in the provided paths."""
         not_installable = list()
