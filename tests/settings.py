@@ -68,6 +68,7 @@ class Network(BaseModel):
     clients: List[substra.sdk.client.Client]
     msp_ids: Optional[List[str]] = None
 
+    # Arbitrary type is used because substra Client is not pydantic compatible
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
