@@ -111,7 +111,7 @@ class TestDataNode(Node):
                     inputs=[
                         substra.schemas.FunctionInputSpec(
                             identifier=InputIdentifiers.datasamples,
-                            kind=substra.sdk.schemas.AssetKind.data_sample.value,
+                            kind=substra.schemas.AssetKind.data_sample.value,
                             optional=False,
                             multiple=True,
                         ),
