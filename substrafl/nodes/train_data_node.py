@@ -70,7 +70,7 @@ class TrainDataNode(Node):
             },
             tag=TaskType.INITIALIZATION,
             worker=self.organization_id,
-        ).dict()
+        ).model_dump()
 
         init_task.pop("function_key")
         init_task["remote_operation"] = operation.remote_struct
@@ -181,7 +181,7 @@ class TrainDataNode(Node):
             metadata=task_metadata,
             tag=TaskType.TRAIN,
             worker=self.organization_id,
-        ).dict()
+        ).model_dump()
 
         train_task.pop("function_key")
         train_task["remote_operation"] = operation.remote_struct

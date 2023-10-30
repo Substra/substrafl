@@ -7,7 +7,8 @@ from typing import Optional
 import substra
 import yaml
 from pydantic import BaseModel
-from pydantic import validator
+from pydantic import ConfigDict
+from pydantic import field_validator
 
 CURRENT_DIR = Path(__file__).parent
 
@@ -44,7 +45,7 @@ class Configuration(BaseModel):
 
     organizations: List[OrganizationCfg]
 
-    @validator("organizations")
+    @field_validator("organizations")
     def minimal_number_of_organizations(cls, v):  # noqa: N805
         assert len(v) >= MIN_ORGANIZATIONS, (
             "Not enough organizations defined in your configuration. "
@@ -67,9 +68,8 @@ class Network(BaseModel):
     clients: List[substra.sdk.client.Client]
     msp_ids: Optional[List[str]] = None
 
-    class Config:
-        # Arbitrary type is used because substra Client is not pydantic compatible
-        arbitrary_types_allowed = True
+    # Arbitrary type is used because substra Client is not pydantic compatible
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def n_organizations(self) -> int:
