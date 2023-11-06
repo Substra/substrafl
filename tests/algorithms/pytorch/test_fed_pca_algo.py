@@ -127,7 +127,7 @@ def test_linear_nodes_pca(
     Args:
         network (Network): Substra network from the configuration file.
         numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
-       test_linear_data_samples_pca ()
+        test_linear_data_samples_pca (List[np.array]): A one element list containing linear linked data.
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:
