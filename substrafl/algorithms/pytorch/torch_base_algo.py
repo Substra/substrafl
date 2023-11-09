@@ -141,7 +141,7 @@ class TorchAlgo(Algo):
 
         self._model.eval()
 
-        with torch.inference_mode():
+        with torch.no_grad():
             predictions = [self._model(x.to(self._device)) for x in predict_loader]
         predictions = torch.cat(predictions, dim=0)
 

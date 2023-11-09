@@ -93,7 +93,7 @@ def get_parameters(
     Returns:
         typing.List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model.
     """
-    with torch.inference_mode():
+    with torch.no_grad():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
         parameters = [p.clone() for p in iter_params()]
 
@@ -122,7 +122,7 @@ def increment_parameters(
         updates_multiplier (float, Optional): The coefficient which multiplies the updates before being added to the
             model. Defaults to 1.0.
     """
-    with torch.inference_mode():
+    with torch.no_grad():
         # INFO: this is the faster way I found of checking that both model.parameters() and shared states has the
         # same length as model.parameters() is a generator.
         iter_params = model_parameters(model=model, with_batch_norm_parameters=with_batch_norm_parameters)
@@ -206,7 +206,7 @@ def weighted_sum_parameters(
         assert all(
             parameters_to_sum[0].data.shape == parameter.data.shape for parameter in parameters_to_sum
         ), "The shape of the parameters are unequal."
-        with torch.inference_mode():
+        with torch.no_grad():
             weighted_sum.append(sum(param * coeff for param, coeff in zip(parameters_to_sum, coefficient_list)))
 
     return weighted_sum
@@ -230,7 +230,7 @@ def set_parameters(
         with_batch_norm_parameters (bool): Whether to the batch norm layers' internal parameters are provided and
             need to be included in the operation.
     """
-    with torch.inference_mode():
+    with torch.no_grad():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
         n_parameters = len(list(iter_params()))
         assert n_parameters == len(parameters), "Length of model parameters and provided parameters are unequal."
@@ -258,7 +258,7 @@ def zeros_like_parameters(
         typing.List[torch.nn.parameter.Parameter]: The list of torch parameters of the provided model
         with values set to zero.
     """
-    with torch.inference_mode():
+    with torch.no_grad():
         iter_params = model_parameters(model, with_batch_norm_parameters=with_batch_norm_parameters)
         parameters = [torch.zeros_like(p).to(device) for p in iter_params()]
 
