@@ -134,7 +134,7 @@ class Scaffold(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Perform prediction on test_data_nodes.
+        """Perform evaluation on test_data_nodes.
 
         Args:
             test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
@@ -153,7 +153,7 @@ class Scaffold(Strategy):
             else:
                 node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            assert self._local_states is not None, "Cannot evaluate if no training has been done beforehand."
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(

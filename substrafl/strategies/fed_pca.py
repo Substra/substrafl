@@ -107,7 +107,7 @@ class FedPCA(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ) -> None:
-        """Perform prediction on test_data_nodes. Perform prediction before round 3 is not take into account
+        """Perform evaluation on test_data_nodes. Perform prediction before round 3 is not take into account
         as all objects to compute prediction are not initialize before the second round.
 
         Args:
@@ -131,7 +131,7 @@ class FedPCA(Strategy):
             else:
                 node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            assert self._local_states is not None, "Cannot evaluate if no training has been done beforehand."
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(

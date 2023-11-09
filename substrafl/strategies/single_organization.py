@@ -147,7 +147,7 @@ class SingleOrganization(Strategy):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Perform prediction on test_data_nodes.
+        """Perform evaluation on test_data_nodes.
 
         Args:
             test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.

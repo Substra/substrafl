@@ -147,8 +147,8 @@ class Strategy(ComputePlanBuilder):
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Perform the prediction of the algo on each test nodes.
-        Gets the model for a train organization and compute the prediction on the
+        """Perform the evaluation of the algo on each test nodes.
+        Gets the model from a train organization and evaluate it on the
         test nodes.
 
         Args:
