@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from substrafl import execute_experiment
+from substrafl import simulate_experiment
 from substrafl.algorithms.pytorch import TorchFedAvgAlgo
 from substrafl.algorithms.pytorch.weight_manager import increment_parameters
 from substrafl.evaluation_strategy import EvaluationStrategy
@@ -49,6 +50,36 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
             )
 
     return MyAlgo
+
+
+@pytest.fixture(scope="module")
+def simulate_compute_plan(
+    torch_algo,
+    train_linear_nodes,
+    test_linear_nodes,
+    aggregation_node,
+    mae_metric,
+    network,
+):
+    strategy = FedAvg(
+        algo=torch_algo(),
+        metric_functions=mae_metric,
+    )
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_linear_nodes, eval_rounds=[0, NUM_ROUNDS]
+    )  # test the initialization and the last round
+
+    performances, _, _ = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_linear_nodes,
+        evaluation_strategy=my_eval_strategy,
+        aggregation_node=aggregation_node,
+        num_rounds=NUM_ROUNDS,
+        clean_models=True,
+    )
+
+    return performances
 
 
 @pytest.fixture(scope="module")
@@ -212,3 +243,14 @@ def test_download_aggregate(network, compute_plan, rtol):
         averaged_state_from_rank.avg_parameters_update, averaged_state_from_round.avg_parameters_update
     ):
         assert np.allclose(param_from_rank, param_from_round, rtol=rtol)
+
+
+@pytest.mark.e2e
+@pytest.mark.slow
+@pytest.mark.substra
+def test_compare_execute_and_simulate_fed_avg_performances(network, compute_plan, simulate_compute_plan, rtol):
+    perfs = network.clients[0].get_performances(compute_plan.key)
+
+    simu_perfs = simulate_compute_plan
+
+    assert np.allclose(perfs.performance, simu_perfs.performance, rtol=rtol)

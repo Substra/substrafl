@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from substrafl import execute_experiment
+from substrafl import simulate_experiment
 from substrafl.algorithms.pytorch.torch_fed_pca_algo import TorchFedPCAAlgo
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.model_loading import download_algo_state
@@ -42,23 +43,60 @@ def torch_pca_algo(numpy_torch_dataset, seed):
 
 
 @pytest.fixture(scope="module")
+def abs_metric():
+    def abs_diff(datasamples, predictions):
+        y_pred = np.array(predictions)
+        y_true = datasamples[1]
+        return (abs(y_pred) - abs(y_true)).mean()
+
+    return abs_diff
+
+
+@pytest.fixture(scope="module")
+def simulate_compute_plan(
+    torch_pca_algo,
+    train_linear_nodes_pca,
+    test_linear_nodes_pca,
+    aggregation_node,
+    abs_metric,
+    network,
+):
+    strategy = FedPCA(
+        algo=torch_pca_algo(),
+        metric_functions=abs_metric,
+    )
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_linear_nodes_pca,
+        eval_rounds=[NUM_ROUNDS],
+    )
+
+    performances, _, _ = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_linear_nodes_pca,
+        evaluation_strategy=my_eval_strategy,
+        aggregation_node=aggregation_node,
+        num_rounds=NUM_ROUNDS,
+        clean_models=False,
+    )
+
+    return performances
+
+
+@pytest.fixture(scope="module")
 def compute_plan(
     torch_pca_algo,
     torch_cpu_dependency,
     train_linear_nodes_pca,
     test_linear_nodes_pca,
     aggregation_node,
+    abs_metric,
     network,
     session_dir,
 ):
-    def abs_diff(datasamples, predictions):
-        y_pred = np.array(predictions)
-        y_true = datasamples[1]
-        return (abs(y_pred) - abs(y_true)).mean()
-
     strategy = FedPCA(
         algo=torch_pca_algo(),
-        metric_functions=abs_diff,
+        metric_functions=abs_metric,
     )
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes_pca,
@@ -241,6 +279,16 @@ def test_torch_fed_pca_performance(network, compute_plan, rtol):
     # Test computed predictions (inputs projected with eigen vectors)
     perfs = network.clients[0].get_performances(compute_plan.key)
     assert pytest.approx(0, abs=rtol) == perfs.performance[0]
+
+
+@pytest.mark.substra
+@pytest.mark.slow
+def test_compare_execute_and_simulate_fed_pca_performances(network, compute_plan, simulate_compute_plan, rtol):
+    perfs = network.clients[0].get_performances(compute_plan.key)
+
+    simu_perfs = simulate_compute_plan
+
+    assert np.allclose(perfs.performance, simu_perfs.performance, rtol=rtol)
 
 
 @pytest.mark.slow
