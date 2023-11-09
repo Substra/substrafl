@@ -260,14 +260,14 @@ def simulate_experiment(
     """Simulate an experiment, by computing all operation on RAM.
     No tasks will be sent to the `Client`, which mean that this function should not be used
     to check that your experiment will run as wanted on Substra.
-    The only backend type supported by this function is `subprocess`.
+    `remote` client backend type is not supported by this function.
 
     The intermediate states always contains the last round computed state. Set `clean_models` to `False`
     to keep all intermediate states.
 
     Args:
         client (substra.Client): A substra client to interact with the Substra platform, in order to retrieve the
-            registered data. The only backend type supported by this function is `subprocess`.
+            registered data. `remote` client backend type is not supported by this function.
         strategy (Strategy): The strategy that will be executed.
         train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
             occurs.
@@ -280,7 +280,7 @@ def simulate_experiment(
             if you want to return intermediary states. Defaults to True.
 
     Raises:
-        UnsupportedClientBackendTypeError: Only `subprocess` client backend type is support by `simulate_experiment`.
+        UnsupportedClientBackendTypeError: `remote` client backend type is not supported by `simulate_experiment`.
 
     Returns:
         SimulationPerformances: Objects containing all computed performances during the simulation. Set to None if no
@@ -290,9 +290,9 @@ def simulate_experiment(
             if no AggregationNode given.
     """
 
-    if client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS:
+    if client.backend_mode == substra.BackendType.REMOTE:
         raise UnsupportedClientBackendTypeError(
-            "Only `subprocess` client backend type is support by `simulate_experiment`."
+            "`remote` client backend type is not supported by `simulate_experiment`."
         )
 
     train_data_nodes = copy.deepcopy(train_data_nodes)

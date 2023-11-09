@@ -15,7 +15,7 @@ class UnsupportedPythonVersionError(Exception):
 
 
 class UnsupportedClientBackendTypeError(Exception):
-    """The client backend type is not supported by `simulate_experiment`. Only subprocess mode is supported."""
+    """The client backend type is not supported."""
 
 
 class InvalidUserModuleError(Exception):
