@@ -14,6 +14,10 @@ class UnsupportedPythonVersionError(Exception):
     """The Python version used is not supported by Substra."""
 
 
+class UnsupportedClientBackendTypeError(Exception):
+    """The client backend type is not supported by `simulate_experiment`. Only subprocess mode is supported."""
+
+
 class InvalidUserModuleError(Exception):
     """The local folder passed by the user as a dependency is not a valid Python module."""
 

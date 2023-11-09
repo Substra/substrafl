@@ -2,9 +2,13 @@ import copy
 import datetime
 import json
 import logging
+import types
 import uuid
+from functools import reduce
+from operator import add
 from pathlib import Path
 from platform import python_version
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -22,8 +26,15 @@ from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
 from substrafl.nodes import AggregationNodeProtocol
 from substrafl.nodes import TrainDataNodeProtocol
+from substrafl.exceptions import UnsupportedClientBackendTypeError
+from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.schemas import OperationKey
 from substrafl.remote.remote_struct import RemoteStruct
+from substrafl.simulation import SimulationIntermediateStates
+from substrafl.simulation import SimulationPerformances
+from substrafl.simulation import simulate_aggregate_update_states
+from substrafl.simulation import simulate_test_update_states
+from substrafl.simulation import simulate_train_update_states
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +216,156 @@ def _get_packages_versions() -> dict:
     }
 
 
+def _preload_data(
+    client: substra.Client,
+    data_manager_key: str,
+    data_sample_keys: List[str],
+) -> Any:
+    """Get the opener from the client using its key, and apply
+    the method `get_data` to the datasamples in order to retrieve them.
+
+    Args:
+        client(substra.Client): A substra client to interact with the Substra platform, in order to retrieve the
+            registered data.
+        data_manager_key(str): key of the registered opener.
+        data_sample_keys(List[str]): keys of the registered datasamples paths.
+
+    Returns:
+        Any: output of the opener's `get_data` method applied on the corresponding datasamples paths.
+    """
+    dataset_info = client.get_dataset(data_manager_key)
+
+    opener_interface = substratools.utils.load_interface_from_module(
+        "opener",
+        interface_class=substratools.Opener,
+        interface_signature=None,
+        path=dataset_info.opener.storage_address,
+    )
+
+    data_sample_paths = [client.get_data_sample(dsk).path for dsk in data_sample_keys]
+
+    return opener_interface.get_data(data_sample_paths)
+
+
+def simulate_experiment(
+    *,
+    client: substra.Client,
+    strategy: ComputePlanBuilder,
+    train_data_nodes: List[TrainDataNode],
+    aggregation_node: Optional[AggregationNode] = None,
+    evaluation_strategy: Optional[EvaluationStrategy] = None,
+    num_rounds: Optional[int] = None,
+    clean_models: bool = True,
+):
+    """Simulate an experiment, by computing all operation on RAM.
+    No tasks will be sent to the `Client`, which mean that this function should not be used
+    to check that your experiment will run as wanted on Substra.
+    The only backend type supported by this function is `subprocess`.
+
+    The intermediate states always contains the last round computed state. Set `clean_models` to `False`
+    to keep all intermediate states.
+
+    Args:
+        client (substra.Client): A substra client to interact with the Substra platform, in order to retrieve the
+            registered data. The only backend type supported by this function is `subprocess`.
+        strategy (Strategy): The strategy that will be executed.
+        train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
+            occurs.
+        aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation
+            node, where all the shared tasks occurs else None.
+        evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
+            Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
+        num_rounds (int): The number of time your strategy will be executed.
+        clean_models (bool): Intermediary models are cleaned by the RAM. Set it to False
+            if you want to return intermediary states. Defaults to True.
+
+    Raises:
+        UnsupportedClientBackendTypeError: Only `subprocess` client backend type is support by `simulate_experiment`.
+
+    Returns:
+        SimulationPerformances: Objects containing all computed performances during the simulation. Set to None if no
+            EvaluationStrategy given.
+        SimulationIntermediateStates: Objects containing all intermediate state saved on the TrainDataNodes.
+        SimulationIntermediateStates: Objects containing all intermediate state saved on the TrainDataNodes. Set to None
+            if no AggregationNode given.
+    """
+
+    if client.backend_mode != substra.BackendType.LOCAL_SUBPROCESS:
+        raise UnsupportedClientBackendTypeError(
+            "Only `subprocess` client backend type is support by `simulate_experiment`."
+        )
+
+    train_data_nodes = copy.deepcopy(train_data_nodes)
+    aggregation_node = copy.deepcopy(aggregation_node)
+    strategy = copy.deepcopy(strategy)
+    evaluation_strategy = copy.deepcopy(evaluation_strategy)
+
+    train_organization_ids = [train_data_node.organization_id for train_data_node in train_data_nodes]
+
+    if len(train_organization_ids) != len(set(train_organization_ids)):
+        raise ValueError("Training multiple functions on the same organization is not supported right now.")
+
+    for train_data_node in train_data_nodes:
+        train_data_node.update_states = types.MethodType(simulate_train_update_states, train_data_node)
+
+        train_data_node._datasamples = _preload_data(
+            client=client,
+            data_manager_key=train_data_node.data_manager_key,
+            data_sample_keys=train_data_node.data_sample_keys,
+        )
+
+        train_data_node._strategy = copy.deepcopy(strategy)
+        train_data_node._intermediate_states = SimulationIntermediateStates()
+
+    if evaluation_strategy is not None:
+        _check_evaluation_strategy(evaluation_strategy, num_rounds)
+        # Reset the evaluation strategy
+        evaluation_strategy.restart_rounds()
+
+        for test_data_node in evaluation_strategy.test_data_nodes:
+            test_data_node.update_states = types.MethodType(simulate_test_update_states, test_data_node)
+
+            test_data_node._datasamples = _preload_data(
+                client=client,
+                data_manager_key=test_data_node.data_manager_key,
+                data_sample_keys=test_data_node.test_data_sample_keys,
+            )
+
+            # We always take the strategy from the first train node, to obtain a model to test.
+            test_data_node._strategy = train_data_nodes[0]._strategy
+            test_data_node._score = SimulationPerformances()
+
+    if aggregation_node is not None:
+        aggregation_node.update_states = types.MethodType(simulate_aggregate_update_states, aggregation_node)
+
+        aggregation_node._strategy = copy.deepcopy(strategy)
+        aggregation_node._intermediate_states = SimulationIntermediateStates()
+
+    logger.info("Simulating the execution of the compute plan.")
+
+    strategy.build_compute_plan(
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        evaluation_strategy=evaluation_strategy,
+        num_rounds=num_rounds,
+        clean_models=clean_models,
+    )
+
+    train_intermediate_states = reduce(
+        add, (train_data_node._intermediate_states for train_data_node in train_data_nodes)
+    )
+
+    aggregate_intermediate_states = aggregation_node._intermediate_states if aggregation_node is not None else None
+
+    performances = (
+        reduce(add, (test_data_node._score for test_data_node in evaluation_strategy.test_data_nodes))
+        if evaluation_strategy is not None
+        else None
+    )
+
+    return performances, train_intermediate_states, aggregate_intermediate_states
+
+
 def execute_experiment(
     *,
     client: substra.Client,
@@ -244,12 +405,12 @@ def execute_experiment(
         client (substra.Client): A substra client to interact with the Substra platform
         strategy (Strategy): The strategy that will be executed
         train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes where training on data
-            occurs evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
-            Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
+            occurs.
         aggregation_node (typing.Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
-        evaluation_strategy: Optional[EvaluationStrategy]
-        num_rounds (int): The number of time your strategy will be executed
+        evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
+            Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
+        num_rounds (int): The number of time your strategy will be executed.
         dependencies (Dependency, Optional): Dependencies of the experiment. It must be defined from
             the SubstraFL Dependency class. Defaults None.
         experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.

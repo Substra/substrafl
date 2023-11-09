@@ -11,6 +11,8 @@ from typing import Optional
 from typing import TypeVar
 from typing import Union
 
+from tqdm.auto import tqdm
+
 from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.compute_plan_builder import ComputePlanBuilder
@@ -210,33 +212,38 @@ class Strategy(ComputePlanBuilder):
         additional_orgs_permissions = (
             evaluation_strategy.test_data_nodes_org_ids if evaluation_strategy is not None else set()
         )
+        with tqdm(
+            total=num_rounds,
+            desc="Rounds progress",
+        ) as progress_bar:
+            # create computation graph.
+            for round_idx in range(0, num_rounds + 1):
+                if round_idx == 0:
+                    self.initialization_round(
+                        train_data_nodes=train_data_nodes,
+                        additional_orgs_permissions=additional_orgs_permissions,
+                        clean_models=clean_models,
+                    )
+                else:
+                    if round_idx == num_rounds:
+                        clean_models = False  # Enforce to keep at least the outputs of the last round.
 
-        # create computation graph.
-        for round_idx in range(0, num_rounds + 1):
-            if round_idx == 0:
-                self.initialization_round(
-                    train_data_nodes=train_data_nodes,
-                    additional_orgs_permissions=additional_orgs_permissions,
-                    clean_models=clean_models,
-                )
-            else:
-                if round_idx == num_rounds:
-                    clean_models = False  # Enforce to keep at least the outputs of the last round.
+                    self.perform_round(
+                        train_data_nodes=train_data_nodes,
+                        aggregation_node=aggregation_node,
+                        additional_orgs_permissions=additional_orgs_permissions,
+                        round_idx=round_idx,
+                        clean_models=clean_models,
+                    )
 
-                self.perform_round(
-                    train_data_nodes=train_data_nodes,
-                    aggregation_node=aggregation_node,
-                    additional_orgs_permissions=additional_orgs_permissions,
-                    round_idx=round_idx,
-                    clean_models=clean_models,
-                )
+                    progress_bar.update()
 
-            if evaluation_strategy is not None and next(evaluation_strategy):
-                self.perform_evaluation(
-                    train_data_nodes=train_data_nodes,
-                    test_data_nodes=evaluation_strategy.test_data_nodes,
-                    round_idx=round_idx,
-                )
+                if evaluation_strategy is not None and next(evaluation_strategy):
+                    self.perform_evaluation(
+                        train_data_nodes=train_data_nodes,
+                        test_data_nodes=evaluation_strategy.test_data_nodes,
+                        round_idx=round_idx,
+                    )
 
     def save_local_state(self, path: Path) -> None:
         self.algo.save_local_state(path)
