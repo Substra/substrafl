@@ -18,7 +18,7 @@ class _Model(pydantic.BaseModel):
         return self.model_dump_json(indent=4)
 
 
-class SimulationPerformances(_Model):
+class SimuPerformancesMemory(_Model):
     """Performances of a simulated experiment"""
 
     worker: List[str] = []
@@ -27,7 +27,7 @@ class SimulationPerformances(_Model):
     performance: List[float] = []
 
     def __add__(self, other):
-        return SimulationPerformances(
+        return SimuPerformancesMemory(
             worker=self.worker + other.worker,
             round_idx=self.round_idx + other.round_idx,
             identifier=self.identifier + other.identifier,
@@ -35,7 +35,7 @@ class SimulationPerformances(_Model):
         )
 
 
-class SimulationIntermediateStates(_Model):
+class SimuStatesMemory(_Model):
     """Intermediate states of a simulated experiment"""
 
     worker: List[str] = []
@@ -47,7 +47,7 @@ class SimulationIntermediateStates(_Model):
         return [str(s) for s in state]
 
     def __add__(self, other):
-        return SimulationIntermediateStates(
+        return SimuStatesMemory(
             worker=self.worker + other.worker,
             round_idx=self.round_idx + other.round_idx,
             state=self.state + other.state,

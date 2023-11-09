@@ -14,8 +14,8 @@ from substrafl.nodes import TestDataNode
 from substrafl.nodes import TrainDataNode
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.remote.operations import RemoteOperation
-from substrafl.simulation.schemas import SimulationIntermediateStates
-from substrafl.simulation.schemas import SimulationPerformances
+from substrafl.simulation.schemas import SimuPerformancesMemory
+from substrafl.simulation.schemas import SimuStatesMemory
 
 
 def _preload_data(
@@ -60,7 +60,7 @@ class SimuTrainDataNode(Node):
             client=client, data_manager_key=self.data_manager_key, data_sample_keys=self.data_sample_keys
         )
         self._strategy = strategy
-        self._memory = SimulationIntermediateStates()
+        self._memory = SimuStatesMemory()
 
     def init_states(self, *args, **kwargs) -> LocalStateRef:
         return LocalStateRef(key=str(uuid.uuid4()), init=True)
@@ -125,7 +125,7 @@ class SimuTestDataNode(Node):
         )
 
         self._strategy = strategy
-        self._memory = SimulationPerformances()
+        self._memory = SimuPerformancesMemory()
 
     def update_states(
         self,
@@ -167,7 +167,7 @@ class SimuAggregationNode(Node):
     def __init__(self, node: AggregationNode, strategy: ComputePlanBuilder):
         super().__init__(node.organization_id)
         self._strategy = strategy
-        self._memory = SimulationIntermediateStates()
+        self._memory = SimuStatesMemory()
 
     def update_states(
         self,
