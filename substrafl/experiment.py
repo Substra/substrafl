@@ -260,7 +260,8 @@ def simulate_experiment(
             "`remote` client backend type is not supported by `simulate_experiment`."
         )
 
-    strategy = copy.deepcopy(strategy)
+    strategy_to_execute = copy.deepcopy(strategy)
+
     simu_evaluation_strategy = copy.deepcopy(evaluation_strategy)
 
     train_organization_ids = [train_data_node.organization_id for train_data_node in train_data_nodes]
@@ -283,8 +284,13 @@ def simulate_experiment(
         for test_data_node in simu_evaluation_strategy.test_data_nodes:
             # We always take the strategy from the first train node, to obtain a model to test.
             # TODO: search if a train is on the same node, and take the strategy from it if possible
+            strategy_match = None
+            for simu_train_data_node in simu_train_data_nodes:
+                if simu_train_data_node.organization_id == test_data_node.organization_id:
+                    strategy_match = simu_train_data_node._strategy
+
             simu_test_data_node = SimuTestDataNode(
-                client=client, node=test_data_node, strategy=simu_train_data_nodes[0]._strategy
+                client=client, node=test_data_node, strategy=strategy_match or simu_train_data_nodes[0]._strategy
             )
 
             simu_test_data_nodes.append(simu_test_data_node)
@@ -299,7 +305,7 @@ def simulate_experiment(
 
     logger.info("Simulating the execution of the compute plan.")
 
-    strategy.build_compute_plan(
+    strategy_to_execute.build_compute_plan(
         train_data_nodes=simu_train_data_nodes,
         aggregation_node=simu_aggregation_node,
         evaluation_strategy=simu_evaluation_strategy,
@@ -307,9 +313,9 @@ def simulate_experiment(
         clean_models=clean_models,
     )
 
-    train_intermediate_states = reduce(add, (node._memory for node in simu_train_data_nodes))
+    trained_states_memory = reduce(add, (node._memory for node in simu_train_data_nodes))
 
-    aggregate_intermediate_states = simu_aggregation_node._memory if simu_aggregation_node is not None else None
+    aggregated_states_memory = simu_aggregation_node._memory if simu_aggregation_node is not None else None
 
     performances = (
         reduce(add, (node._memory for node in simu_evaluation_strategy.test_data_nodes))
@@ -317,7 +323,7 @@ def simulate_experiment(
         else None
     )
 
-    return performances, train_intermediate_states, aggregate_intermediate_states
+    return performances, trained_states_memory, aggregated_states_memory
 
 
 def execute_experiment(
