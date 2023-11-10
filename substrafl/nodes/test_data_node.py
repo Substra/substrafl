@@ -6,26 +6,17 @@ from typing import Optional
 import substra
 
 from substrafl.dependency import Dependency
-<<<<<<< HEAD
+
 from substrafl.nodes.protocol import TestDataNodeProtocol
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OperationKey
 from substrafl.nodes.schemas import OutputIdentifiers
-=======
->>>>>>> fe50289 (chore: protocol)
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.substrafl.nodes.schemas import InputIdentifiers
-from substrafl.substrafl.nodes.schemas import OperationKey
-from substrafl.substrafl.nodes.schemas import OutputIdentifiers
 
 
-<<<<<<< HEAD
 class TestDataNode(TestDataNodeProtocol):
-=======
-class TestDataNode:
->>>>>>> fe50289 (chore: protocol)
     """A node on which you will test your algorithm.
 
     Args:

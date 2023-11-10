@@ -17,9 +17,6 @@ from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
-from substrafl.substrafl.nodes.schemas import InputIdentifiers
-from substrafl.substrafl.nodes.schemas import OperationKey
-from substrafl.substrafl.nodes.schemas import OutputIdentifiers
 
 SharedState = TypeVar("SharedState")
 
