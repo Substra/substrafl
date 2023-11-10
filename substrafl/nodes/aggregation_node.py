@@ -1,5 +1,6 @@
 import uuid
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Set
 from typing import TypeVar
@@ -7,24 +8,27 @@ from typing import TypeVar
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import Node
-from substrafl.nodes.node import OperationKey
-from substrafl.nodes.node import OutputIdentifiers
 from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
+from substrafl.substrafl.nodes.schemas import InputIdentifiers
+from substrafl.substrafl.nodes.schemas import OperationKey
+from substrafl.substrafl.nodes.schemas import OutputIdentifiers
 
 SharedState = TypeVar("SharedState")
 
 
-class AggregationNode(Node):
+class AggregationNode:
     """The node which applies operations to the shared states which are received from ``TrainDataNode``
     data operations.
     The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.
     """
+
+    def __init__(self, organization_id: str):
+        self.organization_id = organization_id
+        self.tasks: List[Dict] = []
 
     def update_states(
         self,

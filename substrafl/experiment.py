@@ -80,14 +80,14 @@ def _register_operations(
 
     if evaluation_strategy is not None:
         for test_data_node in evaluation_strategy.test_data_nodes:
-            test_function_cache = test_data_node.register_test_operations(
+            test_function_cache = test_data_node.register_operations(
                 client=client,
                 permissions=permissions,
                 cache=test_function_cache,
                 dependencies=dependencies,
             )
 
-            tasks += test_data_node.testtasks
+            tasks += test_data_node.tasks
 
     # The aggregation operation is defined in the strategy, its dependencies are
     # the strategy dependencies

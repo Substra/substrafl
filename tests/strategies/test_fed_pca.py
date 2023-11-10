@@ -131,7 +131,7 @@ def test_fed_pca_predict(dummy_algo_class):
         round_idx=1,
     )
 
-    assert all([len(test_data_node.testtasks) == 0 for test_data_node in test_data_nodes])
+    assert all([len(test_data_node.tasks) == 0 for test_data_node in test_data_nodes])
 
     strategy.perform_evaluation(
         test_data_nodes=test_data_nodes,
@@ -139,7 +139,7 @@ def test_fed_pca_predict(dummy_algo_class):
         round_idx=3,
     )
 
-    assert all([len(test_data_node.testtasks) == 1 for test_data_node in test_data_nodes])
+    assert all([len(test_data_node.tasks) == 1 for test_data_node in test_data_nodes])
 
 
 @pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])

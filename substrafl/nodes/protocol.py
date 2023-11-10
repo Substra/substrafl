@@ -16,6 +16,9 @@ class TrainDataNodeProtocol(Protocol):
     def update_states(self, *args, **kwargs) -> (LocalStateRef, Any):
         pass
 
+    def register_operations(self, *args, **kwargs) -> Any:
+        pass
+
     def summary(self) -> dict:
         pass
 
@@ -23,9 +26,12 @@ class TrainDataNodeProtocol(Protocol):
 class TestDataNodeProtocol(Protocol):
     organization_id: str
     data_manager_key: str
-    test_data_sample_keys: List[str]
+    data_sample_keys: List[str]
 
     def update_states(self, *args, **kwargs) -> None:
+        pass
+
+    def register_operations(self, *args, **kwargs) -> Any:
         pass
 
     def summary(self) -> dict:
@@ -36,6 +42,9 @@ class AggregationNodeProtocol(Protocol):
     organization_id: str
 
     def update_states(self, *args, **kwargs) -> Any:
+        pass
+
+    def register_operations(self, *args, **kwargs) -> Any:
         pass
 
     def summary(self) -> dict:

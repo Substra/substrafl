@@ -166,7 +166,7 @@ class SingleOrganization(Strategy):
             test_data_node.update_states(
                 traintask_id=self.local_state.key,
                 operation=self.evaluate(
-                    data_samples=test_data_node.test_data_sample_keys,
+                    data_samples=test_data_node.data_sample_keys,
                     _algo_name=f"Evaluating with {self.__class__.__name__}",
                 ),
                 round_idx=round_idx,
