@@ -1,10 +1,12 @@
 from typing import Any
 from typing import List
 from typing import Protocol
+from typing import runtime_checkable
 
 from substrafl.nodes.references.local_state import LocalStateRef
 
 
+@runtime_checkable
 class TrainDataNodeProtocol(Protocol):
     organization_id: str
     data_manager_key: str
@@ -23,6 +25,7 @@ class TrainDataNodeProtocol(Protocol):
         pass
 
 
+@runtime_checkable
 class TestDataNodeProtocol(Protocol):
     organization_id: str
     data_manager_key: str
@@ -38,6 +41,7 @@ class TestDataNodeProtocol(Protocol):
         pass
 
 
+@runtime_checkable
 class AggregationNodeProtocol(Protocol):
     organization_id: str
 

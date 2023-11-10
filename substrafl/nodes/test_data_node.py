@@ -6,12 +6,12 @@ from typing import Optional
 import substra
 
 from substrafl.dependency import Dependency
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OperationKey
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.substrafl.nodes.schemas import InputIdentifiers
-from substrafl.substrafl.nodes.schemas import OperationKey
-from substrafl.substrafl.nodes.schemas import OutputIdentifiers
 
 
 class TestDataNode:
@@ -154,11 +154,8 @@ class TestDataNode:
         Returns:
             dict: a json-serializable dict with the attributes the user wants to store
         """
-        summary = super().summary()
-        summary.update(
-            {
-                "data_manager_key": self.data_manager_key,
-                "data_sample_keys": self.data_sample_keys,
-            }
-        )
-        return summary
+        return {
+            "organization_id": self.organization_id,
+            "data_manager_key": self.data_manager_key,
+            "data_sample_keys": self.data_sample_keys,
+        }

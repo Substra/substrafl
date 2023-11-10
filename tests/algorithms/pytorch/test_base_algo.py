@@ -14,8 +14,8 @@ from substrafl.exceptions import BatchSizeNotFoundError
 from substrafl.exceptions import DatasetSignatureError
 from substrafl.exceptions import DatasetTypeError
 from substrafl.index_generator import NpIndexGenerator
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.remote.serializers import PickleSerializer

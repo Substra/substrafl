@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from substrafl import exceptions
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 
 
 @pytest.mark.parametrize(

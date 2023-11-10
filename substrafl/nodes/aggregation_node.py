@@ -9,13 +9,13 @@ import substra
 
 from substrafl.dependency import Dependency
 from substrafl.nodes.references.shared_state import SharedStateRef
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OperationKey
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
-from substrafl.substrafl.nodes.schemas import InputIdentifiers
-from substrafl.substrafl.nodes.schemas import OperationKey
-from substrafl.substrafl.nodes.schemas import OutputIdentifiers
 
 SharedState = TypeVar("SharedState")
 
@@ -165,3 +165,13 @@ class AggregationNode:
                 task["function_key"] = function_key
 
         return cache
+
+    def summary(self) -> dict:
+        """Summary of the class to be exposed in the experiment summary file
+
+        Returns:
+            dict: a json-serializable dict with the attributes the user wants to store
+        """
+        return {
+            "organization_id": self.organization_id,
+        }

@@ -22,7 +22,7 @@ from substrafl.model_loading import MODEL_DICT_KEY
 from substrafl.model_loading import REQUIRED_KEYS
 from substrafl.model_loading import _download_task_output_files
 from substrafl.model_loading import _load_from_files
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.register.register import _create_substra_function_files
 from substrafl.schemas import TaskType
 

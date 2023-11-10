@@ -21,7 +21,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
 from substrafl.nodes.aggregation_node import AggregationNode
-from substrafl.nodes.node import OperationKey
+from substrafl.nodes.schemas import OperationKey
 from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
 

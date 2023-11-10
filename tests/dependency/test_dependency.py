@@ -11,8 +11,8 @@ import substrafl
 from substrafl.constants import SUBSTRAFL_FOLDER
 from substrafl.dependency import Dependency
 from substrafl.exceptions import InvalidPathError
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote import remote_data
 from substrafl.remote.register.register import register_function
 

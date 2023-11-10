@@ -18,7 +18,7 @@ from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes import AggregationNodeProtocol
 from substrafl.nodes import TestDataNodeProtocol
 from substrafl.nodes import TrainDataNodeProtocol
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.decorators import remote_data
 from substrafl.strategies.schemas import StrategyName
 

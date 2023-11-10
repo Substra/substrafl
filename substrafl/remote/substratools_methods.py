@@ -9,8 +9,8 @@ from typing import Union
 
 import substratools as tools
 
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.serializers.pickle_serializer import PickleSerializer
 from substrafl.remote.serializers.serializer import Serializer
 
