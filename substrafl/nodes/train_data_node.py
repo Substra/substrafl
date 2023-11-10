@@ -8,6 +8,7 @@ from typing import Tuple
 import substra
 
 from substrafl.dependency import Dependency
+from substrafl.nodes.protocol import TrainDataNodeProtocol
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.schemas import InputIdentifiers
@@ -20,7 +21,7 @@ from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
 
 
-class TrainDataNode:
+class TrainDataNode(TrainDataNodeProtocol):
     """
     A predefined structure that allows you to register operations
     on your train node in a static way before submitting them to substra.

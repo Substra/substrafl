@@ -6,6 +6,7 @@ from typing import Optional
 import substra
 
 from substrafl.dependency import Dependency
+from substrafl.nodes.protocol import TestDataNodeProtocol
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OperationKey
 from substrafl.nodes.schemas import OutputIdentifiers
@@ -14,7 +15,7 @@ from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 
 
-class TestDataNode:
+class TestDataNode(TestDataNodeProtocol):
     """A node on which you will test your algorithm.
 
     Args:

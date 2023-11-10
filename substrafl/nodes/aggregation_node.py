@@ -8,6 +8,7 @@ from typing import TypeVar
 import substra
 
 from substrafl.dependency import Dependency
+from substrafl.nodes.protocol import AggregationNodeProtocol
 from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OperationKey
@@ -20,7 +21,7 @@ from substrafl.schemas import TaskType
 SharedState = TypeVar("SharedState")
 
 
-class AggregationNode:
+class AggregationNode(AggregationNodeProtocol):
     """The node which applies operations to the shared states which are received from ``TrainDataNode``
     data operations.
     The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.
