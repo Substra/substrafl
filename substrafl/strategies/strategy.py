@@ -15,11 +15,11 @@ from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.evaluation_strategy import EvaluationStrategy
-from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.node import OutputIdentifiers
-from substrafl.nodes.test_data_node import TestDataNode
-from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.decorators import remote_data
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TestDataNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.strategies.schemas import StrategyName
 
 SharedState = TypeVar("SharedState")
@@ -83,7 +83,7 @@ class Strategy(ComputePlanBuilder):
     def initialization_round(
         self,
         *,
-        train_data_nodes: List[TrainDataNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
         clean_models: bool,
         round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
@@ -91,7 +91,7 @@ class Strategy(ComputePlanBuilder):
         """Call the initialize function of the algo on each train node.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
@@ -119,8 +119,8 @@ class Strategy(ComputePlanBuilder):
     def perform_round(
         self,
         *,
-        train_data_nodes: List[TrainDataNode],
-        aggregation_node: Optional[AggregationNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
+        aggregation_node: Optional[AggregationNodeProtocol],
         round_idx: int,
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
@@ -128,8 +128,8 @@ class Strategy(ComputePlanBuilder):
         """Perform one round of the strategy
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
-            aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
+            aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             round_idx (int): index of the round
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
@@ -143,8 +143,8 @@ class Strategy(ComputePlanBuilder):
     @abstractmethod
     def perform_evaluation(
         self,
-        test_data_nodes: List[TestDataNode],
-        train_data_nodes: List[TrainDataNode],
+        test_data_nodes: List[TestDataNodeProtocol],
+        train_data_nodes: List[TrainDataNodeProtocol],
         round_idx: int,
     ):
         """Perform the evaluation of the algo on each test nodes.
@@ -152,8 +152,8 @@ class Strategy(ComputePlanBuilder):
         test nodes.
 
         Args:
-            test_data_nodes (typing.List[TestDataNode]): list of nodes on which to evaluate
-            train_data_nodes (typing.List[TrainDataNode]): list of nodes on which the model has
+            test_data_nodes (typing.List[TestDataNodeProtocol]): list of nodes on which to evaluate
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of nodes on which the model has
                 been trained
             round_idx (int): index of the round
         """
@@ -180,8 +180,8 @@ class Strategy(ComputePlanBuilder):
 
     def build_compute_plan(
         self,
-        train_data_nodes: List[TrainDataNode],
-        aggregation_node: Optional[List[AggregationNode]],
+        train_data_nodes: List[TrainDataNodeProtocol],
+        aggregation_node: Optional[List[AggregationNodeProtocol]],
         evaluation_strategy: Optional[EvaluationStrategy],
         num_rounds: int,
         clean_models: Optional[bool] = True,
@@ -195,8 +195,8 @@ class Strategy(ComputePlanBuilder):
         called to complete the graph.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
-            aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
+            aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             evaluation_strategy (Optional[EvaluationStrategy]): evaluation strategy to follow for testing models.
             num_rounds (int): Number of times to repeat the compute plan sub-graph (define in perform round).

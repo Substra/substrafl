@@ -10,11 +10,11 @@ from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import DampingFactorValueError
 from substrafl.exceptions import EmptySharedStatesError
 from substrafl.exceptions import SharedStatesError
-from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TestDataNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
-from substrafl.nodes.test_data_node import TestDataNode
-from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
 from substrafl.strategies.schemas import NewtonRaphsonAveragedStates
 from substrafl.strategies.schemas import NewtonRaphsonSharedState
@@ -85,8 +85,8 @@ class NewtonRaphson(Strategy):
     def perform_round(
         self,
         *,
-        train_data_nodes: List[TrainDataNode],
-        aggregation_node: AggregationNode,
+        train_data_nodes: List[TrainDataNodeProtocol],
+        aggregation_node: AggregationNodeProtocol,
         round_idx: int,
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
@@ -100,9 +100,9 @@ class NewtonRaphson(Strategy):
             - perform a local update of the models on each train data nodes
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes on which to perform
                 local updates
-            aggregation_node (AggregationNode): node without data, used to perform operations
+            aggregation_node (AggregationNodeProtocol): node without data, used to perform operations
                 on the shared states of the models
             round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
@@ -245,7 +245,7 @@ class NewtonRaphson(Strategy):
 
     def _perform_local_updates(
         self,
-        train_data_nodes: List[TrainDataNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
@@ -255,7 +255,7 @@ class NewtonRaphson(Strategy):
         """Perform a local update of the model on each train data nodes.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes on which to
                 perform local updates
             current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to
                 be passed as input to each local training
@@ -295,15 +295,15 @@ class NewtonRaphson(Strategy):
 
     def perform_evaluation(
         self,
-        test_data_nodes: List[TestDataNode],
-        train_data_nodes: List[TrainDataNode],
+        test_data_nodes: List[TestDataNodeProtocol],
+        train_data_nodes: List[TrainDataNodeProtocol],
         round_idx: int,
     ):
         """Perform evaluation on test_data_nodes.
 
         Args:
-            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
-            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+            test_data_nodes (List[TestDataNodeProtocol]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNodeProtocol]): train data nodes the model has been trained
                 on.
             round_idx (int): round index.
         """

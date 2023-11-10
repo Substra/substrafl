@@ -9,11 +9,11 @@ import numpy as np
 
 from substrafl.algorithms.algo import Algo
 from substrafl.exceptions import EmptySharedStatesError
-from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TestDataNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
-from substrafl.nodes.test_data_node import TestDataNode
-from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
 from substrafl.strategies.schemas import FedPCAAveragedState
 from substrafl.strategies.schemas import FedPCASharedState
@@ -103,16 +103,16 @@ class FedPCA(Strategy):
 
     def perform_evaluation(
         self,
-        test_data_nodes: List[TestDataNode],
-        train_data_nodes: List[TrainDataNode],
+        test_data_nodes: List[TestDataNodeProtocol],
+        train_data_nodes: List[TrainDataNodeProtocol],
         round_idx: int,
     ) -> None:
         """Perform evaluation on test_data_nodes. Perform prediction before round 3 is not take into account
         as all objects to compute prediction are not initialize before the second round.
 
         Args:
-            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
-            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+            test_data_nodes (List[TestDataNodeProtocol]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNodeProtocol]): train data nodes the model has been trained
                 on.
             round_idx (int): round index.
         """
@@ -145,8 +145,8 @@ class FedPCA(Strategy):
 
     def perform_round(
         self,
-        train_data_nodes: List[TrainDataNode],
-        aggregation_node: AggregationNode,
+        train_data_nodes: List[TrainDataNodeProtocol],
+        aggregation_node: AggregationNodeProtocol,
         round_idx: int,
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
@@ -159,9 +159,9 @@ class FedPCA(Strategy):
             - Use the local covariance matrices to compute the orthogonal matrix for every next rounds.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): List of the nodes on which to perform
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes on which to perform
                 local updates.
-            aggregation_node (AggregationNode): Node without data, used to perform
+            aggregation_node (AggregationProtocol): Node without data, used to perform
                 operations on the shared states of the models
             round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
@@ -300,7 +300,7 @@ class FedPCA(Strategy):
 
     def _perform_local_updates(
         self,
-        train_data_nodes: List[TrainDataNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
@@ -311,7 +311,7 @@ class FedPCA(Strategy):
         on each train data nodes.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): List of the organizations on which to perform
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the organizations on which to perform
             local updates current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to
                 be passed as input to each local training
             round_idx (int): Round number, it starts at 1.
