@@ -25,11 +25,17 @@ class TrainDataNodeProtocol(Protocol):
     def update_states(self, operation: RemoteDataOperation, *args, **kwargs) -> (LocalStateRef, Any):
         pass
 
+<<<<<<< HEAD
     @abstractmethod
     def register_operations(self, client: substra.Client, *args, **kwargs) -> Any:
         pass
 
     @abstractmethod
+=======
+    def register_operations(self, *args, **kwargs) -> Any:
+        pass
+
+>>>>>>> fe50289 (chore: protocol)
     def summary(self) -> dict:
         pass
 
@@ -44,11 +50,17 @@ class TestDataNodeProtocol(Protocol):
     def update_states(self, operation: RemoteDataOperation, *args, **kwargs) -> None:
         pass
 
+<<<<<<< HEAD
     @abstractmethod
     def register_operations(self, client: substra.Client, *args, **kwargs) -> Any:
         pass
 
     @abstractmethod
+=======
+    def register_operations(self, *args, **kwargs) -> Any:
+        pass
+
+>>>>>>> fe50289 (chore: protocol)
     def summary(self) -> dict:
         pass
 
