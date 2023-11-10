@@ -29,6 +29,8 @@ from substrafl.nodes.aggregation_node import AggregationNode
 from substrafl.nodes.schemas import OperationKey
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.simulation import SimuAggregationNode
+from substrafl.simulation import SimuPerformancesMemory
+from substrafl.simulation import SimuStatesMemory
 from substrafl.simulation import SimuTestDataNode
 from substrafl.simulation import SimuTrainDataNode
 
@@ -221,7 +223,7 @@ def simulate_experiment(
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     num_rounds: Optional[int] = None,
     clean_models: bool = True,
-):
+) -> (SimuPerformancesMemory, SimuStatesMemory, SimuStatesMemory):
     """Simulate an experiment, by computing all operation on RAM.
     No tasks will be sent to the `Client`, which mean that this function should not be used
     to check that your experiment will run as wanted on Substra.
@@ -248,10 +250,10 @@ def simulate_experiment(
         UnsupportedClientBackendTypeError: `remote` client backend type is not supported by `simulate_experiment`.
 
     Returns:
-        SimulationPerformances: Objects containing all computed performances during the simulation. Set to None if no
+        SimuPerformancesMemory: Objects containing all computed performances during the simulation. Set to None if no
             EvaluationStrategy given.
-        SimulationIntermediateStates: Objects containing all intermediate state saved on the TrainDataNodes.
-        SimulationIntermediateStates: Objects containing all intermediate state saved on the TrainDataNodes. Set to None
+        SimuStatesMemory: Objects containing all intermediate state saved on the TrainDataNodes.
+        SimuStatesMemory: Objects containing all intermediate state saved on the TrainDataNodes. Set to None
             if no AggregationNode given.
     """
 
@@ -282,13 +284,15 @@ def simulate_experiment(
 
         simu_test_data_nodes = []
         for test_data_node in simu_evaluation_strategy.test_data_nodes:
-            # We always take the strategy from the first train node, to obtain a model to test.
-            # TODO: search if a train is on the same node, and take the strategy from it if possible
+            # We search if an org with train has also a test node. If yes, we
+            # will use this strategy object to test it.
             strategy_match = None
             for simu_train_data_node in simu_train_data_nodes:
                 if simu_train_data_node.organization_id == test_data_node.organization_id:
                     strategy_match = simu_train_data_node._strategy
 
+            # If no match has been found between train and test nodes, we take the strategy to evaluate
+            # from the first node by default.
             simu_test_data_node = SimuTestDataNode(
                 client=client, node=test_data_node, strategy=strategy_match or simu_train_data_nodes[0]._strategy
             )
