@@ -20,9 +20,9 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
-from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.schemas import OperationKey
-from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote.remote_struct import RemoteStruct
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 
 def _register_operations(
     client: substra.Client,
-    train_data_nodes: List[TrainDataNode],
-    aggregation_node: Optional[AggregationNode],
+    train_data_nodes: List[TrainDataNodeProtocol],
+    aggregation_node: Optional[AggregationNodeProtocol],
     evaluation_strategy: Optional[EvaluationStrategy],
     dependencies: Dependency,
 ) -> Tuple[List[dict], Dict[RemoteStruct, OperationKey]]:
@@ -39,8 +39,8 @@ def _register_operations(
 
     Args:
         client (substra.Client): substra client
-        train_data_nodes (typing.List[TrainDataNode]): list of train data nodes
-        aggregation_node (typing.Optional[AggregationNode]): the aggregation node for
+        train_data_nodes (typing.List[TrainDataNodeProtocol]): list of train data nodes
+        aggregation_node (typing.Optional[AggregationNodeProtocol]): the aggregation node for
             centralized strategies
         evaluation_strategy (typing.Optional[EvaluationStrategy]): the evaluation strategy
             if there is one dependencies
@@ -110,8 +110,8 @@ def _save_experiment_summary(
     strategy: ComputePlanBuilder,
     num_rounds: int,
     operation_cache: Dict[RemoteStruct, OperationKey],
-    train_data_nodes: List[TrainDataNode],
-    aggregation_node: Optional[AggregationNode],
+    train_data_nodes: List[TrainDataNodeProtocol],
+    aggregation_node: Optional[AggregationNodeProtocol],
     evaluation_strategy: EvaluationStrategy,
     timestamp: str,
     additional_metadata: Optional[Dict],
@@ -124,8 +124,8 @@ def _save_experiment_summary(
         strategy (substrafl.strategies.Strategy): strategy
         num_rounds (int): num_rounds
         operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
-        train_data_nodes (typing.List[TrainDataNode]): train_data_nodes
-        aggregation_node (typing.Optional[AggregationNode]): aggregation_node
+        train_data_nodes (typing.List[TrainDataNodeProtocol]): train_data_nodes
+        aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation_node
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
         additional_metadata (dict, Optional): Optional dictionary of metadata to be shown on the Substra WebApp.
@@ -209,10 +209,10 @@ def execute_experiment(
     *,
     client: substra.Client,
     strategy: ComputePlanBuilder,
-    train_data_nodes: List[TrainDataNode],
+    train_data_nodes: List[TrainDataNodeProtocol],
     experiment_folder: Union[str, Path],
     num_rounds: Optional[int] = None,
-    aggregation_node: Optional[AggregationNode] = None,
+    aggregation_node: Optional[AggregationNodeProtocol] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     dependencies: Optional[Dependency] = None,
     clean_models: bool = True,
@@ -243,10 +243,10 @@ def execute_experiment(
     Args:
         client (substra.Client): A substra client to interact with the Substra platform
         strategy (Strategy): The strategy that will be executed
-        train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
+        train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes where training on data
             occurs evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
-        aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation
+        aggregation_node (typing.Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
         evaluation_strategy: Optional[EvaluationStrategy]
         num_rounds (int): The number of time your strategy will be executed
