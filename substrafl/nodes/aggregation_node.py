@@ -21,11 +21,7 @@ from substrafl.schemas import TaskType
 SharedState = TypeVar("SharedState")
 
 
-<<<<<<< HEAD
 class AggregationNode(AggregationNodeProtocol):
-=======
-class AggregationNode:
->>>>>>> fe50289 (chore: protocol)
     """The node which applies operations to the shared states which are received from ``TrainDataNode``
     data operations.
     The result is sent to the ``TrainDataNode`` and/or ``TestDataNode`` data operations.

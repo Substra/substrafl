@@ -6,7 +6,6 @@ from typing import Optional
 import substra
 
 from substrafl.dependency import Dependency
-
 from substrafl.nodes.protocol import TestDataNodeProtocol
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OperationKey
