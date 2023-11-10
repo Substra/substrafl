@@ -15,11 +15,11 @@ from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.evaluation_strategy import EvaluationStrategy
-from substrafl.nodes.node import OutputIdentifiers
-from substrafl.remote.decorators import remote_data
 from substrafl.nodes import AggregationNodeProtocol
 from substrafl.nodes import TestDataNodeProtocol
 from substrafl.nodes import TrainDataNodeProtocol
+from substrafl.nodes.node import OutputIdentifiers
+from substrafl.remote.decorators import remote_data
 from substrafl.strategies.schemas import StrategyName
 
 SharedState = TypeVar("SharedState")
