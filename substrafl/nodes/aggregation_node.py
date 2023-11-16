@@ -1,4 +1,9 @@
+from __future__ import annotations
+
+import copy
 import uuid
+from typing import TYPE_CHECKING
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -13,10 +18,15 @@ from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OperationKey
 from substrafl.nodes.schemas import OutputIdentifiers
+from substrafl.nodes.schemas import SimuStatesMemory
 from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
+
+if TYPE_CHECKING:
+    from substrafl.compute_plan_builder import ComputePlanBuilder
+
 
 SharedState = TypeVar("SharedState")
 
@@ -166,6 +176,65 @@ class AggregationNode(AggregationNodeProtocol):
                 task["function_key"] = function_key
 
         return cache
+
+    def summary(self) -> dict:
+        """Summary of the class to be exposed in the experiment summary file
+
+        Returns:
+            dict: a json-serializable dict with the attributes the user wants to store
+        """
+        return {
+            "organization_id": self.organization_id,
+        }
+
+
+class SimuAggregationNode(AggregationNodeProtocol):
+    def __init__(self, node: AggregationNode, strategy: ComputePlanBuilder):
+        self.organization_id = node.organization_id
+        self._strategy = strategy
+        self._memory = SimuStatesMemory()
+
+    def update_states(
+        self,
+        operation: RemoteOperation,
+        round_idx: Optional[int] = None,
+        clean_models: Optional[bool] = True,
+        *args,
+        **kwargs,
+    ) -> Any:
+        """This function will execute the method to run on the aggregation node with the argument
+        `_skip=True`, to execute it directly in RAM.
+
+        This function is expected to overload the `update_state` method of a AggregationNode
+        to simulate its execution on RAM only.
+
+        Args:
+            operation (RemoteOperation): Object containing all the information to execute
+                the method.
+            round_idx (Optional[int]): Current round idx. Defaults to None.
+            clean_models (Optional[bool]): If set to True, the current state of the instance will
+                be saved in a SimulationIntermediateStates object. Defaults to True.
+
+        Returns:
+            Any: the output of the execution of the method stored in `operation`.
+        """
+        method_name = operation.remote_struct._method_name
+        method_parameters = operation.remote_struct._method_parameters
+
+        method_parameters["shared_states"] = operation.shared_states
+        method_to_run = getattr(self._strategy, method_name)
+
+        shared_state = method_to_run(**method_parameters, _skip=True)
+
+        if not clean_models:
+            self._memory.state.append(copy.deepcopy(self._strategy))
+            self._memory.round_idx.append(round_idx)
+            self._memory.worker.append(self.organization_id)
+
+        return shared_state
+
+    def register_operations(self, *args, **kwargs) -> None:
+        return
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file

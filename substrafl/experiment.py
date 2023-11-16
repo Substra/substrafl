@@ -22,17 +22,17 @@ from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import KeyMetadataError
 from substrafl.exceptions import LenMetadataError
-from substrafl.nodes import AggregationNodeProtocol
-from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.exceptions import UnsupportedClientBackendTypeError
-from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import SimuAggregationNode
+from substrafl.nodes import SimuTestDataNode
+from substrafl.nodes import SimuTrainDataNode
+from substrafl.nodes import TestDataNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.schemas import OperationKey
+from substrafl.nodes.schemas import SimuPerformancesMemory
+from substrafl.nodes.schemas import SimuStatesMemory
 from substrafl.remote.remote_struct import RemoteStruct
-from substrafl.simulation import SimuAggregationNode
-from substrafl.simulation import SimuPerformancesMemory
-from substrafl.simulation import SimuStatesMemory
-from substrafl.simulation import SimuTestDataNode
-from substrafl.simulation import SimuTrainDataNode
 
 logger = logging.getLogger(__name__)
 
@@ -218,8 +218,8 @@ def simulate_experiment(
     *,
     client: substra.Client,
     strategy: ComputePlanBuilder,
-    train_data_nodes: List[TrainDataNode],
-    aggregation_node: Optional[AggregationNode] = None,
+    train_data_nodes: List[TrainDataNodeProtocol],
+    aggregation_node: Optional[AggregationNodeProtocol] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     num_rounds: Optional[int] = None,
     clean_models: bool = True,
@@ -236,9 +236,9 @@ def simulate_experiment(
         client (substra.Client): A substra client to interact with the Substra platform, in order to retrieve the
             registered data. `remote` client backend type is not supported by this function.
         strategy (Strategy): The strategy that will be executed.
-        train_data_nodes (typing.List[TrainDataNode]): List of the nodes where training on data
+        train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes where training on data
             occurs.
-        aggregation_node (typing.Optional[AggregationNode]): For centralized strategy, the aggregation
+        aggregation_node (typing.Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
         evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
@@ -273,7 +273,9 @@ def simulate_experiment(
 
     simu_train_data_nodes = []
     for train_data_node in train_data_nodes:
-        simu_train_data_node = SimuTrainDataNode(client=client, node=train_data_node, strategy=copy.deepcopy(strategy))
+        simu_train_data_node: TrainDataNodeProtocol = SimuTrainDataNode(
+            client=client, node=train_data_node, strategy=copy.deepcopy(strategy)
+        )
 
         simu_train_data_nodes.append(simu_train_data_node)
 
@@ -293,7 +295,7 @@ def simulate_experiment(
 
             # If no match has been found between train and test nodes, we take the strategy to evaluate
             # from the first node by default.
-            simu_test_data_node = SimuTestDataNode(
+            simu_test_data_node: TestDataNodeProtocol = SimuTestDataNode(
                 client=client, node=test_data_node, strategy=strategy_match or simu_train_data_nodes[0]._strategy
             )
 
@@ -301,7 +303,7 @@ def simulate_experiment(
 
         simu_evaluation_strategy.test_data_nodes = simu_test_data_nodes
 
-    simu_aggregation_node = (
+    simu_aggregation_node: AggregationNodeProtocol = (
         SimuAggregationNode(node=aggregation_node, strategy=copy.deepcopy(strategy))
         if aggregation_node is not None
         else None
