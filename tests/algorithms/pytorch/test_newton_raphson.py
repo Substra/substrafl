@@ -3,6 +3,7 @@ import pytest
 import torch
 
 from substrafl import execute_experiment
+from substrafl import simulate_experiment
 from substrafl.algorithms.pytorch import TorchNewtonRaphsonAlgo
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import CriterionReductionError
@@ -227,6 +228,91 @@ def nr_test_data():
 
 
 @pytest.fixture(scope="module")
+def simulate_compute_plan(
+    network,
+    nr_test_data,
+    numpy_datasets,
+    perceptron,
+    mae_metric,
+    aggregation_node,
+    session_dir,
+    numpy_torch_dataset,
+    seed,
+):
+    """Compute plan for e2e test"""
+
+    DAMPING_FACTOR = 1
+    BATCH_SIZE = 1
+
+    torch.manual_seed(seed)
+
+    # We define several sample without noises to be sure to reach the global optimum.
+    # Here, f(x1,x2) = x1 + x2 + 1
+    train_sample_nodes = assets_factory.add_numpy_samples(
+        contents=np.array([[[0, 0, 1], [1, 2, 4], [2, 3, 6]], [[0, 0, 1], [1, 3, 5], [4, 2, 7]]]),
+        dataset_keys=numpy_datasets,
+        clients=network.clients,
+        tmp_folder=session_dir,
+    )
+
+    train_data_nodes = [
+        TrainDataNode(
+            network.msp_ids[k],
+            numpy_datasets[k],
+            [train_sample_nodes[k]],
+        )
+        for k in range(network.n_organizations)
+    ]
+
+    test_sample_nodes = assets_factory.add_numpy_samples(
+        contents=nr_test_data,
+        dataset_keys=[numpy_datasets[0]],
+        clients=[network.clients[0]],
+        tmp_folder=session_dir,
+    )
+
+    test_data_nodes = [
+        TestDataNode(
+            network.msp_ids[0],
+            numpy_datasets[0],
+            [test_sample_nodes[0]],
+        )
+    ]
+
+    model = perceptron(linear_n_col=2, linear_n_target=1)
+    criterion = torch.nn.MSELoss()
+
+    class MyAlgo(TorchNewtonRaphsonAlgo):
+        def __init__(self):
+            super().__init__(
+                model=model,
+                criterion=criterion,
+                batch_size=BATCH_SIZE,
+                dataset=numpy_torch_dataset,
+                l2_coeff=0,
+                use_gpu=False,
+            )
+
+    my_algo = MyAlgo()
+
+    strategy = NewtonRaphson(algo=my_algo, metric_functions=mae_metric, damping_factor=DAMPING_FACTOR)
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_data_nodes, eval_rounds=[0, NUM_ROUNDS]
+    )  # test the initialization and the last round
+
+    performances, _, _ = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_data_nodes,
+        evaluation_strategy=my_eval_strategy,
+        aggregation_node=aggregation_node,
+        num_rounds=NUM_ROUNDS,
+    )
+
+    return performances
+
+
+@pytest.fixture(scope="module")
 def compute_plan(
     network,
     nr_test_data,
@@ -344,6 +430,15 @@ def test_pytorch_nr_algo_performance(
     # This fails on mac M1 pro with 1e-5
     # TODO investigate
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
+
+
+@pytest.mark.substra
+@pytest.mark.slow
+def test_compare_execute_and_simulate_nr_performances(network, compute_plan, simulate_compute_plan, rtol):
+    perfs = network.clients[0].get_performances(compute_plan.key)
+
+    simu_perfs = simulate_compute_plan
+    assert np.allclose(perfs.performance, simu_perfs.performance, rtol=rtol)
 
 
 @pytest.mark.slow

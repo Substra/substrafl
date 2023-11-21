@@ -1,9 +1,11 @@
 import logging
 
+import numpy as np
 import pytest
 import torch
 
 from substrafl import execute_experiment
+from substrafl import simulate_experiment
 from substrafl.algorithms.pytorch import TorchSingleOrganizationAlgo
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.index_generator import NpIndexGenerator
@@ -14,6 +16,60 @@ logger = logging.getLogger(__name__)
 
 EXPECTED_PERFORMANCE = 0.2774176577698596
 N_ROUND = 2
+
+
+@pytest.fixture(scope="module")
+def simulate_compute_plan(
+    network,
+    torch_linear_model,
+    train_linear_nodes,
+    test_linear_nodes,
+    mae_metric,
+    numpy_torch_dataset,
+    seed,
+):
+    BATCH_SIZE = 32
+    N_UPDATES = 1
+
+    torch.manual_seed(seed)
+    perceptron = torch_linear_model()
+    optimizer = torch.optim.SGD(perceptron.parameters(), lr=0.1)
+    nig = NpIndexGenerator(
+        batch_size=BATCH_SIZE,
+        num_updates=N_UPDATES,
+    )
+
+    class MySingleOrganizationAlgo(TorchSingleOrganizationAlgo):
+        def __init__(
+            self,
+        ):
+            super().__init__(
+                optimizer=optimizer,
+                criterion=torch.nn.MSELoss(),
+                model=perceptron,
+                index_generator=nig,
+                dataset=numpy_torch_dataset,
+                use_gpu=False,
+            )
+
+    my_algo = MySingleOrganizationAlgo()
+
+    strategy = SingleOrganization(
+        algo=my_algo,
+        metric_functions=mae_metric,
+    )
+
+    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes[:1], eval_rounds=[0, N_ROUND])
+
+    performances, _, _ = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_linear_nodes[:1],
+        evaluation_strategy=my_eval_strategy,
+        num_rounds=N_ROUND,
+    )
+
+    return performances
 
 
 @pytest.fixture(scope="module")
@@ -107,6 +163,16 @@ def test_one_organization_algo_performance(
 
     performance_at_init = mae(y_pred, y_true)
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
+
+
+@pytest.mark.slow
+@pytest.mark.substra
+def test_compare_execute_and_simulate_single_performances(network, compute_plan, simulate_compute_plan, rtol):
+    perfs = network.clients[0].get_performances(compute_plan.key)
+
+    simu_perfs = simulate_compute_plan
+
+    assert np.allclose(perfs.performance, simu_perfs.performance, rtol=rtol)
 
 
 @pytest.mark.slow

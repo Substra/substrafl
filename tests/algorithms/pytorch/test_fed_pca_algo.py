@@ -283,7 +283,7 @@ def test_torch_fed_pca_performance(network, compute_plan, rtol):
 
 @pytest.mark.substra
 @pytest.mark.slow
-def test_compare_execute_and_simulate_fed_pca_performances(network, simulate_compute_plan, rtol):
+def test_compare_execute_and_simulate_fed_pca_performances(network, compute_plan, simulate_compute_plan, rtol):
     perfs = network.clients[0].get_performances(compute_plan.key)
 
     simu_perfs = simulate_compute_plan
