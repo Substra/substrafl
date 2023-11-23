@@ -25,8 +25,8 @@ class OutputIdentifiers(str, Enum):
     predictions = "predictions"
 
 
-class _Model(pydantic.BaseModel):
-    """Base model configuration"""
+class _PrettyJsonBaseModel(pydantic.BaseModel):
+    """Base model configuration for pretty representation"""
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
@@ -38,7 +38,7 @@ class _Model(pydantic.BaseModel):
         return self.model_dump_json(indent=4)
 
 
-class SimuPerformancesMemory(_Model):
+class SimuPerformancesMemory(_PrettyJsonBaseModel):
     """Performances of a simulated experiment"""
 
     worker: List[str] = []
@@ -55,7 +55,7 @@ class SimuPerformancesMemory(_Model):
         )
 
 
-class SimuStatesMemory(_Model):
+class SimuStatesMemory(_PrettyJsonBaseModel):
     """Intermediate states of a simulated experiment"""
 
     worker: List[str] = []

@@ -344,7 +344,7 @@ class SimuTrainDataNode(TrainDataNodeProtocol):
         """This function will execute the method to run on the train node with the argument
         `_skip=True`, to execute it directly in RAM.
 
-        This function is expected to overload the `update_state` method of a TrainDataNode
+        This function is expected to implement the `update_state` method of a TrainDataNodeProtocol
         to simulate its execution on RAM only.
 
         Args:
@@ -352,7 +352,7 @@ class SimuTrainDataNode(TrainDataNodeProtocol):
                 the method.
             round_idx (Optional[int]): Current round idx. Defaults to None.
             clean_models (Optional[bool]): If set to True, the current state of the instance will
-                be saved in a SimulationIntermediateStates object. Defaults to True
+                be saved in a SimuStatesMemory object. Defaults to True
 
         Returns:
             LocalStateRef: A bogus `LocalStateRef` to ensure compatibility with the execution of the
@@ -365,7 +365,8 @@ class SimuTrainDataNode(TrainDataNodeProtocol):
         method_parameters["shared_state"] = operation.shared_state
         method_parameters["datasamples"] = self._datasamples
 
-        # To be compatible with custom compute plans
+        # To be compatible with all strategies, with or without algos (such as strategies directly
+        # implemented for the ComputePlanBuilder class for instance).
         try:
             method_to_run = getattr(self._strategy.algo, method_name)
         except AttributeError:

@@ -205,7 +205,7 @@ class SimuAggregationNode(AggregationNodeProtocol):
         """This function will execute the method to run on the aggregation node with the argument
         `_skip=True`, to execute it directly in RAM.
 
-        This function is expected to overload the `update_state` method of a AggregationNode
+        This function is expected to implement the `update_state` method of a AggregationNodeProtocol
         to simulate its execution on RAM only.
 
         Args:
@@ -213,7 +213,7 @@ class SimuAggregationNode(AggregationNodeProtocol):
                 the method.
             round_idx (Optional[int]): Current round idx. Defaults to None.
             clean_models (Optional[bool]): If set to True, the current state of the instance will
-                be saved in a SimulationIntermediateStates object. Defaults to True.
+                be saved in a SimuStatesMemory object. Defaults to True.
 
         Returns:
             Any: the output of the execution of the method stored in `operation`.

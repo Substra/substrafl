@@ -194,9 +194,9 @@ class SimuTestDataNode(TestDataNodeProtocol):
         """This function will execute the method to run on the test node with the argument
         `_skip=True`, to execute it directly in RAM. The executed method is expected to compute
         metrics, and to return a dictionary with the metric name as key and the result as value.
-        It will also stores the computed scores in a `SimulationPerformance` object.
+        It will also stores the computed scores in a `SimuPerformancesMemory` object.
 
-        This function is expected to overload the `update_state` method of a TestDataNode
+        This function is expected to implement the `update_state` method of a TestDataNodeProtocol
         to simulate its execution on RAM only.
 
         Args:

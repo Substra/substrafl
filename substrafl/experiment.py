@@ -236,9 +236,9 @@ def simulate_experiment(
         client (substra.Client): A substra client to interact with the Substra platform, in order to retrieve the
             registered data. `remote` client backend type is not supported by this function.
         strategy (Strategy): The strategy that will be executed.
-        train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes where training on data
+        train_data_nodes (List[TrainDataNodeProtocol]): List of the nodes where training on data
             occurs.
-        aggregation_node (typing.Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
+        aggregation_node (Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
         evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
@@ -250,11 +250,11 @@ def simulate_experiment(
         UnsupportedClientBackendTypeError: `remote` client backend type is not supported by `simulate_experiment`.
 
     Returns:
-        SimuPerformancesMemory: Objects containing all computed performances during the simulation. Set to None if no
-            EvaluationStrategy given.
-        SimuStatesMemory: Objects containing all intermediate state saved on the TrainDataNodes.
-        SimuStatesMemory: Objects containing all intermediate state saved on the TrainDataNodes. Set to None
-            if no AggregationNode given.
+        performances (SimuPerformancesMemory): Objects containing all computed performances during the simulation. Set
+            to None if no EvaluationStrategy given.
+        trained_states_memory (SimuStatesMemory): Objects containing all intermediate state saved on the TrainDataNodes.
+        aggregated_states_memory (SimuStatesMemory): Objects containing all intermediate state saved on the
+            AggregationNode. Set to None if no AggregationNode given.
     """
 
     if client.backend_mode == substra.BackendType.REMOTE:
