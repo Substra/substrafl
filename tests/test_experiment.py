@@ -6,10 +6,13 @@ import numpy as np
 import pytest
 import substra
 
-from substrafl import execute_experiment
 from substrafl.dependency import Dependency
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.exceptions import LenMetadataError
+from substrafl.experiment import execute_experiment
+from substrafl.experiment import simulate_experiment
+from substrafl.nodes.schemas import SimuPerformancesMemory
+from substrafl.nodes.schemas import SimuStatesMemory
 from substrafl.strategies import FedAvg
 
 
@@ -81,3 +84,55 @@ def test_too_long_additional_metadata(session_dir, dummy_strategy_class, dummy_a
             experiment_folder=session_dir / "experiment_folder",
             additional_metadata=additional_metadata,
         )
+
+
+def test_simulate_experiment(
+    network,
+    train_linear_nodes,
+    test_linear_nodes,
+    aggregation_node,
+    dummy_strategy_class,
+    dummy_algo_class,
+):
+    num_rounds = 2
+    dummy_algo_instance = dummy_algo_class()
+    strategy = dummy_strategy_class(algo=dummy_algo_instance)
+
+    my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes, eval_frequency=1)
+
+    perf, train_states, aggregated_states = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_linear_nodes,
+        evaluation_strategy=my_eval_strategy,
+        aggregation_node=aggregation_node,
+        num_rounds=num_rounds,
+        clean_models=False,
+    )
+
+    assert isinstance(perf, SimuPerformancesMemory)
+    assert isinstance(train_states, SimuStatesMemory)
+    assert isinstance(aggregated_states, SimuStatesMemory)
+
+
+def test_simulate_experiment_no_test_and_agg(
+    network,
+    train_linear_nodes,
+    dummy_strategy_class,
+    dummy_algo_class,
+):
+    num_rounds = 2
+    dummy_algo_instance = dummy_algo_class()
+    strategy = dummy_strategy_class(algo=dummy_algo_instance)
+
+    perf, train_states, aggregated_states = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_linear_nodes,
+        evaluation_strategy=None,
+        num_rounds=num_rounds,
+    )
+
+    assert perf is None
+    assert isinstance(train_states, SimuStatesMemory)
+    assert aggregated_states is None

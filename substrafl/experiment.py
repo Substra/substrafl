@@ -273,6 +273,8 @@ def simulate_experiment(
 
     simu_train_data_nodes = []
     for train_data_node in train_data_nodes:
+        # To truly simulate FL, each train node needs its own copy of the strategy, to isolate models
+        # from one another.
         simu_train_data_node: TrainDataNodeProtocol = SimuTrainDataNode(
             client=client, node=train_data_node, strategy=copy.deepcopy(strategy)
         )
