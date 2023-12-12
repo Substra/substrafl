@@ -218,11 +218,14 @@ def simulate_experiment(
     *,
     client: substra.Client,
     strategy: ComputePlanBuilder,
+    experiment_folder: Union[str, Path],
     train_data_nodes: List[TrainDataNodeProtocol],
     aggregation_node: Optional[AggregationNodeProtocol] = None,
     evaluation_strategy: Optional[EvaluationStrategy] = None,
     num_rounds: Optional[int] = None,
+    additional_metadata: Optional[Dict] = None,
     clean_models: bool = True,
+    **kwargs,
 ) -> (SimuPerformancesMemory, SimuStatesMemory, SimuStatesMemory):
     """Simulate an experiment, by computing all operation on RAM.
     No tasks will be sent to the `Client`, which mean that this function should not be used
@@ -236,6 +239,7 @@ def simulate_experiment(
         client (substra.Client): A substra client to interact with the Substra platform, in order to retrieve the
             registered data. `remote` client backend type is not supported by this function.
         strategy (Strategy): The strategy that will be executed.
+        experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         train_data_nodes (List[TrainDataNodeProtocol]): List of the nodes where training on data
             occurs.
         aggregation_node (Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
@@ -243,6 +247,8 @@ def simulate_experiment(
         evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         num_rounds (int): The number of time your strategy will be executed.
+        additional_metadata(dict, typing.Optional): Optional dictionary of metadata to be passed to the experiment
+            summary.
         clean_models (bool): Intermediary models are cleaned by the RAM. Set it to False
             if you want to return intermediary states. Defaults to True.
 
@@ -256,6 +262,13 @@ def simulate_experiment(
         aggregated_states_memory (SimuStatesMemory): Objects containing all intermediate state saved on the
             AggregationNode. Set to None if no AggregationNode given.
     """
+
+    # Raise a warning for all additional argument passed to the function.
+    for key in kwargs:
+        logger.warning(
+            f"The argument {key} is unused by the function simulate_experiment. Its value will be ignored by the"
+            " simulation."
+        )
 
     if client.backend_mode == substra.BackendType.REMOTE:
         raise UnsupportedClientBackendTypeError(
@@ -312,6 +325,7 @@ def simulate_experiment(
     )
 
     logger.info("Simulating the execution of the compute plan.")
+    timestamp = str(datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S"))
 
     strategy_to_execute.build_compute_plan(
         train_data_nodes=simu_train_data_nodes,
@@ -319,6 +333,25 @@ def simulate_experiment(
         evaluation_strategy=simu_evaluation_strategy,
         num_rounds=num_rounds,
         clean_models=clean_models,
+    )
+
+    if additional_metadata is not None:
+        _check_additional_metadata(additional_metadata)
+
+    compute_plan_key = "simu-" + str(uuid.uuid4())
+
+    # save the experiment summary in experiment_folder
+    _save_experiment_summary(
+        experiment_folder=experiment_folder,
+        compute_plan_key=compute_plan_key,
+        strategy=strategy,
+        num_rounds=num_rounds,
+        operation_cache={},
+        train_data_nodes=train_data_nodes,
+        aggregation_node=aggregation_node,
+        evaluation_strategy=evaluation_strategy,
+        timestamp=timestamp,
+        additional_metadata=additional_metadata,
     )
 
     trained_states_memory = reduce(add, (node._memory for node in simu_train_data_nodes))
@@ -330,6 +363,7 @@ def simulate_experiment(
         if simu_evaluation_strategy is not None
         else None
     )
+    logger.info(("The compute plan has been simulated, its key is {0}.").format(compute_plan_key))
 
     return performances, trained_states_memory, aggregated_states_memory
 
