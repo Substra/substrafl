@@ -48,15 +48,15 @@ def _register_operations(
 
     Args:
         client (substra.Client): substra client
-        train_data_nodes (typing.List[TrainDataNodeProtocol]): list of train data nodes
-        aggregation_node (typing.Optional[AggregationNodeProtocol]): the aggregation node for
+        train_data_nodes (List[TrainDataNodeProtocol]): list of train data nodes
+        aggregation_node (Optional[AggregationNodeProtocol]): the aggregation node for
             centralized strategies
-        evaluation_strategy (typing.Optional[EvaluationStrategy]): the evaluation strategy
+        evaluation_strategy (Optional[EvaluationStrategy]): the evaluation strategy
             if there is one dependencies
         (Dependency): dependencies of the experiment
 
     Returns:
-        typing.Tuple[typing.List[dict], typing.Dict[RemoteStruct, OperationKey]]:
+        typing.Tuple[List[dict], Dict[RemoteStruct, OperationKey]]:
         tasks, operation_cache
     """
     # `register_operations` methods from the different organizations store the id of the already registered
@@ -128,16 +128,16 @@ def _save_experiment_summary(
     """Saves the experiment summary in `experiment_folder`, with the name format `{timestamp}_{compute_plan.key}.json`
 
     Args:
-        experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
+        experiment_folder (Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         compute_plan_key (str): compute plan key
         strategy (substrafl.strategies.Strategy): strategy
         num_rounds (int): num_rounds
-        operation_cache (typing.Dict[RemoteStruct, OperationKey]): operation_cache
-        train_data_nodes (typing.List[TrainDataNodeProtocol]): train_data_nodes
-        aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation_node
+        operation_cache (Dict[RemoteStruct, OperationKey]): operation_cache
+        train_data_nodes (List[TrainDataNodeProtocol]): train_data_nodes
+        aggregation_node (Optional[AggregationNodeProtocol]): aggregation_node
         evaluation_strategy (EvaluationStrategy): evaluation_strategy
         timestamp (str): timestamp with "%Y_%m_%d_%H_%M_%S" format
-        additional_metadata (dict, Optional): Optional dictionary of metadata to be shown on the Substra WebApp.
+        additional_metadata (Optional[dict]): Optional dictionary of metadata to be shown on the Substra WebApp.
     """
     # create the experiment folder if it doesn't exist
     experiment_folder = Path(experiment_folder)
@@ -406,22 +406,22 @@ def execute_experiment(
     Args:
         client (substra.Client): A substra client to interact with the Substra platform
         strategy (Strategy): The strategy that will be executed
-        train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes where training on data
+        train_data_nodes (List[TrainDataNodeProtocol]): List of the nodes where training on data
             occurs.
-        aggregation_node (typing.Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
+        aggregation_node (Optional[AggregationNodeProtocol]): For centralized strategy, the aggregation
             node, where all the shared tasks occurs else None.
-        evaluation_strategy (EvaluationStrategy, Optional): If None performance will not be measured at all.
+        evaluation_strategy (Optional[EvaluationStrategy]): If None performance will not be measured at all.
             Otherwise measuring of performance will follow the EvaluationStrategy. Defaults to None.
         num_rounds (int): The number of time your strategy will be executed.
-        dependencies (Dependency, Optional): Dependencies of the experiment. It must be defined from
+        dependencies (Optional[Dependency]): Dependencies of the experiment. It must be defined from
             the SubstraFL Dependency class. Defaults None.
-        experiment_folder (typing.Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
+        experiment_folder (Union[str, pathlib.Path]): path to the folder where the experiment summary is saved.
         clean_models (bool): Clean the intermediary models on the Substra platform. Set it to False
             if you want to download or re-use intermediary models. This causes the disk space to fill
             quickly so should be set to True unless needed. Defaults to True.
-        name (str, Optional): Optional name chosen by the user to identify the compute plan. If None,
+        name (Optional[str]): Optional name chosen by the user to identify the compute plan. If None,
             the compute plan name is set to the timestamp.
-        additional_metadata(dict, typing.Optional): Optional dictionary of metadata to be passed to the Substra WebApp.
+        additional_metadata(Optional[dict]): Optional dictionary of metadata to be passed to the Substra WebApp.
         task_submission_batch_size(int): The compute plan tasks are submitted by batch. The higher the batch size,
             the faster the submission, a batch size that is too high makes the submission fail.
             Rule of thumb: batch_size = math.floor(120000 / number_of_samples_per_task)

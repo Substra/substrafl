@@ -130,14 +130,14 @@ class Strategy(ComputePlanBuilder):
         """Perform one round of the strategy
 
         Args:
-            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
-            aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation node, necessary for
+            train_data_nodes (List[TrainDataNodeProtocol]): list of the train organizations
+            aggregation_node (Optional[AggregationNodeProtocol]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             round_idx (int): index of the round
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
-            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
+            additional_orgs_permissions (Optional[set]): Additional permissions to give to the model outputs
                 after training, in order to test the model on an other organization.
         """
         raise NotImplementedError
@@ -197,8 +197,8 @@ class Strategy(ComputePlanBuilder):
         called to complete the graph.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
-            aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation node, necessary for
+            train_data_nodes (List[TrainDataNodeProtocol]): list of the train organizations
+            aggregation_node (Optional[AggregationNodeProtocol]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             evaluation_strategy (Optional[EvaluationStrategy]): evaluation strategy to follow for testing models.
             num_rounds (int): Number of times to repeat the compute plan sub-graph (define in perform round).
