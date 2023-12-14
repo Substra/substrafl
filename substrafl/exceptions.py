@@ -15,7 +15,7 @@ class UnsupportedPythonVersionError(Exception):
 
 
 class UnsupportedClientBackendTypeError(Exception):
-    """The client backend type is not supported."""
+    """The given client backend type is not supported by the function."""
 
 
 class InvalidUserModuleError(Exception):
