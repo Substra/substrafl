@@ -336,7 +336,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         )
         return checkpoint
 
-    def _update_from_checkpoint(self, path: Path) -> dict:
+    def _update_from_checkpoint(self, checkpoint: dict) -> None:
         """Load the checkpoint and update the internal state from it.
 
         Pop the values from the checkpoint so that we can ensure that it is empty at the
@@ -345,12 +345,12 @@ class TorchFedPCAAlgo(TorchAlgo):
         to be popped.
 
         Args:
-            path (pathlib.Path): path where the checkpoint is saved
+            checkpoint (dict): the checkpoint to load.
 
         Returns:
             dict: checkpoint
         """
-        checkpoint = super()._update_from_checkpoint(path)
+        super()._update_from_checkpoint(checkpoint=checkpoint)
         self.local_mean = checkpoint.pop("mean")
         self.local_covmat = checkpoint.pop("covariance_matrix")
-        return checkpoint
+        return

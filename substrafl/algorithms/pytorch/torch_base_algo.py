@@ -244,14 +244,14 @@ class TorchAlgo(Algo):
             device = torch.device("cuda")
         return device
 
-    def _update_from_checkpoint(self, path: Path) -> dict:
+    def _update_from_checkpoint(self, checkpoint: dict) -> None:
         """Load the checkpoint and update the internal state
         from it.
         Pop the values from the checkpoint so that we can ensure that it is empty at the
         end, i.e. all the values have been used.
 
         Args:
-            path (pathlib.Path): path where the checkpoint is saved
+            checkpoint (dict): the checkpoint is saved
 
         Returns:
             dict: checkpoint
@@ -260,13 +260,11 @@ class TorchAlgo(Algo):
 
             .. code-block:: python
 
-                def _update_from_checkpoint(self, path: Path) -> dict:
-                    checkpoint = super()._update_from_checkpoint(path=path)
+                def _update_from_checkpoint(self, checkpoint: dict) -> None:
+                    super()._update_from_checkpoint(checkpoint=checkpoint)
                     self._strategy_specific_variable = checkpoint.pop("strategy_specific_variable")
-                    return checkpoint
+                    return
         """
-        assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-        checkpoint = torch.load(path, map_location=self._device)
         self._model.load_state_dict(checkpoint.pop("model_state_dict"))
 
         if self._optimizer is not None:
@@ -285,8 +283,6 @@ class TorchAlgo(Algo):
         else:
             torch.cuda.set_rng_state(checkpoint.pop("torch_rng_state").to("cpu"))
 
-        return checkpoint
-
     def load_local_state(self, path: Path) -> "TorchAlgo":
         """Load the stateful arguments of this class.
         Child classes do not need to override that function.
@@ -297,7 +293,9 @@ class TorchAlgo(Algo):
         Returns:
             TorchAlgo: The class with the loaded elements.
         """
-        checkpoint = self._update_from_checkpoint(path=path)
+        assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
+        checkpoint = torch.load(path, map_location=self._device)
+        self._update_from_checkpoint(checkpoint=checkpoint)
         assert len(checkpoint) == 0, f"Not all values from the checkpoint have been used: {checkpoint.keys()}"
         return self
 
