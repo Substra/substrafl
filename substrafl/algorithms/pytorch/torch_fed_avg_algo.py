@@ -128,6 +128,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         super().__init__(
+            *args,
             model=model,
             criterion=criterion,
             optimizer=optimizer,
@@ -136,7 +137,6 @@ class TorchFedAvgAlgo(TorchAlgo):
             scheduler=scheduler,
             seed=seed,
             use_gpu=use_gpu,
-            *args,
             **kwargs,
         )
         self._with_batch_norm_parameters = with_batch_norm_parameters
