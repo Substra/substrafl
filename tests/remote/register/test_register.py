@@ -71,7 +71,7 @@ def test_latest_substratools_image_selection(use_latest, monkeypatch, default_pe
 
     function = client.get_function(function_key)
 
-    with tarfile.open(function.function.storage_address, "r:gz") as tar:
+    with tarfile.open(function.archive.storage_address, "r:gz") as tar:
         dockerfile = tar.extractfile("Dockerfile")
         lines = dockerfile.readlines()
 
