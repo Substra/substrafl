@@ -167,8 +167,8 @@ def is_dependency_uninstalled(request):
 
 @pytest.fixture
 def algo_files_with_local_dependency(session_dir, fake_compute_plan, dummy_algo_class, is_dependency_uninstalled):
-    """Check that function _load_from_files raises a custom error in case of non-installed dependency and that it works with
-    installed dependencies."""
+    """Check that function _load_from_files raises a custom error in case of non-installed dependency and that it works
+    with installed dependencies."""
     input_folder = session_dir / str(uuid.uuid4())
     input_folder.mkdir()
 

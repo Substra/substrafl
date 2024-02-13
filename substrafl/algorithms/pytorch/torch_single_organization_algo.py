@@ -124,6 +124,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         super().__init__(
+            *args,
             model=model,
             criterion=criterion,
             optimizer=optimizer,
@@ -132,7 +133,6 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             scheduler=scheduler,
             seed=seed,
             use_gpu=use_gpu,
-            *args,
             **kwargs,
         )
 

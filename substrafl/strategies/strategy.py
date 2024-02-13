@@ -40,7 +40,7 @@ class Strategy(ComputePlanBuilder):
             exceptions.IncompatibleAlgoStrategyError: Raise an error if the strategy name is not in ``algo.strategies``.
         """
 
-        super().__init__(algo=algo, *args, **kwargs)
+        super().__init__(*args, algo=algo, **kwargs)
 
         self.algo = algo
 

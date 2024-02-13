@@ -158,6 +158,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             :ref:`~substrafl.exceptions.NumUpdatesValueError`: If `num_updates` is inferior or equal to zero.
         """
         super().__init__(
+            *args,
             model=model,
             criterion=criterion,
             optimizer=optimizer,
@@ -166,7 +167,6 @@ class TorchScaffoldAlgo(TorchAlgo):
             scheduler=scheduler,
             use_gpu=use_gpu,
             seed=seed,
-            *args,
             **kwargs,
         )
 

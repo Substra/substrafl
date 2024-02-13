@@ -85,6 +85,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         assert "optimizer" not in kwargs, "Newton Raphson strategy does not uses optimizers"
 
         super().__init__(
+            *args,
             model=model,
             criterion=criterion,
             optimizer=None,
@@ -92,7 +93,6 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             dataset=dataset,
             use_gpu=use_gpu,
             seed=seed,
-            *args,
             **kwargs,
         )
         self._with_batch_norm_parameters = with_batch_norm_parameters

@@ -113,6 +113,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         torch.manual_seed(self._seed)
 
         super().__init__(
+            *args,
             model=TorchLinearModel(
                 self.in_features,
                 self.out_features,
@@ -122,7 +123,6 @@ class TorchFedPCAAlgo(TorchAlgo):
             dataset=dataset,
             seed=self._seed,
             use_gpu=use_gpu,
-            *args,
             **kwargs,
         )
 
