@@ -93,7 +93,7 @@ def fake_local_train_task(trunk_model):
             permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=trunk_model
         ),
     }
-    local_train_task.status = substra.models.Status.done
+    local_train_task.status = substra.models.ComputeTaskStatus.done
 
     return local_train_task
 
@@ -116,7 +116,7 @@ def fake_aggregate_task(trunk_model):
             permissions=substra.models.Permissions(process={"public": True, "authorized_ids": []}), value=model
         ),
     }
-    aggregate_task.status = substra.models.Status.done
+    aggregate_task.status = substra.models.ComputeTaskStatus.done
 
     return aggregate_task
 
@@ -447,7 +447,9 @@ def test_load_model_dependency(algo_files_with_local_dependency, is_dependency_u
         assert res == "hello world"
 
 
-@pytest.mark.parametrize("status", [e.value for e in substra.models.Status if e.value != substra.models.Status.done])
+@pytest.mark.parametrize(
+    "status", [e.value for e in substra.models.ComputeTaskStatus if e.value != substra.models.ComputeTaskStatus.done]
+)
 def test_unfinished_task_error(
     fake_client,
     fake_compute_plan,

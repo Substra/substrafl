@@ -10,7 +10,7 @@ from typing import Optional
 
 import substra
 import substratools
-from substra.sdk.models import Status
+from substra.sdk.models import ComputeTaskStatus
 
 import substrafl
 from substrafl import exceptions
@@ -356,7 +356,7 @@ def _download_task_output_files(
             rank_idx=rank_idx,
             tag=task_type,
         )
-    if task.status is not Status.done:
+    if task.status is not ComputeTaskStatus.done:
         raise exceptions.UnfinishedTaskError(
             f"Can't download algo files form task {task.key} as it is " f"in status {task.status}"
         )
