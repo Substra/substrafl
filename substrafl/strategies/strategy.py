@@ -1,17 +1,25 @@
+import inspect
 from abc import abstractmethod
+from collections.abc import Iterable
 from pathlib import Path
+from string import printable
 from typing import Any
+from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TypeVar
+from typing import Union
 
 from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes.node import OutputIdentifiers
 from substrafl.nodes.test_data_node import TestDataNode
 from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.remote.decorators import remote_data
 from substrafl.strategies.schemas import StrategyName
 
 SharedState = TypeVar("SharedState")
@@ -20,7 +28,13 @@ SharedState = TypeVar("SharedState")
 class Strategy(ComputePlanBuilder):
     """Base strategy to be inherited from SubstraFL strategies."""
 
-    def __init__(self, algo: Algo, *args, **kwargs):
+    def __init__(
+        self,
+        algo: Algo,
+        metric_functions: Optional[Union[Dict[str, Callable], List[Callable], Callable]] = None,
+        *args,
+        **kwargs,
+    ):
         """
         All child class arguments need to be passed to it through its ``args`` and ``kwargs``
         in order to use them when instantiating it as a RemoteStruct in each process.
@@ -35,15 +49,19 @@ class Strategy(ComputePlanBuilder):
 
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+            metric_functions (Optional[Union[Dict[str, Callable], List[Callable], Callable]]):
+                list of Functions that implement the different metrics. If a Dict is given, the keys will be used to
+                register the result of the associated function. If a Function or a List is given, function.__name__
+                will be used to store the result.
 
         Raises:
             exceptions.IncompatibleAlgoStrategyError: Raise an error if the strategy name is not in ``algo.strategies``.
         """
 
-        super().__init__(*args, algo=algo, **kwargs)
+        super().__init__(*args, algo=algo, metric_functions=metric_functions, **kwargs)
 
+        self.metric_functions = _validate_metric_functions(metric_functions)
         self.algo = algo
-
         if self.name not in algo.strategies:
             raise exceptions.IncompatibleAlgoStrategyError(
                 f"The algo {self.algo.__class__.__name__} is not compatible with the strategy "
@@ -123,7 +141,7 @@ class Strategy(ComputePlanBuilder):
         raise NotImplementedError
 
     @abstractmethod
-    def perform_predict(
+    def perform_evaluation(
         self,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
@@ -141,6 +159,21 @@ class Strategy(ComputePlanBuilder):
         """
         raise NotImplementedError
 
+    @remote_data
+    def evaluate(self, datasamples: Any, shared_state: Any = None):
+        """Is executed for each TestDataOrganizations.
+
+        Args:
+            datasamples (typing.Any): The output of the ``get_data`` method of the opener.
+            shared_state (typing.Any): None for the first round of the computation graph
+                then the returned object from the previous organization of the computation graph.
+        """
+        predictions = self.algo.predict(datasamples, shared_state)
+        return {
+            metric_function_id: metric_function(datasamples=datasamples, predictions=predictions)
+            for metric_function_id, metric_function in self.metric_functions.items()
+        }
+
     def build_compute_plan(
         self,
         train_data_nodes: List[TrainDataNode],
@@ -154,7 +187,7 @@ class Strategy(ComputePlanBuilder):
         aggregation_nodes and evaluation_strategy.
         This function create a graph be first calling the initialization_round method of the strategy
         at round 0, and then call the perform_round method for each new round.
-        If the current round is part of the evaluation strategy, the perform_predict method is
+        If the current round is part of the evaluation strategy, the perform_evaluation method is
         called to complete the graph.
 
         Args:
@@ -195,7 +228,7 @@ class Strategy(ComputePlanBuilder):
                 )
 
             if evaluation_strategy is not None and next(evaluation_strategy):
-                self.perform_predict(
+                self.perform_evaluation(
                     train_data_nodes=train_data_nodes,
                     test_data_nodes=evaluation_strategy.test_data_nodes,
                     round_idx=round_idx,
@@ -205,4 +238,101 @@ class Strategy(ComputePlanBuilder):
         self.algo.save_local_state(path)
 
     def load_local_state(self, path: Path) -> Any:
-        return self.algo.load_local_state(path)
+        self.algo = self.algo.load_local_state(path)
+        return self
+
+
+def _validate_metric_functions(metric_functions):
+    if metric_functions is None:
+        return {}
+
+    elif isinstance(metric_functions, dict):
+        for metric_id, metric_function in metric_functions.items():
+            _check_metric_function(metric_function)
+            _check_metric_identifier(metric_id)
+        return metric_functions
+
+    elif isinstance(metric_functions, Iterable):
+        metric_functions_dict = {}
+        for metric_function in metric_functions:
+            _check_metric_function(metric_function)
+            _check_metric_identifier(metric_function.__name__)
+            if metric_function.__name__ in metric_functions_dict:
+                raise exceptions.ExistingRegisteredMetricError
+            metric_functions_dict[metric_function.__name__] = metric_function
+        return metric_functions_dict
+
+    elif callable(metric_functions):
+        metric_functions_dict = {}
+        _check_metric_function(metric_functions)
+        _check_metric_identifier(metric_functions.__name__)
+        metric_functions_dict[metric_functions.__name__] = metric_functions
+        return metric_functions_dict
+
+    else:
+        raise exceptions.MetricFunctionTypeError("Metric functions must be of type dictionary, list or callable")
+
+
+def _check_metric_function(metric_function: Callable) -> None:
+    """Function to check the type and the signature of a given metric function.
+
+    Args:
+        metric_function (Callable): function to check.
+
+    Raises:
+        exceptions.MetricFunctionTypeError: metric_function must be of type "function"
+        exceptions.MetricFunctionSignatureError: metric_function must ONLY contains
+            datasamples and predictions_path as parameters
+    """
+
+    if not inspect.isfunction(metric_function):
+        raise exceptions.MetricFunctionTypeError("Metric functions must be a callable or a list of callable")
+
+    signature = inspect.signature(metric_function)
+    parameters = signature.parameters
+
+    if "datasamples" not in parameters:
+        raise exceptions.MetricFunctionSignatureError(
+            f"The metric_function: {metric_function.__name__} must contain datasamples as parameter."
+        )
+    elif "predictions" not in parameters:
+        raise exceptions.MetricFunctionSignatureError(
+            "The metric_function: {metric_function.__name__}  must contain predictions_path as parameter."
+        )
+    elif len(parameters) != 2:
+        raise exceptions.MetricFunctionSignatureError(
+            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions_path as
+            parameters."""
+        )
+
+
+def _check_metric_identifier(identifier: str) -> None:
+    """Check if the identifier used to register the user given function does not interfere with the value internally
+    used stored in the OutputIdentifiers enum.
+
+    Args:
+        identifier (str): identifier used for the registration of the metric function given by the user.
+
+    Raises:
+        exceptions.InvalidMetricIdentifierError: the identifier must not be in the OutputIdentifiers list used
+        internally by SubstraFL.
+    """
+
+    if identifier in list(OutputIdentifiers):
+        raise exceptions.InvalidMetricIdentifierError(
+            f"A metric name or identifier cannot be in {[id.value for id in list(OutputIdentifiers)]}. \
+            These values are used internally by SusbtraFL."
+        )
+
+    unauthorized_characters = set(identifier).difference(
+        set(printable) - {"|"}
+    )  # | is used in the backend as a separator for identifiers.
+    if unauthorized_characters:
+        raise exceptions.InvalidMetricIdentifierError(
+            f"{unauthorized_characters} cannot be used to define a metric name."
+        )
+
+    if identifier == "":
+        raise exceptions.InvalidMetricIdentifierError("A metric name cannot be an empty string.")
+    elif len(identifier) > 36:  # Max length is the uuid4 length.
+        raise exceptions.InvalidMetricIdentifierError("A metric name must be of length inferior to 36.")
