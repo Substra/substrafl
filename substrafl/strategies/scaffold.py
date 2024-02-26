@@ -158,11 +158,7 @@ class Scaffold(Strategy):
 
             test_data_node.update_states(
                 operation=self.evaluate(
-<<<<<<< HEAD
                     data_samples=test_data_node.data_sample_keys,
-=======
-                    data_samples=test_data_node.test_data_sample_keys,
->>>>>>> a79ee49 (rebase)
                     _algo_name=f"Evaluating with {self.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,
