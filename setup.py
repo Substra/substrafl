@@ -43,8 +43,8 @@ setup(
     install_requires=[
         "numpy>=1.24",
         "cloudpickle>=1.6.0",
-        "substra~=0.49.0",
-        "substratools~=0.21.0",
+        "substra~=0.50.0",
+        "substratools~=0.21.1",
         "pydantic>=2.3.0,<3.0",
         "pip>=21.2",
         "wheel",

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.43.0](https://github.com/Substra/substrafl/releases/tag/0.43.0) - 2024-02-26
+
 ### Changed
 
 - Renamed `function` field of Substra Function pydantic model to `archive`([#181](https://github.com/Substra/substrafl/pull/181))
