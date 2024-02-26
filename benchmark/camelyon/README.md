@@ -134,7 +134,7 @@ After each run the [result file](./results/results.json) is populated with a new
         "seed": 42,
         "substra_version": "0.45.0",
         "substrafl_version": "0.38.0",
-        "substratools_version": "0.21.1"
+        "substratools_version": "0.20.0"
     }
 }
 ```
