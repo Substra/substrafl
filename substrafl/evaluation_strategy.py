@@ -84,7 +84,7 @@ class EvaluationStrategy:
             raise ValueError("test_data_nodes lists cannot be empty")
 
         if not all(isinstance(node, TestDataNodeProtocol) for node in test_data_nodes):
-            raise TypeError("test_data_nodes must respect the TestDataNodeProtocol")
+            raise TypeError("test_data_nodes must implement the TestDataNodeProtocol")
 
         if eval_frequency is None and eval_rounds is None:
             raise ValueError("At least one of eval_frequency or eval_rounds must be defined")

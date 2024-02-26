@@ -15,17 +15,10 @@ from substrafl import exceptions
 from substrafl.algorithms.algo import Algo
 from substrafl.compute_plan_builder import ComputePlanBuilder
 from substrafl.evaluation_strategy import EvaluationStrategy
-<<<<<<< HEAD
 from substrafl.nodes import AggregationNodeProtocol
 from substrafl.nodes import TestDataNodeProtocol
 from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.schemas import OutputIdentifiers
-=======
-from substrafl.nodes.aggregation_node import AggregationNode
-from substrafl.nodes.node import OutputIdentifiers
-from substrafl.nodes.test_data_node import TestDataNode
-from substrafl.nodes.train_data_node import TrainDataNode
->>>>>>> a79ee49 (rebase)
 from substrafl.remote.decorators import remote_data
 from substrafl.strategies.schemas import StrategyName
 
