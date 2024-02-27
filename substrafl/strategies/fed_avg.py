@@ -28,7 +28,7 @@ class FedAvg(Strategy):
     passes on each client, aggregating updates by computing their means and
     distributing the consensus update to all clients. In FedAvg, strategy is
     performed in a centralized way, where a single server or
-    ``AggregationProtocol`` communicates with a number of clients ``TrainDataNodeProtocol``
+    ``AggregationNodeProtocol`` communicates with a number of clients ``TrainDataNodeProtocol``
     and ``TestDataNodeProtocol``.
 
     Formally, if :math:`w_t` denotes the parameters of the model at round
@@ -95,7 +95,7 @@ class FedAvg(Strategy):
         Args:
             train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes on which to perform
                 local updates.
-            aggregation_node (AggregationProtocol): Node without data, used to perform
+            aggregation_node (AggregationNodeProtocol): Node without data, used to perform
                 operations on the shared states of the models
             round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
