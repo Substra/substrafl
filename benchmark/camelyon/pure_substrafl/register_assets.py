@@ -239,7 +239,7 @@ def get_test_data_nodes(
             TestDataNode(
                 organization_id=msp_id,
                 data_manager_key=asset_keys.get(msp_id)["dataset_key"],
-                data_sample_keys=asset_keys.get(msp_id)["data_sample_keys"],
+                data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
             )
         )
 
