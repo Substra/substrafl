@@ -58,7 +58,6 @@ def test_execute_experiment_has_no_side_effect(
     )
 
     assert sum(len(node.testtasks) for node in test_linear_nodes) == 0
-    assert sum(len(node.predicttasks) for node in test_linear_nodes) == 0
     assert sum(len(node.tasks) for node in train_linear_nodes) == 0
     assert len(aggregation_node.tasks) == 0
     assert cp1 == cp2

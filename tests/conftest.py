@@ -135,18 +135,10 @@ def mae():
 
 
 @pytest.fixture(scope="session")
-def dummy_metric():
-    def metric(datasamples, predictions_path):
-        return 1
-
-    return metric
-
-
-@pytest.fixture(scope="session")
 def mae_metric(mae):
-    def mae_score(datasamples, predictions_path):
+    def mae_score(datasamples, predictions):
+        y_pred = np.array(predictions)
         y_true = datasamples[1]
-        y_pred = np.load(predictions_path)
         return mae(y_pred, y_true)
 
     return mae_score
@@ -272,7 +264,6 @@ def test_linear_data_samples():
 def test_linear_nodes(
     network,
     numpy_datasets,
-    mae_metric,
     test_linear_data_samples,
     session_dir,
 ):
@@ -281,7 +272,7 @@ def test_linear_nodes(
     Args:
         network (Network): Substra network from the configuration file.
         numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
-        mae (str): Mean absolute error metric for the TestDataNode
+        test_linear_data_samples (np.array): linear data.
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:
@@ -298,7 +289,7 @@ def test_linear_nodes(
         tmp_folder=session_dir,
     )
 
-    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples, metric_functions=mae_metric)]
+    test_data_nodes = [TestDataNode(network.msp_ids[0], numpy_datasets[0], linear_samples)]
 
     return test_data_nodes
 
@@ -389,7 +380,7 @@ def dummy_strategy_class():
         ):
             pass
 
-        def perform_predict(
+        def perform_evaluation(
             self,
             test_data_nodes: List[TestDataNode],
             train_data_nodes: List[TrainDataNode],
@@ -416,7 +407,6 @@ def dummy_algo_class():
         def train(self, datasamples, shared_state):
             return dict(test=np.array([4]), datasamples=datasamples, shared_state=shared_state)
 
-        @remote_data
         def predict(self, datasamples: np.array, shared_state):
             return dict(datasamples=datasamples, shared_state=shared_state)
 

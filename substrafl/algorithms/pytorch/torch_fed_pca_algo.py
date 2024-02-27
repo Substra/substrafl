@@ -285,8 +285,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[parameters_update])
 
-    @remote_data
-    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: Path = None) -> Any:
+    def predict(self, datasamples: Any, shared_state: Any = None) -> torch.Tensor:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -296,7 +295,9 @@ class TorchFedPCAAlgo(TorchAlgo):
         Args:
             datasamples (typing.Any): Input data
             shared_state (typing.Any): Latest train task shared state (output of the train method)
-            predictions_path (os.PathLike): Destination file to save predictions
+
+        Returns:
+            torch.Tensor: The computed predictions.
         """
 
         # Create torch dataset
@@ -313,7 +314,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         predictions = predictions.cpu().detach()
 
-        self._save_predictions(predictions, predictions_path)
+        return predictions
 
     def _get_state_to_save(self) -> dict:
         """Create the algo checkpoint: a dictionary saved with ``torch.save`` using the

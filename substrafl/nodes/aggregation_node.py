@@ -91,7 +91,7 @@ class AggregationNode(Node):
             metadata=task_metadata,
             tag=TaskType.AGGREGATE,
             worker=self.organization_id,
-        ).dict()
+        ).model_dump()
 
         aggregate_task.pop("function_key")
         aggregate_task["remote_operation"] = operation.remote_struct

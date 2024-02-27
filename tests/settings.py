@@ -46,7 +46,8 @@ class Configuration(BaseModel):
     organizations: List[OrganizationCfg]
 
     @field_validator("organizations")
-    def minimal_number_of_organizations(cls, v):  # noqa: N805
+    @classmethod
+    def minimal_number_of_organizations(cls, v):
         assert len(v) >= MIN_ORGANIZATIONS, (
             "Not enough organizations defined in your configuration. "
             f"Found {len(v)}, at least {MIN_ORGANIZATIONS} is/are required."

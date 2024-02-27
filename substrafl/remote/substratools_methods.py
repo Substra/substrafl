@@ -68,12 +68,6 @@ class RemoteMethod:
         if InputIdentifiers.datasamples in inputs:
             loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
 
-        if InputIdentifiers.predictions in inputs:
-            loaded_inputs["predictions_path"] = inputs[InputIdentifiers.predictions]
-
-        if OutputIdentifiers.predictions in outputs:
-            loaded_inputs["predictions_path"] = outputs[OutputIdentifiers.predictions]
-
         return loaded_inputs
 
     def save_method_output(self, method_output: Any, outputs: TypedDict):

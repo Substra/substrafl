@@ -107,7 +107,7 @@ def rng_strategy():
             self._local_states = next_local_states
             self._shared_states = next_shared_states
 
-        def perform_predict(
+        def perform_evaluation(
             self,
             test_data_nodes,
             train_data_nodes,
@@ -319,13 +319,10 @@ def test_rng_state_save_and_load(
 
 
 @pytest.mark.parametrize("n_samples", [1, 2])
-def test_check_predict_shapes(
-    n_samples, test_linear_data_samples, numpy_torch_dataset, torch_linear_model, session_dir, seed
-):
+def test_check_predict_shapes(n_samples, test_linear_data_samples, numpy_torch_dataset, torch_linear_model, seed):
     """Checks that one liner and multiple liners input can be used for inference (corner case of last batch
     shape is (1, n_cols)"""
 
-    predictions_path = session_dir / "predictions"
     num_updates = 100
     torch.manual_seed(seed)
     perceptron = torch_linear_model()
@@ -355,8 +352,7 @@ def test_check_predict_shapes(
     x = test_linear_data_samples[0][:n_samples, :-LINEAR_N_TARGET]
     y = test_linear_data_samples[0][:n_samples, -LINEAR_N_TARGET:]
 
-    my_algo.predict(datasamples=(x, y), predictions_path=predictions_path, _skip=True)
-    res = np.load(predictions_path)
+    res = my_algo.predict(datasamples=(x, y))
     assert res.shape == (n_samples, 1)
 
 
@@ -459,12 +455,13 @@ def test_none_index_generator_for_predict(numpy_torch_dataset):
     my_algo = MyAlgo()
 
     with pytest.raises(BatchSizeNotFoundError):
-        my_algo.predict(datasamples=(np.zeros((1, LINEAR_N_COL)), np.zeros((1, LINEAR_N_TARGET))), _skip=True)
+        my_algo.predict(datasamples=(np.zeros((1, LINEAR_N_COL)), np.zeros((1, LINEAR_N_TARGET))))
 
 
 @pytest.mark.substra
 def test_gpu(
     dummy_gpu,
+    mae_metric,
     session_dir,
     network,
     train_linear_nodes,
@@ -483,9 +480,9 @@ def test_gpu(
     test_data_nodes = [test_linear_nodes[0]] if strategy_class == SingleOrganization else test_linear_nodes
 
     strategy = (
-        strategy_class(algo=my_algo, damping_factor=0.1)
+        strategy_class(algo=my_algo, metric_functions=mae_metric, damping_factor=0.1)
         if strategy_class == NewtonRaphson
-        else strategy_class(algo=my_algo)
+        else strategy_class(algo=my_algo, metric_functions=mae_metric)
     )
 
     my_eval_strategy = EvaluationStrategy(

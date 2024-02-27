@@ -71,18 +71,20 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, datasamples: Any, shared_state: Any = None, predictions_path: Path = None) -> Any:
-        """Is executed for each TestDataOrganizations. The predictions will be saved on the predictions_path.
-        The predictions are then loaded and used to calculate the metric.
+    def predict(self, datasamples: Any, shared_state: Any = None) -> Any:
+        """Is executed for each TestDataOrganizations. Compute the predictions from
+        datasamples.
 
         Args:
             datasamples (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
-            predictions_path (pathlib.Path): Destination file to save predictions.
 
         Raises:
             NotImplementedError
+
+        Returns:
+            Any: The computed predictions.
         """
         raise NotImplementedError
 
@@ -117,7 +119,6 @@ class Algo(abc.ABC):
         Returns:
             None
         """
-
         raise NotImplementedError
 
     @remote

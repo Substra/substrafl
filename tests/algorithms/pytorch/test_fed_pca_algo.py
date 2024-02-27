@@ -51,7 +51,15 @@ def compute_plan(
     network,
     session_dir,
 ):
-    strategy = FedPCA(algo=torch_pca_algo())
+    def abs_diff(datasamples, predictions):
+        y_pred = np.array(predictions)
+        y_true = datasamples[1]
+        return (abs(y_pred) - abs(y_true)).mean()
+
+    strategy = FedPCA(
+        algo=torch_pca_algo(),
+        metric_functions=abs_diff,
+    )
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes_pca,
         eval_rounds=[NUM_ROUNDS],
@@ -119,18 +127,12 @@ def test_linear_nodes_pca(
     Args:
         network (Network): Substra network from the configuration file.
         numpy_datasets (List[str]): Keys linked to numpy dataset (opener) on each organization.
-        mae (str): Mean absolute error metric for the TestDataNode
+        test_linear_data_samples_pca (List[np.array]): A one element list containing linear linked data.
         session_dir (Path): A temp file created for the pytest session.
 
     Returns:
-        List[TestDataNode]: A one element list containing a substrafl TestDataNode for linear data with
-          a mae metric.
+        List[TestDataNode]: A one element list containing a substrafl TestDataNode for linear data.
     """
-
-    def abs_diff(datasamples, predictions_path):
-        y_true = datasamples[1]
-        y_pred = np.load(predictions_path)
-        return (abs(y_pred) - abs(y_true)).mean()
 
     linear_samples = assets_factory.add_numpy_samples(
         # We set the weights seeds to ensure that all contents are linearly linked with the same weights but
@@ -146,7 +148,6 @@ def test_linear_nodes_pca(
             network.msp_ids[0],
             numpy_datasets[0],
             linear_samples,
-            metric_functions=abs_diff,
         )
     ]
 
@@ -301,35 +302,29 @@ def test_train_pca_algo(torch_pca_algo, data, local_mean, local_covmat, rtol):
         (np.array([[3, 2, 1], [1, 2, 3], [2, 2, 2]]), np.array([[0], [0], [0]])),
     ],
 )
-def test_predict_pca_algo(torch_pca_algo, session_dir, data, rtol):
+def test_predict_pca_algo(torch_pca_algo, data, rtol):
     """Data index 0 are the input data, and index 1 are unused labels."""
     my_algo = torch_pca_algo()
 
-    prediction_file = session_dir / "PCA_predictions"
-
-    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
-    predictions_round0 = np.load(prediction_file)
+    predictions_round0 = my_algo.predict(datasamples=data)
 
     out = my_algo.train(datasamples=data, _skip=True)
-    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
-    predictions_round1 = np.load(prediction_file)
+    predictions_round1 = my_algo.predict(datasamples=data)
     assert np.allclose(predictions_round0, predictions_round1, rtol=rtol)  # Model is not updated before round 2
 
     avg_mean = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
     out = my_algo.train(datasamples=data, shared_state=avg_mean, _skip=True)
-    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
-    predictions_round2 = np.load(prediction_file)
+    predictions_round2 = my_algo.predict(datasamples=data)
     assert np.allclose(predictions_round1, predictions_round2, rtol=rtol)  # Model is not updated before round 2
 
     avg_parameters = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
     out = my_algo.train(datasamples=data, shared_state=avg_parameters, _skip=True)
-    my_algo.predict(datasamples=data, predictions_path=prediction_file, _skip=True)
-    predictions_round3 = np.load(prediction_file)
+    predictions_round3 = my_algo.predict(datasamples=data)
     assert not np.allclose(predictions_round2, predictions_round3, rtol=rtol)  # Model is updated at round 3
 
 
 @pytest.mark.parametrize("batch_size", (1, 1_000_000_000_000_000_000))
-def test_large_batch_size_in_predict(batch_size, session_dir, torch_pca_algo, mocker):
+def test_large_batch_size_in_predict(batch_size, torch_pca_algo, mocker):
     n_samples = 10
 
     x_train = np.zeros([n_samples, 3])
@@ -337,12 +332,10 @@ def test_large_batch_size_in_predict(batch_size, session_dir, torch_pca_algo, mo
 
     my_algo = torch_pca_algo(batch_size=batch_size)
 
-    prediction_file = session_dir / "FedPCA_predictions"
-
     spy = mocker.spy(torch.utils.data, "DataLoader")
 
     # Check that no MemoryError is thrown
-    my_algo.predict(datasamples=(x_train, y_train), predictions_path=prediction_file, _skip=True)
+    my_algo.predict(datasamples=(x_train, y_train))
 
     assert spy.call_count == 1
     assert spy.spy_return.batch_size == min(batch_size, n_samples)

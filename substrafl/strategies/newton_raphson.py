@@ -1,5 +1,8 @@
+from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 import numpy as np
 
@@ -42,15 +45,24 @@ class NewtonRaphson(Strategy):
     the gradients of the loss with respect to :math:`\\theta`  and :math:`0 < \\eta <= 1` is the damping factor.
     """
 
-    def __init__(self, algo: Algo, damping_factor: float):
+    def __init__(
+        self,
+        algo: Algo,
+        damping_factor: float,
+        metric_functions: Optional[Union[Dict[str, Callable], List[Callable], Callable]] = None,
+    ):
         """
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
             damping_factor (float): Must be between 0 and 1. Multiplicative coefficient of the parameters update.
                 Smaller value for :math:`\\eta` will increase the stability but decrease the speed of convergence of
                 the gradient descent. Recommended value: ``damping_factor=0.8``.
+            metric_functions (Optional[Union[Dict[str, Callable], List[Callable], Callable]]):
+                list of Functions that implement the different metrics. If a Dict is given, the keys will be used to
+                register the result of the associated function. If a Function or a List is given, function.__name__
+                will be used to store the result.
         """
-        super().__init__(algo=algo, damping_factor=damping_factor)
+        super().__init__(algo=algo, damping_factor=damping_factor, metric_functions=metric_functions)
 
         # States
         self._local_states: Optional[List[LocalStateRef]] = None
@@ -281,13 +293,13 @@ class NewtonRaphson(Strategy):
         self._local_states = next_local_states
         self._shared_states = next_shared_states
 
-    def perform_predict(
+    def perform_evaluation(
         self,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Perform prediction on test_data_nodes.
+        """Perform evaluation on test_data_nodes.
 
         Args:
             test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
@@ -307,13 +319,13 @@ class NewtonRaphson(Strategy):
             else:
                 node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            assert self._local_states is not None, "Cannot evaluate if no training has been done beforehand."
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(
-                operation=self.algo.predict(
+                operation=self.evaluate(
                     data_samples=test_data_node.test_data_sample_keys,
-                    _algo_name=f"Predicting with {self.algo.__class__.__name__}",
+                    _algo_name=f"Evaluating with {self.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,
                 round_idx=round_idx,

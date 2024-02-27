@@ -53,9 +53,19 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
 
 @pytest.fixture(scope="module")
 def compute_plan(
-    torch_algo, torch_cpu_dependency, train_linear_nodes, test_linear_nodes, aggregation_node, network, session_dir
+    torch_algo,
+    torch_cpu_dependency,
+    train_linear_nodes,
+    test_linear_nodes,
+    aggregation_node,
+    mae_metric,
+    network,
+    session_dir,
 ):
-    strategy = FedAvg(algo=torch_algo())
+    strategy = FedAvg(
+        algo=torch_algo(),
+        metric_functions=mae_metric,
+    )
     my_eval_strategy = EvaluationStrategy(
         test_data_nodes=test_linear_nodes, eval_rounds=[0, NUM_ROUNDS]
     )  # test the initialization and the last round

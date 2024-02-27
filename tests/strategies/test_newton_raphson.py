@@ -90,7 +90,6 @@ def test_newton_raphson_perform_round(dummy_algo_class):
 
             return NewtonRaphsonSharedState(n_samples=len(x), gradients=gradients, hessian=hessian)
 
-        @remote_data
         def predict(self, x: np.array, shared_state: NewtonRaphsonAveragedStates):
             return shared_state.parameters_update
 
@@ -117,7 +116,7 @@ def test_newton_raphson_perform_round(dummy_algo_class):
     assert all([len(train_data_node.tasks) == 2 for train_data_node in train_data_nodes])
 
 
-def test_newton_raphson_predict(dummy_algo_class, dummy_metric):
+def test_newton_raphson_predict(dummy_algo_class):
     """Test that the predict function updates the TestDataNode.tasks."""
 
     train_data_nodes = [
@@ -130,13 +129,11 @@ def test_newton_raphson_predict(dummy_algo_class, dummy_metric):
             "DummyNode0",
             "dummy_key",
             ["dummy_key"],
-            metric_functions=dummy_metric,
         ),
         TestDataNode(
             "DummyNode1",
             "dummy_key",
             ["dummy_key"],
-            metric_functions=dummy_metric,
         ),
     ]
 
@@ -147,14 +144,13 @@ def test_newton_raphson_predict(dummy_algo_class, dummy_metric):
         LocalStateRef(key="dummy_key"),
     ]
 
-    strategy.perform_predict(
+    strategy.perform_evaluation(
         test_data_nodes=test_data_nodes,
         train_data_nodes=train_data_nodes,
         round_idx=0,
     )
 
     assert all([len(test_data_node.testtasks) == 1 for test_data_node in test_data_nodes])
-    assert all([len(test_data_node.predicttasks) == 1 for test_data_node in test_data_nodes])
 
 
 @pytest.mark.parametrize("additional_orgs_permissions", [set(), {"TestId"}, {"TestId1", "TestId2"}])

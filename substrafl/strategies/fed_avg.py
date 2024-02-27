@@ -1,5 +1,8 @@
+from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 
 import numpy as np
 
@@ -45,12 +48,20 @@ class FedAvg(Strategy):
     number of samples.
     """
 
-    def __init__(self, algo: Algo):
+    def __init__(
+        self,
+        algo: Algo,
+        metric_functions: Optional[Union[Dict[str, Callable], List[Callable], Callable]] = None,
+    ):
         """
         Args:
             algo (Algo): The algorithm your strategy will execute (i.e. train and test on all the specified nodes)
+            metric_functions (Optional[Union[Dict[str, Callable], List[Callable], Callable]]):
+                list of Functions that implement the different metrics. If a Dict is given, the keys will be used to
+                register the result of the associated function. If a Function or a List is given, function.__name__
+                will be used to store the result.
         """
-        super().__init__(algo=algo)
+        super().__init__(algo=algo, metric_functions=metric_functions)
 
         # current local and share states references of the client
         self._local_states: Optional[List[LocalStateRef]] = None
@@ -125,13 +136,13 @@ class FedAvg(Strategy):
             clean_models=clean_models,
         )
 
-    def perform_predict(
+    def perform_evaluation(
         self,
         test_data_nodes: List[TestDataNode],
         train_data_nodes: List[TrainDataNode],
         round_idx: int,
     ):
-        """Perform prediction on test_data_nodes.
+        """Perform evaluation on test_data_nodes.
 
         Args:
             test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
@@ -150,14 +161,14 @@ class FedAvg(Strategy):
             else:
                 node_index = train_data_nodes.index(matching_train_nodes[0])
 
-            assert self._local_states is not None, "Cannot predict if no training has been done beforehand."
+            assert self._local_states is not None, "Cannot evaluate if no training has been done beforehand."
             local_state = self._local_states[node_index]
 
             test_data_node.update_states(
                 traintask_id=local_state.key,
-                operation=self.algo.predict(
+                operation=self.evaluate(
                     data_samples=test_data_node.test_data_sample_keys,
-                    _algo_name=f"Predicting with {self.algo.__class__.__name__}",
+                    _algo_name=f"Evaluating with {self.__class__.__name__}",
                 ),
                 round_idx=round_idx,
             )  # Init state for testtask

@@ -10,10 +10,8 @@ import substratools
 import substrafl
 from substrafl.dependency import Dependency
 from substrafl.exceptions import UnsupportedPythonVersionError
-from substrafl.nodes import TestDataNode
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.register import register
-from substrafl.remote.register import register_metrics
 from substrafl.remote.register.register import _create_dockerfile
 
 
@@ -174,41 +172,3 @@ def test_register_function_name(algo_name, result, default_permissions):
     )
 
     assert substra.sdk.schemas.FunctionSpec.call_args[1]["name"] == result
-
-
-@patch("substra.sdk.schemas.FunctionSpec", MagicMock(return_value=None))
-def test_register_metrics(default_permissions):
-    client = DummyClient()
-    algo_deps = Dependency()
-
-    def f(datasamples, predictions_path):
-        return
-
-    def g(datasamples, predictions_path):
-        return
-
-    def h(datasamples, predictions_path):
-        return
-
-    expected_identifier = ["f", "g", "h"]
-
-    test_data_node = TestDataNode(
-        organization_id="fake_id",
-        data_manager_key="fake_id",
-        test_data_sample_keys=["fake_id"],
-        metric_functions=[f, g, h],
-    )
-
-    _ = register_metrics(
-        client=client,
-        dependencies=algo_deps,
-        permissions=default_permissions,
-        metric_functions=test_data_node.metric_functions,
-    )
-
-    list_identifiers = []
-
-    for output in substra.sdk.schemas.FunctionSpec.call_args[1]["outputs"]:
-        assert output.kind == substra.sdk.schemas.AssetKind.performance
-        list_identifiers.append(output.identifier)
-    assert list_identifiers == expected_identifier

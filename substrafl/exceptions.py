@@ -141,7 +141,7 @@ class UnsupportedPytorchVersionError(Exception):
 
 class MetricFunctionSignatureError(Exception):
     """The metric_function() function on the given torch Dataset must ONLY have datasamples and
-    predictions_path as parameters."""
+    predictions as parameters."""
 
 
 class MetricFunctionTypeError(Exception):

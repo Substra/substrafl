@@ -23,6 +23,7 @@ def compute_plan(
     torch_cpu_dependency,
     train_linear_nodes,
     test_linear_nodes,
+    mae_metric,
     session_dir,
     numpy_torch_dataset,
     seed,
@@ -53,7 +54,10 @@ def compute_plan(
 
     my_algo = MySingleOrganizationAlgo()
 
-    strategy = SingleOrganization(algo=my_algo)
+    strategy = SingleOrganization(
+        algo=my_algo,
+        metric_functions=mae_metric,
+    )
 
     my_eval_strategy = EvaluationStrategy(test_data_nodes=test_linear_nodes[:1], eval_rounds=[0, N_ROUND])
 
@@ -105,6 +109,8 @@ def test_one_organization_algo_performance(
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
 
 
+@pytest.mark.slow
+@pytest.mark.substra
 def test_download_load_algo(network, compute_plan, test_linear_data_samples, mae, rtol):
     algo = download_algo_state(
         client=network.clients[0],
