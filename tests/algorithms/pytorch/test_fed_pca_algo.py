@@ -60,6 +60,7 @@ def simulate_compute_plan(
     aggregation_node,
     abs_metric,
     network,
+    session_dir,
 ):
     strategy = FedPCA(
         algo=torch_pca_algo(),
@@ -78,6 +79,7 @@ def simulate_compute_plan(
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
         clean_models=False,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     return performances

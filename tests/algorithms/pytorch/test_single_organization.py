@@ -27,6 +27,7 @@ def simulate_compute_plan(
     mae_metric,
     numpy_torch_dataset,
     seed,
+    session_dir,
 ):
     BATCH_SIZE = 32
     N_UPDATES = 1
@@ -67,6 +68,7 @@ def simulate_compute_plan(
         train_data_nodes=train_linear_nodes[:1],
         evaluation_strategy=my_eval_strategy,
         num_rounds=N_ROUND,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     return performances

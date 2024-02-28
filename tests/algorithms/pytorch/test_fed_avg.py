@@ -60,6 +60,7 @@ def simulate_compute_plan(
     aggregation_node,
     mae_metric,
     network,
+    session_dir,
 ):
     strategy = FedAvg(
         algo=torch_algo(),
@@ -77,6 +78,7 @@ def simulate_compute_plan(
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
         clean_models=True,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     return performances
