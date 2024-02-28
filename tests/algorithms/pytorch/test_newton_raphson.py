@@ -307,6 +307,7 @@ def simulate_compute_plan(
         evaluation_strategy=my_eval_strategy,
         aggregation_node=aggregation_node,
         num_rounds=NUM_ROUNDS,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     return performances
