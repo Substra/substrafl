@@ -226,7 +226,7 @@ def simulate_experiment(
     additional_metadata: Optional[Dict] = None,
     clean_models: bool = True,
     **kwargs,
-) -> (SimuPerformancesMemory, SimuStatesMemory, SimuStatesMemory):
+) -> Tuple[SimuPerformancesMemory, SimuStatesMemory, SimuStatesMemory]:
     """Simulate an experiment, by computing all operation on RAM.
     No tasks will be sent to the `Client`, which mean that this function should not be used
     to check that your experiment will run as wanted on Substra.
@@ -256,10 +256,10 @@ def simulate_experiment(
         UnsupportedClientBackendTypeError: `remote` client backend type is not supported by `simulate_experiment`.
 
     Returns:
-        performances (SimuPerformancesMemory): Objects containing all computed performances during the simulation. Set
+        SimuPerformancesMemory: Objects containing all computed performances during the simulation. Set
             to None if no EvaluationStrategy given.
-        trained_states_memory (SimuStatesMemory): Objects containing all intermediate state saved on the TrainDataNodes.
-        aggregated_states_memory (SimuStatesMemory): Objects containing all intermediate state saved on the
+        SimuStatesMemory: Objects containing all intermediate state saved on the TrainDataNodes.
+        SimuStatesMemory: Objects containing all intermediate state saved on the
             AggregationNode. Set to None if no AggregationNode given.
     """
 
