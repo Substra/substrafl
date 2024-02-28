@@ -93,6 +93,7 @@ def test_simulate_experiment(
     aggregation_node,
     dummy_strategy_class,
     dummy_algo_class,
+    session_dir,
 ):
     num_rounds = 2
     dummy_algo_instance = dummy_algo_class()
@@ -108,6 +109,7 @@ def test_simulate_experiment(
         aggregation_node=aggregation_node,
         num_rounds=num_rounds,
         clean_models=False,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     assert isinstance(perf, SimuPerformancesMemory)
@@ -120,6 +122,7 @@ def test_simulate_experiment_no_test_and_agg(
     train_linear_nodes,
     dummy_strategy_class,
     dummy_algo_class,
+    session_dir,
 ):
     num_rounds = 2
     dummy_algo_instance = dummy_algo_class()
@@ -131,6 +134,7 @@ def test_simulate_experiment_no_test_and_agg(
         train_data_nodes=train_linear_nodes,
         evaluation_strategy=None,
         num_rounds=num_rounds,
+        experiment_folder=session_dir / "experiment_folder",
     )
 
     assert perf is None
