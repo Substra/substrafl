@@ -86,27 +86,23 @@ class FedAvg(Strategy):
         additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the Federated Averaging strategy consists in:
-                    - if ``round_idx==0``: initialize the strategy by performing a local update
-                        (train on n mini-batches) of the models on each train data node
-                    - aggregate the model shared_states
-                    - set the model weights to the aggregated weights on each train data nodes
-                    - perform a local update (train on n mini-batches) of the models on each train data nodes
+            - if ``round_idx==0``: initialize the strategy by performing a local update
+                (train on n mini-batches) of the models on each train data node
+            - aggregate the model shared_states
+            - set the model weights to the aggregated weights on each train data nodes
+            - perform a local update (train on n mini-batches) of the models on each train data nodes
 
-                Args:
-                    train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes on which to perform
-                        local updates.
-        <<<<<<< HEAD
-                    aggregation_node (AggregationNodeProtocol): Node without data, used to perform
-        =======
-                    aggregation_node (AggregationProtocol): Node without data, used to perform
-        >>>>>>> 967cc47 (chore: protocol)
-                        operations on the shared states of the models
-                    round_idx (int): Round number, it starts at 0.
-                    clean_models (bool): Clean the intermediary models of this round on the Substra platform.
-                        Set it to False if you want to download or re-use intermediary models. This causes the disk
-                        space to fill quickly so should be set to True unless needed.
-                    additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model outputs
-                        after training, in order to test the model on an other organization.
+        Args:
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the nodes on which to perform
+                local updates.
+            aggregation_node (AggregationNodeProtocol): Node without data, used to perform
+                operations on the shared states of the models
+            round_idx (int): Round number, it starts at 0.
+            clean_models (bool): Clean the intermediary models of this round on the Substra platform.
+                Set it to False if you want to download or re-use intermediary models. This causes the disk
+                space to fill quickly so should be set to True unless needed.
+            additional_orgs_permissions (typing.Optional[set]): Additional permissions to give to the model
+                outputs after training, in order to test the model on an other organization.
         """
         if aggregation_node is None:
             raise ValueError("In FedAvg strategy aggregation node cannot be None")
