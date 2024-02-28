@@ -434,6 +434,8 @@ class TorchScaffoldAlgo(TorchAlgo):
                 "self._model(data) is called) after the `self.optimizer.step()` call."
             )
 
+        self._reset_scaffold_parameters_update()
+
         self._model.eval()
 
         # Scaffold paper's Algo step 12+13.1: compute parameters_update = (yi-x)
@@ -477,6 +479,9 @@ class TorchScaffoldAlgo(TorchAlgo):
             n_samples=len(train_dataset),
         )
         return return_dict
+
+    def _reset_scaffold_parameters_update(self):
+        self._scaffold_parameters_update_num_call = 0
 
     def _get_state_to_save(self) -> dict:
         """Get the local state to save, the only strategy-specific variable

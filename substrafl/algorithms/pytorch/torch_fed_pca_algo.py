@@ -307,7 +307,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)
 
         predictions = torch.Tensor([])
-        with torch.inference_mode():
+        with torch.no_grad():
             for x in predict_loader:
                 x = x.to(self._device)
                 predictions = torch.cat((predictions, self.transform(x)), 0)

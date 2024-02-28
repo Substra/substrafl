@@ -1,4 +1,5 @@
 """Packaging settings."""
+
 import os
 from codecs import open
 
@@ -47,6 +48,7 @@ setup(
         "substratools~=0.21.1",
         "pydantic>=2.3.0,<3.0",
         "pip>=21.2",
+        "tqdm",
         "wheel",
         "six",
         "packaging",

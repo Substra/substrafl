@@ -1,4 +1,9 @@
+from __future__ import annotations
+
+import copy
 import uuid
+from typing import TYPE_CHECKING
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -14,11 +19,16 @@ from substrafl.nodes.references.shared_state import SharedStateRef
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OperationKey
 from substrafl.nodes.schemas import OutputIdentifiers
+from substrafl.nodes.schemas import SimuStatesMemory
+from substrafl.nodes.utils import preload_data
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
+
+if TYPE_CHECKING:
+    from substrafl.compute_plan_builder import ComputePlanBuilder
 
 
 class TrainDataNode(TrainDataNodeProtocol):
@@ -293,6 +303,86 @@ class TrainDataNode(TrainDataNodeProtocol):
                 task["function_key"] = function_key
 
         return cache
+
+    def summary(self) -> dict:
+        """Summary of the class to be exposed in the experiment summary file
+
+        Returns:
+            dict: a json-serializable dict with the attributes the user wants to store
+        """
+        return {
+            "organization_id": self.organization_id,
+            "data_manager_key": self.data_manager_key,
+            "data_sample_keys": self.data_sample_keys,
+        }
+
+
+class SimuTrainDataNode(TrainDataNodeProtocol):
+    def __init__(self, client: substra.Client, node: TrainDataNode, strategy: ComputePlanBuilder):
+        self.organization_id = node.organization_id
+
+        self.data_manager_key = node.data_manager_key
+        self.data_sample_keys = node.data_sample_keys
+
+        self._datasamples = preload_data(
+            client=client, data_manager_key=self.data_manager_key, data_sample_keys=self.data_sample_keys
+        )
+        self._strategy = strategy
+        self._memory = SimuStatesMemory()
+
+    def init_states(self, *args, **kwargs) -> LocalStateRef:
+        return LocalStateRef(key=str(uuid.uuid4()), init=True)
+
+    def update_states(
+        self,
+        operation: RemoteDataOperation,
+        round_idx: Optional[int] = None,
+        clean_models: Optional[bool] = True,
+        *args,
+        **kwargs,
+    ) -> (LocalStateRef, Any):
+        """This function will execute the method to run on the train node with the argument
+        `_skip=True`, to execute it directly in RAM.
+
+        This function is expected to implement the `update_state` method of a TrainDataNodeProtocol
+        to simulate its execution on RAM only.
+
+        Args:
+            operation (RemoteDataOperation): Object containing all the information to execute
+                the method.
+            round_idx (Optional[int]): Current round idx. Defaults to None.
+            clean_models (Optional[bool]): If set to True, the current state of the instance will
+                be saved in a SimuStatesMemory object. Defaults to True
+
+        Returns:
+            LocalStateRef: A bogus `LocalStateRef` to ensure compatibility with the execution of the
+                experiment.
+            Any: the output of the execution of the method stored in `operation`.
+        """
+        method_name = operation.remote_struct._method_name
+        method_parameters = operation.remote_struct._method_parameters
+
+        method_parameters["shared_state"] = operation.shared_state
+        method_parameters["datasamples"] = self._datasamples
+
+        # To be compatible with all strategies, with or without algos (such as strategies directly
+        # implemented for the ComputePlanBuilder class for instance).
+        try:
+            method_to_run = getattr(self._strategy.algo, method_name)
+        except AttributeError:
+            method_to_run = getattr(self._strategy, method_name)
+
+        shared_state = method_to_run(**method_parameters, _skip=True)
+
+        if not clean_models:
+            self._memory.state.append(copy.deepcopy(self._strategy))
+            self._memory.round_idx.append(round_idx)
+            self._memory.worker.append(self.organization_id)
+
+        return LocalStateRef(key=str(uuid.uuid4())), shared_state
+
+    def register_operations(self, *args, **kwargs) -> None:
+        return
 
     def summary(self) -> dict:
         """Summary of the class to be exposed in the experiment summary file

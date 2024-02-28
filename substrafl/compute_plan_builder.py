@@ -41,8 +41,8 @@ class ComputePlanBuilder(abc.ABC):
         :func:`~substrafl.experiment.execute_experiment` function.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
-            aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation node, necessary for
+            train_data_nodes (List[TrainDataNodeProtocol]): list of the train organizations
+            aggregation_node (Optional[AggregationNodeProtocol]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             evaluation_strategy (Optional[EvaluationStrategy]): evaluation strategy to follow for testing models.
             num_rounds (int): Number of times to repeat the compute plan sub-graph (define in perform round). It is

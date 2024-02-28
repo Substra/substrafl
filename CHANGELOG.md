@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Added
+
+- Add the `simulate_experiment` function, that will execute the `Compute Plan` in RAM only. It returns Python objects containing the computed `Performances` and the saved intermediate `States`. More information about this feature is available in docstrings ([#184](https://github.com/Substra/substrafl/pull/184)).
+
+Example of usage:
+
+```py
+from substrafl.experiment import simulate_experiment
+
+scores, intermediate_state_train, intermediate_state_agg = simulate_experiment(
+    client=my_substra_client,
+    strategy=my_strategy,
+    train_data_nodes=train_data_nodes,
+    evaluation_strategy=my_eval_strategy,
+    aggregation_node=aggregation_node,
+    clean_models=False,
+    num_rounds=NUM_ROUNDS,
+)
+```
+
 ### Changed
 
 - The predict task does not exist anymore. The evaluation of a model is done in a single task [#177](https://github.com/Substra/substrafl/pull/177)

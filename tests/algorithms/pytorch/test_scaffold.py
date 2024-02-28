@@ -6,6 +6,7 @@ import pytest
 import torch
 
 from substrafl import execute_experiment
+from substrafl import simulate_experiment
 from substrafl.algorithms.pytorch import TorchScaffoldAlgo
 from substrafl.algorithms.pytorch.weight_manager import increment_parameters
 from substrafl.evaluation_strategy import EvaluationStrategy
@@ -69,6 +70,36 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
         )()
 
     return inner_torch_algo
+
+
+@pytest.fixture(scope="module")
+def simulate_compute_plan(
+    torch_algo,
+    train_linear_nodes,
+    test_linear_nodes,
+    aggregation_node,
+    mae_metric,
+    network,
+):
+    strategy = Scaffold(
+        algo=torch_algo(),
+        metric_functions=mae_metric,
+    )
+    my_eval_strategy = EvaluationStrategy(
+        test_data_nodes=test_linear_nodes, eval_rounds=[0, NUM_ROUNDS]
+    )  # test the initialization and the last round
+
+    performances, _, _ = simulate_experiment(
+        client=network.clients[0],
+        strategy=strategy,
+        train_data_nodes=train_linear_nodes,
+        evaluation_strategy=my_eval_strategy,
+        aggregation_node=aggregation_node,
+        num_rounds=NUM_ROUNDS,
+        clean_models=False,
+    )
+
+    return performances
 
 
 @pytest.fixture(scope="module")
@@ -177,6 +208,15 @@ def test_pytorch_scaffold_algo_performance(
 
     performance_at_init = mae(y_pred, y_true)
     assert performance_at_init == pytest.approx(perfs.performance[0], abs=rtol)
+
+
+@pytest.mark.substra
+@pytest.mark.slow
+def test_compare_execute_and_simulate_scaffold_performances(network, compute_plan, simulate_compute_plan, rtol):
+    perfs = network.clients[0].get_performances(compute_plan.key)
+
+    simu_perfs = simulate_compute_plan
+    assert np.allclose(perfs.performance, simu_perfs.performance, rtol=rtol)
 
 
 @pytest.mark.parametrize("use_scheduler", [True, False])

@@ -177,7 +177,6 @@ class TorchFedAvgAlgo(TorchAlgo):
 
         # Create torch dataset
         train_dataset = self._dataset(datasamples, is_inference=False)
-
         if shared_state is None:
             # Instantiate the index_generator
             assert self._index_generator.n_samples is None

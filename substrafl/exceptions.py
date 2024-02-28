@@ -14,6 +14,10 @@ class UnsupportedPythonVersionError(Exception):
     """The Python version used is not supported by Substra."""
 
 
+class UnsupportedClientBackendTypeError(Exception):
+    """The given client backend type is not supported by the function."""
+
+
 class InvalidUserModuleError(Exception):
     """The local folder passed by the user as a dependency is not a valid Python module."""
 
