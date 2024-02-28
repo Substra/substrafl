@@ -3,8 +3,8 @@ from typing import Tuple
 
 import numpy as np
 
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.decorators import remote
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.operations import RemoteDataOperation

@@ -1,6 +1,6 @@
 import pickle
 
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.schemas import TaskType
 
 

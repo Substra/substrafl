@@ -111,12 +111,12 @@ def add_duplicated_dataset(
                 {
                     <msp_id>: {
                         "dataset_key": "b8d754f0-40a5-4976-ae16-8dd4eca35ffc",
-                        "test_data_sample_keys": ["1238452c-a1dd-47ef-84a8-410c0841693a"],
+                        "data_sample_keys": ["1238452c-a1dd-47ef-84a8-410c0841693a"],
                         "train_data_sample_keys": ["38071944-c974-4b3b-a671-aa4835a0ae62"]
                     },
                     <msp_id>: {
                         "dataset_key": "fa8e9bf7-5084-4b59-b089-a459495a08be",
-                        "test_data_sample_keys": ["73715d69-9447-4270-9d3f-d0b17bb88a87"],
+                        "data_sample_keys": ["73715d69-9447-4270-9d3f-d0b17bb88a87"],
                         "train_data_sample_keys": ["766d2029-f90b-440e-8b39-2389ab04041d"]
                     },
                     ...
@@ -239,7 +239,7 @@ def get_test_data_nodes(
             TestDataNode(
                 organization_id=msp_id,
                 data_manager_key=asset_keys.get(msp_id)["dataset_key"],
-                test_data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
+                data_sample_keys=asset_keys.get(msp_id)["test_data_sample_keys"],
             )
         )
 

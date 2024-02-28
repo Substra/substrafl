@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: the `perform_predict` method of `Strategy` changed in favor of `perform_evaluation` that calls the new `evaluate` method [#177](https://github.com/Substra/substrafl/pull/177)
 - BREAKING: `metric_functions` are now passed to the `Strategy` instead of the `TestDataNode` [#177](https://github.com/Substra/substrafl/pull/177)
 - BREAKING: the `predict` method of `Algo` has no `@remote_data` decorator anymore. It signatures does not take `prediction_path` anymore, and the predictions are return by the method [#177](https://github.com/Substra/substrafl/pull/177)
+- Abstract base class `Node` is replaced by `Protocols`, defined in `substrafl.nodes.protocol.py` ([#185](https://github.com/Substra/substrafl/pull/185))
+- BREAKING: rename `test_data_sample_keys`, `test_tasks` and `register_test_operations`, `tasks` to `data_sample_keys` and `register_operations` in `TestDataNodes` ([#185](https://github.com/Substra/substrafl/pull/185))
+- BREAKING: `InputIdentifiers` and `OutputIdentifiers` move from `substrafl.nodes.node` to `substrafl.nodes.schemas` ([#185](https://github.com/Substra/substrafl/pull/185))
 
 ## [0.43.0](https://github.com/Substra/substrafl/releases/tag/0.43.0) - 2024-02-26
 

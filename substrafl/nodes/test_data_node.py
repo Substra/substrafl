@@ -6,36 +6,36 @@ from typing import Optional
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import Node
-from substrafl.nodes.node import OperationKey
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.protocol import TestDataNodeProtocol
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OperationKey
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.register import register_function
 from substrafl.remote.remote_struct import RemoteStruct
 
 
-class TestDataNode(Node):
+class TestDataNode(TestDataNodeProtocol):
     """A node on which you will test your algorithm.
 
     Args:
         organization_id (str): The substra organization ID (shared with other organizations if permissions are needed)
         data_manager_key (str): Substra data_manager_key opening data samples used by the strategy
-        test_data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
+        data_sample_keys (List[str]): Substra data_sample_keys used for the training on this node
     """
 
     def __init__(
         self,
         organization_id: str,
         data_manager_key: str,
-        test_data_sample_keys: List[str],
+        data_sample_keys: List[str],
     ):
+        self.organization_id = organization_id
+
         self.data_manager_key = data_manager_key
-        self.test_data_sample_keys = test_data_sample_keys
+        self.data_sample_keys = data_sample_keys
 
-        self.testtasks: List[Dict] = []
-
-        super().__init__(organization_id)
+        self.tasks: List[Dict] = []
 
     def update_states(
         self,
@@ -58,7 +58,7 @@ class TestDataNode(Node):
             substra.schemas.InputRef(identifier=InputIdentifiers.opener, asset_key=self.data_manager_key)
         ] + [
             substra.schemas.InputRef(identifier=InputIdentifiers.datasamples, asset_key=data_sample)
-            for data_sample in self.test_data_sample_keys
+            for data_sample in self.data_sample_keys
         ]
         local_input = [
             substra.schemas.InputRef(
@@ -89,9 +89,9 @@ class TestDataNode(Node):
         ).model_dump()
         testtask.pop("function_key")
         testtask["remote_operation"] = operation.remote_struct
-        self.testtasks.append(testtask)
+        self.tasks.append(testtask)
 
-    def register_test_operations(
+    def register_operations(
         self,
         *,
         client: substra.Client,
@@ -99,8 +99,8 @@ class TestDataNode(Node):
         cache: Dict[RemoteStruct, OperationKey],
         dependencies: Dependency,
     ):
-        for testtask in self.testtasks:
-            remote_struct: RemoteStruct = testtask["remote_operation"]
+        for task in self.tasks:
+            remote_struct: RemoteStruct = task["remote_operation"]
 
             if remote_struct not in cache:
                 # Register the evaluation task
@@ -141,11 +141,11 @@ class TestDataNode(Node):
                     ],
                     dependencies=dependencies,
                 )
-                testtask["function_key"] = function_key
+                task["function_key"] = function_key
                 cache[remote_struct] = function_key
             else:
                 function_key = cache[remote_struct]
-                testtask["function_key"] = function_key
+                task["function_key"] = function_key
 
         return cache
 
@@ -155,11 +155,8 @@ class TestDataNode(Node):
         Returns:
             dict: a json-serializable dict with the attributes the user wants to store
         """
-        summary = super().summary()
-        summary.update(
-            {
-                "data_manager_key": self.data_manager_key,
-                "data_sample_keys": self.test_data_sample_keys,
-            }
-        )
-        return summary
+        return {
+            "organization_id": self.organization_id,
+            "data_manager_key": self.data_manager_key,
+            "data_sample_keys": self.data_sample_keys,
+        }

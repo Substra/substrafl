@@ -6,9 +6,9 @@ from typing import Optional
 from typing import Union
 
 from substrafl.algorithms import Algo
-from substrafl.nodes import AggregationNode
-from substrafl.nodes import TestDataNode
-from substrafl.nodes import TrainDataNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TestDataNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.strategies.schemas import StrategyName
 from substrafl.strategies.strategy import Strategy
@@ -22,7 +22,7 @@ class SingleOrganization(Strategy):
     Single organization is not a real federated strategy and it is rather used for testing as it is faster than other
     'real' strategies. The training and prediction are performed on a single Node. However, the number of
     passes to that Node (num_rounds) is still defined to test the actual federated setting.
-    In SingleOrganization strategy a single client ``TrainDataNode`` and ``TestDataNode`` performs
+    In SingleOrganization strategy a single client ``TrainDataNodeProtocol`` and ``TestDataNodeProtocol`` performs
     all the model execution.
     """
 
@@ -56,7 +56,7 @@ class SingleOrganization(Strategy):
     def initialization_round(
         self,
         *,
-        train_data_nodes: List[TrainDataNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
         clean_models: bool,
         round_idx: Optional[int] = 0,
         additional_orgs_permissions: Optional[set] = None,
@@ -64,7 +64,7 @@ class SingleOrganization(Strategy):
         """Call the initialize function of the algo on each train node.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
                 space to fill quickly so should be set to True unless needed.
@@ -93,19 +93,19 @@ class SingleOrganization(Strategy):
     def perform_round(
         self,
         *,
-        train_data_nodes: List[TrainDataNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
         round_idx: int,
         clean_models: bool,
-        aggregation_node: Optional[AggregationNode] = None,
+        aggregation_node: Optional[AggregationNodeProtocol] = None,
         additional_orgs_permissions: Optional[set] = None,
     ):
         """One round of the SingleOrganization strategy: perform a local update (train on n mini-batches) of the models
         on a given data node
 
         Args:
-            train_data_nodes (List[TrainDataNode]): List of the nodes on which to perform local
+            train_data_nodes (List[TrainDataNodeProtocol]): List of the nodes on which to perform local
                 updates, there should be exactly one item in the list.
-            aggregation_node (AggregationNode): Should be None otherwise it will be ignored
+            aggregation_node (AggregationNodeProtocol): Should be None otherwise it will be ignored
             round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
                 Set it to False if you want to download or re-use intermediary models. This causes the disk
@@ -143,15 +143,15 @@ class SingleOrganization(Strategy):
 
     def perform_evaluation(
         self,
-        test_data_nodes: List[TestDataNode],
-        train_data_nodes: List[TrainDataNode],
+        test_data_nodes: List[TestDataNodeProtocol],
+        train_data_nodes: List[TrainDataNodeProtocol],
         round_idx: int,
     ):
         """Perform evaluation on test_data_nodes.
 
         Args:
-            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
-            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+            test_data_nodes (List[TestDataNodeProtocol]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNodeProtocol]): train data nodes the model has been trained
                 on.
             round_idx (int): round index.
         """
@@ -166,7 +166,7 @@ class SingleOrganization(Strategy):
             test_data_node.update_states(
                 traintask_id=self.local_state.key,
                 operation=self.evaluate(
-                    data_samples=test_data_node.test_data_sample_keys,
+                    data_samples=test_data_node.data_sample_keys,
                     _algo_name=f"Evaluating with {self.__class__.__name__}",
                 ),
                 round_idx=round_idx,

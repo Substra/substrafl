@@ -7,11 +7,11 @@ from typing import Union
 import numpy as np
 
 from substrafl.algorithms.algo import Algo
-from substrafl.nodes.aggregation_node import AggregationNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TestDataNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
-from substrafl.nodes.test_data_node import TestDataNode
-from substrafl.nodes.train_data_node import TrainDataNode
 from substrafl.remote import remote
 from substrafl.strategies.schemas import ScaffoldAveragedStates
 from substrafl.strategies.schemas import ScaffoldSharedState
@@ -31,8 +31,8 @@ class Scaffold(Strategy):
     passes on each client, aggregating updates by computing their means and
     distributing the consensus update to all clients. In Scaffold, strategy is
     performed in a centralized way, where a single server or
-    ``AggregationNode`` communicates with a number of clients ``TrainDataNode``
-    and ``TestDataNode``.
+    ``AggregationNodeProtocol`` communicates with a number of clients ``TrainDataNodeProtocol``
+    and ``TestDataNodeProtocol``.
     """
 
     def __init__(
@@ -72,8 +72,8 @@ class Scaffold(Strategy):
     def perform_round(
         self,
         *,
-        train_data_nodes: List[TrainDataNode],
-        aggregation_node: AggregationNode,
+        train_data_nodes: List[TrainDataNodeProtocol],
+        aggregation_node: AggregationNodeProtocol,
         round_idx: int,
         clean_models: bool,
         additional_orgs_permissions: Optional[set] = None,
@@ -86,8 +86,8 @@ class Scaffold(Strategy):
             - perform a local update (train on n mini-batches) of the models on each train data nodes
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): List of the organizations on which to perform
-            local updates aggregation_node (AggregationNode): Node without data, used to perform
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the organizations on which to perform
+            local updates aggregation_node (AggregationNodeProtocol): Node without data, used to perform
                 operations on the shared states of the models
             round_idx (int): Round number, it starts at 0.
             clean_models (bool): Clean the intermediary models of this round on the Substra platform.
@@ -130,15 +130,15 @@ class Scaffold(Strategy):
 
     def perform_evaluation(
         self,
-        test_data_nodes: List[TestDataNode],
-        train_data_nodes: List[TrainDataNode],
+        test_data_nodes: List[TestDataNodeProtocol],
+        train_data_nodes: List[TrainDataNodeProtocol],
         round_idx: int,
     ):
         """Perform evaluation on test_data_nodes.
 
         Args:
-            test_data_nodes (List[TestDataNode]): test data nodes to perform the prediction from the algo on.
-            train_data_nodes (List[TrainDataNode]): train data nodes the model has been trained
+            test_data_nodes (List[TestDataNodeProtocol]): test data nodes to perform the prediction from the algo on.
+            train_data_nodes (List[TrainDataNodeProtocol]): train data nodes the model has been trained
                 on.
             round_idx (int): round index.
         """
@@ -158,7 +158,7 @@ class Scaffold(Strategy):
 
             test_data_node.update_states(
                 operation=self.evaluate(
-                    data_samples=test_data_node.test_data_sample_keys,
+                    data_samples=test_data_node.data_sample_keys,
                     _algo_name=f"Evaluating with {self.__class__.__name__}",
                 ),
                 traintask_id=local_state.key,
@@ -338,7 +338,7 @@ class Scaffold(Strategy):
 
     def _perform_local_updates(
         self,
-        train_data_nodes: List[TrainDataNode],
+        train_data_nodes: List[TrainDataNodeProtocol],
         current_aggregation: Optional[SharedStateRef],
         round_idx: int,
         aggregation_id: str,
@@ -349,7 +349,7 @@ class Scaffold(Strategy):
         on each train data nodes.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): List of the organizations on which to perform
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): List of the organizations on which to perform
             local updates current_aggregation (SharedStateRef, Optional): Reference of an aggregation operation to be
             passed as input to each local training
             round_idx (int): Round number, it starts at 1.

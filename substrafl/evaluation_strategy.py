@@ -2,13 +2,13 @@ from typing import List
 from typing import Optional
 from typing import Set
 
-from substrafl.nodes.test_data_node import TestDataNode
+from substrafl.nodes import TestDataNodeProtocol
 
 
 class EvaluationStrategy:
     def __init__(
         self,
-        test_data_nodes: List[TestDataNode],
+        test_data_nodes: List[TestDataNodeProtocol],
         eval_frequency: Optional[int] = None,
         eval_rounds: Optional[List[int]] = None,
     ) -> None:
@@ -17,7 +17,7 @@ class EvaluationStrategy:
         union of both selected indexes will be evaluated.
 
         Args:
-            test_data_nodes (List[TestDataNode]): nodes on which the model is to be tested.
+            test_data_nodes (List[TestDataNodeProtocol]): nodes on which the model is to be tested.
             eval_frequency (Optional[int]): The model will be tested every ``eval_frequency`` rounds.
                 Set to None to activate eval_rounds only. Defaults to None.
             eval_rounds (Optional[List[int]]): If specified, the model will be tested on the index of a round given
@@ -25,7 +25,7 @@ class EvaluationStrategy:
 
         Raises:
             ValueError: test_data_nodes cannot be an empty list
-            TypeError: test_data_nodes must be filled with instances of TestDataNode
+            TypeError: test_data_nodes must be filled with instances of TestDataNodeProtocol
             TypeError: rounds must be a list or an int
             ValueError: both eval_rounds and eval_frequency cannot be None at the same time
 
@@ -83,8 +83,8 @@ class EvaluationStrategy:
         if not test_data_nodes:
             raise ValueError("test_data_nodes lists cannot be empty")
 
-        if not all(isinstance(node, TestDataNode) for node in test_data_nodes):
-            raise TypeError("test_data_nodes must include objects of TestDataNode type")
+        if not all(isinstance(node, TestDataNodeProtocol) for node in test_data_nodes):
+            raise TypeError("test_data_nodes must implement the TestDataNodeProtocol")
 
         if eval_frequency is None and eval_rounds is None:
             raise ValueError("At least one of eval_frequency or eval_rounds must be defined")

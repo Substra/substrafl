@@ -1,20 +1,21 @@
-from unittest.mock import Mock
-
 import pytest
 
 from substrafl.evaluation_strategy import EvaluationStrategy
 from substrafl.nodes.test_data_node import TestDataNode
 
 
+@pytest.fixture(scope="module")
+def test_data_node():
+    return TestDataNode("fake_id", "fake_id", ["fake_id"])
+
+
 @pytest.mark.parametrize("eval_frequency", [1, 2, 4, 10])
-def test_eval_frequency(eval_frequency):
+def test_eval_frequency(eval_frequency, test_data_node):
     # tests that each next() returns expected True or False
     # tests that next called > num_rounds raises StopIteration
     n_nodes = 3
     num_rounds = 10
     # test rounds as frequencies give expected result
-    # mock the test nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(test_data_nodes=test_data_nodes, eval_frequency=eval_frequency)
@@ -34,14 +35,12 @@ def test_eval_frequency(eval_frequency):
 
 
 @pytest.mark.parametrize("eval_rounds", [[1], [1, 4], [5, 1, 7, 3]])
-def test_eval_rounds(eval_rounds):
+def test_eval_rounds(eval_rounds, test_data_node):
     # tests that each next() returns expected True or False
     # tests that next called > num_rounds raises StopIteration
     n_nodes = 3
     num_rounds = 10
     # test rounds as frequencies give expected result
-    # mock the test nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(
@@ -63,14 +62,12 @@ def test_eval_rounds(eval_rounds):
 
 
 @pytest.mark.parametrize("eval_frequency, eval_rounds", [(2, [1, 3]), (3, [0, 1])])
-def test_union_eval_rounds_and_eval_frequency(eval_frequency, eval_rounds):
+def test_union_eval_rounds_and_eval_frequency(eval_frequency, eval_rounds, test_data_node):
     # tests that each next() returns expected True or False
     # tests that next called > num_rounds raises StopIteration
     n_nodes = 3
     num_rounds = 10
     # test rounds as frequencies give expected result
-    # mock the test nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(
@@ -94,8 +91,7 @@ def test_union_eval_rounds_and_eval_frequency(eval_frequency, eval_rounds):
         response = next(evaluation_strategy)
 
 
-def test_eval_rounds_and_eval_frequency_at_none():
-    test_data_node = Mock(spec=TestDataNode)
+def test_eval_rounds_and_eval_frequency_at_none(test_data_node):
     test_data_nodes = [test_data_node]
 
     with pytest.raises(ValueError):
@@ -113,13 +109,11 @@ def test_eval_rounds_and_eval_frequency_at_none():
         [4.5, TypeError],
     ],
 )
-def test_eval_frequency_edges(eval_frequency, e):
+def test_eval_frequency_edges(test_data_node, eval_frequency, e):
     # tests that EvaluationStrategy raises appropriate error if the eval_frequency
     # is not correct
     n_nodes = 3
 
-    # mock the test data nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     with pytest.raises(e):
@@ -134,13 +128,11 @@ def test_eval_frequency_edges(eval_frequency, e):
         [[4, -1, 5], ValueError],
     ],
 )
-def test_eval_rounds_edges(eval_rounds, e):
+def test_eval_rounds_edges(test_data_node, eval_rounds, e):
     # tests that EvaluationStrategy raises appropriate error if the eval_rounds
     # is not correct
     n_nodes = 3
 
-    # mock the test data nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     with pytest.raises(e):
@@ -158,13 +150,11 @@ def test_eval_rounds_edges(eval_rounds, e):
         [None, [1], 1, None],
     ],
 )
-def test_rounds_inconsitancy(eval_frequency, eval_rounds, num_rounds, e):
+def test_rounds_inconsitancy(test_data_node, eval_frequency, eval_rounds, num_rounds, e):
     # tests that consistency between selected rounds and num_rounds is
     # checked for and if inconsistency is found error is raised
     n_nodes = 3
 
-    # mock the test data nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(
@@ -178,20 +168,10 @@ def test_rounds_inconsitancy(eval_frequency, eval_rounds, num_rounds, e):
             evaluation_strategy.num_rounds = num_rounds
 
 
-@pytest.mark.parametrize(
-    "test_data_nodes, e",
-    [
-        [[Mock(spec=TestDataNode)], None],
-        [[1], TypeError],
-    ],
-)
-def test_error_on_wrong_node_instance(test_data_nodes, e):
+def test_error_on_wrong_node_instance():
     # test that only list of TestDataNodes are accepted as test_data_nodes
-    if e is not None:
-        with pytest.raises(e):
-            EvaluationStrategy(test_data_nodes=test_data_nodes, eval_frequency=3)
-    else:
-        EvaluationStrategy(test_data_nodes=test_data_nodes, eval_frequency=3)
+    with pytest.raises(TypeError):
+        EvaluationStrategy(test_data_nodes=[1], eval_frequency=3)
 
 
 @pytest.mark.parametrize(
@@ -201,11 +181,10 @@ def test_error_on_wrong_node_instance(test_data_nodes, e):
         [2, None, 4, [True, False, True, False, True, StopIteration]],
     ],
 )
-def test_docstring_examples(eval_frequency, eval_rounds, num_rounds, result):
+def test_docstring_examples(test_data_node, eval_frequency, eval_rounds, num_rounds, result):
     """tests that the examples given in the docstring of EvaluationStrategy indeed give the correct result"""
     n_nodes = 3
-    data_node = Mock(spec=TestDataNode)
-    data_nodes = [data_node] * n_nodes
+    data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(
         test_data_nodes=data_nodes, eval_frequency=eval_frequency, eval_rounds=eval_rounds
@@ -223,15 +202,13 @@ def test_docstring_examples(eval_frequency, eval_rounds, num_rounds, result):
 @pytest.mark.parametrize(
     "eval_frequency, eval_rounds", [(1, None), (2, None), (4, None), (10, None), (None, [1]), (None, [1, 4])]
 )
-def test_restart_rounds(eval_frequency, eval_rounds):
+def test_restart_rounds(test_data_node, eval_frequency, eval_rounds):
     # tests running a second time an evaluation strategy after calling restart_rounds
     # give the same results
 
     n_nodes = 3
     num_rounds = 10
 
-    # mock the test nodes
-    test_data_node = Mock(spec=TestDataNode)
     test_data_nodes = [test_data_node] * n_nodes
 
     evaluation_strategy = EvaluationStrategy(

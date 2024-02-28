@@ -8,12 +8,12 @@ from typing import Tuple
 import substra
 
 from substrafl.dependency import Dependency
-from substrafl.nodes.node import InputIdentifiers
-from substrafl.nodes.node import Node
-from substrafl.nodes.node import OperationKey
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.protocol import TrainDataNodeProtocol
 from substrafl.nodes.references.local_state import LocalStateRef
 from substrafl.nodes.references.shared_state import SharedStateRef
+from substrafl.nodes.schemas import InputIdentifiers
+from substrafl.nodes.schemas import OperationKey
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.operations import RemoteDataOperation
 from substrafl.remote.operations import RemoteOperation
 from substrafl.remote.register import register_function
@@ -21,7 +21,7 @@ from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
 
 
-class TrainDataNode(Node):
+class TrainDataNode(TrainDataNodeProtocol):
     """
     A predefined structure that allows you to register operations
     on your train node in a static way before submitting them to substra.
@@ -38,12 +38,13 @@ class TrainDataNode(Node):
         data_manager_key: str,
         data_sample_keys: List[str],
     ):
+        self.organization_id = organization_id
+
         self.data_manager_key = data_manager_key
         self.data_sample_keys = data_sample_keys
 
         self.init_task = None
-
-        super().__init__(organization_id)
+        self.tasks: List[Dict] = []
 
     def init_states(
         self,
@@ -299,11 +300,8 @@ class TrainDataNode(Node):
         Returns:
             dict: a json-serializable dict with the attributes the user wants to store
         """
-        summary = super().summary()
-        summary.update(
-            {
-                "data_manager_key": self.data_manager_key,
-                "data_sample_keys": self.data_sample_keys,
-            }
-        )
-        return summary
+        return {
+            "organization_id": self.organization_id,
+            "data_manager_key": self.data_manager_key,
+            "data_sample_keys": self.data_sample_keys,
+        }

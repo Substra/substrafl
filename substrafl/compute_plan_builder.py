@@ -5,8 +5,8 @@ from typing import List
 from typing import Optional
 
 from substrafl.evaluation_strategy import EvaluationStrategy
-from substrafl.nodes.aggregation_node import AggregationNode
-from substrafl.nodes.train_data_node import TrainDataNode
+from substrafl.nodes import AggregationNodeProtocol
+from substrafl.nodes import TrainDataNodeProtocol
 
 
 class ComputePlanBuilder(abc.ABC):
@@ -31,8 +31,8 @@ class ComputePlanBuilder(abc.ABC):
     @abc.abstractmethod
     def build_compute_plan(
         self,
-        train_data_nodes: Optional[List[TrainDataNode]],
-        aggregation_node: Optional[List[AggregationNode]],
+        train_data_nodes: Optional[List[TrainDataNodeProtocol]],
+        aggregation_node: Optional[List[AggregationNodeProtocol]],
         evaluation_strategy: Optional[EvaluationStrategy],
         num_rounds: Optional[int],
         clean_models: Optional[bool] = True,
@@ -41,8 +41,8 @@ class ComputePlanBuilder(abc.ABC):
         :func:`~substrafl.experiment.execute_experiment` function.
 
         Args:
-            train_data_nodes (typing.List[TrainDataNode]): list of the train organizations
-            aggregation_node (typing.Optional[AggregationNode]): aggregation node, necessary for
+            train_data_nodes (typing.List[TrainDataNodeProtocol]): list of the train organizations
+            aggregation_node (typing.Optional[AggregationNodeProtocol]): aggregation node, necessary for
                 centralized strategy, unused otherwise
             evaluation_strategy (Optional[EvaluationStrategy]): evaluation strategy to follow for testing models.
             num_rounds (int): Number of times to repeat the compute plan sub-graph (define in perform round). It is

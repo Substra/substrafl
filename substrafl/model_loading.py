@@ -15,7 +15,7 @@ from substra.sdk.models import ComputeTaskStatus
 import substrafl
 from substrafl import exceptions
 from substrafl.constants import SUBSTRAFL_FOLDER
-from substrafl.nodes.node import OutputIdentifiers
+from substrafl.nodes.schemas import OutputIdentifiers
 from substrafl.remote.remote_struct import RemoteStruct
 from substrafl.schemas import TaskType
 
