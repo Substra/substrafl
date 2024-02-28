@@ -256,11 +256,11 @@ def simulate_experiment(
         UnsupportedClientBackendTypeError: `remote` client backend type is not supported by `simulate_experiment`.
 
     Returns:
-        SimuPerformancesMemory: Objects containing all computed performances during the simulation. Set
-            to None if no EvaluationStrategy given.
+        SimuPerformancesMemory: Objects containing all computed performances during the simulation.
+        Set to None if no EvaluationStrategy given.
         SimuStatesMemory: Objects containing all intermediate state saved on the TrainDataNodes.
-        SimuStatesMemory: Objects containing all intermediate state saved on the
-            AggregationNode. Set to None if no AggregationNode given.
+        SimuStatesMemory: Objects containing all intermediate state saved on the AggregationNode.
+        Set to None if no AggregationNode given.
     """
 
     # Raise a warning for all additional argument passed to the function.
