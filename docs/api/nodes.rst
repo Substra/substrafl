@@ -24,6 +24,7 @@ References
 ^^^^^^^^^^
 .. automodule:: substrafl.nodes.references
 .. autoclass:: substrafl.nodes.schemas.OperationKey
+.. autoclass:: substrafl.nodes.schemas._PrettyJsonBaseModel
 .. autoclass:: substrafl.nodes.schemas.InputIdentifiers
 .. autoclass:: substrafl.nodes.schemas.OutputIdentifiers
 .. autoclass:: substrafl.nodes.schemas.SimuStatesMemory
