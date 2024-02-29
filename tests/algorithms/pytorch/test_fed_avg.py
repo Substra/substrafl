@@ -247,7 +247,6 @@ def test_download_aggregate(network, compute_plan, rtol):
         assert np.allclose(param_from_rank, param_from_round, rtol=rtol)
 
 
-@pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.substra
 def test_compare_execute_and_simulate_fed_avg_performances(network, compute_plan, simulate_compute_plan, rtol):
