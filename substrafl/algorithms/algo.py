@@ -44,7 +44,7 @@ class Algo(abc.ABC):
     # train function
     # @remote_data
     @abc.abstractmethod
-    def train(self, datasamples, shared_state: Any) -> Any:
+    def train(self, data_from_opener, shared_state: Any) -> Any:
         """Is executed for each TrainDataOrganizations.
         This functions takes the output of the ``get_data`` method from the opener, plus the shared state from the
         aggregator if there is one, and returns a shared state (state to send to the aggregator). Any variable that
@@ -54,7 +54,7 @@ class Algo(abc.ABC):
         :py:func:`~substrafl.algorithms.algo.Algo.load_local_state` functions.
 
         Args:
-            datasamples (typing.Any): The output of the ``get_data`` method of the opener.
+            data_from_opener (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
 
@@ -71,12 +71,12 @@ class Algo(abc.ABC):
     # predict function
     # @remote_data
     @abc.abstractmethod
-    def predict(self, datasamples: Any, shared_state: Any = None) -> Any:
+    def predict(self, data_from_opener: Any, shared_state: Any = None) -> Any:
         """Is executed for each TestDataOrganizations. Compute the predictions from
-        datasamples.
+        data outputed by the opener.
 
         Args:
-            datasamples (typing.Any): The output of the ``get_data`` method of the opener.
+            data_from_opener (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
 

@@ -2,6 +2,7 @@
 Decorators to wrap functions
 so that they are executed on the remote organizations.
 """
+
 from functools import wraps
 from typing import Any
 from typing import Callable
@@ -68,7 +69,7 @@ def remote_data(method: Callable):
 
         assert data_samples is not None
 
-        assert "datasamples" not in method_parameters.keys()
+        assert "data_from_opener" not in method_parameters.keys()
 
         return RemoteDataOperation(
             RemoteStruct(

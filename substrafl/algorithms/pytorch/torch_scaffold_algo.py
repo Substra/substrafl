@@ -82,8 +82,8 @@ class TorchScaffoldAlgo(TorchAlgo):
                     train_dataset: torch.utils.data.Dataset,
                 ):
                     # Create torch dataloader
-                    # ``train_dataset = self._dataset(datasamples=datasamples, is_inference=False)`` is executed
-                    # prior the execution of this function
+                    # ``train_dataset = self._dataset(data_from_opener=data_from_opener, is_inference=False)``
+                    # is executed prior the execution of this function
                     train_data_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=self._index_generator)
 
                     for x_batch, y_batch in train_data_loader:
@@ -337,7 +337,7 @@ class TorchScaffoldAlgo(TorchAlgo):
     @remote_data
     def train(
         self,
-        datasamples: Any,
+        data_from_opener: Any,
         shared_state: Optional[ScaffoldAveragedStates] = None,  # Set to None per default for clarity reason as
         #  the decorator will do it if the arg shared_state is not passed.
     ) -> ScaffoldSharedState:
@@ -350,7 +350,7 @@ class TorchScaffoldAlgo(TorchAlgo):
             * compute the weight update and control variate update
 
         Args:
-            datasamples (typing.Any): Input data returned by the ``get_data`` method from the opener.
+            data_from_opener (typing.Any): Input data returned by the ``get_data`` method from the opener.
             shared_state (typing.Optional[ScaffoldAveragedStates]): Shared state sent by the aggregate_organization
                 (returned by the func strategies.scaffold.avg_shared_states)
                 Defaults to None.
@@ -361,7 +361,7 @@ class TorchScaffoldAlgo(TorchAlgo):
         """
 
         # Create torch dataset
-        train_dataset = self._dataset(datasamples, is_inference=False)
+        train_dataset = self._dataset(data_from_opener, is_inference=False)
 
         if shared_state is None:  # first round
             # Instantiate the index_generator

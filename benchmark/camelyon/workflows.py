@@ -100,16 +100,16 @@ def substrafl_fed_avg(
     )
 
     # Metrics
-    def auc(datasamples, predictions):
+    def auc(data_from_opener, predictions):
         """AUC"""
 
-        y_true = datasamples.y_true
+        y_true = data_from_opener.y_true
         return roc_auc_score(y_true, predictions) if len(set(y_true)) > 1 else 0
 
-    def accuracy(datasamples, predictions):
+    def accuracy(data_from_opener, predictions):
         """Accuracy"""
 
-        y_true = datasamples.y_true
+        y_true = data_from_opener.y_true
         return accuracy_score(y_true, np.round(predictions)) if len(set(y_true)) > 1 else 0
 
     # Custom Strategy used for the data loading (from custom_torch_function.py file)
@@ -173,7 +173,7 @@ def torch_fed_avg(
     start = time.time()
 
     train_camelyon = Data(paths=[train_folder] * nb_train_data_samples)
-    train_datasets = [CamelyonDataset(datasamples=train_camelyon) for _ in range(n_centers)]
+    train_datasets = [CamelyonDataset(data_from_opener=train_camelyon) for _ in range(n_centers)]
 
     batch_samplers = list()
     for train_dataset in train_datasets:
@@ -197,7 +197,7 @@ def torch_fed_avg(
 
     test_camelyon = Data(paths=[test_folder] * nb_test_data_samples)
 
-    test_datasets = [CamelyonDataset(datasamples=test_camelyon) for _ in range(n_centers)]
+    test_datasets = [CamelyonDataset(data_from_opener=test_camelyon) for _ in range(n_centers)]
 
     batch_samplers = list()
     for test_dataset in test_datasets:

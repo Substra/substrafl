@@ -44,9 +44,9 @@ def torch_pca_algo(numpy_torch_dataset, seed):
 
 @pytest.fixture(scope="module")
 def abs_metric():
-    def abs_diff(datasamples, predictions):
+    def abs_diff(data_from_opener, predictions):
         y_pred = np.array(predictions)
-        y_true = datasamples[1]
+        y_true = data_from_opener[1]
         return (abs(y_pred) - abs(y_true)).mean()
 
     return abs_diff
@@ -334,13 +334,13 @@ def test_train_pca_algo(torch_pca_algo, data, local_mean, local_covmat, rtol):
     my_algo = torch_pca_algo()
     assert my_algo.local_mean is None
 
-    out = my_algo.train(datasamples=data, _skip=True)
+    out = my_algo.train(data_from_opener=data, _skip=True)
     assert np.allclose(out.parameters_update[0], local_mean, rtol=rtol)
     assert np.allclose(my_algo.local_mean, local_mean, rtol=rtol)
     assert my_algo.local_covmat is None
 
     avg_mean = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
-    out = my_algo.train(datasamples=data, shared_state=avg_mean, _skip=True)
+    out = my_algo.train(data_from_opener=data, shared_state=avg_mean, _skip=True)
     assert np.allclose(my_algo.local_covmat, local_covmat, rtol=rtol)
 
 
@@ -355,20 +355,20 @@ def test_predict_pca_algo(torch_pca_algo, data, rtol):
     """Data index 0 are the input data, and index 1 are unused labels."""
     my_algo = torch_pca_algo()
 
-    predictions_round0 = my_algo.predict(datasamples=data)
+    predictions_round0 = my_algo.predict(data_from_opener=data)
 
-    out = my_algo.train(datasamples=data, _skip=True)
-    predictions_round1 = my_algo.predict(datasamples=data)
+    out = my_algo.train(data_from_opener=data, _skip=True)
+    predictions_round1 = my_algo.predict(data_from_opener=data)
     assert np.allclose(predictions_round0, predictions_round1, rtol=rtol)  # Model is not updated before round 2
 
     avg_mean = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
-    out = my_algo.train(datasamples=data, shared_state=avg_mean, _skip=True)
-    predictions_round2 = my_algo.predict(datasamples=data)
+    out = my_algo.train(data_from_opener=data, shared_state=avg_mean, _skip=True)
+    predictions_round2 = my_algo.predict(data_from_opener=data)
     assert np.allclose(predictions_round1, predictions_round2, rtol=rtol)  # Model is not updated before round 2
 
     avg_parameters = FedPCAAveragedState(avg_parameters_update=out.parameters_update)
-    out = my_algo.train(datasamples=data, shared_state=avg_parameters, _skip=True)
-    predictions_round3 = my_algo.predict(datasamples=data)
+    out = my_algo.train(data_from_opener=data, shared_state=avg_parameters, _skip=True)
+    predictions_round3 = my_algo.predict(data_from_opener=data)
     assert not np.allclose(predictions_round2, predictions_round3, rtol=rtol)  # Model is updated at round 3
 
 
@@ -384,7 +384,7 @@ def test_large_batch_size_in_predict(batch_size, torch_pca_algo, mocker):
     spy = mocker.spy(torch.utils.data, "DataLoader")
 
     # Check that no MemoryError is thrown
-    my_algo.predict(datasamples=(x_train, y_train))
+    my_algo.predict(data_from_opener=(x_train, y_train))
 
     assert spy.call_count == 1
     assert spy.spy_return.batch_size == min(batch_size, n_samples)

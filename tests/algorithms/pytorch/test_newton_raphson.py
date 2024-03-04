@@ -70,11 +70,11 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
     Also test the behavior for batch_size set to None (batch_size set to num_samples by the index generator and
     num_update set to 1 for Newton Raphson."""
 
-    datasamples = (np.zeros([n_samples, 1]), np.zeros([n_samples, 1]))
+    data_from_opener = (np.zeros([n_samples, 1]), np.zeros([n_samples, 1]))
 
     my_algo = torch_algo(batch_size=batch_size)
 
-    my_algo.train(datasamples=datasamples, _skip=True)
+    my_algo.train(data_from_opener=data_from_opener, _skip=True)
 
     assert my_algo._index_generator.batch_size == batch_size or n_samples
     assert my_algo._index_generator.n_samples == n_samples
@@ -83,7 +83,7 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
 
 
 @pytest.mark.parametrize(
-    "datasamples,expected_gradient,expected_hessian",
+    "data_from_opener,expected_gradient,expected_hessian",
     [
         (([2], [1]), [4, 2], [[8, 4], [4, 2]]),  # One input point
         (([1, 2], [2, 4]), [-5, -3], [[5, 3], [3, 2]]),  # Two input points
@@ -91,16 +91,16 @@ def test_index_generator(torch_algo, n_samples, batch_size, expected_n_updates):
     ],
 )
 def test_train_newton_raphson_shared_states_results(
-    torch_algo, perceptron, datasamples, expected_hessian, expected_gradient
+    torch_algo, perceptron, data_from_opener, expected_hessian, expected_gradient
 ):
     """Test the theoretical value of the gradients and Hessian for a MSE loss and f(x) = a * x + b with
     a = 1 and b = 0."""
-    datasamples = np.array(datasamples)[..., None]
+    data_from_opener = np.array(data_from_opener)[..., None]
 
     model = perceptron(constant_weight_init=1, constant_bias_init=0)
     my_algo = torch_algo(model)
 
-    shared_states = my_algo.train(datasamples=datasamples, _skip=True)
+    shared_states = my_algo.train(data_from_opener=data_from_opener, _skip=True)
 
     # ensure that final result is correct up to 6 decimal points
     rel = 1e-6
@@ -118,13 +118,13 @@ def test_l2_coeff(torch_algo, l2_coeff):
 
     n_samples = 2
 
-    datasamples = (np.zeros([n_samples, 1]), np.ones([n_samples, 1]))
+    data_from_opener = (np.zeros([n_samples, 1]), np.ones([n_samples, 1]))
 
     my_algo_l2 = torch_algo(l2_coeff=l2_coeff)
     my_algo_no_l2 = torch_algo(l2_coeff=0)
 
-    shared_states_l2 = my_algo_l2.train(datasamples=datasamples, _skip=True)
-    shared_states = my_algo_no_l2.train(datasamples=datasamples, _skip=True)
+    shared_states_l2 = my_algo_l2.train(data_from_opener=data_from_opener, _skip=True)
+    shared_states = my_algo_no_l2.train(data_from_opener=data_from_opener, _skip=True)
 
     assert np.allclose(
         np.linalg.eig(shared_states_l2.hessian)[0].real, np.linalg.eig(shared_states.hessian)[0].real + l2_coeff
@@ -163,7 +163,7 @@ def test_train_newton_raphson_shared_states_shape(torch_algo, perceptron, x_shap
     model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
     my_algo = torch_algo(model=model, batch_size=10)
 
-    shared_states = my_algo.train(datasamples=(x_train, y_train), _skip=True)
+    shared_states = my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
 
     assert (
         sum([g.size for g in shared_states.gradients]) == (x_shape + 1) * y_shape
@@ -202,7 +202,7 @@ def test_train_newton_raphson_non_convex_cnn(torch_algo, seed):
     my_algo = torch_algo(model=model, criterion=criterion)
 
     with pytest.raises(NegativeHessianMatrixError):
-        my_algo.train(datasamples=(x_train, y_train), _skip=True)
+        my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
 
 
 @pytest.mark.parametrize(
@@ -218,7 +218,7 @@ def test_prediction_shape(perceptron, torch_algo, n_samples, y_shape, batch_size
     model = perceptron(linear_n_col=x_shape, linear_n_target=y_shape)
     my_algo = torch_algo(model=model, batch_size=batch_size)
 
-    prediction = my_algo.predict(datasamples=(x_train, y_train))
+    prediction = my_algo.predict(data_from_opener=(x_train, y_train))
     assert prediction.shape == (n_samples, y_shape)
 
 
@@ -473,7 +473,7 @@ def test_large_batch_size_in_predict(batch_size, torch_algo, perceptron, mocker)
     spy = mocker.spy(torch.utils.data, "DataLoader")
 
     # Check that no MemoryError is thrown
-    my_algo.predict(datasamples=(x_train, y_train))
+    my_algo.predict(data_from_opener=(x_train, y_train))
 
     assert spy.call_count == 1
     assert spy.spy_return.batch_size == min(batch_size, n_samples)
