@@ -177,7 +177,7 @@ class SimuTestDataNode(TestDataNodeProtocol):
         self.data_manager_key = node.data_manager_key
         self.data_sample_keys = node.data_sample_keys
 
-        self._datasamples = preload_data(
+        self._data_from_opener = preload_data(
             client=client, data_manager_key=self.data_manager_key, data_sample_keys=self.data_sample_keys
         )
 
@@ -208,7 +208,7 @@ class SimuTestDataNode(TestDataNodeProtocol):
         method_parameters = operation.remote_struct._method_parameters
 
         method_parameters["shared_state"] = operation.shared_state
-        method_parameters["datasamples"] = self._datasamples
+        method_parameters["data_from_opener"] = self._data_from_opener
         method_to_run = getattr(self._strategy, method_name)
 
         scores = method_to_run(**method_parameters, _skip=True)

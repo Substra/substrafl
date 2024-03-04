@@ -324,7 +324,7 @@ class SimuTrainDataNode(TrainDataNodeProtocol):
         self.data_manager_key = node.data_manager_key
         self.data_sample_keys = node.data_sample_keys
 
-        self._datasamples = preload_data(
+        self._data_from_opener = preload_data(
             client=client, data_manager_key=self.data_manager_key, data_sample_keys=self.data_sample_keys
         )
         self._strategy = strategy
@@ -363,7 +363,7 @@ class SimuTrainDataNode(TrainDataNodeProtocol):
         method_parameters = operation.remote_struct._method_parameters
 
         method_parameters["shared_state"] = operation.shared_state
-        method_parameters["datasamples"] = self._datasamples
+        method_parameters["data_from_opener"] = self._data_from_opener
 
         # To be compatible with all strategies, with or without algos (such as strategies directly
         # implemented for the ComputePlanBuilder class for instance).

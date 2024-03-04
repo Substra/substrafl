@@ -58,6 +58,7 @@ setup(
         "dev": [
             "pytest>=6.2.4",
             "pytest-cov>=2.12.0",
+            "pytest-reporter<0.5.3",
             "pytest-mock",
             "pre-commit>=2.13.0",
             "types-PyYAML>=6.0.0",
