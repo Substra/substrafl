@@ -1,4 +1,4 @@
 Logger
 ======
 
-.. autoclass:: substrafl.logger
+.. automodule:: substrafl.logger
