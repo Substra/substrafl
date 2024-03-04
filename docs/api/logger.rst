@@ -1,0 +1,4 @@
+Logger
+======
+
+.. autoclass:: substrafl.logger

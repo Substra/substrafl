@@ -16,3 +16,4 @@ SubstraFL API reference
    remote
    strategies
    compute_plan_builder
+   logging
