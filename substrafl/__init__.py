@@ -8,7 +8,9 @@ from substrafl.experiment import simulate_experiment
 from substrafl.index_generator.np_index_generator import NpIndexGenerator
 from substrafl.logger import set_logging_level
 
-set_logging_level(loglevel=logging.INFO)
+logger = logging.getLogger(name="substrafl")
+if logger.getEffectiveLevel() > logging.INFO:
+    set_logging_level(loglevel=logging.INFO)
 
 __all__ = [
     "execute_experiment",
