@@ -2,7 +2,7 @@ import logging
 
 
 def set_logging_level(loglevel):
-    """Set the logging level for substrafl.
+    """Set the logging level for SubstraFL.
     To change it, use the following code:
 
     .. code-block:: python
