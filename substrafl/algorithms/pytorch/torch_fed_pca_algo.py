@@ -213,7 +213,7 @@ class TorchFedPCAAlgo(TorchAlgo):
     @remote_data
     def train(
         self,
-        datasamples: Any,
+        data_from_opener: Any,
         shared_state: Optional[FedPCAAveragedState] = None,  # Set to None per default for clarity reason as
         # the decorator will do it if the arg shared_state is not passed.
     ) -> FedPCASharedState:
@@ -229,7 +229,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             minimum when the algorithm has converged.
 
         Args:
-            datasamples (Any): input data
+            data_from_opener (Any): input data
             shared_state (Optional[FedPCAAveragedState]): incoming FedPCAAveragedState
               obtained at the previous round of the federated algorithm (after
               aggregation). It contains the federatively learnt eigenvectors.
@@ -239,7 +239,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             FedPCASharedState: updated model and parameters shared for aggregation.
         """
         # Create torch dataset
-        train_dataset = self._dataset(datasamples, is_inference=False)
+        train_dataset = self._dataset(data_from_opener, is_inference=False)
 
         if shared_state is None:
             # Instantiate the index_generator
@@ -285,7 +285,7 @@ class TorchFedPCAAlgo(TorchAlgo):
 
         return FedPCASharedState(n_samples=len(train_dataset), parameters_update=[parameters_update])
 
-    def predict(self, datasamples: Any, shared_state: Any = None) -> torch.Tensor:
+    def predict(self, data_from_opener: Any, shared_state: Any = None) -> torch.Tensor:
         """Execute the following operations:
 
             * Create the test torch dataset.
@@ -293,7 +293,7 @@ class TorchFedPCAAlgo(TorchAlgo):
               predictions on the prediction path.
 
         Args:
-            datasamples (typing.Any): Input data
+            data_from_opener (typing.Any): Input data
             shared_state (typing.Any): Latest train task shared state (output of the train method)
 
         Returns:
@@ -301,7 +301,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         """
 
         # Create torch dataset
-        predict_dataset = self._dataset(datasamples, is_inference=True)
+        predict_dataset = self._dataset(data_from_opener, is_inference=True)
 
         dataloader_batchsize = min(self._batch_size, len(predict_dataset)) if self._batch_size else len(predict_dataset)
         predict_loader = torch.utils.data.DataLoader(predict_dataset, batch_size=dataloader_batchsize)

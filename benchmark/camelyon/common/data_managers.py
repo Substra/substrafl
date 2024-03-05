@@ -35,8 +35,8 @@ class Data:
 class CamelyonDataset(Dataset):
     """Torch Dataset for the Camelyon data. Padding is done on the fly."""
 
-    def __init__(self, datasamples, is_inference=False) -> None:
-        data_indexes = datasamples.indexes
+    def __init__(self, data_from_opener, is_inference=False) -> None:
+        data_indexes = data_from_opener.indexes
         self.data_indexes = (
             data_indexes if len(data_indexes.shape) > 1 else np.array(data_indexes).reshape(1, data_indexes.shape[0])
         )

@@ -24,8 +24,8 @@ class RemoteClass:
         return sum(shared_states) + extra_arg
 
     @remote_data
-    def train(self, datasamples: Tuple[int, int], shared_state: int, extra_arg: int = 0) -> int:
-        self.local_state = sum(datasamples) + shared_state + extra_arg
+    def train(self, data_from_opener: Tuple[int, int], shared_state: int, extra_arg: int = 0) -> int:
+        self.local_state = sum(data_from_opener) + shared_state + extra_arg
         return self.local_state
 
     def save_local_state(self, path):
@@ -52,7 +52,7 @@ def test_remote_data():
     assert new_class.kwargs == {"a": 42, "b": 3}
 
     # Execute the function itself
-    result = new_class.train(datasamples=(4, 5), _skip=True, shared_state=4)
+    result = new_class.train(data_from_opener=(4, 5), _skip=True, shared_state=4)
     assert result == 13
 
 

@@ -136,9 +136,9 @@ def mae():
 
 @pytest.fixture(scope="session")
 def mae_metric(mae):
-    def mae_score(datasamples, predictions):
+    def mae_score(data_from_opener, predictions):
         y_pred = np.array(predictions)
-        y_true = datasamples[1]
+        y_true = data_from_opener[1]
         return mae(y_pred, y_true)
 
     return mae_score
@@ -404,11 +404,11 @@ def dummy_algo_class():
             return "model"
 
         @remote_data
-        def train(self, datasamples, shared_state):
-            return dict(test=np.array([4]), datasamples=datasamples, shared_state=shared_state)
+        def train(self, data_from_opener, shared_state):
+            return dict(test=np.array([4]), data_from_opener=data_from_opener, shared_state=shared_state)
 
-        def predict(self, datasamples: np.array, shared_state):
-            return dict(datasamples=datasamples, shared_state=shared_state)
+        def predict(self, data_from_opener: np.array, shared_state):
+            return dict(data_from_opener=data_from_opener, shared_state=shared_state)
 
         def load_local_state(self, path: Path):
             return self
@@ -424,9 +424,9 @@ def dummy_algo_class():
 @pytest.fixture(scope="session")
 def numpy_torch_dataset():
     class TorchDataset(torch.utils.data.Dataset):
-        def __init__(self, datasamples, is_inference=False):
-            self.x = datasamples[0]
-            self.y = datasamples[1]
+        def __init__(self, data_from_opener, is_inference=False):
+            self.x = data_from_opener[0]
+            self.y = data_from_opener[1]
             self.is_inference = is_inference
 
         def __getitem__(self, index):

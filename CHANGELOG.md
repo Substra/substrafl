@@ -31,6 +31,7 @@ scores, intermediate_state_train, intermediate_state_agg = simulate_experiment(
 
 ### Changed
 
+- BREAKING: rename ``datasamples``to ``data_from_opener`` ([#193](https://github.com/Substra/substrafl/pull/193))
 - The predict task does not exist anymore. The evaluation of a model is done in a single task [#177](https://github.com/Substra/substrafl/pull/177)
 - `Strategy` implement an `evaluate` method, with the `@remote_data` decorator, to compute the evaluation of the model. The `evaluate` method is the same for all strategies [#177](https://github.com/Substra/substrafl/pull/177)
 - BREAKING: the `perform_predict` method of `Strategy` changed in favor of `perform_evaluation` that calls the new `evaluate` method [#177](https://github.com/Substra/substrafl/pull/177)

@@ -66,7 +66,7 @@ class RemoteMethod:
                 loaded_inputs["shared_states"] = shared_states
 
         if InputIdentifiers.datasamples in inputs:
-            loaded_inputs["datasamples"] = inputs[InputIdentifiers.datasamples]
+            loaded_inputs["data_from_opener"] = inputs[InputIdentifiers.datasamples]
 
         return loaded_inputs
 

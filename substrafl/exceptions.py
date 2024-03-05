@@ -35,7 +35,7 @@ class DampingFactorValueError(Exception):
 
 
 class DatasetSignatureError(Exception):
-    """The __init__() function on the given torch Dataset must have datasamples and is_inference as parameters."""
+    """The __init__() function on the given torch Dataset must have data_from_opener and is_inference as parameters."""
 
 
 class DatasetTypeError(Exception):
@@ -144,7 +144,7 @@ class UnsupportedPytorchVersionError(Exception):
 
 
 class MetricFunctionSignatureError(Exception):
-    """The metric_function() function on the given torch Dataset must ONLY have datasamples and
+    """The metric_function() function on the given torch Dataset must ONLY have data_from_opener and
     predictions as parameters."""
 
 

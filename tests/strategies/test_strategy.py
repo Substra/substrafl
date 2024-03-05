@@ -16,7 +16,7 @@ from substrafl.nodes.schemas import OutputIdentifiers
             pytest.raises(exceptions.MetricFunctionSignatureError),
         ),
         (
-            lambda datasamples: "any_str",
+            lambda data_from_opener: "any_str",
             pytest.raises(exceptions.MetricFunctionSignatureError),
         ),
         (
@@ -24,7 +24,7 @@ from substrafl.nodes.schemas import OutputIdentifiers
             pytest.raises(exceptions.MetricFunctionSignatureError),
         ),
         (
-            lambda datasamples, predictions, wrong_arg: "any_str",
+            lambda data_from_opener, predictions, wrong_arg: "any_str",
             pytest.raises(exceptions.MetricFunctionSignatureError),
         ),
         (
@@ -32,11 +32,11 @@ from substrafl.nodes.schemas import OutputIdentifiers
             pytest.raises(exceptions.MetricFunctionTypeError),
         ),
         (
-            [lambda datasamples, predictions: "any_str", lambda datasamples, predictions: "any_str"],
+            [lambda data_from_opener, predictions: "any_str", lambda data_from_opener, predictions: "any_str"],
             pytest.raises(exceptions.ExistingRegisteredMetricError),
         ),
         (
-            lambda datasamples, predictions: "any_str",
+            lambda data_from_opener, predictions: "any_str",
             does_not_raise(),
         ),
     ],
@@ -50,13 +50,13 @@ def test_wrong_metric_function(metric_function, expectation, dummy_strategy_clas
 
 
 def test_several_metric_function(dummy_strategy_class, dummy_algo_class):
-    def f(datasamples, predictions):
+    def f(data_from_opener, predictions):
         return
 
-    def g(datasamples, predictions):
+    def g(data_from_opener, predictions):
         return
 
-    def h(datasamples, predictions):
+    def h(data_from_opener, predictions):
         return
 
     expected_results = {"f": f, "g": g, "h": h}
@@ -95,7 +95,7 @@ def test_metric_identifier_in_output_id(identifier, dummy_strategy_class, dummy_
     with pytest.raises(exceptions.InvalidMetricIdentifierError):
         dummy_strategy_class(
             algo=dummy_algo_class(),
-            metric_functions={identifier.value: lambda datasamples, predictions: "any_str"},
+            metric_functions={identifier.value: lambda data_from_opener, predictions: "any_str"},
         )
 
 
@@ -111,7 +111,7 @@ def test_metric_identifier_unauthorized_characters(metric_name, expectation, dum
     with expectation:
         dummy_strategy_class(
             algo=dummy_algo_class(),
-            metric_functions={metric_name: lambda datasamples, predictions: "any_str"},
+            metric_functions={metric_name: lambda data_from_opener, predictions: "any_str"},
         )
 
 
@@ -127,7 +127,7 @@ def test_metric_identifier_wrong_length(metric_name, expectation, dummy_strategy
     with expectation:
         dummy_strategy_class(
             algo=dummy_algo_class(),
-            metric_functions={metric_name: lambda datasamples, predictions: "any_str"},
+            metric_functions={metric_name: lambda data_from_opener, predictions: "any_str"},
         )
 
 
@@ -153,11 +153,11 @@ def test_compute_score(data, dummy_strategy_class, dummy_algo_class):
     strat = dummy_strategy_class(
         algo=dummy_algo_class(),
         metric_functions={
-            "add": lambda datasamples, predictions: datasamples + predictions["datasamples"],
-            "mul": lambda datasamples, predictions: datasamples * predictions["datasamples"],
+            "add": lambda data_from_opener, predictions: data_from_opener + predictions["data_from_opener"],
+            "mul": lambda data_from_opener, predictions: data_from_opener * predictions["data_from_opener"],
         },
     )
 
-    res = strat.evaluate(datasamples=data, _skip=True)
+    res = strat.evaluate(data_from_opener=data, _skip=True)
     assert res["add"] == data + data
     assert res["mul"] == data * data

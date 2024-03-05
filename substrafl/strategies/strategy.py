@@ -162,11 +162,11 @@ class Strategy(ComputePlanBuilder):
         raise NotImplementedError
 
     @remote_data
-    def evaluate(self, datasamples: Any, shared_state: Any = None) -> Dict[str, float]:
+    def evaluate(self, data_from_opener: Any, shared_state: Any = None) -> Dict[str, float]:
         """Is executed for each TestDataOrganizations.
 
         Args:
-            datasamples (typing.Any): The output of the ``get_data`` method of the opener.
+            data_from_opener (typing.Any): The output of the ``get_data`` method of the opener.
             shared_state (typing.Any): None for the first round of the computation graph
                 then the returned object from the previous organization of the computation graph.
 
@@ -174,9 +174,9 @@ class Strategy(ComputePlanBuilder):
             Dict[str, float]: keys of the dict are the metric name, and values are the computed
                 performances.
         """
-        predictions = self.algo.predict(datasamples, shared_state)
+        predictions = self.algo.predict(data_from_opener, shared_state)
         return {
-            metric_function_id: metric_function(datasamples=datasamples, predictions=predictions)
+            metric_function_id: metric_function(data_from_opener=data_from_opener, predictions=predictions)
             for metric_function_id, metric_function in self.metric_functions.items()
         }
 
@@ -293,7 +293,7 @@ def _check_metric_function(metric_function: Callable) -> None:
     Raises:
         exceptions.MetricFunctionTypeError: metric_function must be of type "function"
         exceptions.MetricFunctionSignatureError: metric_function must ONLY contains
-            datasamples and predictions as parameters
+            data_from_opener and predictions as parameters
     """
 
     if not inspect.isfunction(metric_function):
@@ -302,9 +302,9 @@ def _check_metric_function(metric_function: Callable) -> None:
     signature = inspect.signature(metric_function)
     parameters = signature.parameters
 
-    if "datasamples" not in parameters:
+    if "data_from_opener" not in parameters:
         raise exceptions.MetricFunctionSignatureError(
-            f"The metric_function: {metric_function.__name__} must contain datasamples as parameter."
+            f"The metric_function: {metric_function.__name__} must contain data_from_opener as parameter."
         )
     elif "predictions" not in parameters:
         raise exceptions.MetricFunctionSignatureError(
@@ -312,7 +312,7 @@ def _check_metric_function(metric_function: Callable) -> None:
         )
     elif len(parameters) != 2:
         raise exceptions.MetricFunctionSignatureError(
-            """The metric_function: {metric_function.__name__}  must ONLY contains datasamples and predictions as
+            """The metric_function: {metric_function.__name__}  must ONLY contains data_from_opener and predictions as
             parameters."""
         )
 
