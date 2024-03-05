@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add documentation on how to change SubstraFL log level ([#194](https://github.com/Substra/substrafl/pull/194))
 - Add the `simulate_experiment` function, that will execute the `Compute Plan` in RAM only. It returns Python objects containing the computed `Performances` and the saved intermediate `States`. More information about this feature is available in docstrings ([#184](https://github.com/Substra/substrafl/pull/184)).
 
 Example of usage:

@@ -1,0 +1,4 @@
+Logger
+======
+
+.. automodule:: substrafl.logger
