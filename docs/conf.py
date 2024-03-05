@@ -198,6 +198,7 @@ nitpick_ignore = [
     ("py:class", "module"),
     ("py:class", "FieldInfo"),
     ("py:class", "ConfigDict"),
+    ("py:class", "ComputedFieldInfo"),
 ]
 
 html_css_files = [
