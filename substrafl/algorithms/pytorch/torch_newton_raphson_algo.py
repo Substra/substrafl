@@ -408,7 +408,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
 
         hessian = self._hessian_shape(second_order_derivative)
 
-        hessian = 0.5 * hessian + 0.5 * hessian.t()  # ensure the hessian is symmetric
+        hessian = 0.5 * hessian + 0.5 * hessian.T  # ensure the hessian is symmetric
 
         return gradients, hessian
 
