@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+## [0.44.0](https://github.com/Substra/substrafl/releases/tag/0.44.0) - 2024-03-07
+
 ### Added
 
 - Add documentation on how to change SubstraFL log level ([#194](https://github.com/Substra/substrafl/pull/194))
@@ -41,6 +43,7 @@ scores, intermediate_state_train, intermediate_state_agg = simulate_experiment(
 - Abstract base class `Node` is replaced by `Protocols`, defined in `substrafl.nodes.protocol.py` ([#185](https://github.com/Substra/substrafl/pull/185))
 - BREAKING: rename `test_data_sample_keys`, `test_tasks` and `register_test_operations`, `tasks` to `data_sample_keys` and `register_operations` in `TestDataNodes` ([#185](https://github.com/Substra/substrafl/pull/185))
 - BREAKING: `InputIdentifiers` and `OutputIdentifiers` move from `substrafl.nodes.node` to `substrafl.nodes.schemas` ([#185](https://github.com/Substra/substrafl/pull/185))
+- Dropped support for Python 3.8
 
 ## [0.43.0](https://github.com/Substra/substrafl/releases/tag/0.43.0) - 2024-02-26
 
