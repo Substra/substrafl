@@ -31,7 +31,6 @@ setup(
         "Topic :: Utilities",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
@@ -44,8 +43,8 @@ setup(
     install_requires=[
         "numpy>=1.24",
         "cloudpickle>=1.6.0",
-        "substra~=0.50.0",
-        "substratools~=0.21.1",
+        "substra~=0.51.0",
+        "substratools~=0.21.2",
         "pydantic>=2.3.0,<3.0",
         "pip>=21.2",
         "tqdm",
@@ -66,5 +65,5 @@ setup(
             "docker",
         ],
     },
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )
