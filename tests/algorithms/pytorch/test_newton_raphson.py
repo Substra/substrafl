@@ -109,6 +109,36 @@ def test_train_newton_raphson_shared_states_results(
     assert pytest.approx(np.array(expected_hessian), rel) == shared_states.hessian
 
 
+def test_hessian_logistic_regression_newton_raphson(torch_algo, seed):
+    """Test that the Hessian matrix is well computed for a logistic regression problem."""
+    np.random.seed(seed)
+
+    n_samples = 300
+    ndim = 100
+    x_train = np.random.randn(n_samples, ndim)
+    y_train = np.random.randint(0, 2, n_samples).reshape(-1, 1)
+
+    class LogisticRegression(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = torch.nn.Linear(ndim, 1)
+
+        def forward(self, x):
+            out = self.linear(x)
+            return out
+
+    model = LogisticRegression()
+    criterion = torch.nn.BCEWithLogitsLoss()
+
+    my_algo = torch_algo(model=model, criterion=criterion)
+
+    shared_states = my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
+
+    # Esnure that the resulting Hessian is numerically symmetric
+    hessian_nr = shared_states.hessian
+    assert (hessian_nr.T - hessian_nr).max() == 0.0  # *exactly* 0.
+
+
 @pytest.mark.parametrize(
     "l2_coeff",
     [(0), (0.1)],
