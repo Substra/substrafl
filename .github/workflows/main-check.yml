@@ -58,8 +58,6 @@ jobs:
           pip install --upgrade -e substratools
 
       - name: Run the slow local tests
-        env:
-          USE_LATEST_SUBSTRATOOLS: True
         run: |
           cd substrafl
           make COV_OPTIONS="--cov=substrafl --cov-append --cov-report=html:htmlcov" PRUNE_OPTIONS="--prune-docker" test-local-slow
