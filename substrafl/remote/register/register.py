@@ -3,22 +3,16 @@ Create the Substra function assets and register them to the platform.
 """
 
 import logging
-import os
 import shutil
 import tarfile
 import tempfile
 import typing
-import warnings
-from distutils import util
 from pathlib import Path
 from pathlib import PurePosixPath
 from platform import python_version
 
 import substra
-import substratools
-from packaging import version
 
-from substrafl import exceptions
 from substrafl.constants import SUBSTRAFL_FOLDER
 from substrafl.constants import TMP_SUBSTRAFL_PREFIX
 from substrafl.dependency import Dependency
@@ -35,8 +29,7 @@ MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
 MINIMAL_PYTHON_VERSION = 8  # 3.8
 MAXIMAL_PYTHON_VERSION = 11  # 3.11
 
-_DEFAULT_SUBSTRATOOLS_IMAGE = "ghcr.io/substra/substra-tools:\
-{substratools_version}-nvidiacuda11.8.0-base-ubuntu22.04-python{python_version}"
+_DEFAULT_BASE_DOCKER_IMAGE = "python:{python_version}-slim"
 
 DOCKERFILE_TEMPLATE = """
 FROM {docker_image}
@@ -109,24 +102,9 @@ def _check_python_version(python_major_minor: str) -> None:
 
 def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
     """Get the base Docker image for the Dockerfile"""
-
-    substratools_image_version = substratools.__version__
-    if util.strtobool(os.environ.get("USE_LATEST_SUBSTRATOOLS", "False")):
-        substratools_image_version = "latest"
-    elif version.parse(substratools_image_version) < version.parse(MINIMAL_DOCKER_SUBSTRATOOLS_VERSION):
-        if not editable_mode:
-            warnings.warn(
-                f"Your environment uses substra-tools={substratools_image_version}. Version \
-                {MINIMAL_DOCKER_SUBSTRATOOLS_VERSION} will be used on Docker.",
-                exceptions.SubstraToolsDeprecationWarning,
-                stacklevel=2,
-            )
-        substratools_image_version = MINIMAL_DOCKER_SUBSTRATOOLS_VERSION
-
     _check_python_version(python_major_minor)
 
-    substratools_image = _DEFAULT_SUBSTRATOOLS_IMAGE.format(
-        substratools_version=substratools_image_version,
+    substratools_image = _DEFAULT_BASE_DOCKER_IMAGE.format(
         python_version=python_major_minor,
     )
 
