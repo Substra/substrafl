@@ -1,5 +1,4 @@
 import sys
-import tarfile
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -42,41 +41,6 @@ def test_check_python_version(version):
 def test_check_python_version_valid(version):
     """Does not raise for supported versions"""
     register._check_python_version(version)
-
-
-@pytest.mark.parametrize("use_latest", [True, False])
-def test_latest_substratools_image_selection(use_latest, monkeypatch, default_permissions):
-    monkeypatch.setenv("USE_LATEST_SUBSTRATOOLS", str(use_latest))
-
-    client = substra.Client(backend_type=substra.BackendType.LOCAL_SUBPROCESS)
-
-    my_class = RemoteClass()
-
-    data_op = my_class.foo(data_samples=["fake_path"], shared_state=None)
-
-    remote_struct = data_op.remote_struct
-
-    function_deps = Dependency()
-
-    function_key = register.register_function(
-        client=client,
-        remote_struct=remote_struct,
-        permissions=default_permissions,
-        dependencies=function_deps,
-        inputs=None,  # No need to register inputs and outputs as this algo is not actually used
-        outputs=None,
-    )
-
-    function = client.get_function(function_key)
-
-    with tarfile.open(function.archive.storage_address, "r:gz") as tar:
-        dockerfile = tar.extractfile("Dockerfile")
-        lines = dockerfile.readlines()
-
-    if use_latest:
-        assert "latest" in str(lines[1])
-    else:
-        assert "latest" not in str(lines[1])
 
 
 def test_create_dockerfile(tmp_path, mocker, local_installable_module):

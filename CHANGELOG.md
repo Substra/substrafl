@@ -41,6 +41,7 @@ scores, intermediate_state_train, intermediate_state_agg = simulate_experiment(
 - Abstract base class `Node` is replaced by `Protocols`, defined in `substrafl.nodes.protocol.py` ([#185](https://github.com/Substra/substrafl/pull/185))
 - BREAKING: rename `test_data_sample_keys`, `test_tasks` and `register_test_operations`, `tasks` to `data_sample_keys` and `register_operations` in `TestDataNodes` ([#185](https://github.com/Substra/substrafl/pull/185))
 - BREAKING: `InputIdentifiers` and `OutputIdentifiers` move from `substrafl.nodes.node` to `substrafl.nodes.schemas` ([#185](https://github.com/Substra/substrafl/pull/185))
+- Switch to python-slim as base image, instead of substra-tools ([#197](https://github.com/Substra/substrafl/pull/197))
 
 ## [0.43.0](https://github.com/Substra/substrafl/releases/tag/0.43.0) - 2024-02-26
 
