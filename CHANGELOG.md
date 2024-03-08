@@ -42,6 +42,10 @@ scores, intermediate_state_train, intermediate_state_agg = simulate_experiment(
 - BREAKING: rename `test_data_sample_keys`, `test_tasks` and `register_test_operations`, `tasks` to `data_sample_keys` and `register_operations` in `TestDataNodes` ([#185](https://github.com/Substra/substrafl/pull/185))
 - BREAKING: `InputIdentifiers` and `OutputIdentifiers` move from `substrafl.nodes.node` to `substrafl.nodes.schemas` ([#185](https://github.com/Substra/substrafl/pull/185))
 
+### Fixed
+- Numerical stability of the `NewtonRaphson` strategy is improved by symmetrizing the Hessian
+([#196](https://github.com/Substra/substrafl/pull/196))
+
 ## [0.43.0](https://github.com/Substra/substrafl/releases/tag/0.43.0) - 2024-02-26
 
 ### Changed
