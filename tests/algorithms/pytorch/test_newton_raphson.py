@@ -109,6 +109,64 @@ def test_train_newton_raphson_shared_states_results(
     assert pytest.approx(np.array(expected_hessian), rel) == shared_states.hessian
 
 
+def test_hessian_is_symetric(seed, perceptron, torch_algo):
+    """Test that the Hessian matrix is perfectly symetric."""
+    n_samples = 30
+    n_dim = 10
+
+    np.random.seed(seed)
+
+    x_train = np.random.randn(n_samples, n_dim)
+    y_train = np.random.randint(0, 2, n_samples).reshape(-1, 1)
+
+    model = perceptron(n_dim, 1)
+    criterion = torch.nn.BCEWithLogitsLoss()
+
+    my_algo = torch_algo(model=model, criterion=criterion)
+
+    shared_states = my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
+
+    hessian_nr = shared_states.hessian
+    assert (hessian_nr.T - hessian_nr).max() == 0.0  # *exactly* 0.
+
+
+def test_hessian_logistic_regression_newton_raphson(seed, perceptron, torch_algo):
+    """Test that the Hessian matrix is well computed for a logistic regression problem."""
+
+    n_samples = 30
+    n_dim = 10
+
+    np.random.seed(seed)
+
+    x_train = np.random.randn(n_samples, n_dim)
+    y_train = np.random.randint(0, 2, n_samples).reshape(-1, 1)
+
+    model = perceptron(n_dim, 1)
+    criterion = torch.nn.BCEWithLogitsLoss()
+
+    my_algo = torch_algo(model=model, criterion=criterion)
+
+    shared_states = my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
+
+    hessian_nr = shared_states.hessian
+
+    # Compare with the groundtruth values for logistic regression
+    # forward the samples to get all the logits
+    z = model(torch.from_numpy(x_train).float()).detach().numpy().reshape(-1)
+    p = 1.0 / (1.0 + np.exp(-z))  # p = sigmoid(z)
+    # Compute the diagonal of the Hessian
+    diag_hessian = p * (1 - p)
+    # Compute the Hessian in a symmetric fashion
+    diag_sqrt = np.sqrt(diag_hessian)
+    # append 1.0 to the x_train to account for the bias term
+    x_bias = np.concatenate([x_train, np.ones((n_samples, 1))], axis=1)
+    tmp = diag_sqrt.reshape(-1, 1) * x_bias  # equivalent to np.diag(diag_sqrt) @ x_bias
+    hessian = np.dot(tmp.T, tmp) / n_samples  # symmetric matrix by design
+
+    assert np.allclose(hessian, hessian_nr, rtol=1e-6)
+    # should not be completely exact due to numerical precision, hence rtol=1e-6
+
+
 @pytest.mark.parametrize(
     "l2_coeff",
     [(0), (0.1)],

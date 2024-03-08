@@ -394,6 +394,8 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         """The compute_gradients_and_hessian function compute the gradients and the Hessian matrix of the parameters
         regarding the given loss, and outputs them.
 
+        Note that the hessian outputted by pytorch is numerically symmetrized by averaging it with its transpose.
+
         Args:
             loss (torch.Tensor): the loss to compute the gradients and Hessian on.
 
@@ -407,6 +409,8 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         second_order_derivative = self._jacobian(gradients)
 
         hessian = self._hessian_shape(second_order_derivative)
+
+        hessian = 0.5 * hessian + 0.5 * hessian.T  # ensure the hessian is symmetric
 
         return gradients, hessian
 
