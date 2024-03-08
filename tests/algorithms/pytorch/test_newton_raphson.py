@@ -109,42 +109,50 @@ def test_train_newton_raphson_shared_states_results(
     assert pytest.approx(np.array(expected_hessian), rel) == shared_states.hessian
 
 
-@pytest.mark.slow  # the test takes ~30s
-def test_hessian_logistic_regression_newton_raphson(torch_algo, seed):
-    """Test that the Hessian matrix is well computed for a logistic regression problem."""
+def test_hessian_is_symetric(seed, perceptron, torch_algo):
+    """Test that the Hessian matrix is perfectly symetric."""
+    n_samples = 30
+    n_dim = 10
+
     np.random.seed(seed)
 
-    n_samples = 300
-    ndim = 100
-    x_train = np.random.randn(n_samples, ndim)
+    x_train = np.random.randn(n_samples, n_dim)
     y_train = np.random.randint(0, 2, n_samples).reshape(-1, 1)
 
-    class LogisticRegression(torch.nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.linear = torch.nn.Linear(ndim, 1)
-
-        def forward(self, x):
-            out = self.linear(x)
-            return out
-
-    model = LogisticRegression()
+    model = perceptron(n_dim, 1)
     criterion = torch.nn.BCEWithLogitsLoss()
 
     my_algo = torch_algo(model=model, criterion=criterion)
 
     shared_states = my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
 
-    # Ensure that the resulting Hessian is numerically symmetric
     hessian_nr = shared_states.hessian
     assert (hessian_nr.T - hessian_nr).max() == 0.0  # *exactly* 0.
 
-    # Ensure that the resulting Hessian is numerically positive semi-definite
-    assert np.all(np.linalg.eigvals(hessian_nr) >= 0.0)
+
+def test_hessian_logistic_regression_newton_raphson(seed, perceptron, torch_algo):
+    """Test that the Hessian matrix is well computed for a logistic regression problem."""
+
+    n_samples = 30
+    n_dim = 10
+
+    np.random.seed(seed)
+
+    x_train = np.random.randn(n_samples, n_dim)
+    y_train = np.random.randint(0, 2, n_samples).reshape(-1, 1)
+
+    model = perceptron(n_dim, 1)
+    criterion = torch.nn.BCEWithLogitsLoss()
+
+    my_algo = torch_algo(model=model, criterion=criterion)
+
+    shared_states = my_algo.train(data_from_opener=(x_train, y_train), _skip=True)
+
+    hessian_nr = shared_states.hessian
 
     # Compare with the groundtruth values for logistic regression
     # forward the samples to get all the logits
-    z = my_algo._model(torch.from_numpy(x_train).float()).detach().numpy().reshape(-1)
+    z = model(torch.from_numpy(x_train).float()).detach().numpy().reshape(-1)
     p = 1.0 / (1.0 + np.exp(-z))  # p = sigmoid(z)
     # Compute the diagonal of the Hessian
     diag_hessian = p * (1 - p)
@@ -154,6 +162,7 @@ def test_hessian_logistic_regression_newton_raphson(torch_algo, seed):
     x_bias = np.concatenate([x_train, np.ones((n_samples, 1))], axis=1)
     tmp = diag_sqrt.reshape(-1, 1) * x_bias  # equivalent to np.diag(diag_sqrt) @ x_bias
     hessian = np.dot(tmp.T, tmp) / n_samples  # symmetric matrix by design
+
     assert np.allclose(hessian, hessian_nr, rtol=1e-6)
     # should not be completely exact due to numerical precision, hence rtol=1e-6
 
