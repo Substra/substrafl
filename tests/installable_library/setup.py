@@ -7,5 +7,5 @@ setup(
     version="0.0.1",
     description="testlib",
     packages=find_packages(),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )
