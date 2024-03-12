@@ -31,13 +31,13 @@ class DummyClient:
         pass
 
 
-@pytest.mark.parametrize("version", ["2.7", "3.7", "3.18"])
+@pytest.mark.parametrize("version", ["2.7", "3.7", "3.8", "3.18"])
 def test_check_python_version(version):
     with pytest.raises(UnsupportedPythonVersionError):
         register._check_python_version(version)
 
 
-@pytest.mark.parametrize("version", ["3.8", "3.9", "3.10", "3.11"])
+@pytest.mark.parametrize("version", ["3.9", "3.10", "3.11"])
 def test_check_python_version_valid(version):
     """Does not raise for supported versions"""
     register._check_python_version(version)
