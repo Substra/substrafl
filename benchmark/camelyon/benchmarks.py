@@ -62,6 +62,8 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         index_generator=index_generator,
         model=model,
         mode=exp_params["mode"],
+        cp_name=exp_params["cp_name"],
+        torch_gpu=exp_params["torch_gpu"],
     )
 
     torch_metrics = torch_fed_avg(

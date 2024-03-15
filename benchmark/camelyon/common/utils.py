@@ -75,6 +75,13 @@ file where to fill in the Substra assets to be reused""",
         default=Path(__file__).resolve().parents[1] / "data",
         help="Path to the data",
     )
+    parser.add_argument("--torch-gpu", action="store_true", help="Use torch with GPU support")
+    parser.add_argument(
+        "--cp-name",
+        type=str,
+        default=None,
+        help="Compute Plan name to display",
+    )
 
     args = parser.parse_args()
     params["n_centers"] = args.n_centers
@@ -88,6 +95,8 @@ file where to fill in the Substra assets to be reused""",
     params["nb_train_data_samples"] = args.nb_train_data_samples
     params["nb_test_data_samples"] = args.nb_test_data_samples
     params["data_path"] = args.data_path
+    params["torch_gpu"] = args.torch_gpu
+    params["cp_name"] = args.cp_name
 
     return params
 
