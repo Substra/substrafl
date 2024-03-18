@@ -1,6 +1,7 @@
 import time
 from copy import deepcopy
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import torch
@@ -40,7 +41,7 @@ def substrafl_fed_avg(
     model: torch.nn.Module,
     credentials_path: Path,
     asset_keys_path: Path,
-    cp_name: str,
+    cp_name: Optional[str],
     torch_gpu: bool = False,
 ) -> benchmark_metrics.BenchmarkResults:
     """Execute Weldon algorithm for a fed avg strategy with substrafl API.
@@ -63,7 +64,7 @@ def substrafl_fed_avg(
         credentials_path (Path): Remote only: file to Substra credentials configuration path.
         asset_keys_path (Path): Remote only: path to asset key file. If un existent, it will be created.
             Otherwise, all present keys in this fill will be reused per Substra in remote mode.
-        cp_name (str): Compute Plan name to display
+        cp_name ben): (Optional[str]): Compute Plan name to display
         torch_gpu (bool): Use GPU default index for pytorch
     Returns:
         dict: Results of the experiment.
@@ -127,6 +128,7 @@ def substrafl_fed_avg(
 
     # Launch experiment
     compute_plan = execute_experiment(
+        # Choosing first client because usually builder is on Org1
         client=clients[0],
         strategy=strategy,
         train_data_nodes=train_data_nodes,
