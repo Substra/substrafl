@@ -1,6 +1,7 @@
 import time
 from copy import deepcopy
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import torch
@@ -40,6 +41,8 @@ def substrafl_fed_avg(
     model: torch.nn.Module,
     credentials_path: Path,
     asset_keys_path: Path,
+    cp_name: Optional[str],
+    torch_gpu: bool = False,
 ) -> benchmark_metrics.BenchmarkResults:
     """Execute Weldon algorithm for a fed avg strategy with substrafl API.
 
@@ -61,6 +64,8 @@ def substrafl_fed_avg(
         credentials_path (Path): Remote only: file to Substra credentials configuration path.
         asset_keys_path (Path): Remote only: path to asset key file. If un existent, it will be created.
             Otherwise, all present keys in this fill will be reused per Substra in remote mode.
+        cp_name ben): (Optional[str]): Compute Plan name to display
+        torch_gpu (bool): Use GPU default index for pytorch
     Returns:
         dict: Results of the experiment.
     """
@@ -84,15 +89,18 @@ def substrafl_fed_avg(
         seed=seed, learning_rate=learning_rate, num_workers=num_workers, index_generator=index_generator, model=model
     )
 
+    pypi_dependencies = [
+        "numpy==1.24.3",
+        "torch==2.0.1",
+        "scikit-learn==1.3.1",
+    ]
+    if not torch_gpu:
+        pypi_dependencies += ["--extra-index-url https://download.pytorch.org/whl/cpu"]
+
     # Dependencies
     base = Path(__file__).parent
     dependencies = Dependency(
-        pypi_dependencies=[
-            "numpy==1.24.3",
-            "torch==2.0.1",
-            "scikit-learn==1.3.1",
-            "--extra-index-url https://download.pytorch.org/whl/cpu",
-        ],
+        pypi_dependencies=pypi_dependencies,
         local_code=[base / "common", base / "weldon_fedavg.py"],
         # Keeping editable_mode=True to ensure nightly test benchmarks are ran against main substrafl git ref
         editable_mode=True,
@@ -120,7 +128,8 @@ def substrafl_fed_avg(
 
     # Launch experiment
     compute_plan = execute_experiment(
-        client=clients[1],
+        # Choosing first client because usually builder is on Org1
+        client=clients[0],
         strategy=strategy,
         train_data_nodes=train_data_nodes,
         evaluation_strategy=evaluation,
@@ -128,6 +137,7 @@ def substrafl_fed_avg(
         num_rounds=n_rounds,
         dependencies=dependencies,
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
+        name=cp_name,
     )
 
     clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)

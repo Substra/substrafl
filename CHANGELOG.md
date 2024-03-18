@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[Unreleased\]
 
+### Added
+
+- New CLI arguments to Camelyon benchmark (`--torch-gpu` and `--cp-name`)
+
 ## [0.44.0](https://github.com/Substra/substrafl/releases/tag/0.44.0) - 2024-03-07
 
 ### Added

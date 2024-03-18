@@ -65,6 +65,8 @@ python benchmarks.py --mode subprocess --n-rounds 2 --n-local-steps 1 --nb-train
                                     Number of data sample of 400 Mb to use for each train task on each center (default: 5)
 --nb-test-data-samples NB_TEST_DATA_SAMPLES
                                     Number of data sample of 400 Mb to use for each test task on each center (default: 2)
+--torch-gpu                         Use PyTorch with GPU/CUDA support (default: False)
+--cp-name CP_NAME                   Compute Plan name to display (default: None)
 ```
 
 ### Dataset
