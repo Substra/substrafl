@@ -1,8 +1,11 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0.0"]
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "benchmark*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "substrafl.__version__" }
 
 [project]
 classifiers = [
