@@ -52,7 +52,7 @@ jobs:
 
       - name: Install package
         run: |
-          pip install --upgrade -e substrafl[dev]
+          pip install --upgrade -e "substrafl[dev]"
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
 
