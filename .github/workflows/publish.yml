@@ -15,7 +15,7 @@ jobs:
       - name: Install tools
         run: pip install wheel
       - name: Build
-        run: python setup.py sdist bdist_wheel
+        run: python -m build
       - name: Publish
         uses: pypa/gh-action-pypi-publish@v1.5.1
         with:

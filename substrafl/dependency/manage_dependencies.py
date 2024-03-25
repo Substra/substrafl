@@ -1,6 +1,7 @@
 """
 Utility functions to manage dependencies (building wheels, compiling requirement...)
 """
+
 import logging
 import os
 import pathlib
@@ -87,8 +88,8 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
     dest_dir.mkdir(exist_ok=True, parents=True)
     for lib_module in lib_modules:
         lib_path = Path(lib_module.__file__).parents[1]
-        # this function is in practice only called on substra libraries, and we know we use a setup.py
-        if not (lib_path / "setup.py").exists():
+        # this function is in practice only called on substra libraries, and we know we use a pyproject.toml
+        if not (lib_path / "pyproject.toml").exists():
             msg = ", ".join([lib.__name__ for lib in lib_modules])
             raise NotImplementedError(
                 f"You must install {msg} in editable mode.\n" "eg `pip install -e substra` in the substra directory"

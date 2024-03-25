@@ -1,3 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests*", "benchmark*"]
+
+[tool.hatch.version]
+path = "substrafl/__version__.py"
+
+[project]
+name = "substrafl"
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dynamic = ["version"]
+readme = "README.md"
+dependencies = [
+    "numpy>=1.24",
+    "cloudpickle>=1.6.0",
+    "substra~=0.51.0",
+    "substratools~=0.21.2",
+    "pydantic>=2.3.0,<3.0",
+    "pip>=21.2",
+    "tqdm",
+    "wheel",
+    "six",
+    "packaging",
+    "pip-tools",
+]
+keywords = ["substrafl"]
+authors = [{ name = "Owkin, Inc." }]
+license = { file = "LICENSE" }
+
+description = """A high-level federated learning Python library to run
+    federated learning experiments at scale on a Substra network"""
+requires-python = ">= 3.9"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.2.4",
+    "pytest-cov>=2.12.0",
+    "pytest-mock",
+    "pre-commit>=2.13.0",
+    "types-PyYAML>=6.0.0",
+    "torch>=1.9.1,!=1.12.0", # bug in 1.12.0 (https://github.com/pytorch/pytorch/pull/80345)
+    "nbmake>=1.4.3",
+    "docker",
+    "towncrier",
+]
+
+[project.urls]
+Documentation = "https://docs.substra.org/en/stable/"
+Repository = "https://github.com/Substra/substrafl"
+Changelog = "https://github.com/Substra/substrafl/blob/main/CHANGELOG.md"
 
 [tool.black]
 line-length = 120
@@ -12,11 +70,11 @@ profile = "black"
 [tool.pytest.ini_options]
 addopts = "--durations=0"
 markers = [
-    "slow", # mark test as slow.
-    "substra", # mark test as using substra.
+    "slow",        # mark test as slow.
+    "substra",     # mark test as using substra.
     "docker_only", # mark test as only useful in remote and local docker mode
-    "e2e", # test run in the end-to-end tests with Substra
-    "gpu", # gpu tests, to run manually
+    "e2e",         # test run in the end-to-end tests with Substra
+    "gpu",         # gpu tests, to run manually
 ]
 filterwarnings = [
     "ignore:.*TestDataNode.*:pytest.PytestCollectionWarning",

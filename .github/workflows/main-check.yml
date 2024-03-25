@@ -48,7 +48,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/setup.py') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/pyproject.toml') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
 
       - name: Install package
         run: |

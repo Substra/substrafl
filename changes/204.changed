@@ -1,0 +1,1 @@
+- Depreciate `setup.py` in favour of `pyproject.toml` ([#204](https://github.com/Substra/substrafl/pull/204))
