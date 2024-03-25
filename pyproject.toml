@@ -1,15 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0.0"]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
+[tool.hatch.build.targets.sdist]
 exclude = ["tests*", "benchmark*"]
 
-[tool.setuptools.dynamic]
-version = { attr = "substrafl.__version__" }
+[tool.hatch.version]
+path = "substrafl/__version__.py"
 
 [project]
+name = "substrafl"
 classifiers = [
-    "License :: Apache 2.0",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -36,7 +37,6 @@ license = { file = "LICENSE" }
 
 description = """A high-level federated learning Python library to run
     federated learning experiments at scale on a Substra network"""
-name = "substrafl"
 requires-python = ">= 3.9"
 
 [project.optional-dependencies]
