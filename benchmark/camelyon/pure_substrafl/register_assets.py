@@ -27,7 +27,6 @@ SUBSTRA_CONFIG_FOLDER = Path(__file__).parents[1].resolve() / "substra_conf"
 
 DEFAULT_DATASET = DatasetSpec(
     name="Camelyon",
-    type="None",
     data_opener=ASSETS_DIRECTORY / "opener.py",
     description=ASSETS_DIRECTORY / "description.md",
     permissions=PUBLIC_PERMISSIONS,

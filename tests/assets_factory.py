@@ -85,7 +85,6 @@ def add_numpy_datasets(datasets_permissions: Permissions, clients: List[Client],
     for client, permissions in zip(clients, datasets_permissions):
         dataset_spec = DatasetSpec(
             name="Numpy Opener",
-            type="npy",
             data_opener=opener_path,
             description=description_path,
             permissions=permissions,

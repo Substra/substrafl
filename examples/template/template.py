@@ -31,6 +31,7 @@ in the same directory as the example:
     :ref:`get_started/installation:Installation`
 
 """
+
 # %%
 # Setup
 # *****
