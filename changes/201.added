@@ -1,1 +1,1 @@
-- New CLI arguments to Camelyon benchmark (`--torch-gpu` and `--cp-name`)([#201](https://github.com/Substra/substrafl/pull/201))
+- New CLI arguments to Camelyon benchmark (`--torch-gpu` and `--cp-name`)
