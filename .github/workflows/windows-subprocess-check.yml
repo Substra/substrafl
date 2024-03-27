@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-
 jobs:
   pr-validation:
     name: test-${{ matrix.os }}-py-${{ matrix.python }}
@@ -42,7 +41,7 @@ jobs:
 
       - name: Install package
         run: |
-          pip install --upgrade -e substrafl[dev]
+          pip install --upgrade -e "substrafl[dev]"
           pip install --upgrade -e substra
           pip install --upgrade -e substratools
 
