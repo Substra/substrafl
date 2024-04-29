@@ -42,9 +42,6 @@ RUN apt-get install -y python$PYVER python$PYVER-venv python3-pip
 RUN python$PYVER -m venv /venv
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
-# install dependencies
-RUN python{python_version} -m pip install -U pip
-
 # Copy local wheels
 {copy_wheels}
 
@@ -52,7 +49,7 @@ RUN python{python_version} -m pip install -U pip
 COPY requirements.txt requirements.txt
 
 # Install requirements
-RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all other files
 COPY function.py .
@@ -60,7 +57,7 @@ COPY {internal_dir}/cls_cloudpickle {internal_dir}/
 COPY {internal_dir}/description.md {internal_dir}/
 {copy_local_code}
 
-ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
+ENTRYPOINT ["python", "function.py", "--function-name", "{method_name}"]
 """
 
 FUNCTION = """

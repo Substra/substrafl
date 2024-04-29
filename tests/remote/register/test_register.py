@@ -79,9 +79,6 @@ RUN apt-get install -y python$PYVER python$PYVER-venv python3-pip
 RUN python$PYVER -m venv /venv
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
-# install dependencies
-RUN python{python_version} -m pip install -U pip
-
 # Copy local wheels
 COPY {substrafl_wheel} {substrafl_wheel}
 COPY {substra_wheel} {substra_wheel}
@@ -92,7 +89,7 @@ COPY {local_installable_wheel} {local_installable_wheel}
 COPY requirements.txt requirements.txt
 
 # Install requirements
-RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all other files
 COPY function.py .
@@ -100,7 +97,7 @@ COPY substrafl_internal/cls_cloudpickle substrafl_internal/
 COPY substrafl_internal/description.md substrafl_internal/
 COPY local local
 
-ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "foo_bar"]
+ENTRYPOINT ["python", "function.py", "--function-name", "foo_bar"]
 """
     dockerfile = _create_dockerfile(True, dependencies, tmp_path, "foo_bar")
     assert dockerfile == expected_dockerfile
