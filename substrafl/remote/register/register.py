@@ -21,21 +21,30 @@ from substrafl.remote.remote_struct import RemoteStruct
 
 logger = logging.getLogger(__name__)
 
-# Substra tools version for which the image naming scheme changed
-MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
 
 # minimal and maximal values of Python 3 minor versions supported
 # we need to store this as integer, else "3.11" < "3.9" (string comparison)
 MINIMAL_PYTHON_VERSION = 9  # 3.9
 MAXIMAL_PYTHON_VERSION = 11  # 3.11
 
-_DEFAULT_BASE_DOCKER_IMAGE = "python:{python_version}-slim"
-
 DOCKERFILE_TEMPLATE = """
-FROM {docker_image}
+FROM ubuntu:24.04
+
+ARG PYVER="{python_version}"
+
+RUN apt-get update -y
+
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:deadsnakes/ppa
+RUN apt-get -y upgrade
+
+RUN apt-get install -y python$PYVER python$PYVER-venv python3-pip
+
+RUN python$PYVER -m venv /venv
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 # install dependencies
-RUN python{python_version} -m pip install -U pip
+RUN python -m pip install -U pip
 
 # Copy local wheels
 {copy_wheels}
@@ -44,7 +53,7 @@ RUN python{python_version} -m pip install -U pip
 COPY requirements.txt requirements.txt
 
 # Install requirements
-RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
 # Copy all other files
 COPY function.py .
@@ -52,7 +61,7 @@ COPY {internal_dir}/cls_cloudpickle {internal_dir}/
 COPY {internal_dir}/description.md {internal_dir}/
 {copy_local_code}
 
-ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
+ENTRYPOINT ["python", "function.py", "--function-name", "{method_name}"]
 """
 
 FUNCTION = """
@@ -100,17 +109,6 @@ def _check_python_version(python_major_minor: str) -> None:
         )
 
 
-def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
-    """Get the base Docker image for the Dockerfile"""
-    _check_python_version(python_major_minor)
-
-    substratools_image = _DEFAULT_BASE_DOCKER_IMAGE.format(
-        python_version=python_major_minor,
-    )
-
-    return substratools_image
-
-
 def _generate_copy_local_files(local_files: typing.List[Path]) -> str:
     # In Dockerfiles, we need to always have '/'. PurePosixPath resolves that.
     return "\n".join([f"COPY {PurePosixPath(file)} {PurePosixPath(file)}" for file in local_files])
@@ -122,10 +120,9 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
     # Cloudpickle will crash if we don't deserialize with the same major.minor
     python_major_minor = ".".join(python_version().split(".")[:2])
 
-    # Get the base Docker image
-    substratools_image = _get_base_docker_image(
-        python_major_minor=python_major_minor, editable_mode=dependencies.editable_mode
-    )
+    # Check python version compatibility
+    _check_python_version(python_major_minor)
+
     # Build Substrafl, Substra and Substratools, and local dependencies wheels if necessary
     if install_libraries:
         # generate the copy wheel command
@@ -138,7 +135,6 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
     copy_local_code_cmd = _generate_copy_local_files(dependencies._local_paths)
 
     return DOCKERFILE_TEMPLATE.format(
-        docker_image=substratools_image,
         python_version=python_major_minor,
         copy_wheels=copy_wheels_cmd,
         copy_local_code=copy_local_code_cmd,
