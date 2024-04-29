@@ -44,7 +44,6 @@ def test_check_python_version_valid(version):
 
 
 def test_create_dockerfile(tmp_path, mocker, local_installable_module):
-    mocker.patch("substrafl.remote.register.register._get_base_docker_image", return_value="substratools-mocked")
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
     substrafl_wheel = f"substrafl_internal/dist/substrafl-{substrafl.__version__}-py3-none-any.whl"
     substra_wheel = f"substrafl_internal/dist/substra-{substra.__version__}-py3-none-any.whl"
@@ -65,10 +64,23 @@ def test_create_dockerfile(tmp_path, mocker, local_installable_module):
     dependencies._compute_in_cache_directory
 
     expected_dockerfile = f"""
-FROM substratools-mocked
+FROM ubuntu:24.04
+
+ARG PYVER="{python_version}"
+
+RUN apt-get update -y
+
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:deadsnakes/ppa
+RUN apt-get -y upgrade
+
+RUN apt-get install -y python$PYVER python$PYVER-venv python3-pip
+
+RUN python$PYVER -m venv /venv
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 # install dependencies
-RUN python{python_version} -m pip install -U pip
+RUN python -m pip install -U pip
 
 # Copy local wheels
 COPY {substrafl_wheel} {substrafl_wheel}
@@ -80,7 +92,7 @@ COPY {local_installable_wheel} {local_installable_wheel}
 COPY requirements.txt requirements.txt
 
 # Install requirements
-RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
 # Copy all other files
 COPY function.py .
@@ -88,7 +100,7 @@ COPY substrafl_internal/cls_cloudpickle substrafl_internal/
 COPY substrafl_internal/description.md substrafl_internal/
 COPY local local
 
-ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "foo_bar"]
+ENTRYPOINT ["python", "function.py", "--function-name", "foo_bar"]
 """
     dockerfile = _create_dockerfile(True, dependencies, tmp_path, "foo_bar")
     assert dockerfile == expected_dockerfile
