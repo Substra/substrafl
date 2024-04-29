@@ -21,7 +21,6 @@ from substrafl.remote.remote_struct import RemoteStruct
 
 logger = logging.getLogger(__name__)
 
-
 # minimal and maximal values of Python 3 minor versions supported
 # we need to store this as integer, else "3.11" < "3.9" (string comparison)
 MINIMAL_PYTHON_VERSION = 9  # 3.9
@@ -44,7 +43,7 @@ RUN python$PYVER -m venv /venv
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 # install dependencies
-RUN python -m pip install -U pip
+RUN python{python_version} -m pip install -U pip
 
 # Copy local wheels
 {copy_wheels}
@@ -53,7 +52,7 @@ RUN python -m pip install -U pip
 COPY requirements.txt requirements.txt
 
 # Install requirements
-RUN python -m pip install --no-cache-dir -r requirements.txt
+RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
 
 # Copy all other files
 COPY function.py .
@@ -61,7 +60,7 @@ COPY {internal_dir}/cls_cloudpickle {internal_dir}/
 COPY {internal_dir}/description.md {internal_dir}/
 {copy_local_code}
 
-ENTRYPOINT ["python", "function.py", "--function-name", "{method_name}"]
+ENTRYPOINT ["python{python_version}", "function.py", "--function-name", "{method_name}"]
 """
 
 FUNCTION = """
