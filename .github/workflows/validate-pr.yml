@@ -17,11 +17,11 @@ jobs:
         python: ["3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: substrafl
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
@@ -40,12 +40,12 @@ jobs:
           cd substrafl
           pre-commit run --all-files
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: substra/substra-tools
           path: substratools
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: substra/substra
           path: substra
@@ -70,9 +70,9 @@ jobs:
   pr-validation-docs:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
@@ -82,12 +82,12 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/pyproject.toml') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: substra/substra
           path: substra
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: substra/substra-tools
           path: substratools
@@ -107,20 +107,20 @@ jobs:
   benchmark:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.11
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: substrafl
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: substra/substra-tools
           path: substratools
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: substra/substra
           path: substra

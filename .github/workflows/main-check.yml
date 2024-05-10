@@ -15,11 +15,11 @@ jobs:
         python: ["3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: substrafl
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
@@ -33,13 +33,13 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: substra/substra-tools
           path: substratools
 
       - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: substra/substra
           path: substra
