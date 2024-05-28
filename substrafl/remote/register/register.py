@@ -34,6 +34,9 @@ _DEFAULT_BASE_DOCKER_IMAGE = "python:{python_version}-slim"
 DOCKERFILE_TEMPLATE = """
 FROM {docker_image}
 
+# update image
+RUN apt update -y
+
 # install dependencies
 RUN python{python_version} -m pip install -U pip
 

@@ -67,6 +67,9 @@ def test_create_dockerfile(tmp_path, mocker, local_installable_module):
     expected_dockerfile = f"""
 FROM substratools-mocked
 
+# update image
+RUN apt update -y
+
 # install dependencies
 RUN python{python_version} -m pip install -U pip
 
