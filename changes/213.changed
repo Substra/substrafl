@@ -1,1 +1,0 @@
-Add `apt update` to docker user images to limit vulnerabilities.

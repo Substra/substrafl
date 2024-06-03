@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.46.0](https://github.com/Substra/substrafl/releases/tag/0.46.0) - 2024-06-03
+
+
+### Changed
+
+- Add `apt update` to docker user images to limit vulnerabilities. ([#213](https://github.com/Substra/substrafl/pull/213))
+
+
 ## [0.45.0](https://github.com/Substra/substrafl/releases/tag/0.45.0) - 2024-03-27
 
 
