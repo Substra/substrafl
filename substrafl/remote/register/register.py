@@ -36,7 +36,7 @@ FROM {docker_image}
 
 # update and clean image
 RUN apt update -y \\
-    && apt-get purge --auto-remove sqlite3 \\
+    && apt-get purge --auto-remove sqlite3 libsqlite3-dev \\
     && apt-get autoremove \\
     && apt-get autoclean
 
