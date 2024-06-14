@@ -1,6 +1,5 @@
 import logging
 from enum import IntEnum
-from pathlib import Path
 from typing import Any
 from typing import List
 from typing import Optional
@@ -498,18 +497,18 @@ class TorchScaffoldAlgo(TorchAlgo):
         )
         return local_state
 
-    def _update_from_checkpoint(self, path: Path) -> dict:
+    def _update_from_checkpoint(self, checkpoint: dict) -> None:
         """Load the local state from the checkpoint.
 
         Args:
-            path (pathlib.Path): path where the checkpoint is saved
+            checkpoint (dict): the checkpoint to load.
 
         Returns:
             dict: checkpoint
         """
-        checkpoint = super()._update_from_checkpoint(path=path)
+        super()._update_from_checkpoint(checkpoint=checkpoint)
         self._client_control_variate = checkpoint.pop("client_control_variate")
-        return checkpoint
+        return
 
     def summary(self):
         """Summary of the class to be exposed in the experiment summary file
