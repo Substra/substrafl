@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+import substra
 import torch
 import weldon_fedavg
 from common import benchmark_metrics
@@ -142,7 +143,7 @@ def substrafl_fed_avg(
         name=cp_name,
     )
 
-    if cancel_cp:
+    if cancel_cp and clients[0].backend_mode == substra.BackendType.REMOTE:
         clients[0].cancel_compute_plan(key=compute_plan.key)
 
     clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
