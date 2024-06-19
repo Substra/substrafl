@@ -77,6 +77,11 @@ file where to fill in the Substra assets to be reused""",
     )
     parser.add_argument("--torch-gpu", action="store_true", help="Use PyTorch with GPU/CUDA support")
     parser.add_argument(
+        "--skip-pure-torch",
+        action="store_true",
+        help="Skip the pure torch computation part to only test substrafl implementation",
+    )
+    parser.add_argument(
         "--cp-name",
         type=str,
         default=None,
@@ -96,6 +101,7 @@ file where to fill in the Substra assets to be reused""",
     params["nb_test_data_samples"] = args.nb_test_data_samples
     params["data_path"] = args.data_path
     params["torch_gpu"] = args.torch_gpu
+    params["skip_pure_torch"] = args.skip_pure_torch
     params["cp_name"] = args.cp_name
 
     return params
