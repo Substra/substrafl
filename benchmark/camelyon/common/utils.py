@@ -75,7 +75,7 @@ file where to fill in the Substra assets to be reused""",
         default=Path(__file__).resolve().parents[1] / "data",
         help="Path to the data",
     )
-    parser.add_argument("--cancel-cp", action="store_false", help="Cancel the CP after registration for remote mode")
+    parser.add_argument("--cancel-cp", action="store_false", help="Remote only: cancel the CP after registration")
     parser.add_argument("--torch-gpu", action="store_true", help="Use PyTorch with GPU/CUDA support")
     parser.add_argument(
         "--cp-name",
