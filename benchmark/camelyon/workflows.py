@@ -42,6 +42,7 @@ def substrafl_fed_avg(
     credentials_path: Path,
     asset_keys_path: Path,
     cp_name: Optional[str],
+    cancel_cp: bool = False,
     torch_gpu: bool = False,
 ) -> benchmark_metrics.BenchmarkResults:
     """Execute Weldon algorithm for a fed avg strategy with substrafl API.
@@ -65,6 +66,7 @@ def substrafl_fed_avg(
         asset_keys_path (Path): Remote only: path to asset key file. If un existent, it will be created.
             Otherwise, all present keys in this fill will be reused per Substra in remote mode.
         cp_name ben): (Optional[str]): Compute Plan name to display
+        cancel_cp (bool): if set to True, the CP will be canceled as soon as it's registered. Only work for remote mode.
         torch_gpu (bool): Use GPU default index for pytorch
     Returns:
         dict: Results of the experiment.
@@ -139,6 +141,9 @@ def substrafl_fed_avg(
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
         name=cp_name,
     )
+
+    if cancel_cp:
+        clients[0].cancel_compute_plan(key=compute_plan.key)
 
     clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
 
