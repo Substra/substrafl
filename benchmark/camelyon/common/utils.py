@@ -106,7 +106,7 @@ file where to fill in the Substra assets to be reused""",
     params["nb_train_data_samples"] = args.nb_train_data_samples
     params["nb_test_data_samples"] = args.nb_test_data_samples
     params["data_path"] = args.data_path
-    params["cancel_cp"] = bool(args.cancel_cp)
+    params["cancel_cp"] = args.cancel_cp
     params["torch_gpu"] = args.torch_gpu
     params["skip_pure_torch"] = args.skip_pure_torch
     params["cp_name"] = args.cp_name
