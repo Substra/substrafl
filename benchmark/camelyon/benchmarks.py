@@ -66,6 +66,10 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         torch_gpu=exp_params["torch_gpu"],
     )
 
+    if exp_params["skip_pure_torch"]:
+        print("Skipping pure torch FedAvg computation and comparison to SusbtraFL FedAvg.")
+        return
+
     torch_metrics = torch_fed_avg(
         train_folder=train_folder,
         test_folder=test_folder,
