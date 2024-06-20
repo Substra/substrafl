@@ -66,18 +66,21 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         torch_gpu=exp_params["torch_gpu"],
     )
 
-    if not exp_params["skip_pure_torch"]:
-        torch_metrics = torch_fed_avg(
-            train_folder=train_folder,
-            test_folder=test_folder,
-            **{k: v for k, v in exp_params.items() if k in run_keys},
-            index_generator=index_generator,
-            model=model,
-        )
+    if exp_params["skip_pure_torch"]:
+        print("Skipping pure torch FedAvg computation and comparison to SusbtraFL FedAvg.")
+        return
 
-        results = {**exp_params, **{"results": {**substrafl_metrics.to_dict, **torch_metrics.to_dict}}}
-        load_benchmark_summary(file=LOCAL_RESULTS_FILE, experiment_summary=results)
-        assert_expected_results(substrafl_metrics=substrafl_metrics, torch_metrics=torch_metrics, exp_params=exp_params)
+    torch_metrics = torch_fed_avg(
+        train_folder=train_folder,
+        test_folder=test_folder,
+        **{k: v for k, v in exp_params.items() if k in run_keys},
+        index_generator=index_generator,
+        model=model,
+    )
+
+    results = {**exp_params, **{"results": {**substrafl_metrics.to_dict, **torch_metrics.to_dict}}}
+    load_benchmark_summary(file=LOCAL_RESULTS_FILE, experiment_summary=results)
+    assert_expected_results(substrafl_metrics=substrafl_metrics, torch_metrics=torch_metrics, exp_params=exp_params)
 
 
 def main():
