@@ -142,12 +142,11 @@ def substrafl_fed_avg(
         experiment_folder=Path(__file__).resolve().parent / "benchmark_cl_experiment_folder",
         name=cp_name,
     )
-
     if cancel_cp and clients[0].backend_mode == substra.BackendType.REMOTE:
         clients[0].cancel_compute_plan(key=compute_plan.key)
         print(f"Compute plan {compute_plan.key} successfully canceled.")
 
-        return dict()
+        return
 
     else:
         clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
