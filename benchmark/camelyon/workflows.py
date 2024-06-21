@@ -145,12 +145,16 @@ def substrafl_fed_avg(
 
     if cancel_cp and clients[0].backend_mode == substra.BackendType.REMOTE:
         clients[0].cancel_compute_plan(key=compute_plan.key)
+        print(f"Compute plan {compute_plan.key} successfully canceled.")
 
-    clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
+        return dict()
 
-    performances = clients[1].get_performances(key=compute_plan.key)
+    else:
+        clients[0].wait_compute_plan(key=compute_plan.key, raise_on_failure=True)
 
-    return benchmark_metrics.get_metrics_from_substra_performances(raw_performances=performances)
+        performances = clients[1].get_performances(key=compute_plan.key)
+
+        return benchmark_metrics.get_metrics_from_substra_performances(raw_performances=performances)
 
 
 def torch_fed_avg(
