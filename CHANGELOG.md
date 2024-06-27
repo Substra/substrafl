@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [](https://github.com/Substra/substrafl/releases/tag/) - 2024-06-27
+
+
+### Changed
+
+- Test ([#6666](https://github.com/Substra/substrafl/pull/6666))
+
+
 ## [0.46.0](https://github.com/Substra/substrafl/releases/tag/0.46.0) - 2024-06-03
 
 
