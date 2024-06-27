@@ -6,9 +6,9 @@ on:
         app_version:
             description: 'The version of the app'
             required: true
-    pull_request:
-      branches:
-        - main
+  pull_request:
+    branches:
+    - main
 
 jobs:
   create-changelog:
