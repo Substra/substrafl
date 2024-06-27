@@ -1,0 +1,32 @@
+name: Create changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+        app_version:
+            description: 'The version of the app'
+            required: true
+
+jobs:
+  create-changelog:
+    name: Create changelog with towncrier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install towncrier
+        uses: actions/checkout@v4
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - run: pip install towncrier
+      - name: Run towncrier
+        run: towncrier build --yes --version "${{ github.event.inputs.app_version }}" --date "${{ steps.date.outputs.date }}"
+      - name: Commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          file_pattern: 'changes/* CHANGELOG.md'
+          commit_message: '[auto] update changelog'
+          commit_options: '--signoff'
