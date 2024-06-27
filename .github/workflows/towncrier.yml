@@ -1,4 +1,4 @@
-name: Create changelog
+name: Towncrier changelog
 
 on:
   workflow_dispatch:
