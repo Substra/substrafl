@@ -43,8 +43,7 @@ def test_check_python_version_valid(version):
     register._check_python_version(version)
 
 
-def test_create_dockerfile(tmp_path, mocker, local_installable_module):
-    mocker.patch("substrafl.remote.register.register._get_base_docker_image", return_value="substratools-mocked")
+def test_create_cpu_dockerfile(tmp_path, mocker, local_installable_module):
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
     substrafl_wheel = f"substrafl_internal/dist/substrafl-{substrafl.__version__}-py3-none-any.whl"
     substra_wheel = f"substrafl_internal/dist/substra-{substra.__version__}-py3-none-any.whl"
@@ -61,14 +60,15 @@ def test_create_dockerfile(tmp_path, mocker, local_installable_module):
         pypi_dependencies=[],
         local_installable_dependencies=[local_installable_dependencies],
         local_code=[local_code_folder],
+        use_gpu=False,
     )
     dependencies._compute_in_cache_directory
 
     expected_dockerfile = f"""
-FROM substratools-mocked
+FROM python:{python_version}-slim
 
 # update image
-RUN apt update -y
+RUN apt-get update -y
 
 # create a non-root user
 RUN addgroup --gid 1001 group
