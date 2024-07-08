@@ -56,7 +56,7 @@ class Dependency(BaseModel):
             and `excluded_regex`
             Default to []
         use_gpu (bool): Use nvidia docker image with cuda driver. Allow docker image to access GPU. The docker image
-            will be heavier. It is recommended to pass ``use_gpu`` to ``True`` only if you have accessible GPUs.
+            will be longer to build. It is recommended to pass ``use_gpu`` to ``True`` only if you want to use GPUs.
     """
 
     editable_mode: bool = False
