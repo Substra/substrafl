@@ -1,0 +1,4 @@
+Add a non-root user to the generated Dockerfile for the compute functions.
+
+Compute pods were already running as non-root (ensured by a security context in the backend), we are making it more
+explicit here.

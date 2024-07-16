@@ -37,6 +37,13 @@ FROM {docker_image}
 # update image
 RUN apt update -y
 
+# create a non-root user
+RUN addgroup --gid 1001 group
+RUN adduser --disabled-password --gecos "" --uid 1001 --gid 1001 --home /home/user user
+ENV PYTHONPATH /home/user
+WORKDIR /home/user
+USER user
+
 # install dependencies
 RUN python{python_version} -m pip install -U pip
 
