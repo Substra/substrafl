@@ -1,0 +1,1 @@
+Added `subprocess_only` tag to prevent simulation mode tests to run in remote mode.

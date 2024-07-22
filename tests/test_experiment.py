@@ -86,6 +86,7 @@ def test_too_long_additional_metadata(session_dir, dummy_strategy_class, dummy_a
         )
 
 
+@pytest.mark.subprocess_only
 def test_simulate_experiment(
     network,
     train_linear_nodes,
@@ -117,6 +118,7 @@ def test_simulate_experiment(
     assert isinstance(aggregated_states, SimuStatesMemory)
 
 
+@pytest.mark.subprocess_only
 def test_simulate_experiment_no_test_and_agg(
     network,
     train_linear_nodes,
