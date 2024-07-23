@@ -192,6 +192,8 @@ nitpick_ignore = [
     ("py:class", "FieldInfo"),
     ("py:class", "ConfigDict"),
     ("py:class", "ComputedFieldInfo"),
+    ("py:class", "CUpdateRule"),
+    ("py:class", "substrafl.algorithms.pytorch.torch_scaffold_algo.CUpdateRule"),
 ]
 
 html_css_files = [
