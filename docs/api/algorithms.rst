@@ -14,7 +14,7 @@ TorchFedAvgAlgo
 TorchScaffoldAlgo
 -----------------
 
-.. automodule:: substrafl.algorithms.pytorch.torch_scaffold_algo
+.. autoclass:: substrafl.algorithms.pytorch.torch_scaffold_algo.TorchScaffoldAlgo
     :private-members: _local_train, _local_predict, _scaffold_parameters_update, _save_predictions
     :inherited-members:
 

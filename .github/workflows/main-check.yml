@@ -44,11 +44,11 @@ jobs:
           repository: substra/substra
           path: substra
 
-      - uses: actions/cache@v3.0.8
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/pyproject.toml') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
+#      - uses: actions/cache@v3.0.8
+#        id: cache
+#        with:
+#          path: ${{ env.pythonLocation }}
+#          key: ${{ runner.os }}-${{ env.pythonLocation }}-pip-${{ hashFiles('substrafl/pyproject.toml') }}-${{ hashFiles  ('substrafl/docs/requirements.txt') }}-${{ hashFiles('substrafl/benchmark/camelyon/requirements.txt') }}
 
       - name: Install package
         run: |
