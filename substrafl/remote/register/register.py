@@ -53,7 +53,6 @@ RUN apt-get install -y python{python_version} python{python_version}-venv python
 """
 
 DOCKERFILE_TEMPLATE = """{base_docker_image}
-
 # create a non-root user
 RUN addgroup --gid 1001 group
 RUN adduser --disabled-password --gecos "" --uid 1001 --gid 1001 --home /home/user user
@@ -131,7 +130,6 @@ def _check_python_version(python_major_minor: str) -> None:
 
 def _get_base_docker_image(python_major_minor: str, use_gpu: bool) -> str:
     """Get the base Docker image for the Dockerfile"""
-    _check_python_version(python_major_minor)
 
     if use_gpu:
         base_docker_image = _GPU_BASE_IMAGE.format(
@@ -155,6 +153,9 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
     # Required to select the correct version of python inside the docker Image
     # Cloudpickle will crash if we don't deserialize with the same major.minor
     python_major_minor = ".".join(python_version().split(".")[:2])
+
+    # check that the Python version is supported
+    _check_python_version(python_major_minor)
 
     # Get the base Docker image
     base_docker_image = _get_base_docker_image(python_major_minor=python_major_minor, use_gpu=dependencies.use_gpu)
