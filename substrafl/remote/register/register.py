@@ -54,15 +54,14 @@ RUN apt-get install -y python{python_version} python{python_version}-venv python
 
 DOCKERFILE_TEMPLATE = """{base_docker_image}
 
-RUN python{python_version} -m venv /venv
-ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
-
 # create a non-root user
 RUN addgroup --gid 1001 group
 RUN adduser --disabled-password --gecos "" --uid 1001 --gid 1001 --home /home/user user
-ENV PYTHONPATH /home/user
 WORKDIR /home/user
 USER user
+
+RUN python{python_version} -m venv /home/user/venv
+ENV PATH="/home/user/venv/bin:$PATH" VIRTUAL_ENV="/home/user/venv"
 
 # install dependencies
 RUN python{python_version} -m pip install -U pip
