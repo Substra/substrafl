@@ -312,7 +312,7 @@ def torch_cpu_dependency():
     return Dependency(
         pypi_dependencies=[
             "torch==2.2.1",
-            "numpy==1.24.3",
+            "numpy==1.26.4",
             "--extra-index-url https://download.pytorch.org/whl/cpu",
         ],
         editable_mode=True,
