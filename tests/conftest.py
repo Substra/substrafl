@@ -311,7 +311,7 @@ def aggregation_node(network):
 def torch_cpu_dependency():
     return Dependency(
         pypi_dependencies=[
-            "torch==2.0.1",
+            "torch==2.2.1",
             "numpy==1.24.3",
             "--extra-index-url https://download.pytorch.org/whl/cpu",
         ],
