@@ -14,7 +14,7 @@ on:
 
 jobs:
   test-generate-publish:
-    uses: substra/substra-gha-workflows/.github/workflows/towncrier-changelog-build.yml@main
+    uses: substra/substra-gha-workflows/.github/workflows/towncrier-changelog.yml@main
     secrets: inherit
     with:
       app_version: ${{ inputs.app_version }}
