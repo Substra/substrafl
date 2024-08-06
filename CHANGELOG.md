@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+# ## [0.46.0fakerc1](https://github.com/Substra/substrafl/releases/tag/0.46.0fakerc1) - 2024-08-06
+
+### Added
+
+- Python 3.12 support ([#226](https://github.com/Substra/substrafl/pull/226))
+
+### Fixed
+
+- Add a non-root user to the generated Dockerfile for the compute functions.
+
+  Compute pods were already running as non-root (ensured by a security context in the backend), we are making it more
+  explicit here. ([#228](https://github.com/Substra/substrafl/pull/228))
+- Added `subprocess_only` tag to prevent simulation mode tests to run in remote mode. ([#229](https://github.com/Substra/substrafl/pull/229))
+- Bump pytorch version to 2.2.1 in tests. ([#230](https://github.com/Substra/substrafl/pull/230))
+- Bump NumPy version to 1.26.4 in tests. ([#231](https://github.com/Substra/substrafl/pull/231))
+
+
 ## [0.46.0](https://github.com/Substra/substrafl/releases/tag/0.46.0) - 2024-06-03
 
 
