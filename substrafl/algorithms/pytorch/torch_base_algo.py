@@ -46,7 +46,7 @@ class TorchAlgo(Algo):
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         seed: Optional[int] = None,
-        disable_gpu: bool = True,
+        disable_gpu: bool = False,
         *args,
         **kwargs,
     ):

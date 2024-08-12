@@ -201,9 +201,9 @@ def dummy_gpu(request, torch_linear_model, disable_gpu, numpy_torch_dataset):
                     disable_gpu=disable_gpu,
                 )
             if disable_gpu:
-                assert self._device == torch.device("cuda")
-            else:
                 assert self._device == torch.device("cpu")
+            else:
+                assert self._device == torch.device("cuda")
 
         @property
         def strategies(self):

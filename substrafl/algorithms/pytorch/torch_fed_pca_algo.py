@@ -87,7 +87,7 @@ class TorchFedPCAAlgo(TorchAlgo):
         out_features: int,
         batch_size: Optional[int] = None,
         seed: int = 1,
-        disable_gpu: bool = True,
+        disable_gpu: bool = False,
         *args,
         **kwargs,
     ):
@@ -101,7 +101,7 @@ class TorchFedPCAAlgo(TorchAlgo):
             out_features (int): dimension to keep after PCA
             batch_size (Optional[int]): mini-batch size
             seed (int): random generator seed. The seed is mandatory. Default to 1.
-            disable_gpu (bool): whether to use GPU or not. Default to True.
+            disable_gpu (bool): force to disable GPUs usage. Defaults to False.
         """
         self.in_features = in_features
         self.out_features = out_features
