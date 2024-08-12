@@ -499,7 +499,7 @@ def test_gpu(
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
-        name=f'Testing the GPU - strategy {strategy_class.__name__}, running  on {"cuda" if disable_gpu else "cpu"}',
+        name=f'Testing the GPU - strategy {strategy_class.__name__}, running  on {"cpu" if disable_gpu else "cuda"}',
     )
 
     # Wait for the compute plan to be finished
