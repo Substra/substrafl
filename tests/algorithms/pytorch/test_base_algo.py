@@ -161,7 +161,7 @@ def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
     return MyAlgo
 
 
-@pytest.fixture(params=[pytest.param(True, marks=pytest.mark.gpu), False])
+@pytest.fixture(params=[pytest.param(False, marks=pytest.mark.gpu), True])
 def disable_gpu(request):
     return request.param
 
