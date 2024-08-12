@@ -50,7 +50,7 @@ def simulate_compute_plan(
                 model=perceptron,
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
     my_algo = MySingleOrganizationAlgo()
@@ -107,7 +107,7 @@ def compute_plan(
                 model=perceptron,
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
     my_algo = MySingleOrganizationAlgo()

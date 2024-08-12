@@ -92,7 +92,7 @@ class TorchFedAvgAlgo(TorchAlgo):
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         with_batch_norm_parameters: bool = False,
         seed: Optional[int] = None,
-        use_gpu: bool = True,
+        disable_gpu: bool = True,
         *args,
         **kwargs,
     ):
@@ -125,7 +125,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the fed avg
                 strategy. Defaults to False.
             seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
-            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
+            disable_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         super().__init__(
             *args,
@@ -136,7 +136,7 @@ class TorchFedAvgAlgo(TorchAlgo):
             dataset=dataset,
             scheduler=scheduler,
             seed=seed,
-            use_gpu=use_gpu,
+            disable_gpu=disable_gpu,
             **kwargs,
         )
         self._with_batch_norm_parameters = with_batch_norm_parameters

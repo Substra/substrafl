@@ -36,7 +36,7 @@ def torch_pca_algo(numpy_torch_dataset, seed):
                 batch_size=batch_size,
                 dataset=numpy_torch_dataset,
                 seed=seed,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
     return MyAlgo

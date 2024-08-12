@@ -48,7 +48,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
         l2_coeff: float = 0,
         with_batch_norm_parameters: bool = False,
         seed: Optional[int] = None,
-        use_gpu: bool = True,
+        disable_gpu: bool = True,
         *args,
         **kwargs,
     ):
@@ -80,7 +80,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the Newton-Raphson
                 strategy. Defaults to False.
             seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
-            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
+            disable_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
         """
         assert "optimizer" not in kwargs, "Newton Raphson strategy does not uses optimizers"
 
@@ -91,7 +91,7 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             optimizer=None,
             index_generator=None,
             dataset=dataset,
-            use_gpu=use_gpu,
+            disable_gpu=disable_gpu,
             seed=seed,
             **kwargs,
         )

@@ -50,7 +50,7 @@ def _torch_algo(torch_linear_model, numpy_torch_dataset, seed, lr=0.1, use_sched
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
                 scheduler=scheduler,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
     return MyAlgo

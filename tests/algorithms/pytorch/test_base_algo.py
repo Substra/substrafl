@@ -50,7 +50,7 @@ def rng_algo(request, torch_linear_model, numpy_torch_dataset):
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
                 index_generator=nig,
                 seed=test_seed,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
         @property
@@ -162,7 +162,7 @@ def dummy_algo_custom_init_arg(request, numpy_torch_dataset):
 
 
 @pytest.fixture(params=[pytest.param(True, marks=pytest.mark.gpu), False])
-def use_gpu(request):
+def disable_gpu(request):
     return request.param
 
 
@@ -174,7 +174,7 @@ def use_gpu(request):
         (TorchNewtonRaphsonAlgo, NewtonRaphson),
     ]
 )
-def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
+def dummy_gpu(request, torch_linear_model, disable_gpu, numpy_torch_dataset):
     nig = NpIndexGenerator(
         batch_size=1,
         num_updates=1,
@@ -189,7 +189,7 @@ def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
                     criterion=torch.nn.MSELoss(),
                     dataset=numpy_torch_dataset,
                     batch_size=1,
-                    use_gpu=use_gpu,
+                    disable_gpu=disable_gpu,
                 )
             else:
                 super().__init__(
@@ -198,9 +198,9 @@ def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
                     criterion=torch.nn.MSELoss(),
                     dataset=numpy_torch_dataset,
                     index_generator=nig,
-                    use_gpu=use_gpu,
+                    disable_gpu=disable_gpu,
                 )
-            if use_gpu:
+            if disable_gpu:
                 assert self._device == torch.device("cuda")
             else:
                 assert self._device == torch.device("cpu")
@@ -209,7 +209,7 @@ def dummy_gpu(request, torch_linear_model, use_gpu, numpy_torch_dataset):
         def strategies(self):
             return list(StrategyName)
 
-    return MyAlgo, request.param[1], use_gpu
+    return MyAlgo, request.param[1], disable_gpu
 
 
 def test_base_algo_custom_init_arg_default_value(session_dir, dummy_algo_custom_init_arg):
@@ -469,7 +469,7 @@ def test_gpu(
     aggregation_node,
 ):
     num_rounds = 2
-    algo_class, strategy_class, use_gpu = dummy_gpu
+    algo_class, strategy_class, disable_gpu = dummy_gpu
     my_algo = algo_class()
     algo_deps = Dependency(
         pypi_dependencies=["torch==2.2.1", "numpy==1.26.4", "pytest"],
@@ -499,7 +499,7 @@ def test_gpu(
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
-        name=f'Testing the GPU - strategy {strategy_class.__name__}, running  on {"cuda" if use_gpu else "cpu"}',
+        name=f'Testing the GPU - strategy {strategy_class.__name__}, running  on {"cuda" if disable_gpu else "cpu"}',
     )
 
     # Wait for the compute plan to be finished

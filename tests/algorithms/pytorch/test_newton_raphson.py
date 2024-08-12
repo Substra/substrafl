@@ -348,7 +348,7 @@ def simulate_compute_plan(
                 batch_size=BATCH_SIZE,
                 dataset=numpy_torch_dataset,
                 l2_coeff=0,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
     my_algo = MyAlgo()
@@ -435,7 +435,7 @@ def compute_plan(
                 batch_size=BATCH_SIZE,
                 dataset=numpy_torch_dataset,
                 l2_coeff=0,
-                use_gpu=False,
+                disable_gpu=True,
             )
 
     my_algo = MyAlgo()
