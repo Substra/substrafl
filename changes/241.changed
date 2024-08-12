@@ -1,0 +1,1 @@
+BREAKING: rename `use_gpu` to `diasble_gpu` in all `TorchAlgo`. You must inverse the boolean in your code to keep the same behaviour (`diasble_gpu == not use_gpu`).
