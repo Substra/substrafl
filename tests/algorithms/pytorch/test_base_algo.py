@@ -50,7 +50,6 @@ def rng_algo(request, torch_linear_model, numpy_torch_dataset):
                 optimizer=torch.optim.SGD(perceptron.parameters(), lr=0.1),
                 index_generator=nig,
                 seed=test_seed,
-                disable_gpu=True,
             )
 
         @property
