@@ -80,7 +80,8 @@ class TorchNewtonRaphsonAlgo(TorchAlgo):
             with_batch_norm_parameters (bool): Whether to include the batch norm layer parameters in the Newton-Raphson
                 strategy. Defaults to False.
             seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
-            disable_gpu (bool): Force to disable GPUs usage. Defaults to False.
+            disable_gpu (bool): Force disabling GPU usage. If False, GPU will used if available, else CPU will be used.
+                Defaults to False.
         """
         assert "optimizer" not in kwargs, "Newton Raphson strategy does not uses optimizers"
 

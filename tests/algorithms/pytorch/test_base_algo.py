@@ -199,7 +199,7 @@ def dummy_gpu(request, torch_linear_model, disable_gpu, numpy_torch_dataset):
                     index_generator=nig,
                     disable_gpu=disable_gpu,
                 )
-            if disable_gpu:
+            if disable_gpu or not torch.cuda.is_available():
                 assert self._device == torch.device("cpu")
             else:
                 assert self._device == torch.device("cuda")
@@ -498,7 +498,8 @@ def test_gpu(
         dependencies=algo_deps,
         experiment_folder=session_dir / "experiment_folder",
         clean_models=False,
-        name=f'Testing the GPU - strategy {strategy_class.__name__}, running  on {"cpu" if disable_gpu else "cuda"}',
+        name=f'Testing the GPU - strategy {strategy_class.__name__}, running  on \
+            {"cpu" if (disable_gpu or not torch.cuda.is_available()) else "cuda"}',
     )
 
     # Wait for the compute plan to be finished

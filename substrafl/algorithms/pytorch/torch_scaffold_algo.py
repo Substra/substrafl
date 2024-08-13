@@ -153,7 +153,8 @@ class TorchScaffoldAlgo(TorchAlgo):
                 client control variate.
                 Defaults to CUpdateRule.FAST.
             seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
-            disable_gpu (bool): Force to disable GPUs usage. Defaults to False.
+            disable_gpu (bool): Force disabling GPU usage. If False, GPU will used if available, else CPU will be used.
+                Defaults to False.
         Raises:
             :ref:`~substrafl.exceptions.NumUpdatesValueError`: If `num_updates` is inferior or equal to zero.
         """
