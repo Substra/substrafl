@@ -58,16 +58,15 @@ def test_get_base_docker_image_gpu():
     expected_dockerfile = """
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
-# update image
-RUN apt-get update -y
+# update image & install Python
 ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt-get -y upgrade
-
-# install python
-RUN apt-get install -y python3.11 python3.11-venv python3-pip
+RUN apt-get update -y\
+    && apt-get install -y software-properties-common\
+    && add-apt-repository -y ppa:deadsnakes/ppa\
+    && apt-get -y upgrade\
+    && apt-get install -y python3.11 python3.11-venv python3-pip\
+    && apt-get clean\
+    && rm -rf /var/lib/apt/lists/*
 
 """
     assert expected_dockerfile == _get_base_docker_image("3.11", use_gpu=True)

@@ -39,16 +39,15 @@ RUN apt-get update -y
 _GPU_BASE_IMAGE = """
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
-# update image
-RUN apt-get update -y
+# update image & install Python
 ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt-get -y upgrade
-
-# install python
-RUN apt-get install -y python{python_version} python{python_version}-venv python3-pip
+RUN apt-get update -y\
+    && apt-get install -y software-properties-common\
+    && add-apt-repository -y ppa:deadsnakes/ppa\
+    && apt-get -y upgrade\
+    && apt-get install -y python{python_version} python{python_version}-venv python3-pip\
+    && apt-get clean\
+    && rm -rf /var/lib/apt/lists/*
 
 """
 
