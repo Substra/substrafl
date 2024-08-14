@@ -46,7 +46,7 @@ class TorchAlgo(Algo):
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         seed: Optional[int] = None,
-        use_gpu: bool = True,
+        disable_gpu: bool = False,
         *args,
         **kwargs,
     ):
@@ -63,7 +63,7 @@ class TorchAlgo(Algo):
             np.random.seed(seed)
             torch.manual_seed(seed)
 
-        self._device = self._get_torch_device(use_gpu=use_gpu)
+        self._device = self._get_torch_device(disable_gpu=disable_gpu)
 
         self._model = model.to(self._device)
         self._optimizer = optimizer
@@ -212,18 +212,18 @@ class TorchAlgo(Algo):
             if self._scheduler is not None:
                 self._scheduler.step()
 
-    def _get_torch_device(self, use_gpu: bool) -> torch.device:
+    def _get_torch_device(self, disable_gpu: bool) -> torch.device:
         """Get the torch device, CPU or GPU, depending
         on availability and user input.
 
         Args:
-            use_gpu (bool): whether to use GPUs if available or not.
+            disable_gpu (bool): whether to use GPUs if available or not.
 
         Returns:
             torch.device: Torch device
         """
         device = torch.device("cpu")
-        if use_gpu and torch.cuda.is_available():
+        if not disable_gpu and torch.cuda.is_available():
             device = torch.device("cuda")
         return device
 

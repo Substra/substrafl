@@ -46,7 +46,6 @@ def torch_algo(torch_linear_model, numpy_torch_dataset, seed):
                 model=perceptron,
                 index_generator=nig,
                 dataset=numpy_torch_dataset,
-                use_gpu=False,
             )
 
     return MyAlgo

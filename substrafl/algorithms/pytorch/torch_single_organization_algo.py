@@ -90,7 +90,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
         dataset: torch.utils.data.Dataset,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         seed: Optional[int] = None,
-        use_gpu: bool = True,
+        disable_gpu: bool = False,
         *args,
         **kwargs,
     ):
@@ -121,7 +121,8 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             scheduler (torch.optim.lr_scheduler._LRScheduler, Optional): A torch scheduler that will be called at every
                 batch. If None, no scheduler will be used. Defaults to None.
             seed (typing.Optional[int]): Seed set at the algo initialization on each organization. Defaults to None.
-            use_gpu (bool): Whether to use the GPUs if they are available. Defaults to True.
+            disable_gpu (bool): Force disabling GPU usage. If False, GPU will used if available, else CPU will be used.
+                Defaults to False.
         """
         super().__init__(
             *args,
@@ -132,7 +133,7 @@ class TorchSingleOrganizationAlgo(TorchAlgo):
             dataset=dataset,
             scheduler=scheduler,
             seed=seed,
-            use_gpu=use_gpu,
+            disable_gpu=disable_gpu,
             **kwargs,
         )
 

@@ -1,0 +1,1 @@
+BREAKING: change `use_gpu` to `diasble_gpu` in all `TorchAlgo`. The device is set to `cpu` is no GPU are available or if `disable_gpu` is set to `True`. You must inverse the boolean in your code to keep the same behaviour (`diasble_gpu == not use_gpu`).
