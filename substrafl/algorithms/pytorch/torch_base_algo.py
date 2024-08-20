@@ -246,9 +246,11 @@ class TorchAlgo(Algo):
                     return checkpoint
         """
         assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-        checkpoint = torch.load(path, map_location=self._device)
-        self._model.load_state_dict(checkpoint.pop("model_state_dict"))
+        checkpoint = torch.load(path)  # TO CHANGE
         self.disable_gpu = checkpoint.pop("disable_gpu")
+
+        self._model.load_state_dict(checkpoint.pop("model_state_dict"))
+        self._model.to(self._device)
 
         if self._optimizer is not None:
             self._optimizer.load_state_dict(checkpoint.pop("optimizer_state_dict"))
