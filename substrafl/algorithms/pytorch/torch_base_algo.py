@@ -1,6 +1,7 @@
 import abc
 import inspect
 import logging
+import os
 import random
 from pathlib import Path
 from typing import Any
@@ -220,7 +221,7 @@ class TorchAlgo(Algo):
             torch.device: Torch device
         """
         device = torch.device("cpu")
-        if not self.disable_gpu and torch.cuda.is_available():
+        if os.environ.get("SUBSTRA_USE_GPU") == str(True) and torch.cuda.is_available():
             device = torch.device("cuda")
         return device
 
@@ -246,12 +247,12 @@ class TorchAlgo(Algo):
                     return checkpoint
         """
         assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-        checkpoint = torch.load(path)  # TO CHANGE
-        self.disable_gpu = checkpoint.pop("disable_gpu")
+        checkpoint = torch.load(path, map_location=self._device)
 
         self._model.load_state_dict(checkpoint.pop("model_state_dict"))
         self._model.to(self._device)
 
+        _ = checkpoint.pop("disable_gpu")
         if self._optimizer is not None:
             self._optimizer.load_state_dict(checkpoint.pop("optimizer_state_dict"))
 

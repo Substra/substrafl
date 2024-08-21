@@ -79,6 +79,7 @@ class Dependency(BaseModel):
         at the object deletion.
         """
         super().__init__(*args, **kwargs)
+        os.environ["SUBSTRA_USE_GPU"] = str(self.use_gpu)
         self._compute_in_cache_directory()
 
     def __del__(self):
