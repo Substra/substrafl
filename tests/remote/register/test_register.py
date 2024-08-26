@@ -123,6 +123,10 @@ COPY requirements.txt requirements.txt
 # Install requirements
 RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
 
+USER root
+RUN apt-get purge -y --auto-remove build-essential *-dev
+USER user
+
 # Copy all other files
 COPY function.py .
 COPY substrafl_internal/cls_cloudpickle substrafl_internal/
