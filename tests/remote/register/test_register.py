@@ -12,6 +12,7 @@ from substrafl.exceptions import UnsupportedPythonVersionError
 from substrafl.remote.decorators import remote_data
 from substrafl.remote.register import register
 from substrafl.remote.register.register import _create_dockerfile
+from substrafl.remote.register.register import _get_base_docker_image
 
 
 class RemoteClass:
@@ -37,14 +38,41 @@ def test_check_python_version(version):
         register._check_python_version(version)
 
 
-@pytest.mark.parametrize("version", ["3.9", "3.10", "3.11"])
+@pytest.mark.parametrize("version", ["3.9", "3.10", "3.11", "3.12"])
 def test_check_python_version_valid(version):
     """Does not raise for supported versions"""
     register._check_python_version(version)
 
 
-def test_create_dockerfile(tmp_path, mocker, local_installable_module):
-    mocker.patch("substrafl.remote.register.register._get_base_docker_image", return_value="substratools-mocked")
+def test_get_base_docker_image_cpu():
+    expected_dockerfile = """
+FROM python:3.12-slim
+
+# update image
+RUN apt-get update -y
+"""
+    assert expected_dockerfile == _get_base_docker_image("3.12", use_gpu=False)
+
+
+def test_get_base_docker_image_gpu():
+    expected_dockerfile = """
+FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+
+# update image & install Python
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y\
+    && apt-get install -y software-properties-common\
+    && add-apt-repository -y ppa:deadsnakes/ppa\
+    && apt-get -y upgrade\
+    && apt-get install -y python3.11 python3.11-venv python3-pip\
+    && apt-get clean\
+    && rm -rf /var/lib/apt/lists/*
+
+"""
+    assert expected_dockerfile == _get_base_docker_image("3.11", use_gpu=True)
+
+
+def test_create_dockerfile(tmp_path, local_installable_module):
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
     substrafl_wheel = f"substrafl_internal/dist/substrafl-{substrafl.__version__}-py3-none-any.whl"
     substra_wheel = f"substrafl_internal/dist/substra-{substra.__version__}-py3-none-any.whl"
@@ -61,21 +89,24 @@ def test_create_dockerfile(tmp_path, mocker, local_installable_module):
         pypi_dependencies=[],
         local_installable_dependencies=[local_installable_dependencies],
         local_code=[local_code_folder],
+        use_gpu=False,
     )
     dependencies._compute_in_cache_directory
 
     expected_dockerfile = f"""
-FROM substratools-mocked
+FROM python:{python_version}-slim
 
 # update image
-RUN apt update -y
+RUN apt-get update -y
 
 # create a non-root user
 RUN addgroup --gid 1001 group
 RUN adduser --disabled-password --gecos "" --uid 1001 --gid 1001 --home /home/user user
-ENV PYTHONPATH /home/user
 WORKDIR /home/user
 USER user
+
+RUN python{python_version} -m venv /home/user/venv
+ENV PATH="/home/user/venv/bin:$PATH" VIRTUAL_ENV="/home/user/venv"
 
 # install dependencies
 RUN python{python_version} -m pip install -U pip
@@ -91,6 +122,10 @@ COPY requirements.txt requirements.txt
 
 # Install requirements
 RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+
+USER root
+RUN apt-get purge -y --auto-remove build-essential *-dev
+USER user
 
 # Copy all other files
 COPY function.py .

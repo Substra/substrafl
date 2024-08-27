@@ -1,0 +1,1 @@
+Add Docker GPU base image, activated through the `Dependency` object with the variable `use_gpu=True`. The Docker image used is `nvidia/cuda:11.8.0-runtime-ubuntu22.04`.

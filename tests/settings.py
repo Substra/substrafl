@@ -1,4 +1,5 @@
 """Global settings for all tests environment."""
+
 import functools
 from pathlib import Path
 from typing import List

@@ -63,8 +63,7 @@ class TorchAlgo(Algo):
             np.random.seed(seed)
             torch.manual_seed(seed)
 
-        self._device = self._get_torch_device(disable_gpu=disable_gpu)
-
+        self.disable_gpu = disable_gpu
         self._model = model.to(self._device)
         self._optimizer = optimizer
         # Move the optimizer to GPU if needed
@@ -212,18 +211,16 @@ class TorchAlgo(Algo):
             if self._scheduler is not None:
                 self._scheduler.step()
 
-    def _get_torch_device(self, disable_gpu: bool) -> torch.device:
+    @property
+    def _device(self) -> torch.device:
         """Get the torch device, CPU or GPU, depending
         on availability and user input.
-
-        Args:
-            disable_gpu (bool): whether to use GPUs if available or not.
 
         Returns:
             torch.device: Torch device
         """
         device = torch.device("cpu")
-        if not disable_gpu and torch.cuda.is_available():
+        if not self.disable_gpu and torch.cuda.is_available():
             device = torch.device("cuda")
         return device
 
@@ -249,8 +246,11 @@ class TorchAlgo(Algo):
                     return checkpoint
         """
         assert path.is_file(), f'Cannot load the model - does not exist {list(path.parent.glob("*"))}'
-        checkpoint = torch.load(path, map_location=self._device)
+        checkpoint = torch.load(path)  # TO CHANGE
+        self.disable_gpu = checkpoint.pop("disable_gpu")
+
         self._model.load_state_dict(checkpoint.pop("model_state_dict"))
+        self._model.to(self._device)
 
         if self._optimizer is not None:
             self._optimizer.load_state_dict(checkpoint.pop("optimizer_state_dict"))
@@ -307,16 +307,15 @@ class TorchAlgo(Algo):
         checkpoint = {
             "model_state_dict": self._model.state_dict(),
             "index_generator": self._index_generator,
+            "disable_gpu": self.disable_gpu,
+            "random_rng_state": random.getstate(),
+            "numpy_rng_state": np.random.get_state(),
         }
         if self._optimizer is not None:
             checkpoint["optimizer_state_dict"] = self._optimizer.state_dict()
 
         if self._scheduler is not None:
             checkpoint["scheduler_state_dict"] = self._scheduler.state_dict()
-
-        checkpoint["random_rng_state"] = random.getstate()
-
-        checkpoint["numpy_rng_state"] = np.random.get_state()
 
         if self._device == torch.device("cpu"):
             checkpoint["torch_rng_state"] = torch.get_rng_state()

@@ -29,20 +29,37 @@ MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
 MINIMAL_PYTHON_VERSION = 9  # 3.9
 MAXIMAL_PYTHON_VERSION = 12  # 3.12
 
-_DEFAULT_BASE_DOCKER_IMAGE = "python:{python_version}-slim"
-
-DOCKERFILE_TEMPLATE = """
-FROM {docker_image}
+_CPU_BASE_IMAGE = """
+FROM python:{python_version}-slim
 
 # update image
-RUN apt update -y
+RUN apt-get update -y
+"""
 
+_GPU_BASE_IMAGE = """
+FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+
+# update image & install Python
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y\
+    && apt-get install -y software-properties-common\
+    && add-apt-repository -y ppa:deadsnakes/ppa\
+    && apt-get -y upgrade\
+    && apt-get install -y python{python_version} python{python_version}-venv python3-pip\
+    && apt-get clean\
+    && rm -rf /var/lib/apt/lists/*
+
+"""
+
+DOCKERFILE_TEMPLATE = """{base_docker_image}
 # create a non-root user
 RUN addgroup --gid 1001 group
 RUN adduser --disabled-password --gecos "" --uid 1001 --gid 1001 --home /home/user user
-ENV PYTHONPATH /home/user
 WORKDIR /home/user
 USER user
+
+RUN python{python_version} -m venv /home/user/venv
+ENV PATH="/home/user/venv/bin:$PATH" VIRTUAL_ENV="/home/user/venv"
 
 # install dependencies
 RUN python{python_version} -m pip install -U pip
@@ -55,6 +72,10 @@ COPY requirements.txt requirements.txt
 
 # Install requirements
 RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
+
+USER root
+RUN apt-get purge -y --auto-remove build-essential *-dev
+USER user
 
 # Copy all other files
 COPY function.py .
@@ -110,15 +131,19 @@ def _check_python_version(python_major_minor: str) -> None:
         )
 
 
-def _get_base_docker_image(python_major_minor: str, editable_mode: bool) -> str:
+def _get_base_docker_image(python_major_minor: str, use_gpu: bool) -> str:
     """Get the base Docker image for the Dockerfile"""
-    _check_python_version(python_major_minor)
 
-    substratools_image = _DEFAULT_BASE_DOCKER_IMAGE.format(
-        python_version=python_major_minor,
-    )
+    if use_gpu:
+        base_docker_image = _GPU_BASE_IMAGE.format(
+            python_version=python_major_minor,
+        )
+    else:
+        base_docker_image = _CPU_BASE_IMAGE.format(
+            python_version=python_major_minor,
+        )
 
-    return substratools_image
+    return base_docker_image
 
 
 def _generate_copy_local_files(local_files: typing.List[Path]) -> str:
@@ -132,10 +157,11 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
     # Cloudpickle will crash if we don't deserialize with the same major.minor
     python_major_minor = ".".join(python_version().split(".")[:2])
 
+    # check that the Python version is supported
+    _check_python_version(python_major_minor)
+
     # Get the base Docker image
-    substratools_image = _get_base_docker_image(
-        python_major_minor=python_major_minor, editable_mode=dependencies.editable_mode
-    )
+    base_docker_image = _get_base_docker_image(python_major_minor=python_major_minor, use_gpu=dependencies.use_gpu)
     # Build Substrafl, Substra and Substratools, and local dependencies wheels if necessary
     if install_libraries:
         # generate the copy wheel command
@@ -148,7 +174,7 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
     copy_local_code_cmd = _generate_copy_local_files(dependencies._local_paths)
 
     return DOCKERFILE_TEMPLATE.format(
-        docker_image=substratools_image,
+        base_docker_image=base_docker_image,
         python_version=python_major_minor,
         copy_wheels=copy_wheels_cmd,
         copy_local_code=copy_local_code_cmd,

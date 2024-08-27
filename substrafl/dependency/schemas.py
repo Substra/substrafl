@@ -55,6 +55,8 @@ class Dependency(BaseModel):
         force_included_paths (List[pathlib.Path]): Force include files otherwise excluded by `excluded_paths`
             and `excluded_regex`
             Default to []
+        use_gpu (bool): Use nvidia docker image with cuda driver. Allow docker image to access GPU. The docker image
+            will be longer to build. It is recommended to pass ``use_gpu`` to ``True`` only if you want to use GPUs.
     """
 
     editable_mode: bool = False
@@ -65,6 +67,7 @@ class Dependency(BaseModel):
     excluded_paths: List[Path] = Field(default_factory=list)
     excluded_regex: List[str] = Field(default_factory=list)
     force_included_paths: List[Path] = Field(default_factory=list)
+    use_gpu: bool = False
     _wheels: List[Path] = []
     _local_paths: List[Path] = []
     _cache_directory: Optional[Path] = None
