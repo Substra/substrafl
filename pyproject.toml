@@ -1,96 +1,192 @@
 [build-system]
+[build-system]
+requires = ["hatchling"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+build-backend = "hatchling.build"
+
 
 [tool.hatch.build.targets.sdist]
+[tool.hatch.build.targets.sdist]
+exclude = ["tests*", "benchmark*"]
 exclude = ["tests*", "benchmark*"]
 
+
+[tool.hatch.version]
 [tool.hatch.version]
 path = "substrafl/__version__.py"
+path = "substrafl/__version__.py"
+
 
 [project]
+[project]
+name = "substrafl"
 name = "substrafl"
 classifiers = [
+classifiers = [
+    "Operating System :: OS Independent",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.12",
 ]
+]
+dynamic = ["version"]
 dynamic = ["version"]
 readme = "README.md"
+readme = "README.md"
+dependencies = [
 dependencies = [
     "numpy>=1.24,<2.0",
+    "numpy>=1.24,<2.0",
     "cloudpickle>=1.6.0",
+    "cloudpickle>=1.6.0",
+	"substra~=0.54.0rc1",
     "substra~=0.54.0a1",
     "substratools~=0.22.0a2",
+	"substratools~=0.22.0rc1",
+    "pydantic>=2.3.0,<3.0",
     "pydantic>=2.3.0,<3.0",
     "pip>=21.2",
+    "pip>=21.2",
+    "tqdm",
     "tqdm",
     "wheel",
+    "wheel",
+    "six",
     "six",
     "packaging",
+    "packaging",
+    "pip-tools",
     "pip-tools",
 ]
+]
+keywords = ["substrafl"]
 keywords = ["substrafl"]
 authors = [{ name = "Owkin, Inc." }]
+authors = [{ name = "Owkin, Inc." }]
+license = { file = "LICENSE" }
 license = { file = "LICENSE" }
 
+
+description = """A high-level federated learning Python library to run
 description = """A high-level federated learning Python library to run
     federated learning experiments at scale on a Substra network"""
+    federated learning experiments at scale on a Substra network"""
+requires-python = ">= 3.9"
 requires-python = ">= 3.9"
 
+
+[project.optional-dependencies]
 [project.optional-dependencies]
 dev = [
+dev = [
+    "pytest>=6.2.4",
     "pytest>=6.2.4",
     "pytest-cov>=2.12.0",
+    "pytest-cov>=2.12.0",
+    "pytest-mock",
     "pytest-mock",
     "pre-commit>=2.13.0",
+    "pre-commit>=2.13.0",
+    "types-PyYAML>=6.0.0",
     "types-PyYAML>=6.0.0",
     "torch>=1.9.1,!=1.12.0", # bug in 1.12.0 (https://github.com/pytorch/pytorch/pull/80345)
+    "torch>=1.9.1,!=1.12.0", # bug in 1.12.0 (https://github.com/pytorch/pytorch/pull/80345)
+    "nbmake>=1.4.3",
     "nbmake>=1.4.3",
     "docker",
+    "docker",
+    "towncrier",
     "towncrier",
 ]
+]
+
 
 [project.urls]
+[project.urls]
+Documentation = "https://docs.substra.org/en/stable/"
 Documentation = "https://docs.substra.org/en/stable/"
 Repository = "https://github.com/Substra/substrafl"
+Repository = "https://github.com/Substra/substrafl"
+Changelog = "https://github.com/Substra/substrafl/blob/main/CHANGELOG.md"
 Changelog = "https://github.com/Substra/substrafl/blob/main/CHANGELOG.md"
 
+
+[tool.black]
 [tool.black]
 line-length = 120
+line-length = 120
+target-version = ['py39']
 target-version = ['py39']
 
+
+[tool.isort]
 [tool.isort]
 filter_files = true
+filter_files = true
+force_single_line = true
 force_single_line = true
 line_length = 120
+line_length = 120
+profile = "black"
 profile = "black"
 
+
+[tool.pytest.ini_options]
 [tool.pytest.ini_options]
 addopts = "--durations=0"
+addopts = "--durations=0"
+markers = [
 markers = [
     "slow",        # mark test as slow.
+    "slow",        # mark test as slow.
+    "substra",     # mark test as using substra.
     "substra",     # mark test as using substra.
     "docker_only", # mark test as only useful in remote and local docker mode
+    "docker_only", # mark test as only useful in remote and local docker mode
+    "e2e",         # test run in the end-to-end tests with Substra
     "e2e",         # test run in the end-to-end tests with Substra
     "gpu",         # gpu tests, to run manually
+    "gpu",         # gpu tests, to run manually
+]
 ]
 filterwarnings = [
+filterwarnings = [
+    "ignore:.*TestDataNode.*:pytest.PytestCollectionWarning",
     "ignore:.*TestDataNode.*:pytest.PytestCollectionWarning",
     # ignore substra tools deprecation warning
+    # ignore substra tools deprecation warning
+    "ignore:.*imp module.*:DeprecationWarning",
     "ignore:.*imp module.*:DeprecationWarning",
 ]
+]
+
 
 [tool.towncrier]
+[tool.towncrier]
+directory = "changes"
 directory = "changes"
 filename = "CHANGELOG.md"
+filename = "CHANGELOG.md"
+start_string = "<!-- towncrier release notes start -->\n"
 start_string = "<!-- towncrier release notes start -->\n"
 underlines = ["", "", ""]
+underlines = ["", "", ""]
+title_format = "## [{version}](https://github.com/Substra/substrafl/releases/tag/{version}) - {project_date}"
 title_format = "## [{version}](https://github.com/Substra/substrafl/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/Substra/substrafl/pull/{issue})"
+issue_format = "[#{issue}](https://github.com/Substra/substrafl/pull/{issue})"
+[tool.towncrier.fragment.added]
 [tool.towncrier.fragment.added]
 [tool.towncrier.fragment.removed]
+[tool.towncrier.fragment.removed]
 [tool.towncrier.fragment.changed]
+[tool.towncrier.fragment.changed]
+[tool.towncrier.fragment.fixed]
 [tool.towncrier.fragment.fixed]
