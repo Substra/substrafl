@@ -64,7 +64,7 @@ def fed_avg(params: dict, train_folder: Path, test_folder: Path):
         mode=exp_params["mode"],
         cp_name=exp_params["cp_name"],
         cancel_cp=exp_params["cancel_cp"],
-        torch_gpu=exp_params["torch_gpu"],
+        use_gpu=exp_params["use_gpu"],
     )
 
     if exp_params["skip_pure_torch"]:
