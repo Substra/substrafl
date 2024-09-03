@@ -44,7 +44,7 @@ def substrafl_fed_avg(
     asset_keys_path: Path,
     cp_name: Optional[str],
     cancel_cp: bool = False,
-    torch_gpu: bool = False,
+    use_gpu: bool = False,
 ) -> benchmark_metrics.BenchmarkResults:
     """Execute Weldon algorithm for a fed avg strategy with substrafl API.
 
@@ -68,7 +68,7 @@ def substrafl_fed_avg(
             Otherwise, all present keys in this fill will be reused per Substra in remote mode.
         cp_name ben): (Optional[str]): Compute Plan name to display
         cancel_cp (bool): if set to True, the CP will be canceled as soon as it's registered. Only work for remote mode.
-        torch_gpu (bool): Use GPU default index for pytorch
+        use_gpu (bool): Use GPU for Dependency object
     Returns:
         dict: Results of the experiment.
     """
@@ -97,7 +97,7 @@ def substrafl_fed_avg(
         "torch==2.3.0",
         "scikit-learn==1.5.1",
     ]
-    if not torch_gpu:
+    if not use_gpu:
         pypi_dependencies += ["--extra-index-url https://download.pytorch.org/whl/cpu"]
 
     # Dependencies
@@ -108,6 +108,7 @@ def substrafl_fed_avg(
         # Keeping editable_mode=True to ensure nightly test benchmarks are ran against main substrafl git ref
         editable_mode=True,
         compile=True,
+        use_gpu=use_gpu,
     )
 
     # Metrics
