@@ -1,0 +1,1 @@
+Actually trigger the GPU docker configuration with `use_gpu` flag when running Camelyon benchmark
