@@ -89,7 +89,7 @@ def get_weldon_fedavg(
                 for X in dataloader:
                     y_pred.append(self._model(X))
 
-            y_pred = torch.cat(y_pred).numpy()
+            y_pred = torch.cat(y_pred).cpu().numpy()
 
             return y_pred
 
