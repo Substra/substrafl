@@ -1,0 +1,1 @@
+Use Tensor.cpu() to copy the tensor to host memory first in Camelyon benchmark
