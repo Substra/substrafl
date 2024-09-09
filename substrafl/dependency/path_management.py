@@ -152,13 +152,9 @@ def copy_paths(
 def _ignore_files(expanded_excluded, dest_dir):
     def _ignore_files(path: str, names: List[str]) -> Set[str]:
         p = Path(path).resolve()
-
-        # Replicate is_relative_to, added in Python 3.9
-        try:
-            p.relative_to(dest_dir.resolve())
-        except ValueError:
-            return set(name for name in names if p / name in expanded_excluded)
-        else:
+        if p.is_relative_to(dest_dir.resolve()):
             return set(names)
+        else:
+            return set(name for name in names if p / name in expanded_excluded)
 
     return _ignore_files
