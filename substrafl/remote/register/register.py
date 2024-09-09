@@ -26,7 +26,7 @@ MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
 
 # minimal and maximal values of Python 3 minor versions supported
 # we need to store this as integer, else "3.11" < "3.9" (string comparison)
-MINIMAL_PYTHON_VERSION = 9  # 3.9
+MINIMAL_PYTHON_VERSION = 10  # 3.10
 MAXIMAL_PYTHON_VERSION = 12  # 3.12
 
 _CPU_BASE_IMAGE = """
