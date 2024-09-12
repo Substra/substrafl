@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.47.0](https://github.com/Substra/substrafl/releases/tag/0.47.0) - 2024-09-12
+
+### Added
+
+- Python 3.12 support ([#226](https://github.com/Substra/substrafl/pull/226))
+- Add Docker GPU base image, activated through the `Dependency` object with the variable `use_gpu=True`. The Docker image used is `nvidia/cuda:11.8.0-runtime-ubuntu22.04`. ([#227](https://github.com/Substra/substrafl/pull/227))
+
+### Changed
+
+- BREAKING: change `use_gpu` to `diasble_gpu` in all `TorchAlgo`. The device is set to `cpu` is no GPU are available or if `disable_gpu` is set to `True`. You must inverse the boolean in your code to keep the same behaviour (`diasble_gpu == not use_gpu`). ([#241](https://github.com/Substra/substrafl/pull/241))
+- Remove packages named `build-essential` and `*-dev` after building dependencies to decrease CVE ([#242](https://github.com/Substra/substrafl/pull/242))
+
+### Fixed
+
+- Add a non-root user to the generated Dockerfile for the compute functions.
+
+  Compute pods were already running as non-root (ensured by a security context in the backend), we are making it more
+  explicit here. ([#228](https://github.com/Substra/substrafl/pull/228))
+- Added `subprocess_only` tag to prevent simulation mode tests to run in remote mode. ([#229](https://github.com/Substra/substrafl/pull/229))
+- Bump pytorch version to 2.2.1 in tests. ([#230](https://github.com/Substra/substrafl/pull/230))
+- Bump NumPy version to 1.26.4 in tests. ([#231](https://github.com/Substra/substrafl/pull/231))
+- Actually trigger the GPU docker configuration with `use_gpu` flag when running Camelyon benchmark ([#244](https://github.com/Substra/substrafl/pull/244))
+- Use Tensor.cpu() to copy the tensor to host memory first in Camelyon benchmark ([#245](https://github.com/Substra/substrafl/pull/245))
+
+
 ## [0.46.0](https://github.com/Substra/substrafl/releases/tag/0.46.0) - 2024-06-03
 
 
