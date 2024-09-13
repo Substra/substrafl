@@ -12,7 +12,6 @@ path = "substrafl/__version__.py"
 name = "substrafl"
 classifiers = [
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -38,7 +37,7 @@ license = { file = "LICENSE" }
 
 description = """A high-level federated learning Python library to run
     federated learning experiments at scale on a Substra network"""
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 
 [project.optional-dependencies]
 dev = [
