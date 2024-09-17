@@ -295,6 +295,27 @@ class TestLocalDependency:
         client.wait_task(train_task.key, raise_on_failure=True)
 
     @pytest.mark.docker_only
+    def test_binary_dependencies(
+        self,
+        network,
+        numpy_datasets,
+        constant_samples,
+        session_dir,
+        dummy_algo_class,
+    ):
+        """Test that you can install binary dependencies"""
+
+        client = network.clients[0]
+        algo_deps = Dependency(
+            binary_dependencies=["gcc"],
+            editable_mode=True,
+        )
+        function_key = self._register_function(dummy_algo_class(), algo_deps, client, session_dir)
+
+        train_task = self._register_train_task(function_key, numpy_datasets[0], constant_samples[0], client)
+        client.wait_task(train_task.key, raise_on_failure=True)
+
+    @pytest.mark.docker_only
     def test_force_editable_mode(
         self,
         mocker,
