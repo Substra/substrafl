@@ -37,7 +37,7 @@ RUN apt-get update -y
 """
 
 _GPU_BASE_IMAGE = """
-FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6.1-runtime-ubuntu24.04
 
 # update image & install Python
 ENV DEBIAN_FRONTEND=noninteractive
@@ -45,7 +45,7 @@ RUN apt-get update -y\
     && apt-get install -y software-properties-common\
     && add-apt-repository -y ppa:deadsnakes/ppa\
     && apt-get -y upgrade\
-    && apt-get install -y python{python_version} python{python_version}-venv python3-pip\
+    && apt-get install -y python3.10 python3.10-venv python3-pip python3.10-dev gcc openslide-tools\
     && apt-get clean\
     && rm -rf /var/lib/apt/lists/*
 
