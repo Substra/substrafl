@@ -37,7 +37,7 @@ RUN apt-get update -y
 """
 
 _GPU_BASE_IMAGE = """
-FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6.1-runtime-ubuntu24.04
 
 # update image & install Python
 ENV DEBIAN_FRONTEND=noninteractive
