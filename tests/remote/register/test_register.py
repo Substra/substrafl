@@ -49,7 +49,7 @@ def test_get_base_docker_image_cpu():
 FROM python:3.12-slim
 
 # update image
-RUN apt-get update -y
+RUN apt-get update -y && pip uninstall -y setuptools
 """
     assert expected_dockerfile == _get_base_docker_image("3.12", use_gpu=False)
 
@@ -97,7 +97,7 @@ def test_create_dockerfile(tmp_path, local_installable_module):
 FROM python:{python_version}-slim
 
 # update image
-RUN apt-get update -y
+RUN apt-get update -y && pip uninstall -y setuptools
 
 # create a non-root user
 RUN addgroup --gid 1001 group
@@ -109,7 +109,7 @@ RUN python{python_version} -m venv /home/user/venv
 ENV PATH="/home/user/venv/bin:$PATH" VIRTUAL_ENV="/home/user/venv"
 
 # install dependencies
-RUN python{python_version} -m pip install -U pip
+RUN python{python_version} -m pip install -U pip && pip install -U setuptools>=70.0.0
 
 # Copy local wheels
 COPY {substrafl_wheel} {substrafl_wheel}
