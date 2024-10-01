@@ -93,9 +93,9 @@ def substrafl_fed_avg(
     )
 
     pypi_dependencies = [
-        "numpy==1.26.4",
-        "torch==2.3.0",
-        "scikit-learn==1.5.1",
+        "numpy==2.1.1",
+        "torch==2.4.1",
+        "scikit-learn==1.5.2",
     ]
     if not use_gpu:
         pypi_dependencies += ["--extra-index-url https://download.pytorch.org/whl/cpu"]
