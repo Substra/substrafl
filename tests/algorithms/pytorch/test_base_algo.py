@@ -471,7 +471,7 @@ def test_gpu(
     algo_class, strategy_class, disable_gpu = dummy_gpu
     my_algo = algo_class()
     algo_deps = Dependency(
-        pypi_dependencies=["torch==2.2.1", "numpy==1.26.4", "pytest"],
+        pypi_dependencies=["torch==2.4.1", "numpy==2.2.1", "pytest"],
         editable_mode=True,
     )
 
