@@ -33,7 +33,7 @@ _CPU_BASE_IMAGE = """
 FROM python:{python_version}-slim
 
 # update image
-RUN apt-get update -y
+RUN apt-get update -y && pip uninstall -y setuptools
 """
 
 _GPU_BASE_IMAGE = """
@@ -62,7 +62,7 @@ RUN python{python_version} -m venv /home/user/venv
 ENV PATH="/home/user/venv/bin:$PATH" VIRTUAL_ENV="/home/user/venv"
 
 # install dependencies
-RUN python{python_version} -m pip install -U pip
+RUN python{python_version} -m pip install -U pip && pip install -U setuptools>=70.0.0
 
 # Copy local wheels
 {copy_wheels}

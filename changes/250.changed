@@ -1,0 +1,1 @@
+Remove parasite verisons of `setuptools` in Dockerfiles and install `setuptools>70.0.0` to tackle last identified CVEs
