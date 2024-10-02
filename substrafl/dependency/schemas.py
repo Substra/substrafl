@@ -45,6 +45,7 @@ class Dependency(BaseModel):
             `setup.py` or `pyproject.toml`). See the documentation of pip wheel for more details.
         local_code (List[pathlib.Path]): Local relative imports used by your script. All files / folders will be
             pasted to the level of the running script.
+        binary_dependencies (List[str]): Binary dependencies to install in the computation container.
         excluded_paths (List[pathlib.Path]): Local paths excluded from `local_installable_dependencies` / `local_code`.
             Default to [].
         excluded_regex (List[pathlib.Path]): Regex used to exclude files from `local_installable_dependencies` /
@@ -64,6 +65,7 @@ class Dependency(BaseModel):
     pypi_dependencies: List[str] = Field(default_factory=list)
     local_installable_dependencies: List[Path] = Field(default_factory=list)
     local_code: List[Path] = Field(default_factory=list)
+    binary_dependencies: List[str] = Field(default_factory=list)
     excluded_paths: List[Path] = Field(default_factory=list)
     excluded_regex: List[str] = Field(default_factory=list)
     force_included_paths: List[Path] = Field(default_factory=list)

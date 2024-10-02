@@ -36,6 +36,17 @@ FROM python:{python_version}-slim
 RUN apt-get update -y && pip uninstall -y setuptools
 """
 
+_CPU_BASE_IMAGE_WITH_DEPENDENCIES = """
+FROM python:{python_version}-slim
+
+# update image
+RUN apt-get update -y\
+    && pip uninstall -y setuptools\
+    && apt-get install -y {binary_dependencies}\
+    && apt-get clean\
+    && rm -rf /var/lib/apt/lists/*
+"""
+
 _GPU_BASE_IMAGE = """
 FROM nvidia/cuda:12.6.1-runtime-ubuntu24.04
 
@@ -45,7 +56,7 @@ RUN apt-get update -y\
     && apt-get install -y software-properties-common\
     && add-apt-repository -y ppa:deadsnakes/ppa\
     && apt-get -y upgrade\
-    && apt-get install -y python{python_version} python{python_version}-venv python3-pip\
+    && apt-get install -y python{python_version} python{python_version}-venv python3-pip {binary_dependencies}\
     && apt-get clean\
     && rm -rf /var/lib/apt/lists/*
 
@@ -131,12 +142,18 @@ def _check_python_version(python_major_minor: str) -> None:
         )
 
 
-def _get_base_docker_image(python_major_minor: str, use_gpu: bool) -> str:
+def _get_base_docker_image(
+    python_major_minor: str, use_gpu: bool, custom_binary_dependencies: typing.Optional[list] = None
+) -> str:
     """Get the base Docker image for the Dockerfile"""
 
     if use_gpu:
         base_docker_image = _GPU_BASE_IMAGE.format(
-            python_version=python_major_minor,
+            python_version=python_major_minor, binary_dependencies=" ".join(custom_binary_dependencies or [])
+        )
+    elif custom_binary_dependencies:
+        base_docker_image = _CPU_BASE_IMAGE_WITH_DEPENDENCIES.format(
+            python_version=python_major_minor, binary_dependencies=" ".join(custom_binary_dependencies)
         )
     else:
         base_docker_image = _CPU_BASE_IMAGE.format(
@@ -161,7 +178,11 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
     _check_python_version(python_major_minor)
 
     # Get the base Docker image
-    base_docker_image = _get_base_docker_image(python_major_minor=python_major_minor, use_gpu=dependencies.use_gpu)
+    base_docker_image = _get_base_docker_image(
+        python_major_minor=python_major_minor,
+        use_gpu=dependencies.use_gpu,
+        custom_binary_dependencies=dependencies.binary_dependencies,
+    )
     # Build Substrafl, Substra and Substratools, and local dependencies wheels if necessary
     if install_libraries:
         # generate the copy wheel command
