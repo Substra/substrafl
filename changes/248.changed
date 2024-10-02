@@ -1,0 +1,1 @@
+cuda base docker image is now `nvidia/cuda:12.6.1-runtime-ubuntu24.04`
