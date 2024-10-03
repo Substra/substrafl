@@ -307,7 +307,8 @@ class TestLocalDependency:
 
         client = network.clients[0]
         algo_deps = Dependency(
-            binary_dependencies=["gcc"],
+            pypi_dependencies=["pytest"],
+            binary_dependencies=["python3-dev"],
             editable_mode=True,
         )
         function_key = self._register_function(dummy_algo_class(), algo_deps, client, session_dir)

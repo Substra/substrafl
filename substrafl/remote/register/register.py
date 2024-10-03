@@ -43,8 +43,7 @@ FROM python:{python_version}-slim
 RUN apt-get update -y\
     && pip uninstall -y setuptools\
     && apt-get install -y {binary_dependencies}\
-    && apt-get clean\
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean
 """
 
 _GPU_BASE_IMAGE = """
