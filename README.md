@@ -46,7 +46,7 @@ Substra warmly welcomes any contribution. Feel free to fork the repo and create 
 ## How to test
 
 Install `substrafl` in editable mode with developper dependencies.
-In addition, install `substra` and `substra-tools` in editable mode.
+In addition, install `substra` in editable mode.
 It is recommended to install all the libraries in a Python virtual env.
 
 ```sh
@@ -54,8 +54,6 @@ git clone git@github.com:Substra/substrafl.git
 pip install -e "substrafl[dev]"
 git clone git@github.com:Substra/substra.git
 pip install -e substra
-git clone git@github.com:Substra/substra-tools.git
-pip install -e substra-tools
 ```
 
 Now you can use the following command from `subtrafl` top level directory to run tests:

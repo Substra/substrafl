@@ -110,10 +110,10 @@ if __name__ == "__main__":
     # Create a Substra function from the wrapped user code
     remote_instance = remote_struct.get_remote_instance()
 
-    # Register the functions to substra-tools
+    # Register the functions to substra.tools
     remote_instance.register_substratools_function()
 
-    # Execute the function using substra-tools
+    # Execute the function using substra.tools
     tools.execute()
 """
 

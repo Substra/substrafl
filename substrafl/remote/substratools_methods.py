@@ -97,7 +97,7 @@ class RemoteMethod:
         outputs: TypedDict,  # outputs contains a dict where keys are identifiers and values are paths on disk
         task_properties: TypedDict,
     ) -> None:
-        """Generic function to be registered and executed on the Substra platform using substra-tools.
+        """Generic function to be registered and executed on the Substra platform using substra.tools.
 
         Args:
             inputs (TypedDict): dictionary containing the paths where to load the arguments for the method.
