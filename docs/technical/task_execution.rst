@@ -24,14 +24,11 @@ Base Dockerfile
 ^^^^^^^^^^^^^^^^
 
 The Dockerfile describes the commands to run to create a container with all the needed dependencies.
-Its base image is the substratools Docker image, accessible from the private Owkin docker registry (which is a google container registry).
 
 The base image is chosen following two criteria:
 
 - the version of Python is the same as the one the code is run with, to satisfy cloudpickle requirements
-- the version of substratools is the version of the substratools installed in the Python environment (can be
-  overriden, see below). If the version is inferior to 0.10.0, we use 0.10.0 as the name of the substratools images
-  changed.
+- the usage of GPU or not
 
 This means that:
 
@@ -48,7 +45,6 @@ Substrafl dependencies
 
 Substrafl needs the following libraries to be installed in the container:
 
-- substratools
 - substra
 - substrafl
 
@@ -59,7 +55,7 @@ Substra.
 
 There are two modes: the **release mode** and the **editable mode**, chosen with the ``editable_mode`` parameter in the ``dependency`` argument.
 
-In **release mode**, Substrafl downloads the wheels of substra and substrafl (substratools is already installed) from
+In **release mode**, Substrafl downloads the wheels of substra and substrafl from
 the private Owkin PyPi and copies them to the Docker image. The download is made through a subprocess, and it needs pip
 to be configured to access Owkin's PyPi.
 
@@ -72,8 +68,6 @@ Substrafl is executed with. The script goes through each library, and:
 
 Then copy the wheel to the Docker image.
 This is not the preferred method as it can lead to difficulties of knowing which version was used: there may be local changes to the code.
-
-Please note that in editable mode substratools is re-installed in the image.
 
 
 User dependencies

@@ -9,7 +9,6 @@ from typing import Any
 from typing import Optional
 
 import substra
-import substratools
 from substra.sdk.models import ComputeTaskStatus
 
 import substrafl
@@ -21,7 +20,7 @@ from substrafl.schemas import TaskType
 
 logger = logging.getLogger(__name__)
 
-REQUIRED_LIBS = [substrafl, substra, substratools]
+REQUIRED_LIBS = [substrafl, substra]
 REQUIRED_KEYS = set([lib.__name__ + "_version" for lib in REQUIRED_LIBS] + ["python_version"])
 METADATA_FILE = "metadata.json"
 FUNCTION_DICT_KEY = "function_file"

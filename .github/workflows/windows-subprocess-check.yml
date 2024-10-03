@@ -24,12 +24,6 @@ jobs:
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v4
         with:
-          repository: substra/substra-tools
-          path: substratools
-
-      - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v4
-        with:
           repository: substra/substra
           path: substra
 
@@ -43,7 +37,6 @@ jobs:
         run: |
           pip install --upgrade -e "substrafl[dev]"
           pip install --upgrade -e substra
-          pip install --upgrade -e substratools
 
       - name: Run the subprocess tests
         run: |

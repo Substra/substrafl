@@ -7,7 +7,7 @@ from typing import Type
 from typing import TypedDict
 from typing import Union
 
-import substratools as tools
+from substra import tools
 
 from substrafl.nodes.schemas import InputIdentifiers
 from substrafl.nodes.schemas import OutputIdentifiers
@@ -158,7 +158,7 @@ class RemoteMethod:
         self.instance.save_local_state(Path(path))
 
     def register_substratools_function(self):
-        """Register the function that can be accessed and executed by substratools."""
+        """Register the function that can be accessed and executed by substra."""
 
         tools.register(
             function=self.generic_function,

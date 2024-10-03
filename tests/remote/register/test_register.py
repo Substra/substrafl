@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 import pytest
 import substra
-import substratools
 
 import substrafl
 from substrafl.dependency import Dependency
@@ -76,7 +75,6 @@ def test_create_dockerfile(tmp_path, local_installable_module):
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
     substrafl_wheel = f"substrafl_internal/dist/substrafl-{substrafl.__version__}-py3-none-any.whl"
     substra_wheel = f"substrafl_internal/dist/substra-{substra.__version__}-py3-none-any.whl"
-    substratools_wheel = f"substrafl_internal/dist/substratools-{substratools.__version__}-py3-none-any.whl"
     local_installable_dependencies = local_installable_module(tmp_path)
     local_installable_wheel = "substrafl_internal/local_dependencies/mymodule-1.0.2-py3-none-any.whl"
     local_code_folder = tmp_path / "local"
@@ -114,7 +112,6 @@ RUN python{python_version} -m pip install -U pip && pip install -U setuptools>=7
 # Copy local wheels
 COPY {substrafl_wheel} {substrafl_wheel}
 COPY {substra_wheel} {substra_wheel}
-COPY {substratools_wheel} {substratools_wheel}
 COPY {local_installable_wheel} {local_installable_wheel}
 
 # Copy requirements.txt

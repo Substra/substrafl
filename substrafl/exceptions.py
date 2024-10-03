@@ -6,10 +6,6 @@ class BatchSizeNotFoundError(Exception):
     """No batch size found."""
 
 
-class SubstraToolsDeprecationWarning(DeprecationWarning):
-    """The substratools version used is deprecated."""
-
-
 class UnsupportedPythonVersionError(Exception):
     """The Python version used is not supported by Substra."""
 
@@ -72,7 +68,7 @@ class InvalidMetricIdentifierError(Exception):
 
 
 class KeyMetadataError(Exception):
-    """``substrafl_version``, ``substra_version`` and ``substratools_version`` keys can't be added
+    """``substrafl_version`` and ``substra_version`` keys can't be added
     to the experiment metadata."""
 
 

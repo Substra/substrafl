@@ -14,7 +14,6 @@ from typing import Tuple
 from typing import Union
 
 import substra
-import substratools
 
 import substrafl
 from substrafl.compute_plan_builder import ComputePlanBuilder
@@ -183,7 +182,7 @@ def _check_evaluation_strategy(
 
 
 def _check_additional_metadata(additional_metadata: Dict):
-    unauthorized_keys = {"substrafl_version", "substra_version", "substratools_version", "python_version"}
+    unauthorized_keys = {"substrafl_version", "substra_version", "python_version"}
     invalid_keys = set(additional_metadata.keys()).intersection(unauthorized_keys)
 
     if len(invalid_keys) > 0:
@@ -200,16 +199,15 @@ def _check_additional_metadata(additional_metadata: Dict):
 
 
 def _get_packages_versions() -> dict:
-    """Returns a dict containing substrafl, substra and substratools versions
+    """Returns a dict containing substrafl and substra versions
 
     Returns:
-        dict: substrafl, substra and substratools versions
+        dict: substrafl and substra versions
     """
 
     return {
         "substrafl_version": substrafl.__version__,
         "substra_version": substra.__version__,
-        "substratools_version": substratools.__version__,
         "python_version": python_version(),
     }
 
@@ -452,7 +450,7 @@ def execute_experiment(
         _check_additional_metadata(additional_metadata)
         cp_metadata.update(additional_metadata)
 
-    # Adding substrafl, substratools and substra versions to the cp metadata
+    # Adding substrafl and substra versions to the cp metadata
     cp_metadata.update(_get_packages_versions())
 
     logger.info("Building the compute plan.")

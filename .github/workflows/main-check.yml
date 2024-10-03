@@ -35,12 +35,6 @@ jobs:
       - name: Checkout pyconfig from a private repos
         uses: actions/checkout@v4
         with:
-          repository: substra/substra-tools
-          path: substratools
-
-      - name: Checkout pyconfig from a private repos
-        uses: actions/checkout@v4
-        with:
           repository: substra/substra
           path: substra
 
@@ -55,7 +49,6 @@ jobs:
           pip install --upgrade pip
           pip install --upgrade -e substrafl[dev]
           pip install --upgrade -e substra
-          pip install --upgrade -e substratools
 
       - name: Run the slow local tests
         run: |

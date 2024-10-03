@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-import substratools as tools
+from substra import tools
 
 logger = logging.getLogger(__name__)
 

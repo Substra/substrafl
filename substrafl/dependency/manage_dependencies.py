@@ -97,7 +97,7 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
         lib_name = lib_module.__name__
         wheel_name = f"{lib_name}-{lib_module.__version__}-py3-none-any.whl"
 
-        # if the right version of substra or substratools is not found, it will search if they are already
+        # if the right version of substra is not found, it will search if they are already
         # installed in 'dist' and take them from there.
         # sys.executable takes the current Python interpreter instead of the default one on the computer
 
@@ -105,8 +105,6 @@ def local_lib_wheels(lib_modules: List[ModuleType], *, dest_dir: Path) -> List[s
             [
                 "--find-links",
                 dest_dir.parent / "substra",
-                "--find-links",
-                dest_dir.parent / "substratools",
             ]
             if lib_name == "substrafl"
             else []

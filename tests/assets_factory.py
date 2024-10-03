@@ -1,4 +1,3 @@
-import sys
 import tempfile
 from pathlib import Path
 from typing import List
@@ -9,16 +8,10 @@ from substra.sdk.schemas import DataSampleSpec
 from substra.sdk.schemas import DatasetSpec
 from substra.sdk.schemas import Permissions
 
-DEFAULT_SUBSTRATOOLS_VERSION = (
-    f"latest-nvidiacuda11.8.0-base-ubuntu22.04-python{sys.version_info.major}.{sys.version_info.minor}"
-)
-
-DEFAULT_SUBSTRATOOLS_DOCKER_IMAGE = f"ghcr.io/substra/substra-tools:{DEFAULT_SUBSTRATOOLS_VERSION}"
-
 DEFAULT_OPENER_FILE = """
 import os
 import numpy as np
-import substratools as tools
+from substra import tools
 
 class NumpyOpener(tools.Opener):
     def get_data(self, folders):

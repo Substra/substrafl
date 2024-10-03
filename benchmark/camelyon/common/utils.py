@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import substra
-import substratools
 
 import substrafl
 
@@ -22,7 +21,6 @@ def parse_params() -> dict:
         "learning_rate": 0.01,
         "substrafl_version": substrafl.__version__,
         "substra_version": substra.__version__,
-        "substratools_version": substratools.__version__,
     }
 
     parser = argparse.ArgumentParser("Default parser.", formatter_class=argparse.ArgumentDefaultsHelpFormatter)

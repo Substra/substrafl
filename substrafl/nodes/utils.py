@@ -2,7 +2,6 @@ from typing import Any
 from typing import List
 
 import substra
-import substratools
 
 
 def preload_data(
@@ -24,9 +23,9 @@ def preload_data(
     """
     dataset_info = client.get_dataset(data_manager_key)
 
-    opener_interface = substratools.utils.load_interface_from_module(
+    opener_interface = substra.tools.utils.load_interface_from_module(
         "opener",
-        interface_class=substratools.Opener,
+        interface_class=substra.tools.Opener,
         interface_signature=None,
         path=dataset_info.opener.storage_address,
     )

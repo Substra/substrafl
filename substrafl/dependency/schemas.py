@@ -8,7 +8,6 @@ from typing import List
 from typing import Optional
 
 import substra
-import substratools
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -31,7 +30,7 @@ class Dependency(BaseModel):
         **local-worker** or with **tmp_substrafl** as prefix are ignored during the installation.
 
     Args:
-        editable_mode (bool): If set to False, substra, substrafl and substratools used in the
+        editable_mode (bool): If set to False, substra and substrafl used in the
             Dockerfiles submitted to Substra platform will be taken from pypi.
             If set to True, it will be the one installed in editable mode from your python environment.
             Defaults to False.
@@ -177,8 +176,7 @@ class Dependency(BaseModel):
             └── substrafl_internal
                 ├── dist
                 │   ├── substra-0.44.0-py3-none-any.whl
-                │   ├── substrafl-0.36.0-py3-none-any.whl
-                │   └── substratools-0.20.0-py3-none-any.whl
+                │   └── substrafl-0.36.0-py3-none-any.whl
                 ├── local_dependencies
                 │   └── local-module-1.6.1-py3-none-any.whl
                 ├── requirements.in  # only if compile set to True
@@ -195,8 +193,7 @@ class Dependency(BaseModel):
                 lib_modules=[
                     substrafl,
                     substra,
-                    substratools,
-                ],  # We reinstall substratools in editable mode to overwrite the installed version
+                ],
                 dest_dir=substra_wheel_dir,
             )
             self._wheels += [substra_wheel_dir.relative_to(dest_dir) / wheel_name for wheel_name in substra_wheels]

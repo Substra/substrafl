@@ -11,7 +11,6 @@ from unittest.mock import Mock
 
 import pytest
 import substra
-import substratools
 
 import substrafl
 from substrafl import exceptions
@@ -57,7 +56,6 @@ def fake_compute_plan():
     compute_plan.metadata = {
         "substrafl_version": substrafl.__version__,
         "substra_version": substra.__version__,
-        "substratools_version": substratools.__version__,
         "python_version": python_version(),
     }
 

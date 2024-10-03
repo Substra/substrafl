@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy
 import pytest
-import substratools
+import substra
 
 from substrafl.dependency.manage_dependencies import build_user_dependency_wheel
 from substrafl.dependency.manage_dependencies import compile_requirements
@@ -36,7 +36,7 @@ def test_build_user_dependency_wheel_invalid_wheel(tmp_path):
 
 def test_generate_local_lib_wheel(session_dir):
     # Test that editable wheel are generated
-    libs = [substratools]
+    libs = [substra]
     dest_dir = Path(tempfile.mkdtemp(dir=session_dir.as_posix()))
 
     local_lib_wheels(
@@ -56,18 +56,18 @@ def test_generate_local_lib_wheel(session_dir):
 
 def test_get_pypi_dependencies_versions():
     # Test that pypi wheel can be downloaded
-    libs = [substratools, numpy]
+    libs = [substra, numpy]
 
     # We check that we have access to the pypi repo not the specific packages version otherwise this test will fail
     # when trying to create a new version of substrafl as the running dev version on the ci and on a local computer
     # (0.x.0) won't have been released yet.
 
     dependencies = get_pypi_dependencies_versions(lib_modules=libs)
-    assert dependencies == [f"substratools=={substratools.__version__}", f"numpy=={numpy.__version__}"]
+    assert dependencies == [f"substra=={substra.__version__}", f"numpy=={numpy.__version__}"]
 
 
 def test_compile_requirements(tmp_path):
-    compile_requirements(["substrafl", "substra", "substratools", "numpy"], dest_dir=tmp_path)
+    compile_requirements(["substrafl", "substra", "numpy"], dest_dir=tmp_path)
     requirements_path = tmp_path / "requirements.txt"
     assert requirements_path.exists()
     assert "substrafl" in requirements_path.read_text()

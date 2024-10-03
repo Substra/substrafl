@@ -21,9 +21,6 @@ from substrafl.remote.remote_struct import RemoteStruct
 
 logger = logging.getLogger(__name__)
 
-# Substra tools version for which the image naming scheme changed
-MINIMAL_DOCKER_SUBSTRATOOLS_VERSION = "0.16.0"
-
 # minimal and maximal values of Python 3 minor versions supported
 # we need to store this as integer, else "3.11" < "3.9" (string comparison)
 MINIMAL_PYTHON_VERSION = 10  # 3.10
@@ -100,7 +97,7 @@ FUNCTION = """
 import json
 import cloudpickle
 
-import substratools as tools
+from substra import tools
 
 from substrafl.remote.remote_struct import RemoteStruct
 
@@ -182,7 +179,7 @@ def _create_dockerfile(install_libraries: bool, dependencies: Dependency, operat
         use_gpu=dependencies.use_gpu,
         custom_binary_dependencies=dependencies.binary_dependencies,
     )
-    # Build Substrafl, Substra and Substratools, and local dependencies wheels if necessary
+    # Build Substrafl and Substra, and local dependencies wheels if necessary
     if install_libraries:
         # generate the copy wheel command
         copy_wheels_cmd = _generate_copy_local_files(dependencies._wheels)
@@ -230,8 +227,7 @@ def _create_substra_function_files(
                 ├── description.md
                 ├── dist
                 │   ├── substra-0.44.0-py3-none-any.whl
-                │   ├── substrafl-0.36.0-py3-none-any.whl
-                │   └── substratools-0.20.0-py3-none-any.whl
+                │   └── substrafl-0.36.0-py3-none-any.whl
                 ├── local_dependencies
                 │   └── local-module-1.6.1-py3-none-any.whl
                 ├── requirements.in
