@@ -84,7 +84,7 @@ COPY requirements.txt requirements.txt
 RUN python{python_version} -m pip install --no-cache-dir -r requirements.txt
 
 USER root
-RUN apt-get purge -y --auto-remove build-essential *-dev
+RUN apt-get update -y && apt-get purge -y --auto-remove build-essential *-dev
 USER user
 
 # Copy all other files
