@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.0.0](https://github.com/Substra/substrafl/releases/tag/1.0.0) - 2024-10-14
+
+### Added
+
+- The `Dependency` object now takes an optional parameter `binary_dependencies` to specify binary packages to be
+  installed in the computation container. ([#249](https://github.com/Substra/substrafl/pull/249))
+
+### Changed
+
+- cuda base docker image is now `nvidia/cuda:12.6.1-runtime-ubuntu24.04` ([#248](https://github.com/Substra/substrafl/pull/248))
+- Remove parasite verisons of `setuptools` in Dockerfiles and install `setuptools>70.0.0` to tackle last identified CVEs ([#250](https://github.com/Substra/substrafl/pull/250))
+
+### Fixed
+
+- Bump NumPy and pytorch versions in tests. ([#252](https://github.com/Substra/substrafl/pull/252))
+
+### Removed
+
+- Drop Python 3.9 support. ([#247](https://github.com/Substra/substrafl/pull/247))
+
+
 ## [0.47.0](https://github.com/Substra/substrafl/releases/tag/0.47.0) - 2024-09-12
 
 ### Added
